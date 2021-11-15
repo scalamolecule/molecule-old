@@ -20,7 +20,6 @@ import molecule.datomic.base.facade._
 import molecule.datomic.base.marshalling.packers.PackEntityGraph
 import molecule.datomic.client.facade.{Conn_Client, DatomicDb_Client, Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.{Conn_Peer, DatomicDb_Peer, Datomic_Peer}
-import moleculeBuildInfo.BuildInfo._
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -53,7 +52,6 @@ private[molecule] object DatomicRpc extends MoleculeRpc
       txReport <- conn.transact(javaStmts)
     } yield {
       TxReportRPC(txReport.t, txReport.tx, txReport.txInstant, txReport.eids, txReport.txData, txReport.toString)
-//      TxReportRPC(txReport.t, txReport.tx, txReport.txInstant, txReport.eids, txReport.toString)
     }
   }
 
@@ -700,7 +698,6 @@ private[molecule] object DatomicRpc extends MoleculeRpc
       txReport <- conn.transact(javaStmts)
     } yield TxReportRPC(
       txReport.t, txReport.tx, txReport.txInstant, txReport.eids, txReport.txData, txReport.toString
-//      txReport.t, txReport.tx, txReport.txInstant, txReport.eids, txReport.toString
     )
   }
 
@@ -777,14 +774,13 @@ private[molecule] object DatomicRpc extends MoleculeRpc
           Datomic_Peer.recreateDbFromEdn(proxy, schema)
             .recoverWith { case exc => Future.failed[Conn](MoleculeException(exc.getMessage)) }
 
-        case `datomicProtocol` =>
+        case "free" | "dev" | "pro" =>
           Datomic_Peer.connect(proxy, protocol, dbIdentifier)
             .recoverWith { case exc => Future.failed[Conn](MoleculeException(exc.getMessage)) }
 
         case other =>
           Future.failed(MoleculeException(
-            s"\nCan't serve Peer protocol `$other` since the current project is built with " +
-              s"datomic `$datomicProtocol`. Please change the build setup or your Conn_Js protocol"
+            s"\nCan't serve Peer protocol `$other`."
           ))
       }
 
@@ -795,14 +791,13 @@ private[molecule] object DatomicRpc extends MoleculeRpc
           devLocal.recreateDbFromEdn(schema, proxy)
             .recoverWith { case exc => Future.failed[Conn](MoleculeException(exc.getMessage)) }
 
-        case `datomicProtocol` =>
+        case "dev" | "pro" =>
           devLocal.connect(proxy, dbName)
             .recoverWith { case exc => Future.failed[Conn](MoleculeException(exc.getMessage)) }
 
         case other =>
           Future.failed(MoleculeException(
-            s"\nCan't serve DevLocal protocol `$other` since the current project is built with " +
-              s"datomic `$datomicProtocol`. Please change the build setup or your Conn_Js protocol"
+            s"\nCan't serve DevLocal protocol `$other`."
           ))
       }
 

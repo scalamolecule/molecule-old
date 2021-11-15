@@ -103,50 +103,39 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 
     testFrameworks += new TestFramework("moleculeTests.setup.MoleculeTestFramework"),
 
-//    // Temporarily limit number of tests to be compiled (comment out this whole sbt setting to test all)
-//    unmanagedSources / excludeFilter := {
-//      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
-//      val allowed     = Seq(
-//                sharedTests + "/core/attr",
-//        //        sharedTests + "/core/attrMap",
-//        //        sharedTests + "/core/bidirectionals",
-//        //        sharedTests + "/core/crud",
-//        //        sharedTests + "/core/equality",
-//        //        sharedTests + "/core/expression",
-//        //        sharedTests + "/core/input1",
-//        //        sharedTests + "/core/input2",
-//        //        sharedTests + "/core/input3",
-//        //        sharedTests + "/core/json",
-//        //        sharedTests + "/core/nested",
-//        //        sharedTests + "/core/obj",
-//        //        sharedTests + "/core/ref",
-//        //        sharedTests + "/db/datomic/composite",
-//        //        sharedTests + "/db/datomic/entity",
-//        //        sharedTests + "/db/datomic/generic",
-//        //        sharedTests + "/db/datomic/schemaDef",
-//        //        sharedTests + "/db/datomic/time",
-//        //        sharedTests + "/db/datomic/txMetaData",
-//        //        sharedTests + "/examples/datomic/dayOfDatomic",
-//        //        sharedTests + "/examples/datomic/mbrainz",
-//        //        sharedTests + "/examples/datomic/seattle",
-//        //        sharedTests + "/examples/gremlin/gettingStarted",
-//        sharedTests + "/Adhoc.scala",
-//      )
-//      new SimpleFileFilter(f =>
-//        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
-//      )
-//    },
-
-    buildInfoKeys := Seq[BuildInfoKey](
-      name, version, scalaVersion, sbtVersion,
-      "datomicProtocol" -> datomicProtocol,
-      "datomicHome" -> datomicHome,
-      "datomicProVersions" -> datomicProVersions,
-      "datomicProVersion" -> datomicProVersion,
-      "datomicDevLocalVersions" -> datomicDevLocalVersions,
-      "datomicDevLocalVersion" -> datomicDevLocalVersion
-    ),
-    buildInfoPackage := "moleculeBuildInfo"
+    //    // Temporarily limit number of tests to be compiled (comment out this whole sbt setting to test all)
+    //    unmanagedSources / excludeFilter := {
+    //      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
+    //      val allowed     = Seq(
+    //                sharedTests + "/core/attr",
+    //        //        sharedTests + "/core/attrMap",
+    //        //        sharedTests + "/core/bidirectionals",
+    //        //        sharedTests + "/core/crud",
+    //        //        sharedTests + "/core/equality",
+    //        //        sharedTests + "/core/expression",
+    //        //        sharedTests + "/core/input1",
+    //        //        sharedTests + "/core/input2",
+    //        //        sharedTests + "/core/input3",
+    //        //        sharedTests + "/core/json",
+    //        //        sharedTests + "/core/nested",
+    //        //        sharedTests + "/core/obj",
+    //        //        sharedTests + "/core/ref",
+    //        //        sharedTests + "/db/datomic/composite",
+    //        //        sharedTests + "/db/datomic/entity",
+    //        //        sharedTests + "/db/datomic/generic",
+    //        //        sharedTests + "/db/datomic/schemaDef",
+    //        //        sharedTests + "/db/datomic/time",
+    //        //        sharedTests + "/db/datomic/txMetaData",
+    //        //        sharedTests + "/examples/datomic/dayOfDatomic",
+    //        //        sharedTests + "/examples/datomic/mbrainz",
+    //        //        sharedTests + "/examples/datomic/seattle",
+    //        //        sharedTests + "/examples/gremlin/gettingStarted",
+    //        sharedTests + "/Adhoc.scala",
+    //      )
+    //      new SimpleFileFilter(f =>
+    //        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
+    //      )
+    //    },
   )
 
 
@@ -161,6 +150,17 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 
     // Run tests for all systems sequentially to avoid data locks with db
     // Only applies on JVM. On JS platform there's no parallelism anyway.
-    Test / parallelExecution := false
+    Test / parallelExecution := false,
+
+    buildInfoPackage := "moleculeBuildInfo",
+    buildInfoKeys := Seq[BuildInfoKey](
+      name, version, scalaVersion, sbtVersion,
+      "datomicProtocol" -> datomicProtocol,
+      "datomicHome" -> datomicHome,
+      "datomicProVersions" -> datomicProVersions,
+      "datomicProVersion" -> datomicProVersion,
+      "datomicDevLocalVersions" -> datomicDevLocalVersions,
+      "datomicDevLocalVersion" -> datomicDevLocalVersion
+    )
   )
 }

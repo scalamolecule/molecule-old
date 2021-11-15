@@ -5,7 +5,6 @@ import datomic.Peer
 import datomicScala.client.api.sync.Datomic
 import molecule.core.data.SchemaTransaction
 import molecule.core.marshalling.{ConnProxy, DatomicDevLocalProxy}
-import moleculeBuildInfo.BuildInfo.datomicHome
 import scala.concurrent.{ExecutionContext, Future}
 
 

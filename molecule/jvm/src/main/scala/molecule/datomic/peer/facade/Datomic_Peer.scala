@@ -5,7 +5,6 @@ import datomic.Peer
 import molecule.core.data.SchemaTransaction
 import molecule.core.marshalling.{ConnProxy, DatomicPeerProxy}
 import molecule.core.util.JavaConversions
-import moleculeBuildInfo.BuildInfo.datomicProtocol
 import scala.concurrent.{ExecutionContext, Future}
 
 
