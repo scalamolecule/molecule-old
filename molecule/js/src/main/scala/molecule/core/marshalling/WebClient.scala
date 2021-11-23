@@ -6,11 +6,11 @@ import sloth._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait WebClient extends Serializations {
+trait WebClient extends BooPicklers {
 
-  protected def clientAjax(baseAjaxUri: String): Client[ByteBuffer, Future, ClientException] =
-    Client[ByteBuffer, Future, ClientException](WebTransportAjax(baseAjaxUri))
+  def moleculeAjax(interface: String, port: Int): Client[ByteBuffer, Future, ClientException] =
+    Client[ByteBuffer, Future, ClientException](MoleculeAjax(interface, port))
 
-  protected def clientWs(wsUri: String): Client[ByteBuffer, Future, ClientException] =
-    Client[ByteBuffer, Future, ClientException](WebTransportWebSocket(wsUri))
+  def moleculeWs(wsUri: String): Client[ByteBuffer, Future, ClientException] =
+    Client[ByteBuffer, Future, ClientException](MoleculeWebSocket(wsUri))
 }

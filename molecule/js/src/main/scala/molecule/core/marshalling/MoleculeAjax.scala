@@ -8,12 +8,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.scalajs.js.typedarray._
 
-case class WebTransportAjax(baseAjaxUri: String)
-  extends RequestTransport[ByteBuffer, Future] with Serializations {
+case class MoleculeAjax(interface: String, port: Int)
+  extends RequestTransport[ByteBuffer, Future] with BooPicklers {
 
   override def apply(req: Request[ByteBuffer]): Future[ByteBuffer] = {
     Ajax.post(
-      url = baseAjaxUri + "/" + req.path.mkString("/"),
+      url = s"http://$interface:$port/ajax/" + req.path.mkString("/"),
       data = Pickle.intoBytes(req.payload), // Param values
       responseType = "arraybuffer",
       headers = Map("Content-Type" -> "application/octet-stream"),

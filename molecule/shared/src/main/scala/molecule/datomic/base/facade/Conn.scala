@@ -20,7 +20,7 @@ import scala.concurrent.{ExecutionContext, Future}
  *
  * Has additional internal state to manage using adhoc and test databases.
  * */
-trait Conn extends ColOps with Serializations {
+trait Conn extends ColOps with BooPicklers {
 
   // Molecule api --------------------------------------------------------------
 

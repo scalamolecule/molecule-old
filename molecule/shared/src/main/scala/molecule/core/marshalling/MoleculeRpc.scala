@@ -1,14 +1,11 @@
 package molecule.core.marshalling
 
-import java.util.Date
 import molecule.core.marshalling.nodes.Obj
 import molecule.datomic.base.facade.TxReportRPC
 import sloth.PathName
 import scala.concurrent.Future
 
-private[molecule] trait MoleculeRpc {
-
-  def clearConnPool(): Future[Unit]
+trait MoleculeRpc {
 
   def transact(
     connProxy: ConnProxy,
@@ -80,4 +77,9 @@ private[molecule] trait MoleculeRpc {
   def graphDepth(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String]
 
   def graphCode(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String]
+
+
+  // Connection pool ...............................
+
+  def clearConnPool(): Future[Unit]
 }

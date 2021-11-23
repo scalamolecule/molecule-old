@@ -4,7 +4,7 @@ import java.util.{Collection => jCollection}
 import molecule.core.api.Molecule
 import molecule.core.ast.elements.{Model, TxMetaData}
 import molecule.core.exceptions.MoleculeException
-import molecule.core.marshalling.Serializations
+import molecule.core.marshalling.BooPicklers
 import molecule.core.marshalling.unpackers.Packed2EntityMap
 import molecule.core.ops.VerifyModel
 import molecule.core.util.{Helpers, JavaConversions, Quoted}
@@ -17,7 +17,7 @@ import scala.util.{Failure, Success}
 
 
 abstract class DatomicEntity_Jvm(conn: Conn, eid: Any) extends Packed2EntityMap(conn)
-  with DatomicEntity with Quoted with Helpers with Serializations with JavaConversions {
+  with DatomicEntity with Quoted with Helpers with BooPicklers with JavaConversions {
 
 
   def retract(implicit ec: ExecutionContext): Future[TxReport] = {

@@ -1,17 +1,14 @@
-package molecule.core.marshalling
-
-import boopickle.Default._
-
-/** RPC via Sloth ajax web client to server
-  *
-  * Will only be called from client side.
-  *
-  */
-object MoleculeWebClient extends WebClient with Serializations {
-
-  /** Wire handle
-    *
-    */
-  val rpc: MoleculeRpc = clientAjax("http://localhost:8080/ajax").wire[MoleculeRpc]
-  //  val rpc: MoleculeRpc = clientWs("ws://localhost:8080/ws").wire[MoleculeRpc]
-}
+//package molecule.core.marshalling
+//
+//import boopickle.Default._
+//
+///** RPC via Sloth ajax web client to server
+//  *
+//  * Will only be called from client side.
+//  *
+//  */
+//private[molecule] object MoleculeWebClient extends WebClient {
+//
+//  val rpc: MoleculeRpc = moleculeAjax("localhost", 8080).wire[MoleculeRpc]
+//  //  val rpc: MoleculeRpc = moleculeWs("ws://localhost:8080/ws").wire[MoleculeRpc]
+//}

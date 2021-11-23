@@ -8,7 +8,7 @@ import scala.concurrent.{Future, Promise}
 import scala.scalajs.js.typedarray.TypedArrayBufferOps.byteBufferOps
 import scala.scalajs.js.typedarray._
 
-case class WebTransportWebSocket(wsUri: String) extends RequestTransport[ByteBuffer, Future] {
+case class MoleculeWebSocket(wsUri: String) extends RequestTransport[ByteBuffer, Future] {
 
   val socket = new WebSocket(wsUri)
   socket.binaryType = "arraybuffer"

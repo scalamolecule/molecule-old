@@ -44,7 +44,8 @@ object Settings extends SettingsDatomic with SettingsMolecule {
           case _             => file(dir.getPath ++ "-2.13-")
         }
       }
-    }
+    },
+    ThisBuild / versionScheme := Some("early-semver")
   )
 
   val js: Seq[Def.Setting[_]] = Seq(
@@ -53,7 +54,9 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       "io.github.cquiroz" %%% "scala-java-time" % "2.3.0",
       "io.github.cquiroz" %%% "scala-java-time-tzdb" % "2.3.0"
     ),
-    jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv()
+    jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
+    // Ensure clojure loads correctly for async tests run from sbt
+    //    Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
   )
 
   val jvm: Seq[Def.Setting[_]] = {
@@ -78,7 +81,9 @@ object Settings extends SettingsDatomic with SettingsMolecule {
         case _             =>
           // For @TxFns macro annotation on Scala 2.12
           sbt.compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full) :: Nil
-      })
+      }),
+      // Ensure clojure loads correctly for async tests run from sbt
+      //      Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
     ) ++ (if (datomicProtocol == "free") {
       Seq(libraryDependencies += "com.datomic" % "datomic-free" % "0.9.5697")
     } else {
@@ -103,39 +108,39 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 
     testFrameworks += new TestFramework("moleculeTests.setup.MoleculeTestFramework"),
 
-    //    // Temporarily limit number of tests to be compiled (comment out this whole sbt setting to test all)
-    //    unmanagedSources / excludeFilter := {
-    //      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
-    //      val allowed     = Seq(
-    //                sharedTests + "/core/attr",
-    //        //        sharedTests + "/core/attrMap",
-    //        //        sharedTests + "/core/bidirectionals",
-    //        //        sharedTests + "/core/crud",
-    //        //        sharedTests + "/core/equality",
-    //        //        sharedTests + "/core/expression",
-    //        //        sharedTests + "/core/input1",
-    //        //        sharedTests + "/core/input2",
-    //        //        sharedTests + "/core/input3",
-    //        //        sharedTests + "/core/json",
-    //        //        sharedTests + "/core/nested",
-    //        //        sharedTests + "/core/obj",
-    //        //        sharedTests + "/core/ref",
-    //        //        sharedTests + "/db/datomic/composite",
-    //        //        sharedTests + "/db/datomic/entity",
-    //        //        sharedTests + "/db/datomic/generic",
-    //        //        sharedTests + "/db/datomic/schemaDef",
-    //        //        sharedTests + "/db/datomic/time",
-    //        //        sharedTests + "/db/datomic/txMetaData",
-    //        //        sharedTests + "/examples/datomic/dayOfDatomic",
-    //        //        sharedTests + "/examples/datomic/mbrainz",
-    //        //        sharedTests + "/examples/datomic/seattle",
-    //        //        sharedTests + "/examples/gremlin/gettingStarted",
-    //        sharedTests + "/Adhoc.scala",
-    //      )
-    //      new SimpleFileFilter(f =>
-    //        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
-    //      )
-    //    },
+    // Temporarily limit number of tests to be compiled (comment out this whole sbt setting to test all)
+    unmanagedSources / excludeFilter := {
+      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
+      val allowed     = Seq(
+//                sharedTests + "/core/attr",
+        //        sharedTests + "/core/attrMap",
+        //        sharedTests + "/core/bidirectionals",
+        //        sharedTests + "/core/crud",
+        //        sharedTests + "/core/equality",
+        //        sharedTests + "/core/expression",
+        //        sharedTests + "/core/input1",
+        //        sharedTests + "/core/input2",
+        //        sharedTests + "/core/input3",
+        //        sharedTests + "/core/json",
+        //        sharedTests + "/core/nested",
+        //        sharedTests + "/core/obj",
+        //        sharedTests + "/core/ref",
+        //        sharedTests + "/db/datomic/composite",
+        //        sharedTests + "/db/datomic/entity",
+        //        sharedTests + "/db/datomic/generic",
+        //        sharedTests + "/db/datomic/schemaDef",
+        //        sharedTests + "/db/datomic/time",
+        //        sharedTests + "/db/datomic/txMetaData",
+        //        sharedTests + "/examples/datomic/dayOfDatomic",
+        //        sharedTests + "/examples/datomic/mbrainz",
+                sharedTests + "/examples/datomic/seattle",
+        //        sharedTests + "/examples/gremlin/gettingStarted",
+        sharedTests + "/Adhoc.scala",
+      )
+      new SimpleFileFilter(f =>
+        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
+      )
+    },
   )
 
 
@@ -161,6 +166,9 @@ object Settings extends SettingsDatomic with SettingsMolecule {
       "datomicProVersion" -> datomicProVersion,
       "datomicDevLocalVersions" -> datomicDevLocalVersions,
       "datomicDevLocalVersion" -> datomicDevLocalVersion
-    )
+    ),
+
+    // Let IntelliJ detect sbt-molecule-created jars in unmanaged lib directories
+    exportJars := true
   )
 }

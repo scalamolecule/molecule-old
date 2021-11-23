@@ -33,7 +33,7 @@ trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
       case SystemDevLocal   => DatomicDevLocalProxy("mem", "datomic-samples-temp", datomicHome, "", clientSchema, attrMap)
       case SystemPeerServer => DatomicPeerServerProxy("k", "s", "localhost:8998", peerServerDb, clientSchema, attrMap)
     }
-    test(Future(Conn_Js(proxy)))
+    test(Future(Conn_Js(proxy, "localhost", 8080)))
   }
 
   def coreImpl[T](test: Future[Conn] => T): T = inMem(test, CoreTestSchema, "m_coretests")
@@ -76,6 +76,6 @@ trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
           MBrainzSchema.datomicClient, MBrainzSchema.attrMap
         )
     }
-    test(Future(Conn_Js(proxy)))
+    test(Future(Conn_Js(proxy, "localhost", 8080)))
   }
 }

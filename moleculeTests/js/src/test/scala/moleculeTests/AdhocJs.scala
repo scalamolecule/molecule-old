@@ -25,9 +25,6 @@ object AdhocJs extends AsyncTestSuite with Helpers
 
 
 
-
-
-
       } yield ()
     }
 

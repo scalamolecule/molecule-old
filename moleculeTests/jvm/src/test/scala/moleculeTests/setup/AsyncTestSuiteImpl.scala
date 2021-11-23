@@ -1,7 +1,6 @@
 package moleculeTests.setup
 
 import molecule.core.data.SchemaTransaction
-import molecule.core.marshalling.{DatomicDevLocalProxy, DatomicPeerProxy, DatomicPeerServerProxy}
 import molecule.datomic.api.out1._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}

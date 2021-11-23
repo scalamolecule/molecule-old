@@ -25,11 +25,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 
-private[molecule] object DatomicRpc extends MoleculeRpc
+object DatomicRpc extends MoleculeRpc
   with DateHandling with DateStrLocal
   with Helpers with ClojureBridge
   with PackEntityGraph with Quoted
-  with Serializations
+  with BooPicklers
   with PackBase
   with JavaConversions {
 
@@ -760,11 +760,12 @@ private[molecule] object DatomicRpc extends MoleculeRpc
 
   // Connection pool ---------------------------------------------
 
+  // todo - this is primitive, is a more correct implementation needed?
   private val connectionPool = mutable.HashMap.empty[String, Future[Conn]]
 
   def clearConnPool(): Future[Unit] = Future {
+    //    println(s"Connection pool with ${connectionPool.size} connections cleared.")
     connectionPool.clear()
-    //    println("Connection pool cleared")
   }
 
   private def getFreshConn(connProxy: ConnProxy): Future[Conn] = connProxy match {

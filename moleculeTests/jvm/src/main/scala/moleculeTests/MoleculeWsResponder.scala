@@ -1,16 +1,17 @@
-package molecule.core.marshalling
+package moleculeTests
 
 import java.nio.ByteBuffer
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
-import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Directives.{path, _}
 import akka.http.scaladsl.server.Route
 import akka.stream.scaladsl.Flow
 import akka.util.ByteString
 import boopickle.Default._
 import cats.implicits._
+import molecule.core.marshalling.{BooPicklers, MoleculeRpc}
 //import chameleon.ext.boopickle._
 import molecule.datomic.base.marshalling.DatomicRpc
 import sloth._
@@ -25,7 +26,7 @@ import scala.util.{Failure, Success}
   *
   */
 //object WsResponder extends App with Serializations { // un-comment this to run it
-object WsResponder extends Serializations {
+object MoleculeWsResponder extends BooPicklers {
   implicit val system           = ActorSystem(Behaviors.empty, "moleculeWebSocket")
   implicit val executionContext = system.executionContext
 

@@ -11,7 +11,7 @@ import scala.language.postfixOps
 
 /** Check that transaction calls are non-blocking.
  *
- * Calling 100-150 transactions in under 0.1 second confirms that we are not blocking.
+ * Calling 1000 transactions in under 1 second should confirm that we are not blocking.
  *
  * See instructions in examples/README_pro.md to setup testing mbrainz
  * */

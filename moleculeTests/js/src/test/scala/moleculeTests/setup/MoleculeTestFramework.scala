@@ -1,9 +1,9 @@
 package moleculeTests.setup
 
-import molecule.core.marshalling.MoleculeWebClient
+import boopickle.Default._
+import molecule.core.marshalling.{BooPicklers, MoleculeRpc, WebClient}
 
-
-class MoleculeTestFramework extends utest.runner.Framework {
+class MoleculeTestFramework extends utest.runner.Framework with WebClient with BooPicklers {
 
   //  override def setup(): Unit = {
   //    //    println("Setting up JS MoleculeTestFramework")
@@ -13,6 +13,6 @@ class MoleculeTestFramework extends utest.runner.Framework {
     //    println("Tearing down JS MoleculeTestFramework")
 
     // Clear connection pool after each test suite run
-    MoleculeWebClient.rpc.clearConnPool()
+    moleculeAjax("localhost", 8080).wire[MoleculeRpc].clearConnPool()
   }
 }

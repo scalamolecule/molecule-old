@@ -1,12 +1,12 @@
 package molecule.core.api
 
-import molecule.core.marshalling.Serializations
+import molecule.core.marshalling.BooPicklers
 import molecule.core.util.Helpers
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
 import scala.concurrent.{ExecutionContext, Future}
 
-trait TxBundles extends Helpers with Serializations {
+trait TxBundles extends Helpers with BooPicklers {
 
 
   /** Transact bundled transaction statements

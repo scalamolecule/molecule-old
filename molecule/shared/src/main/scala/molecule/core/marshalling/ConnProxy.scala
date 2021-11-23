@@ -1,6 +1,7 @@
 package molecule.core.marshalling
 
 import java.util.UUID
+import molecule.core.data.SchemaTransaction
 import molecule.datomic.base.ast.dbView.{AsOf, DbView, History, TxLong}
 
 
@@ -18,6 +19,7 @@ sealed trait ConnProxy {
   val adhocDbView : Option[DbView]
 }
 
+
 case class DatomicPeerProxy(
   protocol: String,
   dbIdentifier: String,
@@ -28,6 +30,7 @@ case class DatomicPeerProxy(
   adhocDbView: Option[DbView] = None,
   uuid: String = UUID.randomUUID().toString
 ) extends ConnProxy
+
 
 case class DatomicDevLocalProxy(
   protocol: String,
@@ -41,6 +44,7 @@ case class DatomicDevLocalProxy(
   adhocDbView: Option[DbView] = None,
   uuid: String = UUID.randomUUID().toString
 ) extends ConnProxy
+
 
 case class DatomicPeerServerProxy(
   accessKey: String,

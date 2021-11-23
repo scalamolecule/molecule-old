@@ -2,6 +2,7 @@ package molecule.core.facade
 
 import java.net.URI
 import java.util.{Date, UUID}
+import boopickle.Default._
 import molecule.core.ast.elements._
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling._
@@ -16,7 +17,6 @@ import molecule.datomic.base.facade.{Conn, DatomicDb, TxReport}
 import molecule.datomic.base.transform.Query2String
 import scala.concurrent.{ExecutionContext, Future}
 
-
 /** Client connection.
  *
  * Used to cary information enabling marshalling on both client and server side.
@@ -26,8 +26,11 @@ import scala.concurrent.{ExecutionContext, Future}
  *
  * @param defaultConnProxy Db coordinates to access db on server side
  */
-case class Conn_Js(override val defaultConnProxy: ConnProxy)
-  extends Conn with Helpers {
+case class Conn_Js(
+  override val defaultConnProxy: ConnProxy,
+  interface: String,
+  port: Int
+) extends Conn with WebClient with Helpers {
 
   // Molecule api --------------------------------------------------------------
 
@@ -92,7 +95,8 @@ case class Conn_Js(override val defaultConnProxy: ConnProxy)
 
   private[molecule] final val isJsPlatform: Boolean = true
 
-  private[molecule] final override lazy val rpc: MoleculeRpc = MoleculeWebClient.rpc
+  private[molecule] final override lazy val rpc: MoleculeRpc =
+    moleculeAjax(interface, port).wire[MoleculeRpc]
 
 
   private[molecule] def transact(scalaStmts: Future[Seq[Statement]])

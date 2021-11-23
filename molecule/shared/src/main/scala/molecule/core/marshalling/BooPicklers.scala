@@ -8,12 +8,11 @@ import chameleon._
 import molecule.core.api.exception.EntityException
 import molecule.core.exceptions._
 import molecule.core.util.Helpers
-import molecule.datomic.base.api.Datom
 import molecule.datomic.base.facade.exception.DatomicFacadeException
 import scala.util.{Failure, Success, Try}
 
 
-trait Serializations extends Helpers {
+trait BooPicklers extends Helpers {
 
   // Common picklers
   implicit val datePickler = transformPickler((t: Long) => new java.util.Date(t))(_.getTime)
@@ -50,6 +49,11 @@ trait Serializations extends Helpers {
     case v             => throw MoleculeException(
       s"Unexpected Datom anyPickler value `$v` of type " + v.getClass)
   }
+
+  implicit val connProxyPickler = compositePickler[ConnProxy].
+    addConcreteType[DatomicPeerProxy].
+    addConcreteType[DatomicDevLocalProxy].
+    addConcreteType[DatomicPeerServerProxy]
 
 
   implicit val exPickler = exceptionPickler
