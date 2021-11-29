@@ -389,10 +389,8 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
       for {
         _ <- loadData
 
-        r1 <- Schema.t.get
-        schemaTxT = r1.head
-        r2 <- Community.name_.t.get
-        dataTxT = r2.head
+        schemaTxT <- Schema.t.get.map(_.head)
+        dataTxT <- Community.name_.t.get.map(_.head)
 
         // Take all Community entities
         communities = m(Community.e.name_)
@@ -404,28 +402,6 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
 
         _ <- communities.getSince(schemaTxT).map(_.size ==> 150)
         _ <- communities.getSince(dataTxT).map(_.size ==> 0)
-
-
-        // This depends on jvm-only datomic dependency - tested in jvm.examples.datomic.seattle.Seattle
-
-        //        // Imagining the future
-        //        data_rdr2 = new FileReader("moleculeTests/jvm/resources/tests/examples/seattle/seattle-data2upper.dtm")
-        //        newDataTx = Util.readAll(data_rdr2).get(0).asInstanceOf[jList[jList[_]]]
-        //
-        //        // future db
-        //        _ <- communities.getWith(newDataTx).map(_.size ==> 258)
-        //
-        //        // existing db
-        //        _ <- communities.get.map(_.size ==> 150)
-        //
-        //        // transact
-        //        _ <- conn.map(_.transactRaw(newDataTx))
-        //
-        //        // updated db
-        //        _ <- communities.get.map(_.size ==> 258)
-        //
-        //        // number of new transactions
-        //        _ <- communities.getSince(dataTxT).map(_.size ==> 108)
       } yield ()
     }
 

@@ -10,7 +10,7 @@ import sloth._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.control.NonFatal
 
-case class MoleculeRpcHandler_Akka(interface: String, port: Int) extends BooPicklers {
+case class MoleculeRpcHandler(interface: String, port: Int) extends BooPicklers {
   implicit val system          : ActorSystem[Nothing]     = ActorSystem(Behaviors.empty, "MoleculeAjaxSystem")
   implicit val executionContext: ExecutionContextExecutor = system.executionContext
   val MoleculeRpc = "MoleculeRpc"

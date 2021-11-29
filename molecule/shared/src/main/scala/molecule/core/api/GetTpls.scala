@@ -168,9 +168,6 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
    *   ))
    * } yield ()
    * }}}
-   * <br><br>
-   * For more info and code examples see equivalent synchronous
-   * [[molecule.core.api.GetTpls.getAsOf(t:Long)* getAsOf]] method.
    *
    * @group getAsOf
    * @param t    Transaction time t
@@ -217,9 +214,6 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
    *   ))
    * } yield ()
    * }}}
-   * <br><br>
-   * For more info and code examples see equivalent synchronous
-   * [[molecule.core.api.GetTpls.getAsOf(t:Long,n:Int)* getAsOf]] method.
    *
    * @group getAsOf
    * @param t    Long Transaction time t

@@ -122,7 +122,7 @@ trait Conn extends ColOps with BooPicklers {
    *
    * Only works on jvm platform.
    *
-   * @param stmtsReader [[Reader]]
+   * @param stmtsReader [[java.io.Reader]]
    * @param ec
    * @return Future with [[TxReport]]
    */

@@ -32,7 +32,7 @@ trait TxReport {
    */
   def eid: Long = eids.head
 
-  /** Tx report data, a List of [[Datom]] */
+  /** Tx report data, a List of [[molecule.datomic.base.api.Datom]] */
   def txData: List[Datom]
 
   /** Print TxReport */

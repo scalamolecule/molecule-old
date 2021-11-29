@@ -211,6 +211,7 @@ case class Conn_Peer(
    *
    * If this connection originated the transaction, the transaction future will
    * be notified first, before a report is placed on the queue.
+   *
    * @return TxReportQueue
    */
   final def txReportQueue: TxReportQueue =
@@ -827,7 +828,9 @@ object Conn_Peer {
   ): Conn_Peer = Conn_Peer(datomic.Peer.connect(uri), defaultConnProxy, uri)
 
   // Dummy constructor for transaction functions where db is supplied inside transaction by transactor
-  def apply(txDb: AnyRef): Conn_Peer = new Conn_Peer(null, DatomicPeerProxy("dummy", "")) {
+  def apply(txDb: AnyRef): Conn_Peer = new Conn_Peer(
+    null, DatomicPeerProxy("dummy", "", Nil, Map.empty[String, (Int, String)])
+  ) {
     testDb(DatomicDb_Peer(txDb.asInstanceOf[Database]))
   }
 }

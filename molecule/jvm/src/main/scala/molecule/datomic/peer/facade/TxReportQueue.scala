@@ -18,7 +18,7 @@ import scala.concurrent.duration._
  * Note that the queue does not block producers, and will consume
  * memory until you consume the elements from it.
  *
- * @see [[https://docs.datomic.com/on-prem/javadoc/datomic/Connection.html#txReportQueue-- datomic.Connection.txReportQueue()]]
+ * @see https://docs.datomic.com/on-prem/javadoc/datomic/Connection.html#txReportQueue-- datomic.Connection.txReportQueue()
  */
 case class TxReportQueue(javaQueue: jBlockingQueue[jMap[_, _]]) extends JavaConversions {
 

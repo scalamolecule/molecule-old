@@ -817,7 +817,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
    *   // History of Ben
    *   _ <- Person(ben).age.t.op.getObjsHistory.map(_
    *     .sortBy(o => (o.t, o.op))
-   *     .map(o => s"${o.age} ${o.t} ${o.op}") ==> List(
+   *     .map(o => "" + o.age + " " + o.t + " " + o.op) ==> List(
    *     "42 1028 true",  // Insert:  42 asserted
    *     "42 1031 false", // Update:  42 retracted
    *     "43 1031 true",  //          43 asserted

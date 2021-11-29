@@ -8,7 +8,7 @@ import akka.http.scaladsl.server.Route
 import boopickle.Default._
 import cats.implicits._
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
-import molecule.core.marshalling.{MoleculeRpc, MoleculeRpcHandler_Akka}
+import molecule.core.marshalling.{MoleculeRpc, MoleculeRpcHandler}
 import molecule.datomic.base.marshalling.DatomicRpc
 import sloth._
 import scala.concurrent.Future
@@ -20,7 +20,7 @@ import scala.util.{Failure, Success}
  * Any server solution that respond on
  *
  */
-object MoleculeAjaxResponder extends MoleculeRpcHandler_Akka("localhost", 8080) with App {
+object MoleculeAjaxResponder extends MoleculeRpcHandler("localhost", 8080) with App {
 
   lazy val router = Router[ByteBuffer, Future].route[MoleculeRpc](DatomicRpc)
 

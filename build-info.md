@@ -48,6 +48,5 @@ This might be too heavy for the compiler. In that case split up the process:
 > sbt clean compile -Dfree=true
 > sbt doc
 > sbt publishSigned -Dfree=true
-> // publish 2.13 at maven central
 
 
