@@ -1,6 +1,6 @@
 ![](project/resources/Molecule-logo.png)
 
-Molecule is a non-blocking asynchronous domain-tailored database query language for Scala and Scala.js against the [Datomic][datomic] database.
+Molecule is a non-blocking asynchronous domain-customizable database query language for Scala and Scala.js against the [Datomic][datomic] database.
 
 Transactions and queries are type-safely built with the terms of your domain and works on both the jvm and js platform.
 
