@@ -4,10 +4,7 @@ import molecule.core.ast.elements.Model
 import molecule.datomic.base.ast.query.Query
 
 /** Base Molecule interface. */
-abstract class Molecule(
-  private val model: Model,
-  private val queryData: (Query, String, Option[Throwable])
-) {
+trait Molecule {
 
   /** Internal Model representation of a molecule.
     * <br><br>
@@ -17,7 +14,7 @@ abstract class Molecule(
     *
     * @group internal
     **/
-  val _model: Model = model
+  def _model: Model
 
   /** Internal [[molecule.datomic.base.ast.query.Query Query]] representation of molecule.
     * <br><br>
@@ -27,7 +24,7 @@ abstract class Molecule(
     *
     * @group internal
     **/
-  val _query: Query = queryData._1
+  def _query: Query
 
   /** Datalog query.
     * <br><br>
@@ -37,8 +34,8 @@ abstract class Molecule(
     *
     * @group internal
     **/
-  val _datalog: String = queryData._2
+  def _datalog: String
 
 
-  val _inputThrowable: Option[Throwable] = queryData._3
+  def _inputThrowable: Option[Throwable]
 }

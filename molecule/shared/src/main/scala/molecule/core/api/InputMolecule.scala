@@ -45,7 +45,13 @@ import molecule.datomic.base.ast.query._
 private[molecule] abstract class InputMolecule(
   model: Model,
   queryData: (Query, String, Option[Throwable])
-) extends Molecule(model, queryData) {
+) extends Molecule {
+
+  def _model: Model = model
+  def _query: Query = queryData._1
+  def _datalog: String = queryData._2
+  def _inputThrowable: Option[Throwable] = queryData._3
+
   val isJsPlatform: Boolean
 
   protected def resolveOr[I1](or: Or[I1]): Either[Throwable, Seq[I1]] = {

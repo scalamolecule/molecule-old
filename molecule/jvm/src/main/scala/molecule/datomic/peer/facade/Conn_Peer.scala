@@ -4,7 +4,6 @@ import java.util
 import java.util.{Date, Collection => jCollection, List => jList}
 import datomic.Connection.DB_AFTER
 import datomic.Peer._
-import datomic.Util._
 import datomic.{Database, Datom, ListenableFuture, Peer, Util}
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
@@ -255,11 +254,11 @@ case class Conn_Peer(
   private[molecule] final override def buildTxFnInstall(txFnDatomic: String, args: Seq[Any]): jList[_] = {
     val params = args.indices.map(i => ('a' + i).toChar.toString)
     Util.list(Util.map(
-      read(":db/ident"), read(s":$txFnDatomic"),
-      read(":db/fn"), function(Util.map(
-        read(":lang"), "java",
-        read(":params"), list(read("txDb") +: read("txMetaData") +: params.map(read): _*),
-        read(":code"), s"return $txFnDatomic(txDb, txMetaData, ${params.mkString(", ")});"
+      Util.read(":db/ident"), Util.read(s":$txFnDatomic"),
+      Util.read(":db/fn"), Peer.function(Util.map(
+        Util.read(":lang"), "java",
+        Util.read(":params"), Util.list(Util.read("txDb") +: Util.read("txMetaData") +: params.map(Util.read): _*),
+        Util.read(":code"), s"return $txFnDatomic(txDb, txMetaData, ${params.mkString(", ")});"
       ))
     ))
   }
@@ -752,7 +751,7 @@ case class Conn_Peer(
     for {
       db <- db
       txInstants <- db.pull("[:db/id]", ":db/txInstant")
-      txInstId = txInstants.get(read(":db/id"))
+      txInstId = txInstants.get(Util.read(":db/id"))
     } yield {
       try {
         _testDb = Some(peerConn.db)

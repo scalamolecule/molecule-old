@@ -2,8 +2,7 @@ package molecule.datomic.client.facade
 
 import java.util
 import java.util.{Date, Collection => jCollection, List => jList}
-import datomic.Peer
-import datomic.Util._
+import datomic.{Peer, Util}
 import datomicScala.client.api.Datom
 import datomicScala.client.api.sync.{Client, Db, Connection => ClientConnection, Datomic => clientDatomic}
 import molecule.core.ast.elements._
@@ -337,10 +336,10 @@ case class Conn_Client(
           ("datoms", ":eavt", value match {
             case NoValue                   => Seq()
             case Eq(Seq(e))                => Seq(e)
-            case Eq(Seq(e, a))             => Seq(e, read(a.toString))
-            case Eq(Seq(e, a, v))          => Seq(e, read(a.toString), v)
-            case Eq(Seq(e, a, v, d: Date)) => Seq(e, read(a.toString), v, d)
-            case Eq(Seq(e, a, v, t))       => Seq(e, read(a.toString), v, t)
+            case Eq(Seq(e, a))             => Seq(e, Util.read(a.toString))
+            case Eq(Seq(e, a, v))          => Seq(e, Util.read(a.toString), v)
+            case Eq(Seq(e, a, v, d: Date)) => Seq(e, Util.read(a.toString), v, d)
+            case Eq(Seq(e, a, v, t))       => Seq(e, Util.read(a.toString), v, t)
             case v                         => throw MoleculeException("Unexpected EAVT value: " + v)
           })
 
@@ -348,11 +347,11 @@ case class Conn_Client(
           ("datoms", ":aevt", value match {
             case NoValue                   => Seq()
             case EntValue                  => Seq()
-            case Eq(Seq(a))                => Seq(read(a.toString))
-            case Eq(Seq(a, e))             => Seq(read(a.toString), e)
-            case Eq(Seq(a, e, v))          => Seq(read(a.toString), e, v)
-            case Eq(Seq(a, e, v, d: Date)) => Seq(read(a.toString), e, v, d)
-            case Eq(Seq(a, e, v, t))       => Seq(read(a.toString), e, v, t)
+            case Eq(Seq(a))                => Seq(Util.read(a.toString))
+            case Eq(Seq(a, e))             => Seq(Util.read(a.toString), e)
+            case Eq(Seq(a, e, v))          => Seq(Util.read(a.toString), e, v)
+            case Eq(Seq(a, e, v, d: Date)) => Seq(Util.read(a.toString), e, v, d)
+            case Eq(Seq(a, e, v, t))       => Seq(Util.read(a.toString), e, v, t)
             case v                         => throw MoleculeException("Unexpected AEVT value: " + v)
           })
 
@@ -360,23 +359,23 @@ case class Conn_Client(
           attr match {
             case "range" =>
               ("indexRange", "", value match {
-                case Eq(Seq(a, None, None))  => Seq(read(a.toString), None, None)
-                case Eq(Seq(a, from, None))  => Seq(read(a.toString), Some(from), None)
-                case Eq(Seq(a, None, until)) => Seq(read(a.toString), None, Some(until))
+                case Eq(Seq(a, None, None))  => Seq(Util.read(a.toString), None, None)
+                case Eq(Seq(a, from, None))  => Seq(Util.read(a.toString), Some(from), None)
+                case Eq(Seq(a, None, until)) => Seq(Util.read(a.toString), None, Some(until))
                 case Eq(Seq(a, from, until)) =>
                   if (from.getClass != until.getClass)
                     throw MoleculeException("Please supply range arguments of same type as attribute.")
-                  Seq(read(a.toString), Some(from), Some(until))
+                  Seq(Util.read(a.toString), Some(from), Some(until))
                 case v                       => throw MoleculeException("Unexpected AVET range value: " + v)
               })
             case _       =>
               ("datoms", ":avet", value match {
                 case NoValue                   => Seq()
-                case Eq(Seq(a))                => Seq(read(a.toString))
-                case Eq(Seq(a, v))             => Seq(read(a.toString), v)
-                case Eq(Seq(a, v, e))          => Seq(read(a.toString), v, e)
-                case Eq(Seq(a, v, e, d: Date)) => Seq(read(a.toString), v, e, d)
-                case Eq(Seq(a, v, e, t))       => Seq(read(a.toString), v, e, t)
+                case Eq(Seq(a))                => Seq(Util.read(a.toString))
+                case Eq(Seq(a, v))             => Seq(Util.read(a.toString), v)
+                case Eq(Seq(a, v, e))          => Seq(Util.read(a.toString), v, e)
+                case Eq(Seq(a, v, e, d: Date)) => Seq(Util.read(a.toString), v, e, d)
+                case Eq(Seq(a, v, e, t))       => Seq(Util.read(a.toString), v, e, t)
                 case v                         => throw MoleculeException("Unexpected AVET datoms value: " + v)
               })
           }
@@ -385,10 +384,10 @@ case class Conn_Client(
           ("datoms", ":vaet", value match {
             case NoValue                   => Seq()
             case Eq(Seq(v))                => Seq(v)
-            case Eq(Seq(v, a))             => Seq(v, read(a.toString))
-            case Eq(Seq(v, a, e))          => Seq(v, read(a.toString), e)
-            case Eq(Seq(v, a, e, d: Date)) => Seq(v, read(a.toString), e, d)
-            case Eq(Seq(v, a, e, t))       => Seq(v, read(a.toString), e, t)
+            case Eq(Seq(v, a))             => Seq(v, Util.read(a.toString))
+            case Eq(Seq(v, a, e))          => Seq(v, Util.read(a.toString), e)
+            case Eq(Seq(v, a, e, d: Date)) => Seq(v, Util.read(a.toString), e, d)
+            case Eq(Seq(v, a, e, t))       => Seq(v, Util.read(a.toString), e, t)
             case v                         => throw MoleculeException("Unexpected VAET value: " + v)
           })
 
@@ -449,7 +448,7 @@ case class Conn_Client(
       }
 
       lazy val defaultDate = new Date(0)
-      lazy val txInstant   = read(":db/txInstant")
+      lazy val txInstant   = Util.read(":db/txInstant")
 
       def date(tx: Long): Future[Date] = {
         // We can't index all txInstants
@@ -689,12 +688,12 @@ case class Conn_Client(
     for {
       db <- db
       txInstants <- db.pull("[:db/id]", ":db/txInstant")
-      txInstId = txInstants.get(read(":db/id"))
+      txInstId = txInstants.get(Util.read(":db/id"))
     } yield {
       try {
         _testDb = Some(clientConn.db.`with`(clientConn.withDb, list()).dbAfter)
         val txs            = clientConn.txRangeArray(Some(nextTimePoint))
-        val (retract, add) = (read(":db/retract"), read(":db/add"))
+        val (retract, add) = (Util.read(":db/retract"), Util.read(":db/add"))
         def op(datom: Datom) = if (datom.added) retract else add
         var txStmts = new util.ArrayList[jList[_]]()
         val size    = txs.length

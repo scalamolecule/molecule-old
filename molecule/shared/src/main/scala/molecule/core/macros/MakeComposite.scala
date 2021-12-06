@@ -27,7 +27,7 @@ class MakeComposite(val c: blackbox.Context) extends MakeBase {
         final override def packed2tpl(vs: Iterator[String]): (..$OutTypes) = ${packed2tplComposite(obj, txMetas)}
         final override def packed2obj(vs: Iterator[String]): $ObjType = ${objTree(obj, jsTpl, true)}
         final override def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ${packed2jsonFlat(obj, txMetas)}
-        final override lazy val obj: nodes.Obj = $obj
+        final override def obj: nodes.Obj = $obj
       """
     } else {
       q"""

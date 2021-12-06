@@ -3,7 +3,7 @@ package molecule.core.marshalling.unpackAttr
 import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox
 
-trait PackedValue2cast extends TreeOps with String2cast {
+trait PackedValue2cast extends TreeOps {
   val c: blackbox.Context
 
   import c.universe._

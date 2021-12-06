@@ -38,6 +38,8 @@ object Publish {
   )
 
   lazy val withoutDocs = Seq(
+    Test / publishArtifact := false,
+    doc / sources := Seq.empty,
     packageDoc / publishArtifact := false
   )
 

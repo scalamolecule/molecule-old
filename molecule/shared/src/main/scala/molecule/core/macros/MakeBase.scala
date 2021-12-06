@@ -28,6 +28,9 @@ private[molecule] trait MakeBase extends Dsl2Model {
         import molecule.datomic.base.facade.Conn
         import scala.collection.mutable.ListBuffer
         import scala.concurrent.Future
+
+        import molecule.core.marshalling.unpackAttr.String2cast._
+        import molecule.core.marshalling.unpackAttr.String2json._
      """
 
   def mapIdents(idents: Seq[Any]): Seq[(String, Tree)] = idents.flatMap {

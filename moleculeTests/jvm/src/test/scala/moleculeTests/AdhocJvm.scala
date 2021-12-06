@@ -1,7 +1,6 @@
 package moleculeTests
 
 import molecule.core.macros.rowAttr.{CastOptNested, CastTypes, JsonBase}
-import molecule.core.marshalling.unpackAttr.String2cast
 import molecule.core.util.Helpers
 import moleculeTests.setup.AsyncTestSuite
 import utest._
@@ -10,7 +9,7 @@ import scala.concurrent.Future
 
 
 object AdhocJvm extends AsyncTestSuite with Helpers
-  with String2cast with CastTypes with CastOptNested with JsonBase {
+  with CastTypes with CastOptNested with JsonBase {
 
 
   lazy val tests = Tests {

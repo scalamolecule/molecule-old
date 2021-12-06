@@ -1,4 +1,5 @@
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
+import org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import sbt.Keys._
 import sbt._
@@ -10,7 +11,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     organization := "org.scalamolecule",
     organizationName := "ScalaMolecule",
     organizationHomepage := Some(url("http://www.scalamolecule.org")),
-    ThisBuild / version := "1.0.0",
+    ThisBuild / version := "1.0.1-SNAPSHOT",
     ThisBuild / scalaVersion := "2.13.7",
     crossScalaVersions := Seq("2.12.15", "2.13.7"),
     scalacOptions := List(
@@ -52,9 +53,16 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "1.2.0",
       "io.github.cquiroz" %%% "scala-java-time" % "2.3.0",
+      // This creates quite a lot of locales code but is needed on the js side.
+      // See https://github.com/cquiroz/scala-java-time/issues/69
       "io.github.cquiroz" %%% "scala-java-time-tzdb" % "2.3.0"
     ),
-    jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
+    jsEnv := new JSDOMNodeJSEnv(
+      JSDOMNodeJSEnv.Config()
+        // https://github.com/scala-js/scala-js-js-envs/issues/12
+        .withArgs(List("--dns-result-order=ipv4first")) // not needed when scala-js 1.8 is out
+    )
+
     // Ensure clojure loads correctly for async tests run from sbt
     //    Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
   )
@@ -108,7 +116,8 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 
     testFrameworks += new TestFramework("moleculeTests.setup.MoleculeTestFramework"),
 
-//    // Temporarily limit number of tests to be compiled (comment out this whole sbt setting to test all)
+//    // Temporarily limit number of tests to be compiled by sbt (comment out this whole sbt setting to test all)
+//    // Note that intellij doesn't recognize this setting - here you can right click on files and exclude
 //    unmanagedSources / excludeFilter := {
 //      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
 //      val allowed     = Seq(
@@ -133,14 +142,14 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 //        //        sharedTests + "/db/datomic/txMetaData",
 //        //        sharedTests + "/examples/datomic/dayOfDatomic",
 //        //        sharedTests + "/examples/datomic/mbrainz",
-//                sharedTests + "/examples/datomic/seattle",
+//        //                sharedTests + "/examples/datomic/seattle",
 //        //        sharedTests + "/examples/gremlin/gettingStarted",
 //        sharedTests + "/Adhoc.scala",
 //      )
 //      new SimpleFileFilter(f =>
 //        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
 //      )
-//    },
+//    }
   )
 
 

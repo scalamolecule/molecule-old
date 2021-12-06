@@ -13,7 +13,7 @@ import scala.concurrent.Future
 
 
 object AdhocJs extends AsyncTestSuite with Helpers
-  with String2cast with CastTypes with CastOptNested with JsonBase {
+  with CastTypes with CastOptNested with JsonBase {
 
 
   lazy val tests = Tests {

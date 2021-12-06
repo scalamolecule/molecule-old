@@ -26,7 +26,7 @@ import scala.util.control.NonFatal
   * produced transaction statements or sample data.
   * */
 trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl] =>
-  val maxRows = 500
+  def maxRows = 500
 
   /** Inspect call to `get` on a molecule (without affecting the db).
     * <br><br>

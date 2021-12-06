@@ -30,6 +30,7 @@ project/plugins/project/
 */.DS_Store
 project/project/
 node_modules/
+*.json
 /moleculeTests/js/lib/
 /moleculeTests/jvm/lib/
 /moleculeTests/shared/lib/

@@ -6,9 +6,9 @@ import java.util.{Date, TimeZone}
 
 trait DateHandling extends RegexMatching {
 
-  lazy val localZoneOffset: ZoneOffset = OffsetDateTime.now().getOffset
-  lazy val localOffset    : String     = localZoneOffset.toString
-  lazy val zone           : ZoneId     = ZoneId.of(TimeZone.getDefault.getID)
+  def localZoneOffset: ZoneOffset = OffsetDateTime.now().getOffset
+  def localOffset    : String     = localZoneOffset.toString
+  def zone           : ZoneId     = ZoneId.of(TimeZone.getDefault.getID)
 
   private def error(err: String): Nothing = {
     val err1 = "[DateHandling]  " + err

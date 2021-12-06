@@ -14,13 +14,13 @@ import scala.concurrent.{ExecutionContext, Future}
 object Helpers extends Helpers
 trait Helpers extends DateHandling {
 
-  final protected object mkDate {
-    def apply(year: Int, month: Int = 1, day: Int = 1): Date = {
-      val localDate = LocalDate.of(year, month, day)
-      val instant   = localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant
-      Date.from(instant)
-    }
-  }
+//  final protected object mkDate {
+//    def apply(year: Int, month: Int = 1, day: Int = 1): Date = {
+//      val localDate = LocalDate.of(year, month, day)
+//      val instant   = localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant
+//      Date.from(instant)
+//    }
+//  }
 
   def clean(attr: String): String = attr.last match {
     case '_' => attr.init
@@ -145,10 +145,10 @@ trait Helpers extends DateHandling {
     def print: Unit = println(buf.mkString("\n"))
   }
 
-  private var time0 = System.currentTimeMillis()
-  private val times = collection.mutable.Map.empty[Int, Long]
 
   protected final def time(n: Int, prev: Int = 0) = {
+    var time0 = System.currentTimeMillis()
+    val times = collection.mutable.Map.empty[Int, Long]
     if (n < 1 || prev < 0)
       throw new IllegalArgumentException(s"Identifiers have to be positive numbers")
 

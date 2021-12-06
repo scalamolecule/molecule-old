@@ -82,7 +82,7 @@ trait Packed2tplNested extends PackedValue2cast {
       def mkNested(level: Int, unpackers: Seq[Tree]): Tree = {
         q"""
           def ${TermName("nested" + level)} = {
-            v = vs.next()
+            var v = vs.next()
             if (v == "◄◄") {
               Nil
             } else {

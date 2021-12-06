@@ -118,8 +118,6 @@ trait TxFunctions {
 
 object TxFunctions extends Helpers with JavaUtil {
 
-  import Util._
-
   def excMissingScalaJar(e: Throwable): String =
     s"""The Datomic transactor needs any dependencies in transactor
        |functions to be available on its classpath. Please copy the scala-library jar to the Datomic transactor lib.

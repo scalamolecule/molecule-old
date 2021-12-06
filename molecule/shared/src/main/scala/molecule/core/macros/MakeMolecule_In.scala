@@ -127,7 +127,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
             final override def packed2tpl(vs: Iterator[String]): (..$OutTypes) = ${packed2tplFlat(obj, txMetas)}
             final override def packed2obj(vs: Iterator[String]): $ObjType = ${objTree(obj, jsTpl)}
             final override def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ${packed2jsonFlat(obj, txMetas)}
-            final override lazy val obj: nodes.Obj = $obj
+            final override def obj: nodes.Obj = $obj
           }
         """
       } else {
@@ -156,8 +156,8 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
             final override def packed2tpl(vs: Iterator[String]): (..$OutTypes) = ${packed2tplNested(typess, obj, txMetas)}
             final override def packed2obj(vs: Iterator[String]): $ObjType = ${objTree(obj, jsTpl)}
             final override def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ${packed2jsonNested(levels, obj, txMetas)}
-            final override lazy val obj: nodes.Obj = $obj
-            final override lazy val nestedLevels: Int = ${levels - 1}
+            final override def obj: nodes.Obj = $obj
+            final override def nestedLevels: Int = ${levels - 1}
           }
         """
       } else {
@@ -169,7 +169,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
             ..${buildTplNested(castss, typess, OutTypes, txMetas).get}
             ..${buildJsonNested(obj, nestedRefs, txMetas, postJsons).get}
             final override def outerTpl2obj(tpl0: (..$OutTypes)): $ObjType = ${objTree(obj, tpl)}
-            final override lazy val nestedLevels: Int = ${levels - 1}
+            final override def nestedLevels: Int = ${levels - 1}
           }
         """
       }

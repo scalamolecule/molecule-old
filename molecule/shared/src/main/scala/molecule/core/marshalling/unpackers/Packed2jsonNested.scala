@@ -97,7 +97,7 @@ trait Packed2jsonNested extends PackedValue2json with JsonBase {
             quote(sb, $ref)
             sb.append(": [")
             var next = false
-            v = vs.next()
+            var v = vs.next()
             if (v != "◄◄") {
               do {
                 if (next) sb.append(",") else next = true

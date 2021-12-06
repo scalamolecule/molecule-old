@@ -5,7 +5,6 @@ import molecule.core.macros.MakeMoleculeDynamic
 import molecule.core.macros.rowAttr._
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
-import molecule.core.marshalling.unpackAttr.{String2cast, String2json}
 import molecule.core.ops.VerifyModel
 import molecule.core.transform.DynamicMolecule
 import molecule.core.util.Helpers
@@ -106,9 +105,6 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
     with JsonTypes
     with JsonAggr
     with JsonOptNested
-
-    with String2cast
-    with String2json
 
     with GetTpls[Obj, Tpl]
     with GetObjs[Obj, Tpl]

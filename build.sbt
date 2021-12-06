@@ -6,7 +6,10 @@ lazy val moleculeRoot = (project in file("."))
     moleculeTests.js,
     moleculeTests.jvm
   )
-  .settings(Publish.not)
+  .settings(
+    name := "molecule",
+    Publish.not
+  )
 
 
 lazy val molecule = crossProject(JSPlatform, JVMPlatform)

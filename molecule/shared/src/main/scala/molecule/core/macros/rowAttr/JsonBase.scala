@@ -9,27 +9,28 @@ trait JsonBase extends Helpers {
   // Shamelessly adopted from lift-json:
   // https://github.com/lift/framework/blob/db05d863c290c5fd1081a7632263433153fc9fe3/core/json/src/main/scala/net/liftweb/json/JsonAST.scala#L813-L883
 
-  /**
-    * Ranges of chars that should be escaped if this JSON is to be evaluated
-    * directly as JavaScript (rather than by a valid JSON parser).
-    */
-  protected val jsEscapeChars: Set[Char] =
-    List(
-      ('\u00ad', '\u00ad'),
-      ('\u0600', '\u0604'),
-      ('\u070f', '\u070f'),
-      ('\u17b4', '\u17b5'),
-      ('\u200c', '\u200f'),
-      ('\u2028', '\u202f'),
-      ('\u2060', '\u206f'),
-      ('\ufeff', '\ufeff'),
-      ('\ufff0', '\uffff')
-    ).foldLeft(Set[Char]()) {
-      case (set, (start, end)) =>
-        set ++ (start to end).toSet
-    }
 
   protected def appendEscapedString(sb: StringBuffer, s: String): Unit = {
+    /**
+     * Ranges of chars that should be escaped if this JSON is to be evaluated
+     * directly as JavaScript (rather than by a valid JSON parser).
+     */
+    val jsEscapeChars: Set[Char] =
+      List(
+        ('\u00ad', '\u00ad'),
+        ('\u0600', '\u0604'),
+        ('\u070f', '\u070f'),
+        ('\u17b4', '\u17b5'),
+        ('\u200c', '\u200f'),
+        ('\u2028', '\u202f'),
+        ('\u2060', '\u206f'),
+        ('\ufeff', '\ufeff'),
+        ('\ufff0', '\uffff')
+      ).foldLeft(Set[Char]()) {
+        case (set, (start, end)) =>
+          set ++ (start to end).toSet
+      }
+
     s.foreach { c =>
       val strReplacement = c match {
         case '"'  => "\\\""

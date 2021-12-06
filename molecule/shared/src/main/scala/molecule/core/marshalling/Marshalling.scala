@@ -8,17 +8,23 @@ import molecule.datomic.base.ast.query.Query
 
 
 /** Marshalling methods
-  *
-  * Methods are implemented by macros for either JS or JVM platform
-  */
+ *
+ * Methods are implemented by macros for either JS or JVM platform
+ */
 abstract class Marshalling[Obj, Tpl](model: Model, queryData: (Query, String, Option[Throwable]))
-  extends Molecule(model, queryData) with Helpers {
+  extends Molecule with Helpers {
 
-  protected lazy val obj         : nodes.Obj       = ???
-  protected lazy val isOptNested : Boolean         = false
-  protected lazy val nestedLevels: Int             = 0
-  protected lazy val refIndexes  : List[List[Int]] = List(List.empty[Int])
-  protected lazy val tacitIndexes: List[List[Int]] = List(List.empty[Int])
+  def _model: Model = model
+  def _query: Query = queryData._1
+  def _datalog: String = queryData._2
+  def _inputThrowable: Option[Throwable] = queryData._3
+
+
+  protected def obj: nodes.Obj = ???
+  protected def isOptNested: Boolean = false
+  protected def nestedLevels: Int = 0
+  protected def refIndexes: List[List[Int]] = List(List.empty[Int])
+  protected def tacitIndexes: List[List[Int]] = List(List.empty[Int])
 
   // jvm
   protected def row2tpl(row: jList[AnyRef]): Tpl = ???
