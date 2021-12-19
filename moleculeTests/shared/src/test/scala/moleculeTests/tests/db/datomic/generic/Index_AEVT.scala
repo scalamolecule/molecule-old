@@ -13,7 +13,7 @@ import scala.concurrent.Future
 object Index_AEVT extends Base {
 
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import molecule.core.util.Executor._
 
     "Args" - core { implicit conn =>
       for {

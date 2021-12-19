@@ -80,7 +80,7 @@ object Friends2 extends AsyncTestSuite {
   }
 
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import molecule.core.util.Executor._
 
     "The first 5 minutes" - modernGraph2 { implicit conn =>
       for {

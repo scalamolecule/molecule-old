@@ -4,7 +4,7 @@ import molecule.datomic.api.out3._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.examples.datomic.dayOfDatomic.dsl.SocialNews._
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 import scala.concurrent.Future
 import scala.language.postfixOps
 

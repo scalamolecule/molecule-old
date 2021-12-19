@@ -180,7 +180,7 @@ object TxFunction extends AsyncTestSuite {
   import TxFunctionExamples._
 
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import molecule.core.util.Executor._
 
     "Basic inc example" - corePeerOnly { implicit conn =>
       // Example from https://www.youtube.com/watch?v=8fY687k7DMA

@@ -3,7 +3,7 @@ package moleculeTests.tests.examples.datomic.dayOfDatomic
 import molecule.datomic.api.out4._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 
 // See http://docs.neo4j.org/chunked/stable/cypher-cookbook-hyperedges.html
 

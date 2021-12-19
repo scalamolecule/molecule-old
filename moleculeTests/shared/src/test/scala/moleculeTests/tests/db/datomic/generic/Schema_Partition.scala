@@ -3,7 +3,7 @@ package moleculeTests.tests.db.datomic.generic
 import molecule.datomic.api.out3._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 
 
 object Schema_Partition extends AsyncTestSuite {

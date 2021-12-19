@@ -26,7 +26,7 @@ object Binding extends AsyncTestSuite {
   val person      = m(User.e.firstName_(?).lastName_(?))
 
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import molecule.core.util.Executor._
 
     "Binding queries" - socialNews { implicit conn =>
       for {

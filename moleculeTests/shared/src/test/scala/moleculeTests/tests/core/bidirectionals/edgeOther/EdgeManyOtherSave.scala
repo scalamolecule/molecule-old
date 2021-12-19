@@ -5,7 +5,7 @@ import molecule.datomic.api.in1_out5._
 import moleculeTests.dataModels.core.bidirectionals.dsl.Bidirectional._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 
 
 object EdgeManyOtherSave extends AsyncTestSuite {

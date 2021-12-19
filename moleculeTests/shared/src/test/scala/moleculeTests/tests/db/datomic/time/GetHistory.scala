@@ -47,7 +47,7 @@ object GetHistory extends AsyncTestSuite {
   }
 
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import molecule.core.util.Executor._
 
     "1 entity, 1 attr" - core { implicit conn =>
       val genericInputMolecule = m(Ns(?).str.t.op)

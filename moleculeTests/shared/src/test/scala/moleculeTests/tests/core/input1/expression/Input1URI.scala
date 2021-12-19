@@ -33,7 +33,7 @@ object Input1URI extends AsyncTestSuite {
   }
 
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import molecule.core.util.Executor._
 
     "Card one" - {
 

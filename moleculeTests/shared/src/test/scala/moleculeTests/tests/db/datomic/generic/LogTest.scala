@@ -12,7 +12,7 @@ import scala.concurrent.Future
 object LogTest extends Base {
 
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import molecule.core.util.Executor._
 
     "Basics" - core { implicit conn =>
       for {

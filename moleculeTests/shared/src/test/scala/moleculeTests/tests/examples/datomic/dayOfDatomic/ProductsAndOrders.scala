@@ -4,7 +4,7 @@ import molecule.datomic.api.out5._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.examples.datomic.dayOfDatomic.dsl.ProductsOrder._
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 
 // See: http://blog.datomic.com/2013/06/component-entities.html
 

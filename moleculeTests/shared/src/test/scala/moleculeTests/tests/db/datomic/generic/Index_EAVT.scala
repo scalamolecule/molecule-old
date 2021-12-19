@@ -18,7 +18,7 @@ import utest._
 object Index_EAVT extends Base {
 
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import molecule.core.util.Executor._
 
     "Current values" - core { implicit conn =>
       for {

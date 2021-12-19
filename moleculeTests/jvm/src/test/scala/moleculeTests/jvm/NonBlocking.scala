@@ -27,7 +27,7 @@ object NonBlocking extends AsyncTestSuite {
   }
 
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import molecule.core.util.Executor._
 
     "Transactor: save-update-retract" - mbrainz { implicit conn =>
       import moleculeTests.dataModels.examples.datomic.mbrainz.dsl.MBrainz._

@@ -22,7 +22,7 @@ object ObjAggr extends AsyncTestSuite with Helpers {
   }
 
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import molecule.core.util.Executor._
     "min, max, rand, sample, median" - core { implicit conn =>
       for {
         _ <- data

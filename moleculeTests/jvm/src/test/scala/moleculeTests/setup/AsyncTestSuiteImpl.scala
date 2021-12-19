@@ -15,7 +15,7 @@ import moleculeTests.dataModels.examples.datomic.dayOfDatomic.schema._
 import moleculeTests.dataModels.examples.datomic.mbrainz.schema.{MBrainzSchema, MBrainzSchemaLowerToUpper}
 import moleculeTests.dataModels.examples.datomic.seattle.schema.SeattleSchema
 import moleculeTests.dataModels.examples.gremlin.gettingStarted.schema.{ModernGraph1Schema, ModernGraph2Schema}
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 import scala.concurrent.Future
 
 trait AsyncTestSuiteImpl { self: AsyncTestSuite =>

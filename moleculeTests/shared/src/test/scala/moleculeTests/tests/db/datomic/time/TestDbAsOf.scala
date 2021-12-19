@@ -26,7 +26,7 @@ object TestDbAsOf extends AsyncTestSuite {
   }
 
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import molecule.core.util.Executor._
 
     "as of now" - core { implicit futConn =>
       for {

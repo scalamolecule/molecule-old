@@ -81,5 +81,5 @@ trait MoleculeRpc {
 
   // Connection pool ...............................
 
-  def clearConnPool(): Future[Unit]
+  def clearConnPool: Future[Unit]
 }

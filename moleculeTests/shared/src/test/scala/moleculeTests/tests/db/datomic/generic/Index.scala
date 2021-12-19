@@ -10,7 +10,7 @@ object Index extends Base {
 
 
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import molecule.core.util.Executor._
 
     "All Datoms of Index" - core { implicit conn =>
       for {

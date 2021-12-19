@@ -1,15 +1,10 @@
 package molecule.core.transform
 
-import java.util.Date
-import java.util.concurrent.atomic.AtomicInteger
 import molecule.core.ast.elements._
 import molecule.core.util.Helpers
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.transform.exception.Model2TransactionException
-import scala.collection.mutable
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 
 /** Model to Statements transformer.

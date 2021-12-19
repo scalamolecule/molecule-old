@@ -5,7 +5,7 @@ import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 import scala.concurrent.Future
 
 

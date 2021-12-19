@@ -4,7 +4,7 @@
 //import molecule.datomic.api.out3._
 //import moleculeTests.setup.AsyncTestSuite
 //import utest._
-//import scala.concurrent.ExecutionContext.Implicits.global
+//import molecule.core.util.MacroExecutor._
 //
 //object NestedBranches extends AsyncTestSuite {
 //

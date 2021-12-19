@@ -7,6 +7,7 @@ import molecule.core.exceptions.{MoleculeException, QueryException}
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.ops.VerifyModel
+import molecule.core.util.Executor._
 import molecule.core.util.JavaConversions
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.transactionModel.Statement
@@ -14,7 +15,6 @@ import molecule.datomic.base.facade.{Conn, TxReport}
 import molecule.datomic.base.ops.QueryOps._
 import molecule.datomic.base.transform._
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.language.implicitConversions
 import scala.util.control.NonFatal

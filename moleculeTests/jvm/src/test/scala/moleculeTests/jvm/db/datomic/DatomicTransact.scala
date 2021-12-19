@@ -6,7 +6,7 @@ import molecule.datomic.api.out1._
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 
 
 object DatomicTransact extends AsyncTestSuite {

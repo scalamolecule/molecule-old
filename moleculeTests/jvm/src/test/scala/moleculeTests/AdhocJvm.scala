@@ -4,7 +4,7 @@ import molecule.core.macros.rowAttr.{CastOptNested, CastTypes, JsonBase}
 import molecule.core.util.Helpers
 import moleculeTests.setup.AsyncTestSuite
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 import scala.concurrent.Future
 
 

@@ -6,7 +6,7 @@ import molecule.datomic.peer.facade.Conn_Peer
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 
 /**
  * @see https://docs.datomic.com/on-prem/javadoc/index.html

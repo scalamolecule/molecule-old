@@ -4,7 +4,7 @@ import molecule.datomic.api.out5._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.examples.datomic.dayOfDatomic.dsl.Aggregates._
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 import scala.language.postfixOps
 
 object Aggregates extends AsyncTestSuite {

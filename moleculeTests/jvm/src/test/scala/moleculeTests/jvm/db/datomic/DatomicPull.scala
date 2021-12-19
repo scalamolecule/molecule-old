@@ -4,7 +4,7 @@ import java.util.UUID
 import datomic.Util
 import moleculeTests.setup.AsyncTestSuite
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 
 /*
   https://github.com/Datomic/day-of-datomic/blob/master/tutorial/pull.clj

@@ -4,7 +4,7 @@ import molecule.datomic.api.out4._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 
 object ApplyInt extends AsyncTestSuite {
 

@@ -13,7 +13,7 @@ import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.{Conn, Conn_Jvm, DatomicDb, TxReport}
-import molecule.datomic.base.marshalling.DatomicRpc.getJavaStmts
+import molecule.datomic.base.marshalling.DatomicRpc
 import molecule.datomic.base.transform.Query2String
 import molecule.datomic.base.util.QueryOpsClojure
 import scala.concurrent.{ExecutionContext, Future}
@@ -96,7 +96,7 @@ case class Conn_Client(
           case Since(TxDate(d))         => Some(clientConn.db.since(d))
           case History                  => Some(clientConn.db.history)
           case With(stmtsEdn, uriAttrs) =>
-            val txData   = getJavaStmts(stmtsEdn, uriAttrs)
+            val txData   = DatomicRpc().getJavaStmts(stmtsEdn, uriAttrs)
             val txReport = TxReport_Client(clientConn.db.`with`(clientConn.withDb, txData))
             Some(txReport.dbAfter)
 
@@ -167,7 +167,7 @@ case class Conn_Client(
       case Since(TxDate(d))         => Future(baseDb.since(d))
       case History                  => Future(baseDb.history)
       case With(stmtsEdn, uriAttrs) => Future {
-        val txData = getJavaStmts(stmtsEdn, uriAttrs)
+        val txData = DatomicRpc().getJavaStmts(stmtsEdn, uriAttrs)
         baseDb.`with`(clientConn.withDb, txData).dbAfter
       }
       case Sync(0)                  => Future(clientConn.sync(clientConn.db.t))
@@ -240,7 +240,7 @@ case class Conn_Client(
           transactWith
         case History                  => _testDb = Some(clientConn.db.history); transactWith
         case With(stmtsEdn, uriAttrs) =>
-          val txData   = getJavaStmts(stmtsEdn, uriAttrs)
+          val txData   = DatomicRpc().getJavaStmts(stmtsEdn, uriAttrs)
           val txReport = TxReport_Client(clientConn.db.`with`(clientConn.withDb, txData))
           withDbInUse = true
           _testDb = Some(txReport.dbAfter)

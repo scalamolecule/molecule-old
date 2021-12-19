@@ -11,7 +11,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     organization := "org.scalamolecule",
     organizationName := "ScalaMolecule",
     organizationHomepage := Some(url("http://www.scalamolecule.org")),
-    ThisBuild / version := "1.0.1-SNAPSHOT",
+    ThisBuild / version := "1.0.1",
     ThisBuild / scalaVersion := "2.13.7",
     crossScalaVersions := Seq("2.12.15", "2.13.7"),
     scalacOptions := List(
@@ -51,7 +51,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
 
   val js: Seq[Def.Setting[_]] = Seq(
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "1.2.0",
+      "org.scala-js" %%% "scalajs-dom" % "2.0.0",
       "io.github.cquiroz" %%% "scala-java-time" % "2.3.0",
       // This creates quite a lot of locales code but is needed on the js side.
       // See https://github.com/cquiroz/scala-java-time/issues/69
@@ -59,12 +59,10 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     ),
     jsEnv := new JSDOMNodeJSEnv(
       JSDOMNodeJSEnv.Config()
+        // for some reason still needed with Scala.js 1.8
         // https://github.com/scala-js/scala-js-js-envs/issues/12
-        .withArgs(List("--dns-result-order=ipv4first")) // not needed when scala-js 1.8 is out
+        .withArgs(List("--dns-result-order=ipv4first"))
     )
-
-    // Ensure clojure loads correctly for async tests run from sbt
-    //    Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
   )
 
   val jvm: Seq[Def.Setting[_]] = {
@@ -90,8 +88,6 @@ object Settings extends SettingsDatomic with SettingsMolecule {
           // For @TxFns macro annotation on Scala 2.12
           sbt.compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full) :: Nil
       }),
-      // Ensure clojure loads correctly for async tests run from sbt
-      //      Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
     ) ++ (if (datomicProtocol == "free") {
       Seq(libraryDependencies += "com.datomic" % "datomic-free" % "0.9.5697")
     } else {
@@ -109,47 +105,51 @@ object Settings extends SettingsDatomic with SettingsMolecule {
   val shared: Seq[Def.Setting[_]] = baseSettings ++ Seq(
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      "org.scala-js" %%% "scala-js-macrotask-executor" % "1.0.0",
       "com.lihaoyi" %%% "utest" % "0.7.10",
       "io.suzaku" %%% "boopickle" % "1.4.0",
-      "com.github.cornerman" %%% "sloth" % "0.3.0"
+      "com.github.cornerman" %%% "sloth" % "0.4.0"
     ),
 
     testFrameworks += new TestFramework("moleculeTests.setup.MoleculeTestFramework"),
 
-//    // Temporarily limit number of tests to be compiled by sbt (comment out this whole sbt setting to test all)
-//    // Note that intellij doesn't recognize this setting - here you can right click on files and exclude
-//    unmanagedSources / excludeFilter := {
-//      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
-//      val allowed     = Seq(
-////                sharedTests + "/core/attr",
-//        //        sharedTests + "/core/attrMap",
-//        //        sharedTests + "/core/bidirectionals",
-//        //        sharedTests + "/core/crud",
-//        //        sharedTests + "/core/equality",
-//        //        sharedTests + "/core/expression",
-//        //        sharedTests + "/core/input1",
-//        //        sharedTests + "/core/input2",
-//        //        sharedTests + "/core/input3",
-//        //        sharedTests + "/core/json",
-//        //        sharedTests + "/core/nested",
-//        //        sharedTests + "/core/obj",
-//        //        sharedTests + "/core/ref",
-//        //        sharedTests + "/db/datomic/composite",
-//        //        sharedTests + "/db/datomic/entity",
-//        //        sharedTests + "/db/datomic/generic",
-//        //        sharedTests + "/db/datomic/schemaDef",
-//        //        sharedTests + "/db/datomic/time",
-//        //        sharedTests + "/db/datomic/txMetaData",
-//        //        sharedTests + "/examples/datomic/dayOfDatomic",
-//        //        sharedTests + "/examples/datomic/mbrainz",
-//        //                sharedTests + "/examples/datomic/seattle",
-//        //        sharedTests + "/examples/gremlin/gettingStarted",
-//        sharedTests + "/Adhoc.scala",
-//      )
-//      new SimpleFileFilter(f =>
-//        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
-//      )
-//    }
+    // Ensure clojure loads correctly for async tests run from sbt
+    Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat,
+
+    //        // Temporarily limit number of tests to be compiled by sbt (comment out this whole sbt setting to test all)
+    //        // Note that intellij doesn't recognize this setting - here you can right click on files and exclude
+    //        unmanagedSources / excludeFilter := {
+    //          val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
+    //          val allowed     = Seq(
+    ////            sharedTests + "/core/attr",
+    ////            sharedTests + "/core/attrMap",
+    ////            sharedTests + "/core/bidirectionals",
+    ////            sharedTests + "/core/crud",
+    ////            sharedTests + "/core/equality",
+    ////            sharedTests + "/core/expression",
+    ////            sharedTests + "/core/input1",
+    ////            sharedTests + "/core/input2",
+    ////            sharedTests + "/core/input3",
+    ////            sharedTests + "/core/json",
+    ////            sharedTests + "/core/nested",
+    ////            sharedTests + "/core/obj",
+    ////            sharedTests + "/core/ref",
+    ////            sharedTests + "/db/datomic/composite",
+    ////            sharedTests + "/db/datomic/entity",
+    ////            sharedTests + "/db/datomic/generic",
+    ////            sharedTests + "/db/datomic/schemaDef",
+    ////            sharedTests + "/db/datomic/time",
+    ////            sharedTests + "/db/datomic/txMetaData",
+    //            sharedTests + "/examples/datomic/dayOfDatomic",
+    ////            sharedTests + "/examples/datomic/mbrainz",
+    ////            sharedTests + "/examples/datomic/seattle",
+    ////            sharedTests + "/examples/gremlin/gettingStarted",
+    ////            sharedTests + "/Adhoc.scala",
+    //          )
+    //          new SimpleFileFilter(f =>
+    //            f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
+    //          )
+    //        }
   )
 
 

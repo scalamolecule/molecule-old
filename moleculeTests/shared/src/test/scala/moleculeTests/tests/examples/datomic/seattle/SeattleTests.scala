@@ -17,7 +17,7 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
   }
 
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import molecule.core.util.Executor._
 
     "A first query" - seattle { implicit conn =>
       for {

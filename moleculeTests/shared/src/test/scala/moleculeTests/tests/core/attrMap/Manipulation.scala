@@ -3,7 +3,7 @@ package moleculeTests.tests.core.attrMap
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import molecule.datomic.api.out1._
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 
 object Manipulation extends Base {
 

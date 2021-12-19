@@ -17,6 +17,7 @@ import molecule.datomic.base.facade.{Conn, DatomicDb, TxReport}
 import molecule.datomic.base.transform.Query2String
 import scala.concurrent.{ExecutionContext, Future}
 
+
 /** Client connection.
  *
  * Used to cary information enabling marshalling on both client and server side.
@@ -30,7 +31,7 @@ case class Conn_Js(
   override val defaultConnProxy: ConnProxy,
   interface: String,
   port: Int
-) extends Conn with WebClient with Helpers {
+)(implicit ec: ExecutionContext) extends WebClient() with Conn with Helpers {
 
   // Molecule api --------------------------------------------------------------
 

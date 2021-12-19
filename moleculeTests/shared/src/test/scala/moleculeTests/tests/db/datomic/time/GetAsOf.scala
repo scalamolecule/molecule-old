@@ -1,14 +1,13 @@
 package moleculeTests.tests.db.datomic.time
 
-import molecule.core.util.JavaUtil
 import molecule.datomic.api.out3._
 import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 
 
-object GetAsOf extends AsyncTestSuite with JavaUtil {
+object GetAsOf extends AsyncTestSuite {
 
   lazy val tests = Tests {
 

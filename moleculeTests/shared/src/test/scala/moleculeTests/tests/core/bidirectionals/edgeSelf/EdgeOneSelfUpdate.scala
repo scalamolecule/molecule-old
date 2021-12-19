@@ -12,7 +12,7 @@ object EdgeOneSelfUpdate extends AsyncTestSuite {
   val loveOf = m(Person.name_(?).Loves.weight.Person.name)
 
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import molecule.core.util.Executor._
 
     "apply edge to new target" - bidirectional { implicit conn =>
       for {

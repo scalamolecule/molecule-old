@@ -62,7 +62,7 @@ private[molecule] final class TxFnMacro(val c: blackbox.Context) extends MacroHe
             import molecule.datomic.peer.facade.Conn_Peer
             import molecule.datomic.base.ast.transactionModel.Statement
             import scala.concurrent.duration.DurationInt
-            import scala.concurrent.ExecutionContext.Implicits.global
+            import molecule.core.util.Executor._
             import scala.concurrent.{Await, Future}
 
             // Make connection with current db available to tx function code

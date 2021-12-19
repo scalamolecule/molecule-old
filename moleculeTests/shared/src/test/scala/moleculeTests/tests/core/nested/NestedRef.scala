@@ -5,7 +5,7 @@ import molecule.datomic.api.out4._
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 
 
 object NestedRef extends AsyncTestSuite {

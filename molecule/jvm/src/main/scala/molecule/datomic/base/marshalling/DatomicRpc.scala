@@ -21,11 +21,10 @@ import molecule.datomic.base.marshalling.packers.PackEntityGraph
 import molecule.datomic.client.facade.{Conn_Client, DatomicDb_Client, Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.{Conn_Peer, DatomicDb_Peer, Datomic_Peer}
 import scala.collection.mutable
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-object DatomicRpc extends MoleculeRpc
+case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
   with DateHandling with DateStrLocal
   with Helpers with ClojureBridge
   with PackEntityGraph with Quoted
@@ -763,7 +762,7 @@ object DatomicRpc extends MoleculeRpc
   // todo - this is primitive, is a more correct implementation needed?
   private val connectionPool = mutable.HashMap.empty[String, Future[Conn]]
 
-  def clearConnPool(): Future[Unit] = Future {
+  def clearConnPool: Future[Unit] = Future {
     //    println(s"Connection pool with ${connectionPool.size} connections cleared.")
     connectionPool.clear()
   }

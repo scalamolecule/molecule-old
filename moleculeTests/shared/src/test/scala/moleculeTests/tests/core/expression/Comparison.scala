@@ -3,7 +3,7 @@ package moleculeTests.tests.core.expression
 import molecule.datomic.api.out2._
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 
 
 object Comparison extends Base {

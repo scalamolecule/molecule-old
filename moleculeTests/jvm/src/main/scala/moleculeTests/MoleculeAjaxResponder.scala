@@ -14,6 +14,7 @@ import sloth._
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success}
+import molecule.core.util.Executor._
 
 /** Akka Http Ajax responder implementation
  *
@@ -22,7 +23,7 @@ import scala.util.{Failure, Success}
  */
 object MoleculeAjaxResponder extends MoleculeRpcHandler("localhost", 8080) with App {
 
-  lazy val router = Router[ByteBuffer, Future].route[MoleculeRpc](DatomicRpc)
+  lazy val router = Router[ByteBuffer, Future].route[MoleculeRpc](DatomicRpc())
 
   Http()
     .newServerAt(interface, port)
@@ -44,7 +45,7 @@ object MoleculeAjaxResponder extends MoleculeRpcHandler("localhost", 8080) with 
       extractRequest { req =>
         req.entity match {
           case HttpEntity.Strict(_, byteString) =>
-            complete(moleculeRpcResult(router, pathStr , byteString))
+            complete(moleculeRpcResult(router, pathStr, byteString))
 
           case HttpEntity.Default(_, _, chunks) =>
             complete(

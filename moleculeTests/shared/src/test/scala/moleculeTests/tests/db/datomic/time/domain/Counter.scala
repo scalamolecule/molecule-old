@@ -3,7 +3,7 @@ package moleculeTests.tests.db.datomic.time.domain
 import molecule.datomic.api.out1._
 import molecule.datomic.base.facade.Conn
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 import scala.concurrent.Future
 
 // Example domain class getting and manipulating the db with molecules

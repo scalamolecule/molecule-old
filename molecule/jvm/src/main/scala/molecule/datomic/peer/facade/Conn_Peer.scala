@@ -1,10 +1,10 @@
 package molecule.datomic.peer.facade
 
-import java.util
+import java.{lang => jl, util => ju}
 import java.util.{Date, Collection => jCollection, List => jList}
 import datomic.Connection.DB_AFTER
 import datomic.Peer._
-import datomic.{Database, Datom, ListenableFuture, Peer, Util}
+import datomic._
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
 import molecule.core.marshalling._
@@ -13,7 +13,7 @@ import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade._
-import molecule.datomic.base.marshalling.DatomicRpc.getJavaStmts
+import molecule.datomic.base.marshalling.DatomicRpc
 import molecule.datomic.base.transform.Query2String
 import molecule.datomic.base.util.QueryOpsClojure
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -82,7 +82,7 @@ case class Conn_Peer(
           case Since(TxDate(d))         => Some(peerConn.db.since(d))
           case History                  => Some(peerConn.db.history())
           case With(stmtsEdn, uriAttrs) =>
-            val txData   = getJavaStmts(stmtsEdn, uriAttrs)
+            val txData   = DatomicRpc().getJavaStmts(stmtsEdn, uriAttrs)
             val txReport = TxReport_Peer(peerConn.db.`with`(txData))
             Some(txReport.dbAfter)
           case other                    =>
@@ -288,7 +288,7 @@ case class Conn_Peer(
       case Since(TxDate(d))         => Future(baseDb.since(d))
       case History                  => Future(baseDb.history())
       case With(stmtsEdn, uriAttrs) => Future {
-        val txData   = getJavaStmts(stmtsEdn, uriAttrs)
+        val txData   = DatomicRpc().getJavaStmts(stmtsEdn, uriAttrs)
         val txReport = TxReport_Peer(baseDb.`with`(txData))
         txReport.dbAfter.asOf(txReport.t)
       }
@@ -345,7 +345,7 @@ case class Conn_Peer(
         case Since(TxDate(d))         => _testDb = Some(peerConn.db.since(d)); transactWith
         case History                  => _testDb = Some(peerConn.db.history()); transactWith
         case With(stmtsEdn, uriAttrs) =>
-          val txData   = getJavaStmts(stmtsEdn, uriAttrs)
+          val txData   = DatomicRpc().getJavaStmts(stmtsEdn, uriAttrs)
           val txReport = TxReport_Peer(peerConn.db.`with`(txData))
           _testDb = Some(txReport.dbAfter.asOf(txReport.t))
           transactWith
@@ -380,7 +380,7 @@ case class Conn_Peer(
       try {
         Future(Peer.q(query, db.getDatomicDb +: inputs: _*))
       } catch {
-        case e: java.util.concurrent.ExecutionException =>
+        case e: ju.concurrent.ExecutionException =>
           // White list of exceptions that can be pickled by BooPickle
           Future.failed(
             e.getCause match {
@@ -756,10 +756,10 @@ case class Conn_Peer(
       try {
         _testDb = Some(peerConn.db)
         val txs     = peerConn.log.txRange(nextTimePoint, null).iterator()
-        var txStmts = new util.ArrayList[jList[_]]()
+        var txStmts = new ju.ArrayList[jList[_]]()
         while (txs.hasNext) {
           val txDatoms = txs.next().get(datomic.Log.DATA).asInstanceOf[jList[Datom]]
-          txStmts = new util.ArrayList[jList[_]](txDatoms.size())
+          txStmts = new ju.ArrayList[jList[_]](txDatoms.size())
           txDatoms.forEach { datom =>
             // Don't reverse timestamps
             if (datom.a != txInstId) {
@@ -782,12 +782,12 @@ case class Conn_Peer(
   )(implicit ec: ExecutionContext): Future[T] = {
     val p = Promise[T]()
     listenF.addListener(
-      new java.lang.Runnable {
+      new jl.Runnable {
         override def run: Unit = {
           try {
             p.success(listenF.get())
           } catch {
-            case e: java.util.concurrent.ExecutionException =>
+            case e: ju.concurrent.ExecutionException =>
               println("---- ExecutionException: -------------\n" + listenF +
                 javaStmts.fold("")(stmts => "\n---- javaStmts: ----\n" +
                   stmts.asScala.toList.mkString("\n"))

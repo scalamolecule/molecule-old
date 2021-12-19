@@ -5,7 +5,7 @@ import molecule.datomic.api.in1_out4._
 import molecule.core.ops.exception.VerifyModelException
 import moleculeTests.setup.AsyncTestSuite
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 
 object EdgeManyOtherInsert extends AsyncTestSuite {
 

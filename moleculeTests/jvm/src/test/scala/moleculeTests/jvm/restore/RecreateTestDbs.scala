@@ -12,11 +12,11 @@ import moleculeTests.dataModels.examples.datomic.seattle.schema.SeattleSchema
 import moleculeTests.dataModels.examples.gremlin.gettingStarted.schema.{ModernGraph1Schema, ModernGraph2Schema}
 import moleculeTests.jvm.NonBlocking.{mbrainz, run}
 import moleculeTests.setup.AsyncTestSuite
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, Future}
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 
 
   // If running as App

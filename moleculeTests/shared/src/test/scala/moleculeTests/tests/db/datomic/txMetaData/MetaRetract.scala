@@ -6,7 +6,7 @@ import molecule.datomic.base.util.SystemPeerServer
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 
 object MetaRetract extends AsyncTestSuite {
 

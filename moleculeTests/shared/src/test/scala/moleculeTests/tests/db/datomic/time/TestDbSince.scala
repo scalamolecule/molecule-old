@@ -24,7 +24,7 @@ object TestDbSince extends AsyncTestSuite {
   }
 
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import molecule.core.util.Executor._
 
     "since: input types" - core { implicit futConn =>
       for {

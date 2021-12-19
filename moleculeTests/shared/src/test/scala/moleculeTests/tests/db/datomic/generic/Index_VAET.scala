@@ -8,7 +8,7 @@ import utest._
 object Index_VAET extends Base {
 
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import molecule.core.util.Executor._
 
     "Args" - core { implicit conn =>
       for {

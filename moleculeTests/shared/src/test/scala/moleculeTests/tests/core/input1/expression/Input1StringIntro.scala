@@ -28,7 +28,7 @@ object Input1StringIntro extends AsyncTestSuite {
   }
 
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import molecule.core.util.Executor._
     // Parameterized molecules have a `?` placeholder for an expected input value
     // and we call them "Input molecules".
 

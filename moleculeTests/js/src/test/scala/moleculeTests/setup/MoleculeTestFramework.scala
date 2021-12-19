@@ -13,6 +13,6 @@ class MoleculeTestFramework extends utest.runner.Framework with WebClient with B
     //    println("Tearing down JS MoleculeTestFramework")
 
     // Clear connection pool after each test suite run
-    moleculeAjax("localhost", 8080).wire[MoleculeRpc].clearConnPool()
+    moleculeAjax("localhost", 8080).wire[MoleculeRpc].clearConnPool
   }
 }

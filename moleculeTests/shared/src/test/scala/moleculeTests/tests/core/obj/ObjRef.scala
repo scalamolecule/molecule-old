@@ -7,7 +7,7 @@ import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.dataModels.core.ref.dsl.SelfJoin._
 import utest._
-import scala.concurrent.ExecutionContext.Implicits.global
+import molecule.core.util.Executor._
 
 object ObjRef extends AsyncTestSuite with Helpers {
 

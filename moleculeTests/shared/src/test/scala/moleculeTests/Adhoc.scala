@@ -22,7 +22,7 @@ object Adhoc extends AsyncTestSuite with Helpers {
 
 
   lazy val tests = Tests {
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import molecule.core.util.Executor._
 
     "core" - core { implicit futConn =>
       import moleculeTests.dataModels.core.base.dsl.CoreTest._
