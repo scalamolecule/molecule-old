@@ -11,7 +11,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     organization := "org.scalamolecule",
     organizationName := "ScalaMolecule",
     organizationHomepage := Some(url("http://www.scalamolecule.org")),
-    ThisBuild / version := "1.0.1",
+    ThisBuild / version := "1.0.2",
     ThisBuild / scalaVersion := "2.13.7",
     crossScalaVersions := Seq("2.12.15", "2.13.7"),
     scalacOptions := List(
@@ -68,7 +68,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
   val jvm: Seq[Def.Setting[_]] = {
     Seq(
       libraryDependencies ++= Seq(
-        "org.scalamolecule" %% "datomic-client-api-java-scala" % "1.0.2",
+        "org.scalamolecule" %% "datomic-client-api-java-scala" % "1.0.3",
         "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.1",
         "com.typesafe.akka" %% "akka-stream" % "2.6.17",
         "com.typesafe.akka" %% "akka-serialization-jackson" % "2.6.17",
