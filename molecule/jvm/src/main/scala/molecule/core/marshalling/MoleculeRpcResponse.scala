@@ -3,27 +3,26 @@ package molecule.core.marshalling
 import java.nio.ByteBuffer
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
-import akka.util.ByteString
 import boopickle.Default._
 import sloth.ServerFailure._
 import sloth._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.control.NonFatal
 
-case class MoleculeRpcHandler(interface: String, port: Int) extends BooPicklers {
+case class MoleculeRpcResponse(interface: String, port: Int) extends BooPicklers {
   implicit val system          : ActorSystem[Nothing]     = ActorSystem(Behaviors.empty, "MoleculeAjaxSystem")
   implicit val executionContext: ExecutionContextExecutor = system.executionContext
   val MoleculeRpc = "MoleculeRpc"
 
 
-  def moleculeRpcResult(
+  def moleculeRpcResponse(
     router: Router[ByteBuffer, Future],
     pathStr: String,
-    data: ByteString
+    argsData: ByteBuffer
   ): Future[Array[Byte]] = Future {
     try {
       val path       = pathStr.split("/").toList
-      val args       = Unpickle.apply[ByteBuffer].fromBytes(data.asByteBuffer)
+      val args       = Unpickle.apply[ByteBuffer].fromBytes(argsData)
       val callResult = router.apply(Request[ByteBuffer](path, args))
       callResult.toEither match {
         case Right(byteBufferResultFuture) => byteBufferResultFuture

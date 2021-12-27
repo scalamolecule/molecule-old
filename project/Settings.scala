@@ -11,7 +11,7 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     organization := "org.scalamolecule",
     organizationName := "ScalaMolecule",
     organizationHomepage := Some(url("http://www.scalamolecule.org")),
-    ThisBuild / version := "1.0.2",
+    ThisBuild / version := "1.0.3",
     ThisBuild / scalaVersion := "2.13.7",
     crossScalaVersions := Seq("2.12.15", "2.13.7"),
     scalacOptions := List(
@@ -116,40 +116,40 @@ object Settings extends SettingsDatomic with SettingsMolecule {
     // Ensure clojure loads correctly for async tests run from sbt
     Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat,
 
-    //        // Temporarily limit number of tests to be compiled by sbt (comment out this whole sbt setting to test all)
-    //        // Note that intellij doesn't recognize this setting - here you can right click on files and exclude
-    //        unmanagedSources / excludeFilter := {
-    //          val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
-    //          val allowed     = Seq(
-    ////            sharedTests + "/core/attr",
-    ////            sharedTests + "/core/attrMap",
-    ////            sharedTests + "/core/bidirectionals",
-    ////            sharedTests + "/core/crud",
-    ////            sharedTests + "/core/equality",
-    ////            sharedTests + "/core/expression",
-    ////            sharedTests + "/core/input1",
-    ////            sharedTests + "/core/input2",
-    ////            sharedTests + "/core/input3",
-    ////            sharedTests + "/core/json",
-    ////            sharedTests + "/core/nested",
-    ////            sharedTests + "/core/obj",
-    ////            sharedTests + "/core/ref",
-    ////            sharedTests + "/db/datomic/composite",
-    ////            sharedTests + "/db/datomic/entity",
-    ////            sharedTests + "/db/datomic/generic",
-    ////            sharedTests + "/db/datomic/schemaDef",
-    ////            sharedTests + "/db/datomic/time",
-    ////            sharedTests + "/db/datomic/txMetaData",
-    //            sharedTests + "/examples/datomic/dayOfDatomic",
-    ////            sharedTests + "/examples/datomic/mbrainz",
-    ////            sharedTests + "/examples/datomic/seattle",
-    ////            sharedTests + "/examples/gremlin/gettingStarted",
-    ////            sharedTests + "/Adhoc.scala",
-    //          )
-    //          new SimpleFileFilter(f =>
-    //            f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
-    //          )
-    //        }
+    //    // Temporarily limit number of tests to be compiled by sbt (comment out this whole sbt setting to test all)
+    //    // Note that intellij doesn't recognize this setting - here you can right click on files and exclude
+    //    unmanagedSources / excludeFilter := {
+    //      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
+    //      val allowed     = Seq(
+    ////        sharedTests + "/core/attr",
+    ////        sharedTests + "/core/attrMap",
+    ////        sharedTests + "/core/bidirectionals",
+    ////        sharedTests + "/core/crud",
+    ////        sharedTests + "/core/equality",
+    ////        sharedTests + "/core/expression",
+    ////        sharedTests + "/core/input1",
+    ////        sharedTests + "/core/input2",
+    ////        sharedTests + "/core/input3",
+    ////        sharedTests + "/core/json",
+    ////        sharedTests + "/core/nested",
+    ////        sharedTests + "/core/obj",
+    ////        sharedTests + "/core/ref",
+    ////        sharedTests + "/db/datomic/composite",
+    ////        sharedTests + "/db/datomic/entity",
+    ////        sharedTests + "/db/datomic/generic",
+    ////        sharedTests + "/db/datomic/schemaDef",
+    ////        sharedTests + "/db/datomic/time",
+    ////        sharedTests + "/db/datomic/txMetaData",
+    ////        sharedTests + "/examples/datomic/dayOfDatomic",
+    ////        sharedTests + "/examples/datomic/mbrainz",
+    ////        sharedTests + "/examples/datomic/seattle",
+    ////        sharedTests + "/examples/gremlin/gettingStarted",
+    //        sharedTests + "/Adhoc.scala",
+    //      )
+    //      new SimpleFileFilter(f =>
+    //        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
+    //      )
+    //    }
   )
 
 

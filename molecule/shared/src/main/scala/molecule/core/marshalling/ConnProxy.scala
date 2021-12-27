@@ -1,8 +1,7 @@
 package molecule.core.marshalling
 
 import java.util.UUID
-import molecule.core.data.SchemaTransaction
-import molecule.datomic.base.ast.dbView.{AsOf, DbView, History, TxLong}
+import molecule.datomic.base.ast.dbView.DbView
 
 /** Proxy connection on the client side.
  *

@@ -9,7 +9,7 @@ import scala.concurrent.{Future, Promise}
 import scala.scalajs.js.typedarray.TypedArrayBufferOps._
 import scala.scalajs.js.typedarray._
 
-case class MoleculePost(interface: String, port: Int)
+case class MoleculeRpcRequest(interface: String, port: Int)
   extends RequestTransport[ByteBuffer, Future] with BooPicklers {
 
   case class PostException(xhr: dom.XMLHttpRequest) extends Exception {
@@ -37,7 +37,10 @@ case class MoleculePost(interface: String, port: Int)
     req.timeout = 0
     req.withCredentials = false
     req.setRequestHeader("Content-Type", "application/octet-stream")
-    req.send(requestData)
+    if (requestData == null)
+      req.send()
+    else
+      req.send(requestData)
 
     promise.future.recover {
       // Failed Future

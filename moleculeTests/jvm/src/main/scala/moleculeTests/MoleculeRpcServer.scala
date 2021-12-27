@@ -8,22 +8,18 @@ import akka.http.scaladsl.server.Route
 import boopickle.Default._
 import cats.implicits._
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
-import molecule.core.marshalling.{MoleculeRpc, MoleculeRpcHandler}
+import molecule.core.marshalling.{MoleculeRpc, MoleculeRpcResponse}
+import molecule.core.util.Executor.global
 import molecule.datomic.base.marshalling.DatomicRpc
 import sloth._
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success}
-import molecule.core.util.Executor._
 
-/** Akka Http Ajax responder implementation
- *
- * Any server solution that respond on
- *
- */
-object MoleculeAjaxResponder extends MoleculeRpcHandler("localhost", 8080) with App {
+/** Akka Http RPC server responding to molecule ajax requests */
+object MoleculeRpcServer extends MoleculeRpcResponse("localhost", 8080) with App {
 
-  lazy val router = Router[ByteBuffer, Future].route[MoleculeRpc](DatomicRpc())
+  lazy val router = Router[ByteBuffer, Future].route[MoleculeRpc](DatomicRpc()(global))
 
   Http()
     .newServerAt(interface, port)
@@ -44,18 +40,18 @@ object MoleculeAjaxResponder extends MoleculeRpcHandler("localhost", 8080) with 
     post {
       extractRequest { req =>
         req.entity match {
-          case HttpEntity.Strict(_, byteString) =>
-            complete(moleculeRpcResult(router, pathStr, byteString))
+          case HttpEntity.Strict(_, responseData) =>
+            complete(moleculeRpcResponse(router, pathStr, responseData.asByteBuffer))
 
           case HttpEntity.Default(_, _, chunks) =>
             complete(
               chunks.reduce(_ ++ _)
                 .runFoldAsync(Array.empty[Byte]) {
-                  case (_, byteString) => moleculeRpcResult(router, pathStr, byteString)
+                  case (_, responseData) => moleculeRpcResponse(router, pathStr, responseData.asByteBuffer)
                 }
             )
 
-          case other => complete("Unexpected HttpEntity in AjaxResponder: " + other)
+          case other => complete("Unexpected HttpEntity in MoleculeRpcServer: " + other)
         }
       }
     }
