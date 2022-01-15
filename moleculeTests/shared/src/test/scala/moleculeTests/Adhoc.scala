@@ -7,7 +7,7 @@ import molecule.core.exceptions.MoleculeException
 import molecule.core.ops.exception.VerifyModelException
 import molecule.core.util.Helpers
 import molecule.core.util.testing.expectCompileError
-import molecule.datomic.api.in3_out12._
+import molecule.datomic.api.in3_out18._
 import molecule.datomic.base.api.Datom
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.transform.Model2Query
@@ -34,8 +34,8 @@ object Adhoc extends AsyncTestSuite with Helpers {
 
 
 
-
       } yield ()
     }
+
   }
 }

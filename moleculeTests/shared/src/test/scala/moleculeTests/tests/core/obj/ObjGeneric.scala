@@ -96,7 +96,11 @@ object ObjGeneric extends AsyncTestSuite with Helpers {
         _ <- testData
 
         // :Ns/int attribute
-        intAttrId = if (system == SystemPeer) 73 else 74
+        intAttrId = (system, protocol) match {
+          case (SystemPeer, "free") => 64
+          case (SystemPeer, _)      => 73
+          case (_, _)               => 74
+        }
         intIndex = if (system == SystemPeer) Some(true) else None
         _ <- Schema
           .part.id.a(":Ns/int").nsFull.ns.attr.tpe.card.doc

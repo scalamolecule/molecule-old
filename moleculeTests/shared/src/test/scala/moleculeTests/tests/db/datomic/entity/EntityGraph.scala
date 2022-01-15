@@ -12,7 +12,7 @@ object EntityGraph extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
-    // See also molecule.examples.datomic.dayOfDatomic.ProductsAndOrders
+    // See also moleculeTests.tests.examples.datomic.dayOfDatomic.ProductsAndOrders
 
     "graph" - core { implicit conn =>
       for {

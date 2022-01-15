@@ -32,8 +32,9 @@ case class DatomicEntity_Peer(
 
   private[molecule] final override def rawValue(
     kw: String
-  )(implicit ec: ExecutionContext): Future[Any] =
+  )(implicit ec: ExecutionContext): Future[Any] = {
     Future(datomicEntity.get(kw))
+  }
 
 
   private[molecule] final def toScala(

@@ -20,7 +20,10 @@ sealed trait ConnProxy {
   /** Seq of edn strings to transact schema. Supplied from generated boilerplate code. */
   val schema: Seq[String]
 
-  /** Map of attribute meta data. Supplied from generated boilerplate code. */
+  /** Map of attribute meta data. Supplied from generated boilerplate code.
+   *
+   * Attr name -> (orderIndex, type string)
+   * */
   val attrMap: Map[String, (Int, String)]
 
   /** Internal setting for test db status

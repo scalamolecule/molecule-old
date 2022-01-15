@@ -106,19 +106,19 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.date.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "date": "2001-07-01",
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "date": "2001-07-01",
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.uuid.Refs1.*(Ref1.int1).getJson.map(_ ==>
           s"""{
@@ -138,19 +138,19 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.uri.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "uri": "uri1",
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "uri": "uri1",
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.enumm.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
@@ -283,22 +283,22 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.dates.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "dates": [
-             |          "2001-07-01",
-             |          "2002-01-01"
-             |        ],
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "dates": [
+            |          "2001-07-01",
+            |          "2002-01-01"
+            |        ],
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.uuids.Refs1.*(Ref1.int1).getJson.map(_ ==>
           s"""{
@@ -321,61 +321,61 @@ object JsonNestedTypes extends AsyncTestSuite {
         _ <- if (system == SystemPeerServer) {
           Ns.uris.Refs1.*(Ref1.int1).getJson.map(_ ==>
             """{
-               |  "data": {
-               |    "Ns": [
-               |      {
-               |        "uris": [
-               |          "uri1",
-               |          "uri2"
-               |        ],
-               |        "Refs1": [
-               |          {
-               |            "int1": 1
-               |          }
-               |        ]
-               |      }
-               |    ]
-               |  }
-               |}""".stripMargin)
+              |  "data": {
+              |    "Ns": [
+              |      {
+              |        "uris": [
+              |          "uri1",
+              |          "uri2"
+              |        ],
+              |        "Refs1": [
+              |          {
+              |            "int1": 1
+              |          }
+              |        ]
+              |      }
+              |    ]
+              |  }
+              |}""".stripMargin)
         } else {
           Ns.uris.Refs1.*(Ref1.int1).getJson.map(_ ==>
             """{
-               |  "data": {
-               |    "Ns": [
-               |      {
-               |        "uris": [
-               |          "uri1",
-               |          "uri2"
-               |        ],
-               |        "Refs1": [
-               |          {
-               |            "int1": 1
-               |          }
-               |        ]
-               |      }
-               |    ]
-               |  }
-               |}""".stripMargin)
+              |  "data": {
+              |    "Ns": [
+              |      {
+              |        "uris": [
+              |          "uri1",
+              |          "uri2"
+              |        ],
+              |        "Refs1": [
+              |          {
+              |            "int1": 1
+              |          }
+              |        ]
+              |      }
+              |    ]
+              |  }
+              |}""".stripMargin)
         }
 
         _ <- Ns.enums.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "enums": [
-             |          "enum1",
-             |          "enum2"
-             |        ],
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "enums": [
+            |          "enum1",
+            |          "enum2"
+            |        ],
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.bigInts.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
@@ -528,22 +528,22 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.dateMap.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "dateMap": {
-             |          "a": "2001-07-01",
-             |          "b": "2002-01-01"
-             |        },
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "dateMap": {
+            |          "a": "2001-07-01",
+            |          "b": "2002-01-01"
+            |        },
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.uuidMap.Refs1.*(Ref1.int1).getJson.map(_ ==>
           s"""{
@@ -565,22 +565,22 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.uriMap.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "uriMap": {
-             |          "b": "uri2",
-             |          "a": "uri1"
-             |        },
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "uriMap": {
+            |          "b": "uri2",
+            |          "a": "uri1"
+            |        },
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.bigIntMap.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
@@ -839,29 +839,29 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(9).uri$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 9,
-             |        "uri$": null,
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int": 9,
-             |        "uri$": "uri2",
-             |        "Refs1": [
-             |          {
-             |            "int1": 2
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 9,
+            |        "uri$": null,
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 9,
+            |        "uri$": "uri2",
+            |        "Refs1": [
+            |          {
+            |            "int1": 2
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.int(10).enumm$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
@@ -1074,46 +1074,65 @@ object JsonNestedTypes extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        //    if (system == DatomicPeer) {
-        //      // Bug, where only one boolean value is returned
-        //      _ <- Ns.int(6).bools$.Refs1.*(Ref1.int1).getJson.map(_ ==>
-        //        """{
-        //          |{"Ns.int": 6, "Ns.bools": null, "Ns.refs1": [
-        //          |   {"Ref1.int1": 1}]},
-        //          |{"Ns.int": 6, "Ns.bools": [true], "Ns.refs1": [
-        //          |   {"Ref1.int1": 2}]}
-        //          |]""".stripMargin)
-        //    } else {
-        //    }
-        // Correct output
-        _ <- Ns.int(6).bools$.Refs1.*(Ref1.int1).getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "int": 6,
-            |        "bools$": null,
-            |        "Refs1": [
-            |          {
-            |            "int1": 1
-            |          }
-            |        ]
-            |      },
-            |      {
-            |        "int": 6,
-            |        "bools$": [
-            |          false,
-            |          true
-            |        ],
-            |        "Refs1": [
-            |          {
-            |            "int1": 2
-            |          }
-            |        ]
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin)
+        _ <- if (protocol == "free") {
+          // For some reason, Datomic Free returns only one boolean for a card-many attr.
+          Ns.int(6).bools$.Refs1.*(Ref1.int1).getJson.map(_ ==>
+            """{
+              |  "data": {
+              |    "Ns": [
+              |      {
+              |        "int": 6,
+              |        "bools$": null,
+              |        "Refs1": [
+              |          {
+              |            "int1": 1
+              |          }
+              |        ]
+              |      },
+              |      {
+              |        "int": 6,
+              |        "bools$": [
+              |          true
+              |        ],
+              |        "Refs1": [
+              |          {
+              |            "int1": 2
+              |          }
+              |        ]
+              |      }
+              |    ]
+              |  }
+              |}""".stripMargin)
+        } else {
+          Ns.int(6).bools$.Refs1.*(Ref1.int1).getJson.map(_ ==>
+            """{
+              |  "data": {
+              |    "Ns": [
+              |      {
+              |        "int": 6,
+              |        "bools$": null,
+              |        "Refs1": [
+              |          {
+              |            "int1": 1
+              |          }
+              |        ]
+              |      },
+              |      {
+              |        "int": 6,
+              |        "bools$": [
+              |          false,
+              |          true
+              |        ],
+              |        "Refs1": [
+              |          {
+              |            "int1": 2
+              |          }
+              |        ]
+              |      }
+              |    ]
+              |  }
+              |}""".stripMargin)
+        }
 
         _ <- Ns.int(7).dates$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
@@ -1175,119 +1194,119 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(9).uris$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 9,
-             |        "uris$": null,
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int": 9,
-             |        "uris$": [
-             |          "uri1",
-             |          "uri2"
-             |        ],
-             |        "Refs1": [
-             |          {
-             |            "int1": 2
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 9,
+            |        "uris$": null,
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 9,
+            |        "uris$": [
+            |          "uri1",
+            |          "uri2"
+            |        ],
+            |        "Refs1": [
+            |          {
+            |            "int1": 2
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.int(10).enums$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 10,
-             |        "enums$": null,
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int": 10,
-             |        "enums$": [
-             |          "enum1",
-             |          "enum2"
-             |        ],
-             |        "Refs1": [
-             |          {
-             |            "int1": 2
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 10,
+            |        "enums$": null,
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 10,
+            |        "enums$": [
+            |          "enum1",
+            |          "enum2"
+            |        ],
+            |        "Refs1": [
+            |          {
+            |            "int1": 2
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.int(11).bigInts$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 11,
-             |        "bigInts$": null,
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int": 11,
-             |        "bigInts$": [
-             |          1,
-             |          2
-             |        ],
-             |        "Refs1": [
-             |          {
-             |            "int1": 2
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 11,
+            |        "bigInts$": null,
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 11,
+            |        "bigInts$": [
+            |          1,
+            |          2
+            |        ],
+            |        "Refs1": [
+            |          {
+            |            "int1": 2
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
 
         _ <- Ns.int(12).bigDecs$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 12,
-             |        "bigDecs$": null,
-             |        "Refs1": [
-             |          {
-             |            "int1": 1
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int": 12,
-             |        "bigDecs$": [
-             |          1.0,
-             |          2.0
-             |        ],
-             |        "Refs1": [
-             |          {
-             |            "int1": 2
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin)
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 12,
+            |        "bigDecs$": null,
+            |        "Refs1": [
+            |          {
+            |            "int1": 1
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 12,
+            |        "bigDecs$": [
+            |          1.0,
+            |          2.0
+            |        ],
+            |        "Refs1": [
+            |          {
+            |            "int1": 2
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 

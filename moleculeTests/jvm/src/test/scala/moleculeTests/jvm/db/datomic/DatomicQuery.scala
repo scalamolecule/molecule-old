@@ -86,24 +86,24 @@ object DatomicQuery extends AsyncTestSuite {
               |       :where [?e :release/artists ?artist]]""".stripMargin,
             ledZeppelin,
             "[:Release/name]"
-          ).map(_ ==> List(
-            List(":Release/name" -> "Led Zeppelin II"),
-            List(":Release/name" -> "Led Zeppelin II"),
-            List(":Release/name" -> "Led Zeppelin II"),
-            List(":Release/name" -> "Led Zeppelin II"),
-            List(":Release/name" -> "Immigrant Song / Hey Hey What Can I Do"),
-            List(":Release/name" -> "Immigrant Song / Hey Hey What Can I Do"),
-            List(":Release/name" -> "Houses of the Holy"),
+          ).map(_.sortBy(_.head.toString) ==> List(
             List(":Release/name" -> "Heartbreaker / Bring It On Home"),
+            List(":Release/name" -> "Houses of the Holy"),
+            List(":Release/name" -> "Immigrant Song / Hey Hey What Can I Do"),
+            List(":Release/name" -> "Immigrant Song / Hey Hey What Can I Do"),
+            List(":Release/name" -> "Led Zeppelin II"),
+            List(":Release/name" -> "Led Zeppelin II"),
+            List(":Release/name" -> "Led Zeppelin II"),
+            List(":Release/name" -> "Led Zeppelin II"),
             List(":Release/name" -> "Led Zeppelin III"),
             List(":Release/name" -> "Led Zeppelin III"),
             List(":Release/name" -> "Led Zeppelin III"),
+            List(":Release/name" -> "Led Zeppelin IV"),
+            List(":Release/name" -> "Led Zeppelin IV"),
+            List(":Release/name" -> "Led Zeppelin"),
+            List(":Release/name" -> "Led Zeppelin"),
+            List(":Release/name" -> "Led Zeppelin"),
             List(":Release/name" -> "Whole Lotta Love / Living Loving Maid"),
-            List(":Release/name" -> "Led Zeppelin IV"),
-            List(":Release/name" -> "Led Zeppelin IV"),
-            List(":Release/name" -> "Led Zeppelin"),
-            List(":Release/name" -> "Led Zeppelin"),
-            List(":Release/name" -> "Led Zeppelin"),
           ))
         } else Future.unit
       } yield ()

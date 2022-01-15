@@ -5,6 +5,7 @@ import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
 import molecule.core.util.Executor._
+import moleculeTests.Adhoc.useFree
 
 
 object JsonNested extends AsyncTestSuite {
@@ -59,36 +60,59 @@ object JsonNested extends AsyncTestSuite {
         }
 
         // NestedOpt
-        _ <- Ns.str.Refs1.*?(Ref1.int1).getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "str": "a",
-            |        "Refs1": [
-            |          {
-            |            "int1": 1
-            |          }
-            |        ]
-            |      },
-            |      {
-            |        "str": "b",
-            |        "Refs1": [
-            |          {
-            |            "int1": 2
-            |          },
-            |          {
-            |            "int1": 3
-            |          }
-            |        ]
-            |      },
-            |      {
-            |        "str": "c",
-            |        "Refs1": []
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin)
+        _ <- {
+          val a =
+            """{
+              |        "str": "a",
+              |        "Refs1": [
+              |          {
+              |            "int1": 1
+              |          }
+              |        ]
+              |      }""".stripMargin
+          val b =
+            """{
+              |        "str": "b",
+              |        "Refs1": [
+              |          {
+              |            "int1": 2
+              |          },
+              |          {
+              |            "int1": 3
+              |          }
+              |        ]
+              |      }""".stripMargin
+          val c =
+            """{
+              |        "str": "c",
+              |        "Refs1": []
+              |      }""".stripMargin
+
+          Ns.str.Refs1.*?(Ref1.int1).getJson.map(_ ==>
+            (if (useFree) {
+              s"""{
+                 |  "data": {
+                 |    "Ns": [
+                 |      $c,
+                 |      $a,
+                 |      $b
+                 |    ]
+                 |  }
+                 |}""".
+                stripMargin
+            } else {
+              s"""{
+                 |  "data": {
+                 |    "Ns": [
+                 |      $a,
+                 |      $b,
+                 |      $c
+                 |    ]
+                 |  }
+                 |}""".stripMargin
+            })
+          )
+        }
 
         // Nested
         _ <- Ns.str.Refs1.*(Ref1.int1).getJson.map(_ ==>

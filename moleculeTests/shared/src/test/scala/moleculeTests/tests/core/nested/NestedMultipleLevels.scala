@@ -48,37 +48,60 @@ object NestedMultipleLevels extends AsyncTestSuite {
           )),
           ("b", List())
         ))
-        _ <- Ns.str.Refs1.*?(Ref1.int1.Refs2.*?(Ref2.int2)).getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "str": "a",
-            |        "Refs1": [
-            |          {
-            |            "int1": 1,
-            |            "Refs2": [
-            |              {
-            |                "int2": 11
-            |              },
-            |              {
-            |                "int2": 12
-            |              }
-            |            ]
-            |          },
-            |          {
-            |            "int1": 2,
-            |            "Refs2": []
-            |          }
-            |        ]
-            |      },
-            |      {
-            |        "str": "b",
-            |        "Refs1": []
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin)
+
+        _ <- {
+          val a =
+            """{
+              |        "str": "a",
+              |        "Refs1": [
+              |          {
+              |            "int1": 1,
+              |            "Refs2": [
+              |              {
+              |                "int2": 11
+              |              },
+              |              {
+              |                "int2": 12
+              |              }
+              |            ]
+              |          },
+              |          {
+              |            "int1": 2,
+              |            "Refs2": []
+              |          }
+              |        ]
+              |      }""".stripMargin
+          val b =
+            """{
+              |        "str": "b",
+              |        "Refs1": []
+              |      }""".stripMargin
+
+          Ns.str.Refs1.*?(Ref1.int1.Refs2.*?(Ref2.int2)).getJson.map(_ ==>
+            (if (useFree) {
+              println("------ free")
+              s"""{
+                 |  "data": {
+                 |    "Ns": [
+                 |      $b,
+                 |      $a
+                 |    ]
+                 |  }
+                 |}""".
+                stripMargin
+            } else {
+              println("------ dev")
+              s"""{
+                 |  "data": {
+                 |    "Ns": [
+                 |      $a,
+                 |      $b
+                 |    ]
+                 |  }
+                 |}""".stripMargin
+            })
+          )
+        }
 
         _ <- Ns.str.Refs1.*?(Ref1.int1).get.map(_.sortBy(_._1) ==> List(
           ("a", List(1, 2)),

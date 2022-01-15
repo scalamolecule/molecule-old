@@ -105,31 +105,57 @@ Copy all lines below and paste into terminal to start the Peer Server and having
 
 Now you can run molecule tests or projects against peer, peer-server and dev-local (cloud).
 
-## Test
-Run asynchronous uTest suites in sbt:
+## Test molecules in JVM project
+Run jvm tests in sbt:
 ```
 sbt
+project moleculeTestsJVM
 
 // Run all tests (against scala 2.13 as default)
-sbt:molecule> test
+sbt:moleculeTests> test
 
 // Run selection of tests (against scala 2.13 as default)
-sbt:molecule> testOnly molecule.tests.*
-sbt:molecule> testOnly molecule.tests.core.ref.*
-sbt:molecule> testOnly molecule.tests.core.ref.TwoStepQueries
-
-// Test against scala 2.13 explicitly
-sbt:molecule> ++2.13.6; testOnly molecule.tests.*
-sbt:molecule> ++2.13.6; testOnly molecule.tests.core.ref.*
-sbt:molecule> ++2.13.6; testOnly molecule.tests.core.ref.TwoStepQueries
+sbt:moleculeTests> testOnly moleculeTests.tests.*
+sbt:moleculeTests> testOnly moleculeTests.tests.core.ref.*
+sbt:moleculeTests> testOnly moleculeTests.tests.core.ref.TwoStepQueries
 
 // Test against scala 2.12 
-sbt:molecule> ++2.12.15; test
-sbt:molecule> ++2.12.15; testOnly molecule.tests.*
-sbt:molecule> ++2.12.15; testOnly molecule.tests.core.ref.*
-sbt:molecule> ++2.12.15; testOnly molecule.tests.core.ref.TwoStepQueries
+sbt:moleculeTests> ++2.12.15; test
+sbt:moleculeTests> ++2.12.15; testOnly moleculeTests.tests.*
+sbt:moleculeTests> ++2.12.15; testOnly moleculeTests.tests.core.ref.*
+sbt:moleculeTests> ++2.12.15; testOnly moleculeTests.tests.core.ref.TwoStepQueries
 ```
 Remember to ctrl-c the sbt process to avoid process locks if testing in IDE.
+
+
+## Test molecules in JS project
+To run molecule tests from the client/js, a jvm server has to be running to receive ajax calls from the client. It can be of any stack, as long as it can respond to ajax calls. In our test setup we use `MoleculeRpcServer` which is just a simple Akka-Http server with this only purpose. But it can be your server running just serving molecule ajax requests too.
+
+In one process in the terminal we start the `MoleculeRpcServer` with
+
+    sbt
+    moleculeTestsJVM/run
+
+And in another we run the tests, this time just choosing the JS project. From here on, all tests are run as with the jvm.
+```
+sbt
+project moleculeTestsJS
+
+// Run all tests (against scala 2.13 as default)
+sbt:moleculeTests> test
+
+// Run selection of tests (against scala 2.13 as default)
+sbt:moleculeTests> testOnly moleculeTests.tests.*
+sbt:moleculeTests> testOnly moleculeTests.tests.core.ref.*
+sbt:moleculeTests> testOnly moleculeTests.tests.core.ref.TwoStepQueries
+
+// Test against scala 2.12 
+sbt:moleculeTests> ++2.12.15; test
+sbt:moleculeTests> ++2.12.15; testOnly moleculeTests.tests.*
+sbt:moleculeTests> ++2.12.15; testOnly moleculeTests.tests.core.ref.*
+sbt:moleculeTests> ++2.12.15; testOnly moleculeTests.tests.core.ref.TwoStepQueries
+```
+
 
 ## Further info
 

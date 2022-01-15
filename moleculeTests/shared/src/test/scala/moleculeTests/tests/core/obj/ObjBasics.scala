@@ -6,6 +6,7 @@ import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
 import molecule.core.util.Executor._
+import moleculeTests.Adhoc.useFree
 
 
 object ObjBasics extends AsyncTestSuite with Helpers {
@@ -54,12 +55,21 @@ object ObjBasics extends AsyncTestSuite with Helpers {
         )
 
         // third row not returned since `str` is tacitly required
-        _ <- Ns.int.str_.bool$.getObjs.collect { case List(o1, o2) =>
-          o1.int ==> 1
-          o1.bool$ ==> Some(true)
+        // (free/pro output sorted differently)
+        _ <- Ns.int.str_.bool$.getObjs.collect {
+          case List(o2, o1) if useFree =>
+            o1.int ==> 1
+            o1.bool$ ==> Some(true)
 
-          o2.int ==> 2
-          o2.bool$ ==> None
+            o2.int ==> 2
+            o2.bool$ ==> None
+
+          case List(o1, o2) =>
+            o1.int ==> 1
+            o1.bool$ ==> Some(true)
+
+            o2.int ==> 2
+            o2.bool$ ==> None
         }
       } yield ()
     }

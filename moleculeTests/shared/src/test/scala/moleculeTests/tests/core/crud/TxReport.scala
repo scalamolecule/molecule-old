@@ -7,13 +7,19 @@ import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
 import molecule.core.util.Executor._
+import moleculeTests.Adhoc.{protocol, system}
 
 
 object TxReport extends AsyncTestSuite {
   val txInstAttrId = 50
 
   // Attribute ids for dev-local 1 higher
-  val d = if (system == SystemPeer) 0 else 1
+  val d = (system, protocol) match {
+    case (SystemPeer, "free") => -9
+    case (SystemPeer, _)      => 0
+    case (_, "free")          => -8
+    case (_, _)               => 1
+  }
 
   lazy val tests = Tests {
 
@@ -26,7 +32,7 @@ object TxReport extends AsyncTestSuite {
         tx = txReport.tx
         txInstant = txReport.txInstant
 
-        _ = txReport.txData ==> List(
+        _ = txReport.txData.sortBy(d => d.a) ==> List(
           Datom(tx, txInstAttrId, txInstant, tx, true),
           Datom(e, 72 + d, "a", tx, true),
           Datom(e, 73 + d, 1, tx, true),

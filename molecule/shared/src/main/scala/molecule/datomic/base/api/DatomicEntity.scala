@@ -35,7 +35,7 @@ trait DatomicEntity {
    * `retract(eids, txMetaDataMolecules*)` in molecule.datomic.base.api.EntityOps.
    *
    * @group retract
-   * @param ec Implicit [[scala.concurrent.ExecutionContext]]
+   * @param ec Implicit ExecutionContext
    * @return [[molecule.datomic.base.facade.TxReport]] with result of retraction
    */
   def retract(implicit ec: ExecutionContext): Future[TxReport]
@@ -69,7 +69,7 @@ trait DatomicEntity {
    * @group retract
    * @param txMeta1 tx meta data molecule
    * @param txMetaMore Optional additional tx meta data molecules
-   * @param ec Implicit [[scala.concurrent.ExecutionContext]]
+   * @param ec Implicit ExecutionContext
    * @return [[molecule.datomic.base.facade.TxReport]] with result of retraction
    */
   def retract(txMeta1: Molecule, txMetaMore: Molecule*)(implicit ec: ExecutionContext): Future[TxReport]
@@ -89,7 +89,7 @@ trait DatomicEntity {
    * }}}
    *
    * @group retract
-   * @param ec Implicit [[scala.concurrent.ExecutionContext]]
+   * @param ec Implicit ExecutionContext
    * @return Future[Seq[Statement]]
    * */
   def getRetractStmts(implicit ec: ExecutionContext): Future[Seq[Statement]]
@@ -113,7 +113,7 @@ trait DatomicEntity {
    * @group retract
    * @param txMeta1 tx meta data molecule
    * @param txMetaMore Optional additional tx meta data molecules
-   * @param ec Implicit [[scala.concurrent.ExecutionContext]]
+   * @param ec Implicit ExecutionContext
    * @return Future[Seq[Statement]]
    * */
   def getRetractStmts(txMeta1: Molecule, txMetaMore: Molecule*)(implicit ec: ExecutionContext): Future[Seq[Statement]]
@@ -135,7 +135,7 @@ trait DatomicEntity {
    * }}}
    *
    * @group retract
-   * @param ec Implicit [[scala.concurrent.ExecutionContext]]
+   * @param ec Implicit ExecutionContext
    * @return Unit (prints data to console)
    */
   def inspectRetract(implicit ec: ExecutionContext): Future[Unit]
@@ -162,7 +162,7 @@ trait DatomicEntity {
    * @group retract
    * @param txMeta1 tx meta data molecule
    * @param txMetaMore Optional additional tx meta data molecules
-   * @param ec Implicit [[scala.concurrent.ExecutionContext]]
+   * @param ec Implicit ExecutionContext
    * @return Unit (prints data to console)
    */
   def inspectRetract(txMeta1: Molecule, txMetaMore: Molecule*)(implicit ec: ExecutionContext): Future[Unit]

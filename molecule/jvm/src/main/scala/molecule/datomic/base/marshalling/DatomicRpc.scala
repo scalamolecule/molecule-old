@@ -6,7 +6,6 @@ import java.util
 import java.util.{Collections, Date, UUID, List => jList}
 import datomic.Peer.toT
 import datomic.Util._
-import datomic.core.db.{Db => ClientDb}
 import datomic.{Util, Database => PeerDb, Datom => PeerDatom}
 import datomicClient.ClojureBridge
 import datomicScala.client.api.{Datom => ClientDatom}
@@ -214,6 +213,15 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
       throw MoleculeException(s"Unexpected enum input: `$other`")
   }
 
+  private def getIdent(conn: Conn, eid: Any): Future[String] = {
+    conn.rawQuery(s"[:find ?idIdent :where [$eid :db/ident ?idIdent]]").map { rows =>
+      if (rows.size() != 1)
+        throw MoleculeException(s"Couldn't find attribute name of eid $eid in saved schema.")
+      else
+        rows.iterator().next().get(0).toString
+    }
+  }
+
   def index2packed(
     connProxy: ConnProxy,
     api: String,
@@ -321,38 +329,42 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
             case x                     => throw MoleculeException("Unexpected PeerDatom element: " + x)
           }
 
+
           def clientDatomElement2packed(
             tOpt: Option[Long],
             attr: String
-          ): (StringBuffer, ClientDatom) => Future[StringBuffer] = attr match {
-            case "e"                   => (sb: StringBuffer, d: ClientDatom) => Future(add(sb, d.e.toString))
-            case "a"                   => (sb: StringBuffer, d: ClientDatom) =>
-              Future {
-                add(sb, adhocDb.getDatomicDb.asInstanceOf[ClientDb].ident(d.a).toString)
-                end(sb)
-              }
-            case "v"                   => (sb: StringBuffer, d: ClientDatom) =>
-              Future {
-                val a         = adhocDb.getDatomicDb.asInstanceOf[ClientDb].ident(d.a).toString
-                val (_, tpe)  = attrMap.getOrElse(a,
-                  throw MoleculeException(s"Unexpected attribute `$a` not found in attrMap.")
-                )
-                val tpePrefix = tpe + " " * (10 - tpe.length)
-                tpe match {
-                  case "String" => add(sb, tpePrefix + d.v.toString); end(sb)
-                  case "Date"   => add(sb, tpePrefix + date2str(d.v.asInstanceOf[Date]))
-                  case _        => add(sb, tpePrefix + d.v.toString)
+          ): (StringBuffer, ClientDatom) => Future[StringBuffer] = {
+            attr match {
+              case "e" => (sb: StringBuffer, d: ClientDatom) => Future(add(sb, d.e.toString))
+              case "a" => (sb: StringBuffer, d: ClientDatom) =>
+                getIdent(conn, d.a).map { attrName =>
+                  add(sb, attrName)
+                  end(sb)
                 }
-              }
-            case "t" if tOpt.isDefined => (sb: StringBuffer, _: ClientDatom) => Future(add(sb, tOpt.get.toString))
-            case "t"                   => (sb: StringBuffer, d: ClientDatom) => Future(add(sb, toT(d.tx).toString))
-            case "tx"                  => (sb: StringBuffer, d: ClientDatom) => Future(add(sb, d.tx.toString))
-            case "txInstant"           => (sb: StringBuffer, d: ClientDatom) =>
-              adhocDb.entity(conn, d.tx).rawValue(":db/txInstant").map { v =>
-                add(sb, date2str(v.asInstanceOf[Date]))
-              }
-            case "op"                  => (sb: StringBuffer, d: ClientDatom) => Future(add(sb, d.added.toString))
-            case x                     => throw MoleculeException("Unexpected ClientDatom element: " + x)
+
+              case "v" => (sb: StringBuffer, d: ClientDatom) =>
+                getIdent(conn, d.a).map { attrName =>
+                  val (_, tpe)  = attrMap.getOrElse(attrName,
+                    throw MoleculeException(s"Attribute name `$attrName` not found in attrMap.")
+                  )
+                  val tpePrefix = tpe + " " * (10 - tpe.length)
+                  tpe match {
+                    case "String" => add(sb, tpePrefix + d.v.toString); end(sb)
+                    case "Date"   => add(sb, tpePrefix + date2str(d.v.asInstanceOf[Date]))
+                    case _        => add(sb, tpePrefix + d.v.toString)
+                  }
+                }
+
+              case "t" if tOpt.isDefined => (sb: StringBuffer, _: ClientDatom) => Future(add(sb, tOpt.get.toString))
+              case "t"                   => (sb: StringBuffer, d: ClientDatom) => Future(add(sb, toT(d.tx).toString))
+              case "tx"                  => (sb: StringBuffer, d: ClientDatom) => Future(add(sb, d.tx.toString))
+              case "txInstant"           => (sb: StringBuffer, d: ClientDatom) =>
+                adhocDb.entity(conn, d.tx).rawValue(":db/txInstant").map { v =>
+                  add(sb, date2str(v.asInstanceOf[Date]))
+                }
+              case "op"                  => (sb: StringBuffer, d: ClientDatom) => Future(add(sb, d.added.toString))
+              case x                     => throw MoleculeException("Unexpected ClientDatom element: " + x)
+            }
           }
 
           def getPeerDatom2packed(tOpt: Option[Long]): (StringBuffer, PeerDatom) => Future[StringBuffer] = attrs.length match {

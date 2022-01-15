@@ -2,8 +2,8 @@ package molecule.core.api
 
 import java.util.concurrent.{ExecutionException => ExecutionExc}
 import molecule.core.ast.elements.{Composite, Model, TxMetaData}
-import molecule.core.exceptions.TxFnException
-import molecule.core.macros.TxFunctionCall
+import molecule.core.exceptions.{MoleculeException, TxFnException}
+import molecule.core.macros.ResolveTxFnCall
 import molecule.core.util.{Helpers, JavaUtil}
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
@@ -70,8 +70,7 @@ trait TxFunctions {
   def transactFn(
     txFnCall: Future[Seq[Statement]],
     txMolecules: Molecule*
-  )(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = macro TxFunctionCall.txFnCall
-
+  )(implicit conn: Future[Conn], ec: ExecutionContext): Future[TxReport] = macro ResolveTxFnCall.resolveTxFnCall
 
   /** Inspect tx function invocation
    * <br><br>
@@ -112,7 +111,7 @@ trait TxFunctions {
   def inspectTransactFn(
     txFnCall: Future[Seq[Statement]],
     txMolecules: Molecule*
-  )(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = macro TxFunctionCall.inspectTxFnCall
+  )(implicit conn: Future[Conn], ec: ExecutionContext): Future[Unit] = macro ResolveTxFnCall.resolveInspectTxFnCall
 }
 
 
@@ -152,20 +151,15 @@ object TxFunctions extends Helpers with JavaUtil {
 
   /** Invoke transaction function call */
   def txFnCall(
-    txFnDatomic: String,
+    classpathTxFn: String,
     txMolecules: Seq[Molecule],
     args: Any*
-  )(implicit futConn: Future[Conn], ec: ExecutionContext): Future[TxReport] = try {
-    for {
+  )(implicit futConn: Future[Conn], ec: ExecutionContext): Future[TxReport] = {
+    (for {
       conn <- futConn
-      db <- conn.db
 
-      // Install transaction function if not installed yet
-      txFns <- db.pull("[*]", s":$txFnDatomic")
-      _ <- if (txFns.size() == 1) {
-        // Only id returned - tx function needs to be installed in db
-        conn.transact(conn.buildTxFnInstall(txFnDatomic, args))
-      } else Future.unit
+      // Install database function in db that invokes the classpath tx function
+      _ <- conn.transact(conn.buildTxFnInvoker(classpathTxFn, args))
 
       txMetaStmts <- if (txMolecules.nonEmpty) {
         val txElements = txMolecules.flatMap { mol =>
@@ -175,36 +169,30 @@ object TxFunctions extends Helpers with JavaUtil {
           }
         }
         val txModel    = Model(Seq(TxMetaData(txElements)))
-        conn.model2stmts(txModel).saveStmts
-      } else Future(Nil)
+        conn.model2stmts(txModel).saveStmts.map(stmts => conn.stmts2java(stmts))
+      } else Future(list())
 
-      res <- {
-        // Build raw function call for Datomic using untyped function
-        val txFnInvocationClauses = list(
-          list(s":$txFnDatomic" +: txMetaStmts +: args.map(_.asInstanceOf[AnyRef]): _*)
-        )
+      // Invoke transaction function to retrieve result
+      res <- conn.transact(list(
+        list(s":${classpathTxFn}_invoker" +: txMetaStmts +: args.map(_.asInstanceOf[AnyRef]): _*)
+      ))
+    } yield res).recoverWith {
+      case e@MoleculeException(msg, _) => msg match {
+        case msg if msg.startsWith("scala") =>
+          Future.failed(TxFnException(excMissingScalaJar(e)))
 
-        // Invoke transaction function and retrieve result
-        conn.transact(txFnInvocationClauses)
+        case msg if msg.startsWith("java.lang.NoClassDefFoundError: molecule") =>
+          Future.failed(TxFnException(excMissingMoleculeClass(e)))
+
+        case msg if msg.startsWith("java.lang.NoSuchMethodError: molecule") =>
+          Future.failed(TxFnException(excMissingMoleculeMethod(e)))
+
+        case _ => Future.failed(TxFnException(e.getMessage))
       }
-    } yield res
-  } catch {
-    case e: ExecutionExc => e.getMessage match {
-      case msg if msg.startsWith("java.lang.NoClassDefFoundError: scala") =>
-        Future.failed(TxFnException(excMissingScalaJar(e)))
 
-      case msg if msg.startsWith("java.lang.NoClassDefFoundError: molecule") =>
-        Future.failed(TxFnException(excMissingMoleculeClass(e)))
-
-      case msg if msg.startsWith("java.lang.NoSuchMethodError: molecule") =>
-        Future.failed(TxFnException(excMissingMoleculeMethod(e)))
-
-      case _ =>
-        Future.failed(TxFnException(e.getMessage.drop(redundant)))
+      // Wrap other exceptions in a TxFnException to enable pattern matching
+      case NonFatal(e) => Future.failed(TxFnException(e.getMessage))
     }
-
-    case NonFatal(e) =>
-      Future.failed(TxFnException(e.getMessage.drop(redundant)))
   }
 
 

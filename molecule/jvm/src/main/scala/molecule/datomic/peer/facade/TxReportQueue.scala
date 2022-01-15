@@ -11,7 +11,7 @@ import scala.concurrent.duration._
 /** A transaction report queue associated with a connection.
  *
  * The molecule TxReportQueue is a wrapper of the
- * [[java.util.concurrent.BlockingQueue BlockingQueue]] returned by a Datomic
+ * java.util.concurrent.BlockingQueue returned by a Datomic
  * Peer Connection.
  *
  * This queue may be safely consumed from more than one thread.

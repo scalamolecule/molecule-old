@@ -1,46 +1,24 @@
 package moleculeTests
 
-import molecule.core.macros.rowAttr.{CastOptNested, CastTypes, JsonBase}
+import molecule.core.util.Executor._
 import molecule.core.util.Helpers
 import moleculeTests.setup.AsyncTestSuite
 import utest._
-import molecule.core.util.Executor._
-import scala.concurrent.Future
 
 
-object AdhocJvm extends AsyncTestSuite with Helpers
-  with CastTypes with CastOptNested with JsonBase {
+object AdhocJvm extends AsyncTestSuite with Helpers {
 
 
   lazy val tests = Tests {
 
-
     "adhocJvm" - core { implicit futConn =>
+
       for {
-        _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
 
 
-
       } yield ()
-
     }
-
-//    "adhocJvm2" - core { implicit futConn =>
-//      for {
-//        _ <- Future(1 ==> 1) // dummy to start monad chain if needed
-//        conn <- futConn
-//
-////        dd <- Log(Some(1000L)).e.a.v.get
-////        _ = println(dd)
-//        _ <- Ns.int(2).save
-//        _ <- Ns.int.get.map(_ ==> List(2))
-//
-//
-//      } yield ()
-//    }
-
-
 
 
     //    "adhoc" - products { implicit conn =>

@@ -40,14 +40,14 @@ object MoleculeRpcServer extends MoleculeRpcResponse("localhost", 8080) with App
     post {
       extractRequest { req =>
         req.entity match {
-          case HttpEntity.Strict(_, responseData) =>
-            complete(moleculeRpcResponse(router, pathStr, responseData.asByteBuffer))
+          case HttpEntity.Strict(_, argsData) =>
+            complete(moleculeRpcResponse(router, pathStr, argsData.asByteBuffer))
 
           case HttpEntity.Default(_, _, chunks) =>
             complete(
               chunks.reduce(_ ++ _)
                 .runFoldAsync(Array.empty[Byte]) {
-                  case (_, responseData) => moleculeRpcResponse(router, pathStr, responseData.asByteBuffer)
+                  case (_, argsData) => moleculeRpcResponse(router, pathStr, argsData.asByteBuffer)
                 }
             )
 

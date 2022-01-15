@@ -128,9 +128,9 @@ object Schema_AttrOptions extends AsyncTestSuite {
 
 
           // Get optional attribute indexing status with `index$`
-          _ <- Schema.attr_("bool", "str").a.index$.get.map(_ ==> List(
-            (":Ns/str", Some(true)),
+          _ <- Schema.attr_("bool", "str").a.index$.get.map(_.sortBy(_._1) ==> List(
             (":Ns/bool", Some(true)),
+            (":Ns/str", Some(true)),
           ))
 
           // Filter by applying optional attribute indexing status
@@ -256,9 +256,9 @@ object Schema_AttrOptions extends AsyncTestSuite {
           ))
 
           // Get optional attribute fulltext status with `fulltext$`
-          _ <- Schema.attr_("bool", "str").a.fulltext$.get.map(_ ==> List(
-            (":Ns/str", Some(true)),
+          _ <- Schema.attr_("bool", "str").a.fulltext$.get.map(_.sortBy(_._1) ==> List(
             (":Ns/bool", None),
+            (":Ns/str", Some(true)),
           ))
 
           // Filter by applying optional attribute fulltext search status

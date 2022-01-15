@@ -70,13 +70,13 @@ Add the following to your build files:
 `project/build.properties`:
 
 ```scala
-sbt.version=1.6.0
+sbt.version=1.6.1
 ```
 
 `project/buildinfo.sbt`:
 
 ```scala
-addSbtPlugin("org.scalamolecule" % "sbt-molecule" % "1.0.0")
+addSbtPlugin("org.scalamolecule" % "sbt-molecule" % "1.0.2")
 ```
 
 `build.sbt`:
@@ -91,7 +91,7 @@ lazy val yourProject = project.in(file("app"))
       Resolver.sonatypeRepo("releases")
     ),
     libraryDependencies ++= Seq(
-      "org.scalamolecule" %% "molecule" % "1.0.3",
+      "org.scalamolecule" %% "molecule" % "1.1.0",
       "com.datomic" % "datomic-free" % "0.9.5697" // or pro (see README_pro)
     ),
     moleculeSchemas := Seq("app") // paths to your schema definition files...
@@ -106,9 +106,6 @@ Molecule is available at [maven]((https://repo1.maven.org/maven2/org/scalamolecu
 #### Author
 Marc Grue
 
-
-#### Credits/inspiration/acknowledgements
-- [Datomisca](https://github.com/pellucidanalytics/datomisca), a Scala API for Datomic
 
 #### License
 Molecule is licensed under the [Apache License 2.0](http://en.wikipedia.org/wiki/Apache_license)

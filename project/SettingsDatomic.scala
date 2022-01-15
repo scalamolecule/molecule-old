@@ -2,62 +2,91 @@ import sbt._
 
 
 trait SettingsDatomic {
+  val notAvailable = "<not available>"
 
   // todo: make configurable
   // Replace with path to your Datomic downloads directory
   val datomicDistributionsDir = "/Users/mg/lib/datomic"
 
-
-  val testDatomicDir = new File(datomicDistributionsDir)
   if (!new File(datomicDistributionsDir).isDirectory)
     throw new IllegalArgumentException(
       "Please set your datomic downloads directory path in project.SettingsDatomic")
 
+
+  val testDatomicDir = new File(datomicDistributionsDir)
+
+  // Force specific free version with `sbt compile -Ddatomic.free=0.9.9999`
+  val datomicFreeVersion = sys.props.get("datomic.free").getOrElse(
+    // Use last published version
+    "0.9.5697"
+  )
+
+  if (!testDatomicDir.listFiles().exists(_.getName == s"datomic-free-$datomicFreeVersion"))
+    throw new IllegalArgumentException(
+      s"Please download datomic-free-$datomicFreeVersion to `$datomicDistributionsDir` " +
+        s"and run `bin/maven-install`.\n" +
+        s""
+    )
+
+  // Force Datomic to use a specific protocol (and db) by adding a protocol flag:
+  // `sbt <cmd> -Dprotocol=free` where <cmd> can be `compile`, `publish` etc.
+  val (datomicProtocol, datomicUseFree) = sys.props.get("protocol") match {
+    case Some("mem-free") => ("mem", true)
+    case Some("free")     => ("free", true)
+    case Some("dev")      => ("dev", false)
+    case _                => ("mem", false) // default: in-mem protocol with pro db
+  }
+
+  val datomicFreeVersions     = datomicVersions("datomic-free")
   val datomicProVersions      = datomicVersions("datomic-pro")
   val datomicDevLocalVersions = datomicVersions("dev-local")
 
-
-  // Force Datomic free version to be used with `sbt <cmd> -Dfree=true` where
-  // <cmd> can be `compile`, `publish` etc.
-  val useFree: Boolean = sys.props.get("free") match {
-    case Some("true") => true
-    case _            => false
-  }
-
-  val datomicProtocol = if (useFree || datomicProVersions.isEmpty) "free" else "dev"
-
-  if (!useFree && datomicProVersions.isEmpty)
+  if (datomicProtocol != "free" && datomicProVersions.isEmpty)
     throw new IllegalArgumentException(
       s"Please download Datomic starter/pro or " +
         s"switch to free version (see README_free and README_pro)")
 
-  if (!testDatomicDir.listFiles().exists(_.getName == "datomic-free-0.9.5697"))
-    throw new IllegalArgumentException(
-      s"Please download datomic-free-0.9.5697 to `$datomicDistributionsDir` " +
-        s"and run `bin/maven-install`.")
-
-
-  // Force specific free version with `sbt compile -Ddatomic.free=0.9.9999`
-  val datomicFreeVersion = sys.props.get("datomic.free").getOrElse(
-    if (datomicProVersions.nonEmpty) datomicProVersions.max else ""
-  )
 
   // Force specific pro version with `sbt compile -Ddatomic.pro=1.0.6202`
   val datomicProVersion = sys.props.get("datomic.pro").getOrElse(
-    if (datomicProVersions.nonEmpty) datomicProVersions.max else ""
+    if (datomicProVersions.nonEmpty) datomicProVersions.max else notAvailable
   )
 
   // Force specific dev-local version with `sbt compile -Ddatomic.dev-local=0.9.225`
   val datomicDevLocalVersion = sys.props.get("datomic.dev-local").getOrElse(
-    if (datomicDevLocalVersions.nonEmpty) datomicDevLocalVersions.max else ""
+    if (datomicDevLocalVersions.nonEmpty) datomicDevLocalVersions.max else notAvailable
   )
 
-  val datomicHome = datomicProtocol match {
-    case "dev"  => datomicDistributionsDir + "/datomic-pro-" + datomicProVersion
-    case "free" => datomicDistributionsDir + "/datomic-free-0.9.5697"
-  }
+  val datomicHome = datomicDistributionsDir + "/datomic-" + (
+    if (datomicUseFree) "free-" + datomicFreeVersion else "pro-" + datomicProVersion
+    )
+  //  val datomicHome = datomicProtocol match {
+  //    case "dev" | "pro" => datomicDistributionsDir + "/datomic-pro-" + datomicProVersion
+  //    case _             => datomicDistributionsDir + "/datomic-free-" + datomicFreeVersion
+  //  }
 
-  def datomicVersions(system: String): Seq[String] = {
+  val dbType = if (datomicProtocol == "mem") if (datomicUseFree) "(free)" else "(pro)" else ""
+
+  // print current datomic setup to console when running sbt commands from terminal
+  println(
+    s"""------------------------------------------------------------------------
+       |  Datomic protocol : $datomicProtocol $dbType
+       |  Datomic home     : $datomicHome
+       |
+       |  Available versions
+       |  free      : $datomicFreeVersions
+       |  pro       : $datomicProVersions
+       |  dev-Local : $datomicDevLocalVersions
+       |
+       |  Current versions
+       |  free      : $datomicFreeVersion
+       |  pro       : $datomicProVersion
+       |  dev-Local : $datomicDevLocalVersion
+       |------------------------------------------------------------------------""".stripMargin
+  )
+
+
+  private def datomicVersions(system: String): Seq[String] = {
     val datomicPath = Path.userHome + (System.getProperty("os.name").toLowerCase match {
       case os if os.contains("win")                        => "\\.m2\\repository\\com\\datomic\\"
       case os if os.contains("mac") | os.contains("linux") => "/.m2/repository/com/datomic/"
@@ -69,6 +98,7 @@ trait SettingsDatomic {
       val cmd     = system match {
         case "datomic-pro" => "bin/maven-install"
         case "dev-local"   => "./install"
+        case _             => "<no cmd>"
       }
       val distDir = new File(datomicDistributionsDir)
       if (distDir.listFiles() == null
@@ -82,29 +112,10 @@ trait SettingsDatomic {
       }
       // Need to install Datomic distribution
       throw new RuntimeException(
-          s"Please run `$cmd` in the $system distribution in $distDir to install " +
-            s"the system libraries to local .m2 repository.")
+        s"Please run `$cmd` in the $system distribution in $distDir to install " +
+          s"the system libraries to local .m2 repository.")
     }
     // Get list of Datomic system version names
     dir.listFiles.filter(_.isDirectory).map(_.getName).toList.sorted
   }
-
-  // print current datomic setup to console when running sbt commands from terminal
-  println(
-    s"""---- Datomic settings --------------------------------------------------
-       |  -Dfree                 : ${sys.props.get("free").getOrElse("<not set>")}
-       |  -Ddatomic.pro          : ${sys.props.get("datomic.pro").getOrElse("<not set>")}
-       |  -Ddatomic.free         : ${sys.props.get("datomic.free").getOrElse("<not set>")}
-       |
-       |  datomicProtocol        : $datomicProtocol
-       |  datomicDownloadsDir    : $datomicDistributionsDir
-       |  datomicHome            : $datomicHome
-       |
-       |  datomicProVersions     : $datomicProVersions
-       |  datomicProVersion      : $datomicProVersion
-       |
-       |  datomicDevLocalVersions: $datomicDevLocalVersions
-       |  datomicDevLocalVersion : $datomicDevLocalVersion
-       |------------------------------------------------------------------------""".stripMargin
-  )
 }

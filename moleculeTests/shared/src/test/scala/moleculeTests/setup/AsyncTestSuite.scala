@@ -7,33 +7,38 @@ import utest._
 import utest.framework.Formatter
 import scala.concurrent.Future
 
-
 trait AsyncTestSuite extends TestSuite with CoreData
   // Platform-specific implementations (JS/JVM)
   with AsyncTestSuiteImpl {
 
   val isJsPlatform: Boolean = isJsPlatform_
+  val protocol    : String  = protocol_
+  val useFree     : Boolean = useFree_
 
   val system: System = {
     SystemPeer
-//    SystemDevLocal
+    //        SystemDevLocal
 
     // Since we run asynchronous tests and can't recreate databases against the Peer Server,
-    // we can only be test reliably by restarting the Peer Server and test a single test at a time.
+    // we can only test reliably by restarting the Peer Server and test a single test at a time.
     //    SystemPeerServer
   }
 
-  val platformSystem = {
-    (if (isJsPlatform) "JS" else "JVM") + (system match {
-      case SystemPeer       => " Peer"
-      case SystemDevLocal   => " DevLocal"
-      case SystemPeerServer => " PeerServer"
-    })
+  val platformSystemProtocol = {
+    val dbType = if (protocol == "mem") if (useFree) "(free)" else "(pro)" else ""
+    (if (isJsPlatform) "JS" else "JVM") +
+      (system match {
+        case SystemPeer       => s" Peer $protocol $dbType"
+        case SystemDevLocal   => s" DevLocal $protocol"
+        case SystemPeerServer => s" PeerServer $protocol"
+      })
   }
 
   override def utestFormatter: Formatter = new Formatter {
     override def formatIcon(success: Boolean): ufansi.Str = {
-      formatResultColor(success)(if (success) s"+ $platformSystem" else s"X $platformSystem")
+      formatResultColor(success)(
+        (if (success) "+ " else "X ") + platformSystemProtocol
+      )
     }
   }
 
@@ -53,8 +58,7 @@ trait AsyncTestSuite extends TestSuite with CoreData
   def seattle[T](test: Future[Conn] => T): T = seattleImpl(test)
   def mbrainz[T](test: Future[Conn] => Future[T]): Future[T] = mbrainzImpl(test)
 
-
   // At least 1 ms delay between transactions involving Dates to avoid overlapping
   // (can't use Thread.sleep(1000) on js platform)
-  def delay = (1 to 10000).sum
+  def delay = (1 to 50000).sum
 }

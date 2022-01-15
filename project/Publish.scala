@@ -7,6 +7,8 @@ object Publish {
   lazy private val snapshots = "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
   lazy private val releases  = "Sonatype OSS Staging" at "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
+  lazy val docs = if (sys.props.get("docs").contains("true")) withDocs else withoutDocs
+
   lazy val withDocs = Seq(
     publishMavenStyle := true,
     publishTo := (if (isSnapshot.value) Some(snapshots) else Some(releases)),

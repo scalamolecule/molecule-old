@@ -21,9 +21,9 @@ object MetaNested extends AsyncTestSuite {
           (true, List("a", "b"), 1)
         ))
 
-        _ <- Ns.bool.Refs1.*?(Ref1.str1).Tx(Ref3.int3).get.map(_ ==> List(
-          (true, List("a", "b"), 1),
-          (false, Nil, 1)
+        _ <- Ns.bool.Refs1.*?(Ref1.str1).Tx(Ref3.int3).get.map(_.sortBy(_._1.toString) ==> List(
+          (false, Nil, 1),
+          (true, List("a", "b"), 1)
         ))
       } yield ()
     }
@@ -86,7 +86,7 @@ object MetaNested extends AsyncTestSuite {
         )
 
         _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
-          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
+          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_.sortBy(_._1) ==> List(
           ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", 5, "c"), (6, true)),
           ("B", Nil, ("b", 5, "c"), (6, true))
         ))

@@ -8,6 +8,7 @@ import scala.concurrent.Future
 
 object Index extends Base {
 
+  val freeAdj = if (useFree) -43 else 0
 
   lazy val tests = Tests {
     import molecule.core.util.Executor._
@@ -19,10 +20,10 @@ object Index extends Base {
         _ <- system match {
           case SystemPeer =>
             for {
-              _ <- EAVT.a.get.map(_.size ==> 684)
-              _ <- AEVT.a.get.map(_.size ==> 684)
-              _ <- VAET.a.get.map(_.size ==> 334)
-              r <- AVET.a.get.map(_.size ==> 215)
+              _ <- EAVT.a.get.map(_.size ==> 684 + (if (useFree) -43 else 0))
+              _ <- AEVT.a.get.map(_.size ==> 684 + (if (useFree) -43 else 0))
+              _ <- VAET.a.get.map(_.size ==> 334 + (if (useFree) -26 else 0))
+              r <- AVET.a.get.map(_.size ==> 215 + (if (useFree) -15 else 0))
               //              _ <- EAVT.a.get.map(_.size ==> 679)
               //              _ <- AEVT.a.get.map(_.size ==> 679)
               //              _ <- VAET.a.get.map(_.size ==> 331)

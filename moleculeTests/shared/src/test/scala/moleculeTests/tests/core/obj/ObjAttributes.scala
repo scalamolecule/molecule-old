@@ -129,7 +129,7 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
 
 
         _ <- Ns.int(1).str$.getObjs.map { oo =>
-          val List(o1, o2) = oo
+          val List(o1, o2) = oo.sortBy(_.str$.toString)
           o1.int ==> 1
           o1.str$ ==> None
           o2.int ==> 1
@@ -142,7 +142,7 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
         }
 
         _ <- Ns.long(2L).int$.getObjs.map { oo =>
-          val List(o1, o2) = oo
+          val List(o1, o2) = oo.sortBy(_.int$.toString)
           o1.long ==> 2L
           o1.int$ ==> None
           o2.long ==> 2L
@@ -155,7 +155,7 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
         }
 
         _ <- Ns.int(3).long$.getObjs.map { oo =>
-          val List(o1, o2) = oo
+          val List(o1, o2) = oo.sortBy(_.long$.toString)
           o1.int ==> 3
           o1.long$ ==> None
           o2.int ==> 3
@@ -168,7 +168,7 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
         }
 
         _ <- Ns.int(4).double$.getObjs.map { oo =>
-          val List(o1, o2) = oo
+          val List(o1, o2) = oo.sortBy(_.double$.toString)
           o1.int ==> 4
           o1.double$ ==> None
           o2.int ==> 4
@@ -181,7 +181,7 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
         }
 
         _ <- Ns.int(5).bool$.getObjs.map { oo =>
-          val List(o1, o2) = oo
+          val List(o1, o2) = oo.sortBy(_.bool$.toString)
           o1.int ==> 5
           o1.bool$ ==> None
           o2.int ==> 5
@@ -194,7 +194,7 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
         }
 
         _ <- Ns.int(6).date$.getObjs.map { oo =>
-          val List(o1, o2) = oo
+          val List(o1, o2) = oo.sortBy(_.date$.toString)
           o1.int ==> 6
           o1.date$ ==> None
           o2.int ==> 6
@@ -207,7 +207,7 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
         }
 
         _ <- Ns.int(7).uuid$.getObjs.map { oo =>
-          val List(o1, o2) = oo
+          val List(o1, o2) = oo.sortBy(_.uuid$.toString)
           o1.int ==> 7
           o1.uuid$ ==> None
           o2.int ==> 7
@@ -220,7 +220,7 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
         }
 
         _ <- Ns.int(8).uri$.getObjs.map { oo =>
-          val List(o1, o2) = oo
+          val List(o1, o2) = oo.sortBy(_.uri$.toString)
           o1.int ==> 8
           o1.uri$ ==> None
           o2.int ==> 8
@@ -233,7 +233,7 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
         }
 
         _ <- Ns.int(9).bigInt$.getObjs.map { oo =>
-          val List(o1, o2) = oo
+          val List(o1, o2) = oo.sortBy(_.bigInt$.toString)
           o1.int ==> 9
           o1.bigInt$ ==> None
           o2.int ==> 9
@@ -246,7 +246,7 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
         }
 
         _ <- Ns.int(10).bigDec$.getObjs.map { oo =>
-          val List(o1, o2) = oo
+          val List(o1, o2) = oo.sortBy(_.bigDec$.toString)
           o1.int ==> 10
           o1.bigDec$ ==> None
           o2.int ==> 10
@@ -259,7 +259,7 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
         }
 
         _ <- Ns.int(11).enumm$.getObjs.map { oo =>
-          val List(o1, o2) = oo
+          val List(o1, o2) = oo.sortBy(_.enumm$.toString)
           o1.int ==> 11
           o1.enumm$ ==> None
           o2.int ==> 11
@@ -272,7 +272,7 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
         }
 
         _ <- Ns.int(12).ref1$.getObjs.map { oo =>
-          val List(o1, o2) = oo
+          val List(o1, o2) = oo.sortBy(_.ref1$.toString)
           o1.int ==> 12
           o1.ref1$ ==> None
           o2.int ==> 12
@@ -361,7 +361,15 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
           o1.int ==> 5
           o1.bools$ ==> None
           o2.int ==> 5
-          o2.bools$ ==> Some(Set(true, false))
+          o2.bools$ ==> Some {
+            // Datomic free version returns only returns a single boolean for boolean card-many attributes
+            // (is likely a bug - unfortunately the free version is no longer maintained, so this will likely not be fixed)
+            if (useFree) {
+              Set(true)
+            } else {
+              Set(true, false)
+            }
+          }
         }
         _ <- Ns.int(5).bools.getObjs.map { oo =>
           val o = oo.head
@@ -478,7 +486,7 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
 
 
         _ <- Ns.int(1).strMap$.getObjs.map { oo =>
-          val List(o1, o2) = oo
+          val List(o1, o2) = oo.sortBy(_.strMap$.toString)
           o1.int ==> 1
           o1.strMap$ ==> None
           o2.int ==> 1

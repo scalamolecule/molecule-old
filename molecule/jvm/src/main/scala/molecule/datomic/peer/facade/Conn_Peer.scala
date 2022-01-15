@@ -251,18 +251,18 @@ case class Conn_Peer(
 
   // Tx fn helpers -------------------------------------------------------------
 
-  private[molecule] final override def buildTxFnInstall(txFnDatomic: String, args: Seq[Any]): jList[_] = {
+  private[molecule] final override def buildTxFnInvoker(classpathTxFn: String, args: Seq[Any]): jList[_] = {
     val params = args.indices.map(i => ('a' + i).toChar.toString)
     Util.list(Util.map(
-      Util.read(":db/ident"), Util.read(s":$txFnDatomic"),
+      Util.read(":db/ident"), Util.read(s":${classpathTxFn}_invoker"),
       Util.read(":db/fn"), Peer.function(Util.map(
         Util.read(":lang"), "java",
-        Util.read(":params"), Util.list(Util.read("txDb") +: Util.read("txMetaData") +: params.map(Util.read): _*),
-        Util.read(":code"), s"return $txFnDatomic(txDb, txMetaData, ${params.mkString(", ")});"
+        Util.read(":params"), Util.list(
+          Util.read("txDb") +: Util.read("txMetaData") +: params.map(Util.read): _*),
+        Util.read(":code"), s"return $classpathTxFn(txDb, txMetaData, ${params.mkString(", ")});"
       ))
     ))
   }
-
 
   // Internal ------------------------------------------------------------------
 
@@ -788,9 +788,10 @@ case class Conn_Peer(
             p.success(listenF.get())
           } catch {
             case e: ju.concurrent.ExecutionException =>
-              println("---- ExecutionException: -------------\n" + listenF +
-                javaStmts.fold("")(stmts => "\n---- javaStmts: ----\n" +
-                  stmts.asScala.toList.mkString("\n"))
+              println(
+                "---- ExecutionException: -------------\n" +
+                  listenF +
+                  javaStmts.fold("")(stmts => "\n---- javaStmts: ----\n" + stmts.asScala.toList.mkString("\n"))
               )
               // White list of exceptions that can be pickled by BooPickle
               p.failure(
@@ -802,8 +803,10 @@ case class Conn_Peer(
               )
 
             case NonFatal(e) =>
-              println("---- NonFatal exception: -------------\n" + listenF +
-                javaStmts.fold("")(stmts => "\n---- javaStmts: ----\n" + stmts.asScala.toList.mkString("\n"))
+              println(
+                "---- NonFatal exception: -------------\n" +
+                  listenF +
+                  javaStmts.fold("")(stmts => "\n---- javaStmts: ----\n" + stmts.asScala.toList.mkString("\n"))
               )
               p.failure(MoleculeException(e.getMessage))
           }

@@ -1,4 +1,6 @@
 package moleculeTests.jvm.db.datomic.peer
+//package molecule
+//package jvm.db.datomic.peer
 
 import molecule.core.exceptions.TxFnException
 import molecule.core.macros.TxFns
@@ -12,42 +14,55 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 /** Example tx functions for tests
-  *
-  * A transaction function allows its logic and database calls to be performed withing a single
-  * transaction to guarantee transactional atomicity.
-  *
-  * Transaction functions are available for Peers on the jvm side only.
-  *
-  * To run tx functions, the transactor needs to have access to them. This is achieved
-  * by 2 means:
-  *
-  * 1. Annotating an object that contains some tx function(s) with `@TxFns`. This is a Scala
-  * annotation macro that creates a twin method for each tx function that satisfy the transactor:
-  * a) `db` as its first parameter (used by the transactor to inject the db value)
-  * b) All params as temporary params of type Object / AnyRef
-  * c) Casting of temporary params to typed params according to original tx function.
-  * d) Injection of zero or more tx meta data molecule statements to be saved with the transaction.
-  * (tx meta data molecules are added when transacting with `transact(<txFn>, <txMetaData>*)`.
-  *
-  * 2. Preparing the transactor environment:
-  *
-  * LOCAL DEV / IN-MEMORY
-  * No need to prepare anything since transaction functions defined within the project
-  * will be available on the classpath for the Transactor managed by the Peer.
-  *
-  * STARTER PRO / PRO
-  * Set Datomic classpath variable to where your tx functions are before starting the transactor
-  * > export DATOMIC_EXT_CLASSPATH=/Users/mg/molecule/molecule/coretests/target/scala-2.13/test-classes/
-  * > bin/transactor ...
-  *
-  * FREE
-  * The Free version can't set the classpath variable so we need to provide the tx functions manually
-  * by making a jar of our classes, move it to the transactor lib folder and start the transactor:
-  * > cd <project-path>/molecule-tests/target/scala-2.13/test-classes  [path to your compiled classes]
-  * > jar cvf scala-fns.jar .
-  * > mv <project-path>/molecule-tests/target/scala-2.13/test-classes/scala-fns.jar DATOMIC_HOME/lib/
-  * > bin/transactor ...
-  * */
+ *
+ * A transaction function allows its logic and database calls to be performed withing a single
+ * transaction to guarantee transactional atomicity.
+ *
+ * Transaction functions are available for Peers on the jvm side only.
+ *
+ * To run tx functions, the transactor needs to have access to them. This is achieved
+ * by 2 means:
+ *
+ * 1. Annotating an object that contains some tx function(s) with `@TxFns`. This is a Scala
+ * annotation macro that creates a twin method for each tx function that satisfy the transactor:
+ * a) `db` as its first parameter (used by the transactor to inject the db value)
+ * b) All params as temporary params of type Object / AnyRef
+ * c) Casting of temporary params to typed params according to original tx function.
+ * d) Injection of zero or more tx meta data molecule statements to be saved with the transaction.
+ * (tx meta data molecules are added when transacting with `transact(<txFn>, <txMetaData>*)`.
+ *
+ * 2. Preparing the transactor environment:
+ *
+ * MEM
+ * No need to prepare anything since transaction functions defined within the project
+ * will be available on the classpath for the Transactor managed by the Peer.
+ *
+ * PRO
+ * Set Datomic classpath variable to where your tx functions are (replace initial part of
+ * paths with your paths) before starting the transactor:
+ * > export DATOMIC_EXT_CLASSPATH=/Users/mg/molecule/molecule/moleculeTests/jvm/target/scala-2.13/test-classes
+ * > bin/transactor ...
+ *
+ * OBS: Remember to re-start the transactor after changing tx function definitions to allow the transactor to
+ * use the updated tx functions. The transactor will use only the compiled code available when it is started.
+ *
+ * FREE
+ * The Free version can't set the classpath variable so we need to provide the tx functions manually
+ * by making a jar of our tx function classes, move it to the transactor lib folder and start the transactor
+ * (replace initial part of paths with your paths):
+ *
+ * {{{
+ * export DATOMIC_HOME="/Users/mg/lib/datomic/datomic-free-0.9.5697"
+ * cd /Users/mg/molecule/molecule/moleculeTests/jvm/target/scala-2.13/test-classes
+ * jar cvf molecule_tx_fns.jar .
+ * mv molecule_tx_fns.jar lib
+ * bin/transactor config/samples/free-transactor-template.properties
+ * }}}
+ *
+ * OBS: Remember to re-create the jar and re-start the transactor after changing tx function definitions to allow
+ * the transactor to use the updated tx functions. The transactor will use only the compiled code available when
+ * it is started.
+ * */
 @TxFns
 object TxFunctionExamples {
 
@@ -75,11 +90,13 @@ object TxFunctionExamples {
       // Validate sufficient funds in from-account
       curFromBalance <- Ns(from).int.get.map(_.headOption.getOrElse(0))
 
-      _ = if (curFromBalance < amount)
-      // Throw exception to abort the whole transaction
+      _ = if (curFromBalance < amount) {
+        // Throw exception to abort the whole transaction
+        // (other types of exceptions thrown are wrapped in TxFnException's)
         throw TxFnException(
           s"Can't transfer $amount from account $from having a balance of only $curFromBalance."
         )
+      }
 
       // Calculate new balances
       newFromBalance = curFromBalance - amount
@@ -140,13 +157,13 @@ object TxFunctionExamples {
       userCheck <- Ns.str(username).get
 
       _ = if (userCheck.nonEmpty)
-        throw TxFnException(s"Username `$username` is already taken. Please choose another username.")
+        throw TxFnException(s"Username `$username` is already taken. Please choose another username.") else ()
 
       // Constraint check not dependent on db call - this could be lifted out of the tx function to
       // save transactor workload. But the trade-off is that validation encapsulation is broken and
       // responsibility to check transfered to application code.
       _ = if (age < 18)
-        throw TxFnException(s"Users have to be at least 18 years old to register.")
+        throw TxFnException(s"Users have to be at least 18 years old to register.") else ()
 
       // Save valid User
       stmts <- Ns.str(username).int(age).getSaveStmts
@@ -179,10 +196,12 @@ object TxFunction extends AsyncTestSuite {
 
   import TxFunctionExamples._
 
+
   lazy val tests = Tests {
     import molecule.core.util.Executor._
 
-    "Basic inc example" - corePeerOnly { implicit conn =>
+
+    "Basic inc example" - corePeerOnly { implicit futConn =>
       // Example from https://www.youtube.com/watch?v=8fY687k7DMA
       for {
         // Existing data
@@ -192,7 +211,7 @@ object TxFunction extends AsyncTestSuite {
         _ <- transactFn(inc(eid, 10))
 
         // Value is updated
-        _ <- Ns.int.get.map(_.head ==> 110)
+        _ <- Ns(eid).int.get.map(_.head ==> 110)
       } yield ()
     }
 

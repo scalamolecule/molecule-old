@@ -1,12 +1,15 @@
 package moleculeTests.setup
 
+import java.util.UUID.randomUUID
 import molecule.core.data.SchemaTransaction
+import molecule.core.util.Executor._
 import molecule.datomic.api.out1._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}
 import molecule.datomic.client.facade.{Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.Datomic_Peer
-import moleculeBuildInfo.BuildInfo.{datomicHome, datomicProtocol}
+import moleculeBuildInfo.BuildInfo
+import moleculeBuildInfo.BuildInfo.datomicHome
 import moleculeTests.dataModels.core.base.schema.CoreTestSchema
 import moleculeTests.dataModels.core.bidirectionals.schema.BidirectionalSchema
 import moleculeTests.dataModels.core.ref.schema.{NestedSchema, SelfJoinSchema}
@@ -15,22 +18,27 @@ import moleculeTests.dataModels.examples.datomic.dayOfDatomic.schema._
 import moleculeTests.dataModels.examples.datomic.mbrainz.schema.{MBrainzSchema, MBrainzSchemaLowerToUpper}
 import moleculeTests.dataModels.examples.datomic.seattle.schema.SeattleSchema
 import moleculeTests.dataModels.examples.gremlin.gettingStarted.schema.{ModernGraph1Schema, ModernGraph2Schema}
-import molecule.core.util.Executor._
 import scala.concurrent.Future
 
 trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
 
   val isJsPlatform_ = false
+  val protocol_     = BuildInfo.datomicProtocol
+  val useFree_      = BuildInfo.datomicUseFree
 
   def inMem[T](
     test: Future[Conn] => T,
     schemaTx: SchemaTransaction,
-    peerServerDb: String
+    db: String
   ): T = {
+    val dbUri   = if (protocol_ == "mem") "" else {
+      println(s"Re-creating live `$db` database...")
+      "localhost:4334/" + randomUUID().toString
+    }
     val futConn = system match {
-      case SystemPeer       => Datomic_Peer.recreateDbFrom(schemaTx)
+      case SystemPeer       => Datomic_Peer.recreateDbFrom(schemaTx, protocol_, dbUri)
       case SystemDevLocal   => Datomic_DevLocal("datomic-samples-temp", datomicHome).recreateDbFrom(schemaTx)
-      case SystemPeerServer => Datomic_PeerServer("k", "s", "localhost:8998").connect(schemaTx, peerServerDb)
+      case SystemPeerServer => Datomic_PeerServer("k", "s", "localhost:8998").connect(schemaTx, db)
     }
     test(futConn)
   }
@@ -50,17 +58,16 @@ trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
   def productsImpl[T](test: Future[Conn] => T): T = inMem(test, ProductsOrderSchema, "m_productsOrder")
   def seattleImpl[T](test: Future[Conn] => T): T = inMem(test, SeattleSchema, "m_seattle")
 
-
   // Connecting to existing MBrainz database without recreating it
   def mbrainzImpl[T](test: Future[Conn] => Future[T]): Future[T] = {
     implicit val futConn: Future[Conn] = system match {
       case SystemPeer =>
         Datomic_Peer
-          .connect(MBrainzSchema, datomicProtocol, "localhost:4334/mbrainz-1968-1973")
+          .connect(MBrainzSchema, "dev", "localhost:4334/mbrainz-1968-1973")
 
       case SystemDevLocal =>
         Datomic_DevLocal("datomic-samples", datomicHome)
-          .connect(MBrainzSchema, datomicProtocol, "mbrainz-subset")
+          .connect(MBrainzSchema, "dev", "mbrainz-subset")
 
       case SystemPeerServer =>
         Datomic_PeerServer("k", "s", "localhost:8998")

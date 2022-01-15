@@ -10,11 +10,11 @@ import molecule.core.util.Executor._
 object Schema_Attr extends AsyncTestSuite {
 
   // Differing counts and ids for different systems
-  val List(attrCount, a1, a2, a3, card1count, card2count) = system match {
-    //    case SystemPeer       => List(68, 106, 108, 109, 30, 38)
-    case SystemPeer       => List(69, 106, 108, 109, 30, 39)
-    case SystemDevLocal   => List(69, 107, 109, 110, 30, 39)
-    case SystemPeerServer => List(71, 104, 106, 107, 31, 40)
+  val List(attrCount, a1, a2, a3, card1count, card2count) = (system, protocol) match {
+    case (SystemPeer, "free")  => List(69, 97, 99, 100, 30, 39)
+    case (SystemPeer, _)       => List(69, 106, 108, 109, 30, 39)
+    case (SystemDevLocal, _)   => List(69, 107, 109, 110, 30, 39)
+    case (SystemPeerServer, _) => List(71, 104, 106, 107, 31, 40)
   }
 
   lazy val tests = Tests {

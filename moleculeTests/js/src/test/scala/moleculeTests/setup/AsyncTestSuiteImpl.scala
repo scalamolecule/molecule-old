@@ -15,12 +15,15 @@ import moleculeTests.dataModels.examples.datomic.mbrainz.schema.MBrainzSchema
 import moleculeTests.dataModels.examples.datomic.seattle.schema.SeattleSchema
 import moleculeTests.dataModels.examples.gremlin.gettingStarted.schema.{ModernGraph1Schema, ModernGraph2Schema}
 import molecule.core.util.Executor._
+import moleculeBuildInfo.BuildInfo
 import scala.concurrent.Future
 
 
 trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
 
   val isJsPlatform_ = true
+  val protocol_     = BuildInfo.datomicProtocol
+  val useFree_      = BuildInfo.datomicUseFree
 
   def inMem[T](
     test: Future[Conn] => T,
@@ -51,18 +54,19 @@ trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
   def productsImpl[T](test: Future[Conn] => T): T = inMem(test, ProductsOrderSchema, "m_productsOrder")
   def seattleImpl[T](test: Future[Conn] => T): T = inMem(test, SeattleSchema, "m_seattle")
 
+  // Connecting to existing MBrainz database without recreating it
   def mbrainzImpl[T](test: Future[Conn] => Future[T]): Future[T] = {
     val proxy = system match {
       case SystemPeer =>
         DatomicPeerProxy(
-          datomicProtocol,
+          "dev",
           "localhost:4334/mbrainz-1968-1973",
           MBrainzSchema.datomicPeer, MBrainzSchema.attrMap
         )
 
       case SystemDevLocal =>
         DatomicDevLocalProxy(
-          datomicProtocol,
+          "dev",
           "datomic-samples",
           datomicHome,
           "mbrainz-subset",

@@ -122,7 +122,7 @@ trait Conn extends ColOps with BooPicklers {
    *
    * Only works on jvm platform.
    *
-   * @param stmtsReader [[java.io.Reader]]
+   * @param stmtsReader [[Reader]]
    * @param ec
    * @return Future with [[TxReport]]
    */
@@ -238,8 +238,11 @@ trait Conn extends ColOps with BooPicklers {
   def stmts2java(stmts: Seq[Statement]): jList[jList[_]] =
     throw jvmPeerOnly("stmts2java(stmts: Seq[Statement])")
 
-  private[molecule] def buildTxFnInstall(txFn: String, args: Seq[Any]): jList[_] =
+  private[molecule] def buildTxFnInvoker(txFn: String, args: Seq[Any]): jList[_] =
     throw jvmPeerOnly("buildTxFnInstall(txFn: String, args: Seq[Any])")
+
+  private[molecule] def buildTxFnInvoker2(txFn: String, args: Seq[Any]): jList[_] =
+    throw jvmPeerOnly("buildTxFnInstall2(txFn: String, args: Seq[Any])")
 
 
   // Internal ------------------------------------------------------------------

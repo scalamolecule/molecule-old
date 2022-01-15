@@ -14,10 +14,7 @@ lazy val moleculeRoot = (project in file("."))
 
 lazy val molecule = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
-  .settings(Settings.shared ++
-    //    Publish.withoutDocs // save time without doc creation for publishLocal
-    Publish.withDocs // make docs for publishSigned
-  )
+  .settings(Settings.shared ++ Publish.docs)
   .jsSettings(Settings.js)
   .jvmSettings(Settings.jvm)
 
@@ -26,10 +23,6 @@ lazy val moleculeTests = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
   .dependsOn(molecule)
   .enablePlugins(BuildInfoPlugin, MoleculePlugin)
-  .settings(Settings.shared ++
-    Settings.moleculeTests ++
-    Settings.tests ++
-    Publish.not
-  )
+  .settings(Settings.shared ++ Settings.tests ++ Publish.not)
   .jsSettings(Settings.js)
   .jvmSettings(Settings.jvm)
