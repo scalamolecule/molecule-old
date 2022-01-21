@@ -401,7 +401,7 @@ case class Conn_Peer(
     query: Query
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     model.elements.head match {
-      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _) => indexQuery(model)
+      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _, _) => indexQuery(model)
       case _                                                           => datalogQuery(model, query)
     }
   }
@@ -413,7 +413,7 @@ case class Conn_Peer(
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
     try {
       val (api, index, args) = model.elements.head match {
-        case Generic("EAVT", _, _, value) =>
+        case Generic("EAVT", _, _, value, _) =>
           ("datoms", datomic.Database.EAVT, value match {
             case NoValue                   => Seq()
             case Eq(Seq(e))                => Seq(e)
@@ -424,7 +424,7 @@ case class Conn_Peer(
             case v                         => throw MoleculeException("Unexpected EAVT value: " + v)
           })
 
-        case Generic("AEVT", _, _, value) =>
+        case Generic("AEVT", _, _, value, _) =>
           ("datoms", datomic.Database.AEVT, value match {
             case NoValue                   => Seq()
             case EntValue                  => Seq()
@@ -436,7 +436,7 @@ case class Conn_Peer(
             case v                         => throw MoleculeException("Unexpected AEVT value: " + v)
           })
 
-        case Generic("AVET", attr, _, value) =>
+        case Generic("AVET", attr, _, value, _) =>
           attr match {
             case "range" =>
               ("indexRange", "", value match {
@@ -461,7 +461,7 @@ case class Conn_Peer(
               })
           }
 
-        case Generic("VAET", _, _, value) =>
+        case Generic("VAET", _, _, value, _) =>
           ("datoms", datomic.Database.VAET, value match {
             case NoValue                   => Seq()
             case Eq(Seq(v))                => Seq(v)
@@ -472,7 +472,7 @@ case class Conn_Peer(
             case v                         => throw MoleculeException("Unexpected VAET value: " + v)
           })
 
-        case Generic("Log", _, _, value) =>
+        case Generic("Log", _, _, value, _) =>
           def err(v: Any) = throw MoleculeException(
             s"Args to Log can only be t, tx or txInstant of type Int/Long/Date. Found `$v` of type " + v.getClass)
 
@@ -534,7 +534,7 @@ case class Conn_Peer(
       }
 
       val attrs: Seq[String] = model.elements.collect {
-        case Generic(_, attr, _, _)
+        case Generic(_, attr, _, _, _)
           if attr != "args_" && attr != "range" => attr
       }
 
@@ -548,7 +548,7 @@ case class Conn_Peer(
               v1 <- x1(d)
             } yield list(
               v1.asInstanceOf[AnyRef]
-            ).asInstanceOf[jList[AnyRef]]
+            )
 
         case 2 =>
           val x1 = datomElement(tOpt, attrs.head)
@@ -560,7 +560,7 @@ case class Conn_Peer(
             } yield list(
               v1.asInstanceOf[AnyRef],
               v2.asInstanceOf[AnyRef]
-            ).asInstanceOf[jList[AnyRef]]
+            )
 
         case 3 =>
           val x1 = datomElement(tOpt, attrs.head)
@@ -575,7 +575,7 @@ case class Conn_Peer(
               v1.asInstanceOf[AnyRef],
               v2.asInstanceOf[AnyRef],
               v3.asInstanceOf[AnyRef]
-            ).asInstanceOf[jList[AnyRef]]
+            )
 
 
         case 4 =>
@@ -594,7 +594,7 @@ case class Conn_Peer(
               v2.asInstanceOf[AnyRef],
               v3.asInstanceOf[AnyRef],
               v4.asInstanceOf[AnyRef]
-            ).asInstanceOf[jList[AnyRef]]
+            )
 
         case 5 =>
           val x1 = datomElement(tOpt, attrs.head)
@@ -615,7 +615,7 @@ case class Conn_Peer(
               v3.asInstanceOf[AnyRef],
               v4.asInstanceOf[AnyRef],
               v5.asInstanceOf[AnyRef]
-            ).asInstanceOf[jList[AnyRef]]
+            )
 
         case 6 =>
           val x1 = datomElement(tOpt, attrs.head)
@@ -639,7 +639,7 @@ case class Conn_Peer(
               v4.asInstanceOf[AnyRef],
               v5.asInstanceOf[AnyRef],
               v6.asInstanceOf[AnyRef]
-            ).asInstanceOf[jList[AnyRef]]
+            )
 
         case 7 =>
           val x1 = datomElement(tOpt, attrs.head)
@@ -666,7 +666,7 @@ case class Conn_Peer(
               v5.asInstanceOf[AnyRef],
               v6.asInstanceOf[AnyRef],
               v7.asInstanceOf[AnyRef]
-            ).asInstanceOf[jList[AnyRef]]
+            )
       }
 
 

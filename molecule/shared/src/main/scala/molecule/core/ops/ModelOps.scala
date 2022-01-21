@@ -45,7 +45,7 @@ object ModelOps extends Helpers {
     }
 
     def resolve(elements: Seq[Element]): Seq[Element] = elements map {
-      case a@Atom(_, _, _, _, MapEq(idents), _, _, keyIdents)           => idents match {
+      case a@Atom(_, _, _, _, MapEq(idents), _, _, keyIdents, _)           => idents match {
         case List((ident, "__pair__"))
           if ident.startsWith("__ident__") && getValues(Seq(ident)) == Seq(None) =>
           a.copy(value = Fn("not", None), keys = getKeys(keyIdents))
@@ -53,41 +53,41 @@ object ModelOps extends Helpers {
         case idents =>
           a.copy(value = MapEq(getValues(idents).asInstanceOf[Seq[(String, Any)]]), keys = getKeys(keyIdents))
       }
-      case a@Atom(_, _, _, 2, Eq(idents), _, _, _)                      => getValues(idents) match {
+      case a@Atom(_, _, _, 2, Eq(idents), _, _, _, _)                      => getValues(idents) match {
         case Seq(None) => a.copy(value = Fn("not", None))
         case values    => a.copy(value = Eq(values))
       }
-      case a@Atom(_, _, _, _, Eq(idents), _, _, keyIdents)              => getValues(idents) match {
+      case a@Atom(_, _, _, _, Eq(idents), _, _, keyIdents, _)              => getValues(idents) match {
         case Seq(None) => a.copy(value = Fn("not", None), keys = getKeys(keyIdents))
         case values    => a.copy(value = Eq(values), keys = getKeys(keyIdents))
       }
-      case g@Generic(_, _, _, Eq(idents))                               => getValues(idents) match {
+      case g@Generic(_, _, _, Eq(idents), _)                               => getValues(idents) match {
         case Seq(None) => g.copy(value = Fn("not", None))
         case values    => g.copy(value = Eq(values))
       }
-      case a@Atom(_, _, _, _, Neq(idents), _, _, keyIdents)             => a.copy(value = Neq(getValues(idents)), keys = getKeys(keyIdents))
-      case a@Atom(_, _, _, _, And(idents), _, _, keyIdents)             => a.copy(value = And(getValues(idents)), keys = getKeys(keyIdents))
-      case a@Atom(_, _, _, _, Lt(ident), _, _, keyIdents)               => a.copy(value = Lt(getValues(Seq(ident)).head), keys = getKeys(keyIdents))
-      case a@Atom(_, _, _, _, Gt(ident), _, _, keyIdents)               => a.copy(value = Gt(getValues(Seq(ident)).head), keys = getKeys(keyIdents))
-      case a@Atom(_, _, _, _, Le(ident), _, _, keyIdents)               => a.copy(value = Le(getValues(Seq(ident)).head), keys = getKeys(keyIdents))
-      case a@Atom(_, _, _, _, Ge(ident), _, _, keyIdents)               => a.copy(value = Ge(getValues(Seq(ident)).head), keys = getKeys(keyIdents))
-      case a@Atom(_, _, _, _, Fulltext(idents), _, _, keyIdents)        => a.copy(value = Fulltext(getValues(idents)), keys = getKeys(keyIdents))
-      case a@Atom(_, _, _, _, AssertValue(idents), _, _, _)             => a.copy(value = AssertValue(getValues(idents)))
-      case a@Atom(_, _, _, _, RetractValue(idents), _, _, _)            => a.copy(value = RetractValue(getValues(idents)))
-      case a@Atom(_, _, _, _, ReplaceValue(oldNew), _, _, _)            => a.copy(value = ReplaceValue(getValues(oldNew).asInstanceOf[Seq[(Any, Any)]]))
-      case a@Atom(_, _, _, _, AssertMapPairs(idents), _, _, keyIdents)  => a.copy(value = AssertMapPairs(getValues(idents).asInstanceOf[Seq[(String, Any)]]), keys = getKeys(keyIdents))
-      case a@Atom(_, _, _, _, ReplaceMapPairs(idents), _, _, keyIdents) => a.copy(value = ReplaceMapPairs(getValues(idents).asInstanceOf[Seq[(String, Any)]]), keys = getKeys(keyIdents))
-      case a@Atom(_, _, _, _, RetractMapKeys(idents), _, _, keyIdents)  => a.copy(value = RetractMapKeys(getValues(idents).map(_.toString)), keys = getKeys(keyIdents))
-      case a@Atom(_, _, _, _, MapKeys(idents), _, _, _)                 => a.copy(value = MapKeys(getValues(idents).asInstanceOf[Seq[String]]))
-      case g@Generic(_, _, _, Neq(idents))                              => g.copy(value = Neq(getValues(idents)))
-      case g@Generic(_, _, _, Lt(ident))                                => g.copy(value = Lt(getValues(Seq(ident)).head))
-      case g@Generic(_, _, _, Gt(ident))                                => g.copy(value = Gt(getValues(Seq(ident)).head))
-      case g@Generic(_, _, _, Le(ident))                                => g.copy(value = Le(getValues(Seq(ident)).head))
-      case g@Generic(_, _, _, Ge(ident))                                => g.copy(value = Ge(getValues(Seq(ident)).head))
-      case Nested(bond, nestedElements)                                 => Nested(bond, resolve(nestedElements))
-      case Composite(compositeElements)                                 => Composite(resolve(compositeElements))
-      case TxMetaData(txElements)                                       => TxMetaData(resolve(txElements))
-      case other                                                        => other
+      case a@Atom(_, _, _, _, Neq(idents), _, _, keyIdents, _)             => a.copy(value = Neq(getValues(idents)), keys = getKeys(keyIdents))
+      case a@Atom(_, _, _, _, And(idents), _, _, keyIdents, _)             => a.copy(value = And(getValues(idents)), keys = getKeys(keyIdents))
+      case a@Atom(_, _, _, _, Lt(ident), _, _, keyIdents, _)               => a.copy(value = Lt(getValues(Seq(ident)).head), keys = getKeys(keyIdents))
+      case a@Atom(_, _, _, _, Gt(ident), _, _, keyIdents, _)               => a.copy(value = Gt(getValues(Seq(ident)).head), keys = getKeys(keyIdents))
+      case a@Atom(_, _, _, _, Le(ident), _, _, keyIdents, _)               => a.copy(value = Le(getValues(Seq(ident)).head), keys = getKeys(keyIdents))
+      case a@Atom(_, _, _, _, Ge(ident), _, _, keyIdents, _)               => a.copy(value = Ge(getValues(Seq(ident)).head), keys = getKeys(keyIdents))
+      case a@Atom(_, _, _, _, Fulltext(idents), _, _, keyIdents, _)        => a.copy(value = Fulltext(getValues(idents)), keys = getKeys(keyIdents))
+      case a@Atom(_, _, _, _, AssertValue(idents), _, _, _, _)             => a.copy(value = AssertValue(getValues(idents)))
+      case a@Atom(_, _, _, _, RetractValue(idents), _, _, _, _)            => a.copy(value = RetractValue(getValues(idents)))
+      case a@Atom(_, _, _, _, ReplaceValue(oldNew), _, _, _, _)            => a.copy(value = ReplaceValue(getValues(oldNew).asInstanceOf[Seq[(Any, Any)]]))
+      case a@Atom(_, _, _, _, AssertMapPairs(idents), _, _, keyIdents, _)  => a.copy(value = AssertMapPairs(getValues(idents).asInstanceOf[Seq[(String, Any)]]), keys = getKeys(keyIdents))
+      case a@Atom(_, _, _, _, ReplaceMapPairs(idents), _, _, keyIdents, _) => a.copy(value = ReplaceMapPairs(getValues(idents).asInstanceOf[Seq[(String, Any)]]), keys = getKeys(keyIdents))
+      case a@Atom(_, _, _, _, RetractMapKeys(idents), _, _, keyIdents, _)  => a.copy(value = RetractMapKeys(getValues(idents).map(_.toString)), keys = getKeys(keyIdents))
+      case a@Atom(_, _, _, _, MapKeys(idents), _, _, _, _)                 => a.copy(value = MapKeys(getValues(idents).asInstanceOf[Seq[String]]))
+      case g@Generic(_, _, _, Neq(idents), _)                              => g.copy(value = Neq(getValues(idents)))
+      case g@Generic(_, _, _, Lt(ident), _)                                => g.copy(value = Lt(getValues(Seq(ident)).head))
+      case g@Generic(_, _, _, Gt(ident), _)                                => g.copy(value = Gt(getValues(Seq(ident)).head))
+      case g@Generic(_, _, _, Le(ident), _)                                => g.copy(value = Le(getValues(Seq(ident)).head))
+      case g@Generic(_, _, _, Ge(ident), _)                                => g.copy(value = Ge(getValues(Seq(ident)).head))
+      case Nested(bond, nestedElements)                                    => Nested(bond, resolve(nestedElements))
+      case Composite(compositeElements)                                    => Composite(resolve(compositeElements))
+      case TxMetaData(txElements)                                          => TxMetaData(resolve(txElements))
+      case other                                                           => other
     }
 
     if (identMap.isEmpty) model else Model(resolve(model.elements))

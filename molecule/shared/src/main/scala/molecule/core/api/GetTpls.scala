@@ -1,6 +1,6 @@
 package molecule.core.api
 
-import java.util.Date
+import java.util.{Date, List => jList}
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.ops.ColOps
@@ -38,17 +38,6 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
 
           //          println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
           //          println(_model)
-          //          _model.elements.collect {
-          //            case Generic(_, _, _, Eq(Seq(v1)))           =>
-          //              println(v1)
-          //              println(v1.getClass)
-          //            case Atom(_, _, _, _, Eq(Seq(v1)), _, _, _)  =>
-          //              println(v1)
-          //              println(v1.getClass)
-          //            case Atom(_, _, _, _, Neq(Seq(v1)), _, _, _) =>
-          //              println(v1)
-          //              println(v1.getClass)
-          //          }
           //          println("----------------")
           //          println(_query)
           //          println("----------------")
@@ -59,16 +48,27 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
           )
         } else {
           conn.jvmQuery(_model, _query).map { jColl =>
-            val it   = jColl.iterator
-            val list = List.newBuilder[Tpl]
-            while (it.hasNext) {
-              list += row2tpl(it.next)
+            jColl.size match {
+              case 0 => List.empty[Tpl]
+              case 1 => List(row2tpl(jColl.iterator().next()))
+              case _ =>
+                val it   = if (sortRows) {
+                  val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
+                  rows.sort(this) // using macro-implemented `compare` method
+                  rows.iterator
+                } else {
+                  jColl.iterator()
+                }
+                val list = List.newBuilder[Tpl]
+                while (it.hasNext) {
+                  list += row2tpl(it.next)
+                }
+                list.result()
             }
-            list.result()
           }
         }
       }
-    )(Future.failed) // Pass on exception from input failure
+    )(Future.failed) // Wrap exception from input failure in Future
   }
 
   /** Get Future with List of n rows as tuples matching a molecule.

@@ -21,26 +21,26 @@ import scala.util.control.NonFatal
 
 
 /** Inspect methods
-  *
-  * Call a inspect method on a molecule to see the internal transformations and
-  * produced transaction statements or sample data.
-  * */
+ *
+ * Call a inspect method on a molecule to see the internal transformations and
+ * produced transaction statements or sample data.
+ * */
 trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl] =>
   def maxRows = 500
 
   /** Inspect call to `get` on a molecule (without affecting the db).
-    * <br><br>
-    * Prints the following to output:
-    * <br><br>
-    * 1. Internal molecule transformation representations:
-    * <br>Molecule DSL --> Model --> Query --> Datomic query
-    * <br><br>
-    * 2. Data returned from get query (max 500 rows).
-    * OBS: printing raw Date's (Clojure Instant) will miss the time-zone
-    *
-    * @group inspectGet
-    * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-    */
+   * <br><br>
+   * Prints the following to output:
+   * <br><br>
+   * 1. Internal molecule transformation representations:
+   * <br>Molecule DSL --> Model --> Query --> Datomic query
+   * <br><br>
+   * 2. Data returned from get query (max 500 rows).
+   * OBS: printing raw Date's (Clojure Instant) will miss the time-zone
+   *
+   * @group inspectGet
+   * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   */
   def inspectGet(implicit futConn: Future[Conn]): Future[Unit] = {
 
     def renderIndex(): Future[Unit] = {
@@ -61,17 +61,17 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
         val n = {
           val dataElements: Seq[Generic] = _model.elements.
             collect {
-              case e@Generic(_, attr, _, _) if attr != "args_" && attr != "range" => e
+              case e@Generic(_, attr, _, _, _) if attr != "args_" && attr != "range" => e
             }
           dataElements.zipWithIndex.map {
-            case (Generic(_, "e", _, _), i)         => print(p("E", pE)); pad += pE + 3; i -> pE
-            case (Generic(_, "a", _, _), i)         => print(p("A", pA)); pad += pA + 3; i -> pA
-            case (Generic(_, "v", _, _), i)         => print(p("V", pV)); pad += pV + 3; i -> pV
-            case (Generic(_, "t", _, _), i)         => print(p("T", pT)); pad += pT + 3; i -> pT
-            case (Generic(_, "tx", _, _), i)        => print(p("Tx", pE)); pad += pE + 3; i -> pE
-            case (Generic(_, "txInstant", _, _), i) => print(p("TxInstant", pD)); pad += pD + 3; i -> pD
-            case (Generic(_, "op", _, _), i)        => print(p("Op", pT)); pad += pT + 3; i -> pT
-            case other                              => throw MoleculeException("Unexpected element: " + other)
+            case (Generic(_, "e", _, _, _), i)         => print(p("E", pE)); pad += pE + 3; i -> pE
+            case (Generic(_, "a", _, _, _), i)         => print(p("A", pA)); pad += pA + 3; i -> pA
+            case (Generic(_, "v", _, _, _), i)         => print(p("V", pV)); pad += pV + 3; i -> pV
+            case (Generic(_, "t", _, _, _), i)         => print(p("T", pT)); pad += pT + 3; i -> pT
+            case (Generic(_, "tx", _, _, _), i)        => print(p("Tx", pE)); pad += pE + 3; i -> pE
+            case (Generic(_, "txInstant", _, _, _), i) => print(p("TxInstant", pD)); pad += pD + 3; i -> pD
+            case (Generic(_, "op", _, _, _), i)        => print(p("Op", pT)); pad += pT + 3; i -> pT
+            case other                                 => throw MoleculeException("Unexpected element: " + other)
           }.toMap
         }
 
@@ -191,16 +191,16 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
     def recurse(level: Int, acc: Seq[(Int, Boolean, Boolean, Boolean)], elements: Seq[Element])
     : (Int, Seq[(Int, Boolean, Boolean, Boolean)]) = {
       elements.foldLeft(level, acc) {
-        case ((level, acc), Generic(_, "txInstant", _, _))                      => (level, acc :+ (1, false, true, false))
-        case ((level, acc), Generic(_, _, "datom" | "schema", _))               => (level, acc :+ (1, false, false, false))
-        case ((level, acc), ga: GenericAtom) if ga.attr.last == '_'             => (level, acc)
-        case ((level, acc), Atom(_, _, _, _, Fn(fn, _), _, _, _)) if isAggr(fn) => (level, acc :+ (1, false, false, true))
-        case ((level, acc), Atom(_, attr, "Date", card, _, _, _, _))            => (level, acc :+ (card, attr.last == '$', true, false))
-        case ((level, acc), Atom(_, attr, _, card, _, _, _, _))                 => (level, acc :+ (card, attr.last == '$', false, false))
-        case ((level, acc), Nested(_, nestedElements))                          => recurse(level + 1, acc, nestedElements)
-        case ((level, acc), Composite(compositeElements))                       => recurse(level, acc, compositeElements)
-        case ((level, acc), TxMetaData(txElements))                             => recurse(level, acc, txElements)
-        case ((level, acc), _)                                                  => (level, acc)
+        case ((level, acc), Generic(_, "txInstant", _, _, _))                      => (level, acc :+ (1, false, true, false))
+        case ((level, acc), Generic(_, _, "datom" | "schema", _, _))               => (level, acc :+ (1, false, false, false))
+        case ((level, acc), ga: GenericAtom) if ga.attr.last == '_'                => (level, acc)
+        case ((level, acc), Atom(_, _, _, _, Fn(fn, _), _, _, _, _)) if isAggr(fn) => (level, acc :+ (1, false, false, true))
+        case ((level, acc), Atom(_, attr, "Date", card, _, _, _, _, _))            => (level, acc :+ (card, attr.last == '$', true, false))
+        case ((level, acc), Atom(_, attr, _, card, _, _, _, _, _))                 => (level, acc :+ (card, attr.last == '$', false, false))
+        case ((level, acc), Nested(_, nestedElements))                             => recurse(level + 1, acc, nestedElements)
+        case ((level, acc), Composite(compositeElements))                          => recurse(level, acc, compositeElements)
+        case ((level, acc), TxMetaData(txElements))                                => recurse(level, acc, txElements)
+        case ((level, acc), _)                                                     => (level, acc)
       }
     }
 
@@ -337,7 +337,7 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
 
         val ins = QueryOps(_query).inputs
 
-        for{
+        for {
           db <- conn.db
           rawRows <- if (conn.isJsPlatform) jsRows(conn) else conn.datalogQuery(_model, _query, Some(db))
           rows = resolve(rawRows.asScala.take(maxRows))
@@ -389,129 +389,129 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
     }
 
     _model.elements.head match {
-      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _) => renderIndex()
-      case _                                                           => renderQuery()
+      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _, _) => renderIndex()
+      case _                                                              => renderQuery()
     }
   }
 
 
   /** Inspect call to `getAsOf(t)` on a molecule (without affecting the db).
-    * <br><br>
-    * Prints the following to output:
-    * <br><br>
-    * 1. Internal molecule transformation representations:
-    * <br>Molecule DSL --> Model --> Query --> Datomic query
-    * <br><br>
-    * 2. Data returned from get query (max 500 rows).
-    *
-    * @group inspectGet
-    * @param t
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-    */
+   * <br><br>
+   * Prints the following to output:
+   * <br><br>
+   * 1. Internal molecule transformation representations:
+   * <br>Molecule DSL --> Model --> Query --> Datomic query
+   * <br><br>
+   * 2. Data returned from get query (max 500 rows).
+   *
+   * @group inspectGet
+   * @param t
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   */
   def inspectGetAsOf(t: Long)(implicit conn: Future[Conn]): Future[Unit] =
     inspectGet(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))))
 
 
   /** Inspect call to `getAsOf(tx)` on a molecule (without affecting the db).
-    * <br><br>
-    * Prints the following to output:
-    * <br><br>
-    * 1. Internal molecule transformation representations:
-    * <br>Molecule DSL --> Model --> Query --> Datomic query
-    * <br><br>
-    * 2. Data returned from get query (max 500 rows).
-    *
-    * @group inspectGet
-    * @param tx   [[molecule.datomic.base.facade.TxReport TxReport]]
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-    */
+   * <br><br>
+   * Prints the following to output:
+   * <br><br>
+   * 1. Internal molecule transformation representations:
+   * <br>Molecule DSL --> Model --> Query --> Datomic query
+   * <br><br>
+   * 2. Data returned from get query (max 500 rows).
+   *
+   * @group inspectGet
+   * @param tx   [[molecule.datomic.base.facade.TxReport TxReport]]
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   */
   def inspectGetAsOf(tx: TxReport)(implicit conn: Future[Conn]): Future[Unit] =
     inspectGet(conn.map(_.usingAdhocDbView(AsOf(TxLong(tx.t)))))
 
 
   /** Inspect call to `getAsOf(date)` on a molecule (without affecting the db).
-    * <br><br>
-    * Prints the following to output:
-    * <br><br>
-    * 1. Internal molecule transformation representations:
-    * <br>Molecule DSL --> Model --> Query --> Datomic query
-    * <br><br>
-    * 2. Data returned from get query (max 500 rows).
-    *
-    * @group inspectGet
-    * @param date
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scsope
-    */
+   * <br><br>
+   * Prints the following to output:
+   * <br><br>
+   * 1. Internal molecule transformation representations:
+   * <br>Molecule DSL --> Model --> Query --> Datomic query
+   * <br><br>
+   * 2. Data returned from get query (max 500 rows).
+   *
+   * @group inspectGet
+   * @param date
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scsope
+   */
   def inspectGetAsOf(date: Date)(implicit conn: Future[Conn]): Future[Unit] =
     inspectGet(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))))
 
 
   /** Inspect call to `getSince(t)` on a molecule (without affecting the db).
-    * <br><br>
-    * Prints the following to output:
-    * <br><br>
-    * 1. Internal molecule transformation representations:
-    * <br>Molecule DSL --> Model --> Query --> Datomic query
-    * <br><br>
-    * 2. Data returned from get query (max 500 rows).
-    *
-    * @group inspectGet
-    * @param t
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-    */
+   * <br><br>
+   * Prints the following to output:
+   * <br><br>
+   * 1. Internal molecule transformation representations:
+   * <br>Molecule DSL --> Model --> Query --> Datomic query
+   * <br><br>
+   * 2. Data returned from get query (max 500 rows).
+   *
+   * @group inspectGet
+   * @param t
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   */
   def inspectGetSince(t: Long)(implicit conn: Future[Conn]): Future[Unit] =
     inspectGet(conn.map(_.usingAdhocDbView(Since(TxLong(t)))))
 
 
   /** Inspect call to `getSince(tx)` on a molecule (without affecting the db).
-    * <br><br>
-    * Prints the following to output:
-    * <br><br>
-    * 1. Internal molecule transformation representations:
-    * <br>Molecule DSL --> Model --> Query --> Datomic query
-    * <br><br>
-    * 2. Data returned from get query (max 500 rows).
-    *
-    * @group inspectGet
-    * @param tx   [[molecule.datomic.base.facade.TxReport TxReport]]
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-    */
+   * <br><br>
+   * Prints the following to output:
+   * <br><br>
+   * 1. Internal molecule transformation representations:
+   * <br>Molecule DSL --> Model --> Query --> Datomic query
+   * <br><br>
+   * 2. Data returned from get query (max 500 rows).
+   *
+   * @group inspectGet
+   * @param tx   [[molecule.datomic.base.facade.TxReport TxReport]]
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   */
   def inspectGetSince(tx: TxReport)(implicit conn: Future[Conn]): Future[Unit] =
     inspectGet(conn.map(_.usingAdhocDbView(Since(TxLong(tx.t)))))
 
 
   /** Inspect call to `getSince(date)` on a molecule (without affecting the db).
-    * <br><br>
-    * Prints the following to output:
-    * <br><br>
-    * 1. Internal molecule transformation representations:
-    * <br>Molecule DSL --> Model --> Query --> Datomic query
-    * <br><br>
-    * 2. Data returned from get query (max 500 rows).
-    *
-    * @group inspectGet
-    * @param date
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-    */
+   * <br><br>
+   * Prints the following to output:
+   * <br><br>
+   * 1. Internal molecule transformation representations:
+   * <br>Molecule DSL --> Model --> Query --> Datomic query
+   * <br><br>
+   * 2. Data returned from get query (max 500 rows).
+   *
+   * @group inspectGet
+   * @param date
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   */
   def inspectGetSince(date: Date)(implicit conn: Future[Conn]): Future[Unit] =
     inspectGet(conn.map(_.usingAdhocDbView(Since(TxDate(date)))))
 
 
   /** Inspect call to `getWith(txMolecules)` on a molecule (without affecting the db).
-    * <br><br>
-    * Prints the following to output:
-    * <br><br>
-    * 1. Internal molecule transformation representations:
-    * <br>Molecule DSL --> Model --> Query --> Datomic query
-    * <br><br>
-    * 2. Data returned from get query (max 500 rows).
-    * <br><br>
-    * 3. Transactions of applied transaction molecules.
-    *
-    * @group inspectGet
-    * @param txMolecules Transaction statements from applied Molecules with test data
-    * @param conn        Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-    */
+   * <br><br>
+   * Prints the following to output:
+   * <br><br>
+   * 1. Internal molecule transformation representations:
+   * <br>Molecule DSL --> Model --> Query --> Datomic query
+   * <br><br>
+   * 2. Data returned from get query (max 500 rows).
+   * <br><br>
+   * 3. Transactions of applied transaction molecules.
+   *
+   * @group inspectGet
+   * @param txMolecules Transaction statements from applied Molecules with test data
+   * @param conn        Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   */
   def inspectGetWith(txMolecules: Seq[Statement]*)(implicit conn: Future[Conn]): Future[Unit] = {
     inspectGet(
       conn.map { conn2 =>
@@ -536,30 +536,30 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
 
 
   /** Inspect call to `getHistory` on a molecule (without affecting the db).
-    * <br><br>
-    * Prints the following to output:
-    * <br><br>
-    * 1. Internal molecule transformation representations:
-    * <br>Molecule DSL --> Model --> Query --> Datomic query
-    * <br><br>
-    * 2. Data returned from get query (max 500 rows).
-    *
-    * @group inspectGet
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-    */
+   * <br><br>
+   * Prints the following to output:
+   * <br><br>
+   * 1. Internal molecule transformation representations:
+   * <br>Molecule DSL --> Model --> Query --> Datomic query
+   * <br><br>
+   * 2. Data returned from get query (max 500 rows).
+   *
+   * @group inspectGet
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   */
   def inspectGetHistory(implicit conn: Future[Conn]): Future[Unit] = inspectGet(conn.map(_.usingAdhocDbView(History)))
 
 
   /** Inspect call to `save` on a molecule (without affecting the db).
-    * <br><br>
-    * Prints internal molecule transformation representations to output:
-    * <br><br>
-    * Model --> Generic statements --> Datomic statements
-    *
-    * @group inspectOp
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-    * @return Unit
-    */
+   * <br><br>
+   * Prints internal molecule transformation representations to output:
+   * <br><br>
+   * Model --> Generic statements --> Datomic statements
+   *
+   * @group inspectOp
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   * @return Unit
+   */
   def inspectSave(implicit conn: Future[Conn]): Future[Unit] = conn.flatMap { conn =>
     val transformer = conn.model2stmts(_model)
     try {
@@ -597,15 +597,15 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
 
 
   /** Inspect call to `update` on a molecule (without affecting the db).
-    * <br><br>
-    * Prints internal molecule transformation representations to output:
-    * <br><br>
-    * Model --> Generic statements --> Datomic statements
-    *
-    * @group inspectOp
-    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
-    * @return
-    */
+   * <br><br>
+   * Prints internal molecule transformation representations to output:
+   * <br><br>
+   * Model --> Generic statements --> Datomic statements
+   *
+   * @group inspectOp
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   * @return
+   */
   def inspectUpdate(implicit conn: Future[Conn]): Future[Unit] = conn.flatMap { conn =>
     val transformer = conn.model2stmts(_model)
     try {

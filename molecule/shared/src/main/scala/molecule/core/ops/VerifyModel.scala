@@ -66,23 +66,23 @@ case class VerifyModel(model: Model, op: String) extends Helpers {
 
   // Avoid mixing insert/update style
   private def unexpectedAppliedId: Element = model.elements.head match {
-    case Generic(_, "e" | "e_", _, Eq(List(_))) => err("unexpectedAppliedId",
+    case Generic(_, "e" | "e_", _, Eq(List(_)), _) => err("unexpectedAppliedId",
       s"""Applying an eid is only allowed for updates.""")
-    case ok                                     => ok
+    case ok                                        => ok
   }
 
   private def missingAppliedId: Boolean = model.elements.head match {
-    case Generic(_, "e" | "e_", _, Eq(List(eid))) =>
+    case Generic(_, "e" | "e_", _, Eq(List(eid)), _) =>
       true
-    case Generic(_, "e" | "e_", _, Eq(eids))      => true
-    case Composite(elements)                      => elements.head match {
-      case Generic(_, "e" | "e_", _, Eq(eids)) => true
-      case _                                   => false
+    case Generic(_, "e" | "e_", _, Eq(eids), _)      => true
+    case Composite(elements)                         => elements.head match {
+      case Generic(_, "e" | "e_", _, Eq(eids), _) => true
+      case _                                      => false
     }
-    case Atom(nsFull, _, _, _, _, _, _, _)        =>
+    case Atom(nsFull, _, _, _, _, _, _, _, _)        =>
       err("missingAppliedId",
         s"Update molecule should start with an applied id: `${Ns(nsFull)}(<eid>)...`")
-    case other                                    =>
+    case other                                       =>
       err("missingAppliedId", "unexpected element: " + other)
   }
 
@@ -98,14 +98,14 @@ case class VerifyModel(model: Model, op: String) extends Helpers {
   }
 
   private def noGenericsInTail: Option[Nothing] = model.elements.tail.collectFirst {
-    case Generic(_, attr, _, Eq(List(eid))) if datomGenerics.contains(attr) => err("noGenerics",
+    case Generic(_, attr, _, Eq(List(eid)), _) if datomGenerics.contains(attr) => err("noGenerics",
       s"Generic elements `e`, `a`, `v`, `ns`, `tx`, `t`, `txInstant` and `op` " +
         s"not allowed in $op molecules. Found `e($eid)`")
   }
 
   private def onlyTacitTxAttrs: Seq[Option[Nothing]] = model.elements.collect {
     case TxMetaData(es) => es.collectFirst {
-      case Atom(nsFull, attr, _, _, _, _, _, _) if !attr.endsWith("_") =>
+      case Atom(nsFull, attr, _, _, _, _, _, _, _) if !attr.endsWith("_") =>
         val attrClean = if (attr.endsWith("$")) attr.init else attr
         err("onlyTacitTxAttrs",
           s"For inserts, tx meta data can only be applied to tacit attributes, " +
@@ -127,11 +127,11 @@ case class VerifyModel(model: Model, op: String) extends Helpers {
   private def missingAttrInStart: Unit = {
     model.elements.foldLeft(Seq[Element]()) {
       case (attrs, e) => e match {
-        case a: Atom if a.attr.last != '$'         => attrs :+ a
-        case g@Generic(_, "e" | "e_", _, EntValue) => attrs :+ g
-        case b: Bond if attrs.isEmpty              =>
+        case a: Atom if a.attr.last != '$'            => attrs :+ a
+        case g@Generic(_, "e" | "e_", _, EntValue, _) => attrs :+ g
+        case b: Bond if attrs.isEmpty                 =>
           err("missingAttrInStartEnd", "Missing mandatory attributes of first namespace.")
-        case _                                     => attrs
+        case _                                        => attrs
       }
     }
     def missingAttrInEnd(elements: Seq[Element]): Seq[Element] = elements.foldRight(Seq[Element]()) {
@@ -148,13 +148,13 @@ case class VerifyModel(model: Model, op: String) extends Helpers {
 
   private def noConflictingCardOneValues: Unit = {
     def catchConflictingCardOneValues(elements: Seq[Element]): Unit = elements.collectFirst {
-      case Atom(nsFull, attr, tpe, 1, Eq(vs), _, _, _) if vs.length > 1 =>
+      case Atom(nsFull, attr, tpe, 1, Eq(vs), _, _, _, _) if vs.length > 1 =>
         val format = (v: Any) => jsNumber(tpe, v)
         err("noConflictingCardOneValues",
           s"""Can't $op multiple values for cardinality-one attribute:
              |  ${Ns(nsFull)} ... $attr(${vs.map(format).mkString(", ")})""".stripMargin)
-      case Nested(_, es)                                                  => catchConflictingCardOneValues(es)
-      case Composite(es)                                                  => catchConflictingCardOneValues(es)
+      case Nested(_, es)                                                   => catchConflictingCardOneValues(es)
+      case Composite(es)                                                   => catchConflictingCardOneValues(es)
     }
     catchConflictingCardOneValues(model.elements)
   }
@@ -203,8 +203,8 @@ case class VerifyModel(model: Model, op: String) extends Helpers {
       case Nested(Bond(baseNs, _, refNs, _, Seq(BiEdgeRef(_, _))), es)
         if !es.collectFirst {
           // One of those is expected
-          case Bond(_, _, _, _, Seq(BiTargetRef(_, attr)))              => true
-          case Atom(_, _, _, _, _, _, Seq(BiTargetRefAttr(_, attr)), _) => true
+          case Bond(_, _, _, _, Seq(BiTargetRef(_, attr)))                 => true
+          case Atom(_, _, _, _, _, _, Seq(BiTargetRefAttr(_, attr)), _, _) => true
         }.getOrElse(false) => err("noNestedEdgesWithoutTarget",
         s"Nested edge ns `${Ns(refNs)}` should link to target ns within the nested group of attributes.")
     }
@@ -226,7 +226,7 @@ case class VerifyModel(model: Model, op: String) extends Helpers {
         // Base.attr.Edge ...
         case Bond(_, _, edgeNs1, _, Seq(BiEdgeRef(_, _))) if edgeNs1 == edgeNs => true
         // Base.attr.edge ...
-        case Atom(_, _, _, _, _, _, Seq(BiEdgeRefAttr(_, edgeRefAttr)), _) if extractNs(edgeRefAttr) == edgeNs => true
+        case Atom(_, _, _, _, _, _, Seq(BiEdgeRefAttr(_, edgeRefAttr)), _, _) if extractNs(edgeRefAttr) == edgeNs => true
       }
     }
 
@@ -236,7 +236,7 @@ case class VerifyModel(model: Model, op: String) extends Helpers {
         // ... TargetNs
         case Bond(edgeNs1, _, _, _, Seq(BiTargetRef(_, _))) if edgeNs1 == edgeNs => true
         // ... targetAttr
-        case Atom(edgeNs1, _, _, _, _, _, Seq(BiTargetRefAttr(_, attr)), _) if edgeNs1 == edgeNs => true
+        case Atom(edgeNs1, _, _, _, _, _, Seq(BiTargetRefAttr(_, attr)), _, _) if edgeNs1 == edgeNs => true
       }
 
       elements.collectFirst {
@@ -245,7 +245,7 @@ case class VerifyModel(model: Model, op: String) extends Helpers {
           err("edgeComplete", s"Missing target namespace after edge namespace `${Ns(edgeNs)}`.")
 
         // Edge.prop ..?
-        case Atom(edgeNs, prop, _, _, _, _, Seq(BiEdgePropAttr(_)), _) =>
+        case Atom(edgeNs, prop, _, _, _, _, Seq(BiEdgePropAttr(_)), _, _) =>
           hasTarget(elements, edgeNs) getOrElse
             err("edgeComplete",
               s"Missing target namespace somewhere after edge property `${Ns(edgeNs)}/$prop`.")
@@ -253,8 +253,8 @@ case class VerifyModel(model: Model, op: String) extends Helpers {
     }
 
     model.elements.head match {
-      case Generic(_, "e_", "e", Eq(List(eid))) => // BiEdge
-      case checkNext                            => missingTarget(model.elements)
+      case Generic(_, "e_", "e", Eq(List(eid)), _) => // BiEdge
+      case checkNext                               => missingTarget(model.elements)
     }
   }
 
@@ -267,7 +267,7 @@ case class VerifyModel(model: Model, op: String) extends Helpers {
         // ... TargetNs
         case Bond(edgeNs1, _, _, _, Seq(BiTargetRef(_, _))) if edgeNs1 == edgeNs => true
         // ... targetAttr
-        case Atom(edgeNs1, _, _, _, _, _, Seq(BiTargetRefAttr(_, _)), _) if edgeNs1 == edgeNs => true
+        case Atom(edgeNs1, _, _, _, _, _, Seq(BiTargetRefAttr(_, _)), _, _) if edgeNs1 == edgeNs => true
       }
 
       elements.collectFirst {

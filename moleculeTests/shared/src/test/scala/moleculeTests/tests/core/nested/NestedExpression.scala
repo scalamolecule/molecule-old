@@ -94,7 +94,7 @@ object NestedExpression extends AsyncTestSuite {
           "m(Ns.int.Refs1 *? Ref1.int1(2))",
           "molecule.core.transform.exception.Dsl2ModelException: " +
             "Expressions not allowed within optional nested structures. " +
-            """Found: Atom("Ref1", "int1", "Int", 1, Eq(Seq(2)), None, Seq(), Seq())"""
+            """Found: Atom("Ref1", "int1", "Int", 1, Eq(Seq(2)), None, Seq(), Seq(), "")"""
         )
       } yield ()
     }

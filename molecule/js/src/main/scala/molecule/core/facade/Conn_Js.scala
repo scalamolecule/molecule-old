@@ -119,8 +119,8 @@ case class Conn_Js(
     tacitIndexes: List[List[Int]]
   ): Future[String] = {
     model.elements.head match {
-      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _) => indexQuery(model)
-      case _                                                           => datalogQuery(
+      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _, _) => indexQuery(model)
+      case _                                                              => datalogQuery(
         query, datalog, maxRows, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
       )
     }
@@ -144,7 +144,7 @@ case class Conn_Js(
     def l(v: Any) = v.toString.toLong
 
     val (api, index, indexArgs) = model.elements.head match {
-      case Generic("EAVT", _, _, value) =>
+      case Generic("EAVT", _, _, value, _) =>
         ("datoms", "EAVT", value match {
           case NoValue                   => IndexArgs()
           case Eq(Seq(e))                => IndexArgs(l(e))
@@ -155,7 +155,7 @@ case class Conn_Js(
           case v                         => throw MoleculeException("Unexpected EAVT value: " + v)
         })
 
-      case Generic("AEVT", _, _, value) =>
+      case Generic("AEVT", _, _, value, _) =>
         ("datoms", "AEVT", value match {
           case NoValue                   => IndexArgs()
           case EntValue                  => IndexArgs()
@@ -167,7 +167,7 @@ case class Conn_Js(
           case v                         => throw MoleculeException("Unexpected AEVT value: " + v)
         })
 
-      case Generic("AVET", attr, _, value) =>
+      case Generic("AVET", attr, _, value, _) =>
         attr match {
           case "range" =>
             ("indexRange", "", value match {
@@ -201,7 +201,7 @@ case class Conn_Js(
             })
         }
 
-      case Generic("VAET", _, _, value) =>
+      case Generic("VAET", _, _, value, _) =>
         ("datoms", "VAET", value match {
           case NoValue                   => IndexArgs()
           case Eq(Seq(v))                => val (s, tpe) = p(v); IndexArgs(v = s, tpe = tpe)
@@ -212,7 +212,7 @@ case class Conn_Js(
           case v                         => throw MoleculeException("Unexpected VAET value: " + v)
         })
 
-      case Generic("Log", _, _, value) =>
+      case Generic("Log", _, _, value, _) =>
         def err(v: Any) = throw MoleculeException(
           s"Args to Log can only be t, tx or txInstant of type Int/Long/Date. Found `$v` of type " + v.getClass)
 
@@ -270,7 +270,7 @@ case class Conn_Js(
       )
     }
     val attrs: Seq[String]      = model.elements.collect {
-      case Generic(_, attr, _, _) if attr != "args_" && attr != "range" => attr
+      case Generic(_, attr, _, _, _) if attr != "args_" && attr != "range" => attr
     }
 
     rpc.index2packed(connProxy, api, index, indexArgs, attrs)

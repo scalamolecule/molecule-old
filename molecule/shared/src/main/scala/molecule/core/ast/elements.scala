@@ -54,14 +54,17 @@ object elements {
     val attr  : String
     val tpe   : String
     val value : Value
+    val sort  : String
   }
 
   case class Generic(
     nsFull: String,
     attr: String,
     tpe: String,
-    value: Value) extends GenericAtom {
-    override def toString: String = s"""Generic("$nsFull", "$attr", "$tpe", $value)"""
+    value: Value,
+    sort: String = ""
+  ) extends GenericAtom {
+    override def toString: String = s"""Generic("$nsFull", "$attr", "$tpe", $value, "$sort")"""
   }
 
   case class Atom(
@@ -72,9 +75,11 @@ object elements {
     value: Value,
     enumPrefix: Option[String] = None,
     gvs: Seq[GenericValue] = Nil,
-    keys: Seq[String] = Nil) extends GenericAtom {
+    keys: Seq[String] = Nil,
+    sort: String = ""
+  ) extends GenericAtom {
     override def toString: String =
-      s"""Atom("$nsFull", "$attr", "$tpe", $card, ${tv(tpe, value)}, ${o(enumPrefix)}, ${sq(gvs)}, ${sq(keys)})"""
+      s"""Atom("$nsFull", "$attr", "$tpe", $card, ${tv(tpe, value)}, ${o(enumPrefix)}, ${sq(gvs)}, ${sq(keys)}, "$sort")"""
   }
 
   case class Bond(
@@ -265,11 +270,11 @@ object elements {
 
 
   def curNs(e: Element): String = e match {
-    case Atom(nsFull, _, _, _, _, _, _, _)   => nsFull
-    case Bond(nsFull, _, _, _, _)            => nsFull
-    case Nested(Bond(nsFull, _, _, _, _), _) => nsFull
-    case Generic(nsFull, _, _, _)            => nsFull
-    case unexpected                          =>
+    case Atom(nsFull, _, _, _, _, _, _, _, _) => nsFull
+    case Bond(nsFull, _, _, _, _)             => nsFull
+    case Nested(Bond(nsFull, _, _, _, _), _)  => nsFull
+    case Generic(nsFull, _, _, _, _)          => nsFull
+    case unexpected                           =>
       throw ModelException("Unexpected element: " + unexpected)
   }
 

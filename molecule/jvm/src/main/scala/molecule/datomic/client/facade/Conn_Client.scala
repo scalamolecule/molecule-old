@@ -317,7 +317,7 @@ case class Conn_Client(
     query: Query
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     model.elements.head match {
-      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _) =>
+      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _, _) =>
         indexQuery(model)
 
       case _ =>
@@ -332,7 +332,7 @@ case class Conn_Client(
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
     try {
       val (api, index, args) = model.elements.head match {
-        case Generic("EAVT", _, _, value) =>
+        case Generic("EAVT", _, _, value, _) =>
           ("datoms", ":eavt", value match {
             case NoValue                   => Seq()
             case Eq(Seq(e))                => Seq(e)
@@ -343,7 +343,7 @@ case class Conn_Client(
             case v                         => throw MoleculeException("Unexpected EAVT value: " + v)
           })
 
-        case Generic("AEVT", _, _, value) =>
+        case Generic("AEVT", _, _, value, _) =>
           ("datoms", ":aevt", value match {
             case NoValue                   => Seq()
             case EntValue                  => Seq()
@@ -355,7 +355,7 @@ case class Conn_Client(
             case v                         => throw MoleculeException("Unexpected AEVT value: " + v)
           })
 
-        case Generic("AVET", attr, _, value) =>
+        case Generic("AVET", attr, _, value, _) =>
           attr match {
             case "range" =>
               ("indexRange", "", value match {
@@ -380,7 +380,7 @@ case class Conn_Client(
               })
           }
 
-        case Generic("VAET", _, _, value) =>
+        case Generic("VAET", _, _, value, _) =>
           ("datoms", ":vaet", value match {
             case NoValue                   => Seq()
             case Eq(Seq(v))                => Seq(v)
@@ -391,7 +391,7 @@ case class Conn_Client(
             case v                         => throw MoleculeException("Unexpected VAET value: " + v)
           })
 
-        case Generic("Log", _, _, value) =>
+        case Generic("Log", _, _, value, _) =>
           def err(v: Any) = throw MoleculeException(
             s"Args to Log can only be t, tx or txInstant of type Int/Long/Date. Found `$v` of type " + v.getClass)
 
@@ -476,7 +476,7 @@ case class Conn_Client(
       }
 
       val attrs: Seq[String] = model.elements.collect {
-        case Generic(_, attr, _, _)
+        case Generic(_, attr, _, _, _)
           if attr != "args_" && attr != "range" => attr
       }
 
@@ -488,7 +488,7 @@ case class Conn_Client(
               v1 <- x1(d)
             } yield list(
               v1.asInstanceOf[Object],
-            ).asInstanceOf[jList[AnyRef]]
+            )
 
         case 2 =>
           val x1 = datomElement(tOpt, attrs.head)
@@ -500,7 +500,7 @@ case class Conn_Client(
             } yield list(
               v1.asInstanceOf[Object],
               v2.asInstanceOf[Object],
-            ).asInstanceOf[jList[AnyRef]]
+            )
 
         case 3 =>
           val x1 = datomElement(tOpt, attrs.head)
@@ -515,7 +515,7 @@ case class Conn_Client(
               v1.asInstanceOf[Object],
               v2.asInstanceOf[Object],
               v3.asInstanceOf[Object],
-            ).asInstanceOf[jList[AnyRef]]
+            )
 
         case 4 =>
           val x1 = datomElement(tOpt, attrs.head)
@@ -533,7 +533,7 @@ case class Conn_Client(
               v2.asInstanceOf[Object],
               v3.asInstanceOf[Object],
               v4.asInstanceOf[Object],
-            ).asInstanceOf[jList[AnyRef]]
+            )
 
         case 5 =>
           val x1 = datomElement(tOpt, attrs.head)
@@ -554,7 +554,7 @@ case class Conn_Client(
               v3.asInstanceOf[Object],
               v4.asInstanceOf[Object],
               v5.asInstanceOf[Object],
-            ).asInstanceOf[jList[AnyRef]]
+            )
 
         case 6 =>
           val x1 = datomElement(tOpt, attrs.head)
@@ -578,7 +578,7 @@ case class Conn_Client(
               v4.asInstanceOf[Object],
               v5.asInstanceOf[Object],
               v6.asInstanceOf[Object],
-            ).asInstanceOf[jList[AnyRef]]
+            )
 
         case 7 =>
           val x1 = datomElement(tOpt, attrs.head)
@@ -605,7 +605,7 @@ case class Conn_Client(
               v5.asInstanceOf[Object],
               v6.asInstanceOf[Object],
               v7.asInstanceOf[Object]
-            ).asInstanceOf[jList[AnyRef]]
+            )
       }
 
       // Convert Datoms to standard list of rows so that we can use the same Molecule query API

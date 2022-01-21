@@ -484,15 +484,15 @@ private[molecule] trait Liftables extends MacroHelpers {
   }
 
   implicit val liftElement: c.universe.Liftable[Element] = Liftable[Element] {
-    case Atom(nsFull, attr, tpeS, card, value, enumPrefix, gs, keys) => q"Atom($nsFull, $attr, $tpeS, $card, $value, $enumPrefix, Seq(..$gs), Seq(..$keys))"
-    case Bond(nsFull, refAttr, refNs, card, gs)                      => q"Bond($nsFull, $refAttr, $refNs, $card, Seq(..$gs))"
-    case ReBond(backRef)                                             => q"ReBond($backRef)"
-    case Nested(ref, elements)                                       => q"Nested($ref, $elements)"
-    case Generic(nsFull, attr, kind, value)                          => q"Generic($nsFull, $attr, $kind, $value)"
-    case TxMetaData(elements)                                        => q"TxMetaData($elements)"
-    case Composite(elements)                                         => q"Composite($elements)"
-    case Self                                                        => q"Self"
-    case EmptyElement                                                => q"EmptyElement"
+    case Atom(nsFull, attr, tpeS, card, value, enumPrefix, gs, keys, sort) => q"Atom($nsFull, $attr, $tpeS, $card, $value, $enumPrefix, Seq(..$gs), Seq(..$keys), $sort)"
+    case Bond(nsFull, refAttr, refNs, card, gs)                            => q"Bond($nsFull, $refAttr, $refNs, $card, Seq(..$gs))"
+    case ReBond(backRef)                                                   => q"ReBond($backRef)"
+    case Nested(ref, elements)                                             => q"Nested($ref, $elements)"
+    case Generic(nsFull, attr, kind, value, sort)                          => q"Generic($nsFull, $attr, $kind, $value, $sort)"
+    case TxMetaData(elements)                                              => q"TxMetaData($elements)"
+    case Composite(elements)                                               => q"Composite($elements)"
+    case Self                                                              => q"Self"
+    case EmptyElement                                                      => q"EmptyElement"
   }
 
   implicit val liftModel: c.universe.Liftable[Model] = Liftable[Model] { model => q"Model(Seq(..${model.elements}))" }

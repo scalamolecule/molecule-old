@@ -3,16 +3,14 @@ package molecule.core.macros.nested
 import java.lang.{Long => jLong}
 import java.util.{ArrayList => jArrayList, Comparator => jComparator, List => jList}
 import molecule.core.api.Molecule_0
-import molecule.datomic.base.facade.Conn
-import scala.concurrent.{ExecutionContext, Future}
 
 
 /** Builder classes of various arity of nested tuples. */
 trait NestedBase[Obj, Tpl]
-  extends jComparator[jList[AnyRef]] { self: Molecule_0[Obj, Tpl] =>
+//  extends jComparator[jList[AnyRef]] { self: Molecule_0[Obj, Tpl] =>
+   { self: Molecule_0[Obj, Tpl] =>
 
   val levels = nestedLevels + 1
-
 
   protected var row    : jList[AnyRef] = new jArrayList[AnyRef]()
   protected var prevRow: jList[AnyRef] = new jArrayList[AnyRef]()
@@ -61,7 +59,7 @@ trait NestedBase[Obj, Tpl]
 
 
   // java.util.Comparator sorting interface implemented by NestedTuples subclasses (`rows.sort(this)`)
-  def compare(a: jList[AnyRef], b: jList[AnyRef]): Int = {
+  override def compare(a: jList[AnyRef], b: jList[AnyRef]): Int = {
     sortIndex = 0
     result = 0
     if (descending) {

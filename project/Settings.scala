@@ -92,11 +92,7 @@ object Settings extends SettingsDatomic {
       "com.lihaoyi" %%% "utest" % "0.7.10",
       "io.suzaku" %%% "boopickle" % "1.4.0",
       "com.github.cornerman" %%% "sloth" % "0.4.0"
-    ),
-    //        testFrameworks += new TestFramework("moleculeTests.setup.MoleculeTestFramework"),
-
-    // Ensure clojure loads correctly for async tests run from sbt
-    //        Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat,
+    )
   )
 
 
@@ -185,7 +181,7 @@ object Settings extends SettingsDatomic {
         //        sharedTests + "/db/datomic/time",
         //        sharedTests + "/db/datomic/txMetaData",
         //        sharedTests + "/examples/datomic/dayOfDatomic",
-                sharedTests + "/examples/datomic/mbrainz",
+        //        sharedTests + "/examples/datomic/mbrainz",
         //        sharedTests + "/examples/datomic/seattle",
         //        sharedTests + "/examples/gremlin/gettingStarted",
         sharedTests + "/Adhoc.scala",

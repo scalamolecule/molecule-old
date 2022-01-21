@@ -107,15 +107,15 @@ object Model2Query extends Helpers {
   : (Query, String, String, String, String, String) = {
     val (nsFull, attr) = (atom.nsFull, atom.attr)
     atom match {
-      case Atom(_, _, _, _, Fn("unify", _), _, _, _) => makeAtomUnify(query, atom, nsFull, attr, e, v, w, prevNs)
-      case Atom(_, _, "a", _, _, _, _, _)            => (resolve(query, e, v, atom), e, w, nsFull, attr, "")
-      case Atom(_, _, "ns", _, _, _, _, _)           => (resolve(query, e, v, atom), e, w, nsFull, attr, "")
-      case _ if prevRefNs == "IndexVal"              => (resolve(query, e, w, atom), e, w, nsFull, attr, "")
-      case Atom(`prevRefNs`, _, _, _, _, _, _, _)    => (resolve(query, v, w, atom), v, w, nsFull, attr, "")
-      case Atom(`prevAttr`, _, _, _, _, _, _, _)     => (resolve(query, v, w, atom), v, w, nsFull, attr, "")
-      case Atom(`prevNs`, _, _, _, _, _, _, _)       => (resolve(query, e, w, atom), e, w, nsFull, attr, "")
-      case _ if datomGeneric.contains(prevAttr)      => (resolve(query, e, w, atom), e, w, nsFull, attr, "")
-      case _                                         => (resolve(query, e, v, atom), e, v, nsFull, attr, "")
+      case Atom(_, _, _, _, Fn("unify", _), _, _, _, _) => makeAtomUnify(query, atom, nsFull, attr, e, v, w, prevNs)
+      case Atom(_, _, "a", _, _, _, _, _, _)            => (resolve(query, e, v, atom), e, w, nsFull, attr, "")
+      case Atom(_, _, "ns", _, _, _, _, _, _)           => (resolve(query, e, v, atom), e, w, nsFull, attr, "")
+      case _ if prevRefNs == "IndexVal"                 => (resolve(query, e, w, atom), e, w, nsFull, attr, "")
+      case Atom(`prevRefNs`, _, _, _, _, _, _, _, _)    => (resolve(query, v, w, atom), v, w, nsFull, attr, "")
+      case Atom(`prevAttr`, _, _, _, _, _, _, _, _)     => (resolve(query, v, w, atom), v, w, nsFull, attr, "")
+      case Atom(`prevNs`, _, _, _, _, _, _, _, _)       => (resolve(query, e, w, atom), e, w, nsFull, attr, "")
+      case _ if datomGeneric.contains(prevAttr)         => (resolve(query, e, w, atom), e, w, nsFull, attr, "")
+      case _                                            => (resolve(query, e, v, atom), e, v, nsFull, attr, "")
     }
   }
 
@@ -209,10 +209,10 @@ object Model2Query extends Helpers {
           case ((acc, Nil), _) => (acc, Nil)
 
           // Nested attributes
-          case ((acc, rem), Atom(nsFull1, attr, _, _, _, None, _, _)) if optTac(attr) => (acc :+ PullAttr(nsFull1, clean(attr), true), rem.tail)
-          case ((acc, rem), Atom(nsFull1, attr, _, _, _, None, _, _))                 => (acc :+ PullAttr(nsFull1, attr, false), rem.tail)
-          case ((acc, rem), Atom(nsFull1, attr, _, _, _, _, _, _)) if optTac(attr)    => (acc :+ PullEnum(nsFull1, clean(attr), true), rem.tail)
-          case ((acc, rem), Atom(nsFull1, attr, _, _, _, _, _, _))                    => (acc :+ PullEnum(nsFull1, attr, false), rem.tail)
+          case ((acc, rem), Atom(nsFull1, attr, _, _, _, None, _, _, _)) if optTac(attr) => (acc :+ PullAttr(nsFull1, clean(attr), true), rem.tail)
+          case ((acc, rem), Atom(nsFull1, attr, _, _, _, None, _, _, _))                 => (acc :+ PullAttr(nsFull1, attr, false), rem.tail)
+          case ((acc, rem), Atom(nsFull1, attr, _, _, _, _, _, _, _)) if optTac(attr)    => (acc :+ PullEnum(nsFull1, clean(attr), true), rem.tail)
+          case ((acc, rem), Atom(nsFull1, attr, _, _, _, _, _, _, _))                    => (acc :+ PullEnum(nsFull1, attr, false), rem.tail)
 
           // Card 1 ref within nested structure is represented as a nested structure itself
           case ((acc, rem), Bond(prevNs, refAttr, _, _, _)) =>
@@ -282,10 +282,11 @@ object Model2Query extends Helpers {
       }
     } else v0
 
-    val (q2, e2, v2, prevNs2, prevAttr2, prevRefNs2) = composite.elements.foldLeft((query, eid, v, prevNs, prevAttr, prevRefNs)) {
-      case ((q1, e1, v1, prevNs1, prevAttr1, prevRefNs1), element) =>
-        make(model, q1, element, e1, v1, prevNs1, prevAttr1, prevRefNs1)
-    }
+    val (q2, e2, v2, prevNs2, prevAttr2, prevRefNs2) = composite.elements
+      .foldLeft((query, eid, v, prevNs, prevAttr, prevRefNs)) {
+        case ((q1, e1, v1, prevNs1, prevAttr1, prevRefNs1), element) =>
+          make(model, q1, element, e1, v1, prevNs1, prevAttr1, prevRefNs1)
+      }
     (q2, e2, nextChar(v2, 1), prevNs2, prevAttr2, prevRefNs2)
   }
 
@@ -307,32 +308,34 @@ object Model2Query extends Helpers {
     val (opt: Boolean, tacit: Boolean) = (a.attr.last == '$', a.attr.last == '_')
     a match {
       // Manipulation (not relevant to queries, only to transactions)
-      case Atom(_, _, _, _, AssertValue(_) | ReplaceValue(_) | RetractValue(_) | AssertMapPairs(_) | ReplaceMapPairs(_) | RetractMapKeys(_), _, _, _) => q
+      case Atom(_, _, _, _,
+      AssertValue(_) | ReplaceValue(_) | RetractValue(_) | AssertMapPairs(_) | ReplaceMapPairs(_) | RetractMapKeys(_),
+      _, _, _, _) => q
 
       // Enum
-      case a@Atom(_, _, _, 2, _, Some(prefix), _, _) if opt       => resolveEnumOptional2(q, e, a, v, v2)
-      case a@Atom(_, _, _, 1, _, Some(prefix), _, _) if opt       => resolveEnumOptional1(q, e, a, v, v2, prefix)
-      case a@Atom(_, _, _, 1 | 2, _, Some(prefix), _, _) if tacit => resolveEnumTacit(q, e, a, v, v2, v3, prefix)
-      case a@Atom(_, _, _, 2, _, Some(prefix), _, _)              => resolveEnumMandatory2(q, e, a, v, v2, v3, prefix)
-      case a@Atom(_, _, _, 1, _, Some(prefix), _, _)              => resolveEnumMandatory1(q, e, a, v, v2, v3, prefix)
+      case a@Atom(_, _, _, 2, _, Some(prefix), _, _, _) if opt       => resolveEnumOptional2(q, e, a, v, v2)
+      case a@Atom(_, _, _, 1, _, Some(prefix), _, _, _) if opt       => resolveEnumOptional1(q, e, a, v, v2, prefix)
+      case a@Atom(_, _, _, 1 | 2, _, Some(prefix), _, _, _) if tacit => resolveEnumTacit(q, e, a, v, v2, v3, prefix)
+      case a@Atom(_, _, _, 2, _, Some(prefix), _, _, _)              => resolveEnumMandatory2(q, e, a, v, v2, v3, prefix)
+      case a@Atom(_, _, _, 1, _, Some(prefix), _, _, _)              => resolveEnumMandatory1(q, e, a, v, v2, v3, prefix)
 
       // Atom
-      case a@Atom(_, _, _, 2, _, _, _, _) if opt       => resolveAtomOptional2(q, e, a, v, v1)
-      case a@Atom(_, _, _, 1, _, _, _, _) if opt       => resolveAtomOptional1(q, e, a, v, v1)
-      case a@Atom(_, _, _, 1 | 2, _, _, _, _) if tacit => resolveAtomTacit(q, e, a, v, v1)
-      case a@Atom(_, _, _, 2, _, _, _, _)              => resolveAtomMandatory2(q, e, a, v, v1)
-      case a@Atom(_, _, _, 1, _, _, _, _)              => resolveAtomMandatory1(q, e, a, v, v1)
+      case a@Atom(_, _, _, 2, _, _, _, _, _) if opt       => resolveAtomOptional2(q, e, a, v, v1)
+      case a@Atom(_, _, _, 1, _, _, _, _, _) if opt       => resolveAtomOptional1(q, e, a, v, v1)
+      case a@Atom(_, _, _, 1 | 2, _, _, _, _, _) if tacit => resolveAtomTacit(q, e, a, v, v1)
+      case a@Atom(_, _, _, 2, _, _, _, _, _)              => resolveAtomMandatory2(q, e, a, v, v1)
+      case a@Atom(_, _, _, 1, _, _, _, _, _)              => resolveAtomMandatory1(q, e, a, v, v1)
 
       // Mapped attributes
-      case a@Atom(_, _, _, 3, _, _, _, _) if opt      => resolveAtomMapOptional(q, e, a, v)
-      case a@Atom(_, _, _, 3, _, _, _, keys) if tacit => resolveAtomMapTacit(q, e, a, v, keys)
-      case a@Atom(_, _, _, 3, _, _, _, keys)          => resolveAtomMapMandatory(q, e, a, v, keys)
+      case a@Atom(_, _, _, 3, _, _, _, _, _) if opt      => resolveAtomMapOptional(q, e, a, v)
+      case a@Atom(_, _, _, 3, _, _, _, keys, _) if tacit => resolveAtomMapTacit(q, e, a, v, keys)
+      case a@Atom(_, _, _, 3, _, _, _, keys, _)          => resolveAtomMapMandatory(q, e, a, v, keys)
 
       // Keyed mapped attributes
-      case a@Atom(_, _, _, 4, _, _, _, _) if opt            => resolveAtomKeyedMapOptional(q, e, a)
-      case a@Atom(_, _, _, 4, _, _, _, key :: Nil) if tacit => resolveAtomKeyedMapTacit(q, e, a, v, v1, v2, key)
-      case a@Atom(_, _, _, 4, _, _, _, key :: Nil)          => resolveAtomKeyedMapMandatory(q, e, a, v, v1, v2, v3, key)
-      case a                                                => abort("Unexpected Atom: " + a)
+      case a@Atom(_, _, _, 4, _, _, _, _, _) if opt            => resolveAtomKeyedMapOptional(q, e, a)
+      case a@Atom(_, _, _, 4, _, _, _, key :: Nil, _) if tacit => resolveAtomKeyedMapTacit(q, e, a, v, v1, v2, key)
+      case a@Atom(_, _, _, 4, _, _, _, key :: Nil, _)          => resolveAtomKeyedMapMandatory(q, e, a, v, v1, v2, v3, key)
+      case a                                                   => abort("Unexpected Atom: " + a)
     }
   }
 
@@ -1010,19 +1013,19 @@ object Model2Query extends Helpers {
   def postProcess(model: Model, q: Query): Query = {
 
     val andAtoms: Seq[Atom] = model.elements.collect {
-      case a@Atom(_, _, _, card, And(_), _, _, _) if card == 1 || card == 3 => a
+      case a@Atom(_, _, _, card, And(_), _, _, _, _) if card == 1 || card == 3 => a
     }
 
     if (andAtoms.size > 1)
       abort("For now, only 1 And-expression can be used. Found: " + andAtoms)
 
     if (andAtoms.size == 1) {
-      val clauses                                               = q.wh.clauses
-      val andAtom                                               = andAtoms.head
-      val Atom(nsFull, attr0, _, card, And(andValues), _, _, _) = andAtom
-      val attr                                                  = if (attr0.last == '_') attr0.init else attr0
-      val unifyAttrs                                            = model.elements.collect {
-        case a@Atom(nsFull1, attr1, _, _, _, _, _, _) if a != andAtom => (nsFull1, if (attr1.last == '_') attr1.init else attr1)
+      val clauses                                                  = q.wh.clauses
+      val andAtom                                                  = andAtoms.head
+      val Atom(nsFull, attr0, _, card, And(andValues), _, _, _, _) = andAtom
+      val attr                                                     = if (attr0.last == '_') attr0.init else attr0
+      val unifyAttrs                                               = model.elements.collect {
+        case a@Atom(nsFull1, attr1, _, _, _, _, _, _, _) if a != andAtom => (nsFull1, if (attr1.last == '_') attr1.init else attr1)
       }
 
       // The first arg is already modelled in the query

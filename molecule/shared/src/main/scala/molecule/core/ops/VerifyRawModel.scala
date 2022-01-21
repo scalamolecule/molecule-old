@@ -60,11 +60,11 @@ object VerifyRawModel extends Helpers {
       el match {
         case e if after => e match {
           // No non-tx generic attributes after TxMetaData/Nested
-          case Generic(_, attr, _, _)          => txError(s" generic attribute `$attr`")
-          case Atom(_, attr, _, _, _, _, _, _) => txError(s" attribute `$attr`")
-          case Bond(_, refAttr, _, _, _)       => txError(s" reference `${refAttr.capitalize}`")
-          case _: TxMetaData                   => // ok
-          case _                               => txError(s": " + e)
+          case Generic(_, attr, _, _, _)          => txError(s" generic attribute `$attr`")
+          case Atom(_, attr, _, _, _, _, _, _, _) => txError(s" attribute `$attr`")
+          case Bond(_, refAttr, _, _, _)          => txError(s" reference `${refAttr.capitalize}`")
+          case _: TxMetaData                      => // ok
+          case _                                  => txError(s": " + e)
         }
 
         // Molecule should at least have one mandatory attribute
@@ -74,27 +74,27 @@ object VerifyRawModel extends Helpers {
             hasMandatory = true
 
           a match {
-            case Atom(nsFull, attr, tpe, _, ReplaceValue(pairs), _, _, _) if dupValues(tpe, pairs).nonEmpty =>
+            case Atom(nsFull, attr, tpe, _, ReplaceValue(pairs), _, _, _, _) if dupValues(tpe, pairs).nonEmpty =>
               abort(s"Can't replace with duplicate values of attribute `:$nsFull/$attr`:\n" + dupValues(tpe, pairs).mkString("\n"))
 
-            case Atom(nsFull, attr, tpe, _, AssertMapPairs(pairs), _, _, _) if dupKeys(pairs).nonEmpty =>
+            case Atom(nsFull, attr, tpe, _, AssertMapPairs(pairs), _, _, _, _) if dupKeys(pairs).nonEmpty =>
               val dups     = dupKeys(pairs)
               val dupPairs = pairs.filter(p => dups.contains(p._1)).sortBy(_._1).map { case (k, v) => s"$k -> ${jsNumber(tpe, v)}" }
               abort(s"Can't assert multiple key/value pairs with the same key for attribute `:$nsFull/$attr`:\n" + dupPairs.mkString("\n"))
 
-            case Atom(nsFull, attr, tpe, _, ReplaceMapPairs(pairs), _, _, _) if dupKeys(pairs).nonEmpty =>
+            case Atom(nsFull, attr, tpe, _, ReplaceMapPairs(pairs), _, _, _, _) if dupKeys(pairs).nonEmpty =>
               val dups     = dupKeys(pairs)
               val dupPairs = pairs.filter(p => dups.contains(p._1)).sortBy(_._1).map { case (k, v) => s"$k -> ${jsNumber(tpe, v)}" }
               abort(s"Can't replace multiple key/value pairs with the same key for attribute `:$nsFull/$attr`:\n" + dupPairs.mkString("\n"))
 
-            case Atom(nsFull, attr, _, 2, Distinct, _, _, _) =>
+            case Atom(nsFull, attr, _, 2, Distinct, _, _, _, _) =>
               abort(s"`Distinct` keyword not supported for card many attributes like `:$nsFull/$attr` (card many values already returned as Sets of distinct values).")
 
-            case Atom(_, _, _, 3 | 4, Fn(fn, _), _, _, _) =>
+            case Atom(_, _, _, 3 | 4, Fn(fn, _), _, _, _, _) =>
               if (!Seq("not", "unify").contains(fn))
                 abort("Only expression keywords `not` and `unify` can be applied to Map attributes.")
 
-            case Atom(nsFull, attr, _, _, _, _, _, _) =>
+            case Atom(nsFull, attr, _, _, _, _, _, _, _) =>
               if (beforeFirstAttr) {
                 if (generics.nonEmpty)
                   abort(s"Can't add first attribute `${a.attr}` after generic attributes (except `e` which is ok to have first). " +
@@ -151,7 +151,7 @@ object VerifyRawModel extends Helpers {
             case _: Nested =>
               abort("Nested molecules in composites are not implemented")
 
-            case Atom(nsFull, name, _, _, _, _, _, _) =>
+            case Atom(nsFull, name, _, _, _, _, _, _, _) =>
               if (compLevel == 0) {
                 if (compTopLevelAttrs.contains(nsFull + "/" + clean(name)))
                   abort(s"Composite molecules can't contain the same attribute more than once. Found multiple instances of `:$nsFull/${clean(name)}`")

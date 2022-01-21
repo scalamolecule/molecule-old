@@ -73,14 +73,14 @@ private[molecule] abstract class InputMolecule(
     val nsFull_                = nsFull + "_"
     val (attr_, attrK, attrK_) = (attr + "_", attr + "K", attr + "K_")
     def isTacit_(elements: Seq[Element], tacit0: Option[Boolean]): Option[Boolean] = elements.foldLeft(tacit0) {
-      case (tacit, Generic(_, `attr`, `nsFull`, _))                                  => Some(true)
-      case (tacit, Atom(`nsFull` | `nsFull_`, `attr_` | `attrK_`, _, _, _, _, _, _)) => Some(true)
-      case (tacit, Atom(`nsFull_`, `attr` | `attrK`, _, _, _, _, _, _))              => Some(true)
-      case (tacit, Atom(`nsFull`, `attr` | `attrK`, _, _, _, _, _, _))               => Some(false)
-      case (tacit, Nested(_, elements2))                                             => isTacit_(elements2, tacit)
-      case (tacit, Composite(elements2))                                             => isTacit_(elements2, tacit)
-      case (tacit, TxMetaData(elements2))                                            => isTacit_(elements2, tacit)
-      case (tacit, _)                                                                => tacit
+      case (tacit, Generic(_, `attr`, `nsFull`, _, _))                                  => Some(true)
+      case (tacit, Atom(`nsFull` | `nsFull_`, `attr_` | `attrK_`, _, _, _, _, _, _, _)) => Some(true)
+      case (tacit, Atom(`nsFull_`, `attr` | `attrK`, _, _, _, _, _, _, _))              => Some(true)
+      case (tacit, Atom(`nsFull`, `attr` | `attrK`, _, _, _, _, _, _, _))               => Some(false)
+      case (tacit, Nested(_, elements2))                                                => isTacit_(elements2, tacit)
+      case (tacit, Composite(elements2))                                                => isTacit_(elements2, tacit)
+      case (tacit, TxMetaData(elements2))                                               => isTacit_(elements2, tacit)
+      case (tacit, _)                                                                   => tacit
     }
     isTacit_(_model.elements, None) match {
       case Some(result) => result
@@ -92,12 +92,12 @@ private[molecule] abstract class InputMolecule(
     val nsFull_                = nsFull + "_"
     val (attr_, attrK, attrK_) = (attr + "_", attr + "K", attr + "K_")
     def isTacit_(elements: Seq[Element], cardOpt0: Option[Int]): Option[Int] = elements.foldLeft(cardOpt0) {
-      case (cardOpt, Generic(_, `attr`, `nsFull`, _))                                                        => Some(2)
-      case (cardOpt, Atom(`nsFull` | `nsFull_`, `attr` | `attr_` | `attrK` | `attrK_`, _, card, _, _, _, _)) => Some(card)
-      case (cardOpt, Nested(_, elements2))                                                                   => isTacit_(elements2, cardOpt)
-      case (cardOpt, Composite(elements2))                                                                   => isTacit_(elements2, cardOpt)
-      case (cardOpt, TxMetaData(elements2))                                                                  => isTacit_(elements2, cardOpt)
-      case (cardOpt, e)                                                                                      => cardOpt
+      case (cardOpt, Generic(_, `attr`, `nsFull`, _, _))                                                        => Some(2)
+      case (cardOpt, Atom(`nsFull` | `nsFull_`, `attr` | `attr_` | `attrK` | `attrK_`, _, card, _, _, _, _, _)) => Some(card)
+      case (cardOpt, Nested(_, elements2))                                                                      => isTacit_(elements2, cardOpt)
+      case (cardOpt, Composite(elements2))                                                                      => isTacit_(elements2, cardOpt)
+      case (cardOpt, TxMetaData(elements2))                                                                     => isTacit_(elements2, cardOpt)
+      case (cardOpt, e)                                                                                         => cardOpt
     }
     isTacit_(_model.elements, None) match {
       case Some(result) => result
@@ -108,11 +108,11 @@ private[molecule] abstract class InputMolecule(
   protected def isExpression(nsFull: String, attr: String): Boolean = {
     val attr_ = attr + "_"
     def isExpression_(elements: Seq[Element], isExpression: Boolean): Boolean = elements.foldLeft(isExpression) {
-      case (expr, Atom(`nsFull`, `attr` | `attr_`, _, _, Neq(_) | Lt(_) | Gt(_) | Le(_) | Ge(_) | Fulltext(_), _, _, _)) => true
-      case (expr, Nested(_, elements2))                                                                                  => isExpression_(elements2, expr)
-      case (expr, Composite(elements2))                                                                                  => isExpression_(elements2, expr)
-      case (expr, TxMetaData(elements2))                                                                                 => isExpression_(elements2, expr)
-      case (expr, _)                                                                                                     => expr
+      case (expr, Atom(`nsFull`, `attr` | `attr_`, _, _, Neq(_) | Lt(_) | Gt(_) | Le(_) | Ge(_) | Fulltext(_), _, _, _, _)) => true
+      case (expr, Nested(_, elements2))                                                                                     => isExpression_(elements2, expr)
+      case (expr, Composite(elements2))                                                                                     => isExpression_(elements2, expr)
+      case (expr, TxMetaData(elements2))                                                                                    => isExpression_(elements2, expr)
+      case (expr, _)                                                                                                        => expr
     }
     isExpression_(_model.elements, false)
   }

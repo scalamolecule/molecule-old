@@ -1,6 +1,6 @@
 package molecule.core.marshalling
 
-import java.util.{List => jList}
+import java.util.{Comparator, List => jList}
 import molecule.core.api.Molecule
 import molecule.core.ast.elements.Model
 import molecule.core.util.Helpers
@@ -12,7 +12,7 @@ import molecule.datomic.base.ast.query.Query
  * Methods are implemented by macros for either JS or JVM platform
  */
 abstract class Marshalling[Obj, Tpl](model: Model, queryData: (Query, String, Option[Throwable]))
-  extends Molecule with Helpers {
+  extends Comparator[jList[AnyRef]] with Molecule with Helpers {
 
   def _model: Model = model
   def _query: Query = queryData._1
@@ -25,6 +25,10 @@ abstract class Marshalling[Obj, Tpl](model: Model, queryData: (Query, String, Op
   protected def nestedLevels: Int = 0
   protected def refIndexes: List[List[Int]] = List(List.empty[Int])
   protected def tacitIndexes: List[List[Int]] = List(List.empty[Int])
+
+  // Sorting
+  protected def sortRows: Boolean = false
+  def compare(a: jList[AnyRef], b: jList[AnyRef]): Int = ???
 
   // jvm
   protected def row2tpl(row: jList[AnyRef]): Tpl = ???

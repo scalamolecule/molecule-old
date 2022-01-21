@@ -16,7 +16,7 @@ class MakeComposite_In(val c: blackbox.Context) extends MakeBase {
   private lazy val xx = InspectMacro("MakeComposite_In", 90)
 
   private[this] final def generateComposite_In_Molecule(dsl: Tree, ObjType: Type, InTypes: Type*)(OutTypes: Type*): Tree = {
-    val (genericImports, model0, _, castss, obj, _, hasVariables, txMetas, _, _, _, _) = getModel(dsl)
+    val (genericImports, model0, _, castss, obj, _, hasVariables, txMetas, _, _, _, _, _) = getModel(dsl)
 
     val imports          = getImports(genericImports)
     val InputMoleculeTpe = inputMolecule_i_o(InTypes.size, OutTypes.size)

@@ -14,13 +14,13 @@ import scala.concurrent.{ExecutionContext, Future}
 object Helpers extends Helpers
 trait Helpers extends DateHandling {
 
-//  final protected object mkDate {
-//    def apply(year: Int, month: Int = 1, day: Int = 1): Date = {
-//      val localDate = LocalDate.of(year, month, day)
-//      val instant   = localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant
-//      Date.from(instant)
-//    }
-//  }
+  //  final protected object mkDate {
+  //    def apply(year: Int, month: Int = 1, day: Int = 1): Date = {
+  //      val localDate = LocalDate.of(year, month, day)
+  //      val instant   = localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant
+  //      Date.from(instant)
+  //    }
+  //  }
 
   def clean(attr: String): String = attr.last match {
     case '_' => attr.init
@@ -128,11 +128,11 @@ trait Helpers extends DateHandling {
 
   def firstNs(model: Model): String = {
     def getNs(element: Element): String = element match {
-      case Atom(nsFull, _, _, _, _, _, _, _) => nsFull
-      case Bond(nsFull, _, _, _, _)          => nsFull
-      case Generic(nsFull, _, _, _)          => nsFull
-      case Composite(elements)               => getNs(elements.head)
-      case other                             =>
+      case Atom(nsFull, _, _, _, _, _, _, _, _) => nsFull
+      case Bond(nsFull, _, _, _, _)             => nsFull
+      case Generic(nsFull, _, _, _, _)          => nsFull
+      case Composite(elements)                  => getNs(elements.head)
+      case other                                =>
         throw MoleculeException("Unexpected first model element: " + other)
     }
     getNs(model.elements.head)

@@ -29,9 +29,66 @@ object Adhoc extends AsyncTestSuite with Helpers {
       for {
         conn <- futConn
 
-        _ <- Ns.int(1).save
-        _ <- Ns.int.get.map(_ ==> List(1))
+        _ <- Ns.int.long insert List(
+          (2, 3),
+          (1, 4),
+          (1, 3),
+        )
 
+        _ <- Ns.int.d2.long.a1.inspectGet
+
+        _ <- Ns.int.a1.long.a2.get.map(_ ==> List(
+          (1, 3),
+          (1, 4),
+          (2, 3),
+        ))
+        _ <- Ns.int.a1.long.d2.get.map(_ ==> List(
+          (1, 4),
+          (1, 3),
+          (2, 3),
+        ))
+        _ <- Ns.int.d1.long.a2.get.map(_ ==> List(
+          (2, 3),
+          (1, 3),
+          (1, 4),
+        ))
+        _ <- Ns.int.d1.long.d2.get.map(_ ==> List(
+          (2, 3),
+          (1, 4),
+          (1, 3),
+        ))
+
+        _ <- Ns.int.a2.long.a1.get.map(_ ==> List(
+          (1, 3),
+          (2, 3),
+          (1, 4),
+        ))
+        _ <- Ns.int.a2.long.d1.get.map(_ ==> List(
+          (1, 4),
+          (1, 3),
+          (2, 3),
+        ))
+        _ <- Ns.int.d2.long.a1.get.map(_ ==> List(
+          (2, 3),
+          (1, 3),
+          (1, 4),
+        ))
+        _ <- Ns.int.d2.long.d1.get.map(_ ==> List(
+          (1, 4),
+          (2, 3),
+          (1, 3),
+        ))
+
+        //        _ <- Ns.int.d1.inspectGet
+        //        _ <- Ns.int.d1.get.map(_ ==> List(3, 2, 1))
+
+        //        _ <- Ns.int.get(2).map(_ ==> List(1, 3))
+        //        _ <- Ns.int.a1.get(2).map(_ ==> List(1, 2))
+        //        _ <- Ns.int.d1.get(2).map(_ ==> List(3, 2))
+
+        //        _ <- Ns.int.get(2, 2).map(_ ==> List(2))
+        //        _ <- Ns.int.a1.get(2, 2).map(_ ==> List(3))
+        //        _ <- Ns.int.d1.get(2, 2).map(_ ==> List(1))
 
 
       } yield ()

@@ -17,13 +17,13 @@ object NestedInput extends AsyncTestSuite {
       expectCompileError("""m(Ns.int(?).Refs1 *? Ref1.int1)""",
         "molecule.core.transform.exception.Dsl2ModelException: " +
           "Input not allowed in optional nested structures. " +
-          """Found: Atom("Ns", "int", "Int", 1, Qm, None, Seq(), Seq())"""
+          """Found: Atom("Ns", "int", "Int", 1, Qm, None, Seq(), Seq(), "")"""
       )
 
       expectCompileError("""m(Ns.int.Refs1 *? Ref1.int1(?))""",
         "molecule.core.transform.exception.Dsl2ModelException: " +
           "Input not allowed in optional nested structures. " +
-          """Found: Atom("Ref1", "int1", "Int", 1, Qm, None, Seq(), Seq())"""
+          """Found: Atom("Ref1", "int1", "Int", 1, Qm, None, Seq(), Seq(), "")"""
       )
     }
 

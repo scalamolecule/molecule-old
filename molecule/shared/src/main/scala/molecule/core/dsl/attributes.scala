@@ -17,14 +17,42 @@ object attributes {
   trait OneRef[This, Next] extends Ref[This, Next]
   trait ManyRef[This, Next] extends Ref[This, Next]
 
-  trait Attr
+  trait Attr {
+    // Ascending
+    def a1: this.type = ???
+    def a2: this.type = ???
+    def a3: this.type = ???
+    def a4: this.type = ???
+    def a5: this.type = ???
+
+    // Descending
+    def d1: this.type = ???
+    def d2: this.type = ???
+    def d3: this.type = ???
+    def d4: this.type = ???
+    def d5: this.type = ???
+  }
 
   trait RefAttr[Ns] extends Attr
 
   trait OneRefAttr[Ns, In] extends RefAttr[Ns] with OneExpr[Ns, In, Long]
   trait ManyRefAttr[Ns, In] extends RefAttr[Ns] with ManyExpr[Ns, In, Long]
 
-  sealed trait ValueAttr[Ns, In, TT, T] extends Attr
+  sealed trait ValueAttr[Ns, In, TT, T] extends Attr {
+    // Ascending
+    override def a1: this.type = ???
+    override def a2: this.type = ???
+    override def a3: this.type = ???
+    override def a4: this.type = ???
+    override def a5: this.type = ???
+
+    // Descending
+    override def d1: this.type = ???
+    override def d2: this.type = ???
+    override def d3: this.type = ???
+    override def d4: this.type = ???
+    override def d5: this.type = ???
+  }
 
 
   // Cardinality one attributes
