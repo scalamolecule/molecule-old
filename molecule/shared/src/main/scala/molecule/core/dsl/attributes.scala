@@ -2,7 +2,6 @@ package molecule.core.dsl
 
 import java.net.URI
 import java.util.{Date, UUID}
-import molecule.core.dsl.base.NS
 import molecule.core.expression.AttrExpressions._
 
 /** Boilerplate interfaces for custom DSL generated from schema definition file.
@@ -17,47 +16,35 @@ object attributes {
   trait OneRef[This, Next] extends Ref[This, Next]
   trait ManyRef[This, Next] extends Ref[This, Next]
 
-  trait Attr {
+  trait Attr
+
+  trait SortMarkers[Ns] {
     // Ascending
-    def a1: this.type = ???
-    def a2: this.type = ???
-    def a3: this.type = ???
-    def a4: this.type = ???
-    def a5: this.type = ???
+    def a1: Ns = ???
+    def a2: Ns = ???
+    def a3: Ns = ???
+    def a4: Ns = ???
+    def a5: Ns = ???
 
     // Descending
-    def d1: this.type = ???
-    def d2: this.type = ???
-    def d3: this.type = ???
-    def d4: this.type = ???
-    def d5: this.type = ???
+    def d1: Ns = ???
+    def d2: Ns = ???
+    def d3: Ns = ???
+    def d4: Ns = ???
+    def d5: Ns = ???
   }
 
   trait RefAttr[Ns] extends Attr
 
-  trait OneRefAttr[Ns, In] extends RefAttr[Ns] with OneExpr[Ns, In, Long]
+  trait OneRefAttr[Ns, In] extends RefAttr[Ns] with OneExpr[Ns, In, Long] with SortMarkers[Ns]
   trait ManyRefAttr[Ns, In] extends RefAttr[Ns] with ManyExpr[Ns, In, Long]
 
-  sealed trait ValueAttr[Ns, In, TT, T] extends Attr {
-    // Ascending
-    override def a1: this.type = ???
-    override def a2: this.type = ???
-    override def a3: this.type = ???
-    override def a4: this.type = ???
-    override def a5: this.type = ???
-
-    // Descending
-    override def d1: this.type = ???
-    override def d2: this.type = ???
-    override def d3: this.type = ???
-    override def d4: this.type = ???
-    override def d5: this.type = ???
-  }
+  sealed trait ValueAttr[Ns, In, TT, T] extends Attr
 
 
   // Cardinality one attributes
 
-  trait One[Ns, In, T] extends ValueAttr[Ns, In, Nothing, T] with OneExpr[Ns, In, T]
+  trait One[Ns, In, T] extends ValueAttr[Ns, In, Nothing, T] with OneExpr[Ns, In, T] with SortMarkers[Ns]
 
   trait OneString    [Ns, In] extends One[Ns, In, String    ]
   trait OneInt       [Ns, In] extends One[Ns, In, Int       ]
@@ -111,23 +98,23 @@ object attributes {
   object EnumValue
   trait Enum
 
-  trait OneEnum  [Ns, In] extends One [Ns, In, String]              with Enum
+  trait OneEnum  [Ns, In] extends One [Ns, In, String]              with Enum with SortMarkers[Ns]
   trait ManyEnums[Ns, In] extends Many[Ns, In, Set[String], String] with Enum
 
   trait Enum$[Ns, T] extends Attr with Enum with OptionalExpr[Ns, T]
-  trait OneEnum$   [Ns] extends Enum$[Ns, String]
+  trait OneEnum$   [Ns] extends Enum$[Ns, String] with SortMarkers[Ns]
   trait ManyEnums$ [Ns] extends Enum$[Ns, Set[String]]
 
 
   // Optional attributes
 
   trait RefAttr$[Ns] extends Attr
-  trait OneRefAttr$ [Ns] extends RefAttr$[Ns] with OptionalExpr[Ns, Long]
+  trait OneRefAttr$ [Ns] extends RefAttr$[Ns] with OptionalExpr[Ns, Long] with SortMarkers[Ns]
   trait ManyRefAttr$[Ns] extends RefAttr$[Ns] with OptionalExpr[Ns, Set[Long]]
 
   trait ValueAttr$[T] extends Attr
 
-  trait OneValueAttr$[Ns, T] extends ValueAttr$[T] with OptionalExpr[Ns, T]
+  trait OneValueAttr$[Ns, T] extends ValueAttr$[T] with OptionalExpr[Ns, T] with SortMarkers[Ns]
 
   trait OneString$    [Ns] extends OneValueAttr$[Ns, String    ]
   trait OneInt$       [Ns] extends OneValueAttr$[Ns, Int       ]

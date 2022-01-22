@@ -130,7 +130,7 @@ private[molecule] trait Dsl2Model extends TreeOps
     var first      : Boolean = true
     var genericType: String  = "datom"
 
-    var sortMarker       : String    = ""
+    var sortMarker : String    = ""
     var sortIndexes: List[Int] = Nil
 
     def getType(t: richTree): Tree = {
@@ -234,9 +234,6 @@ private[molecule] trait Dsl2Model extends TreeOps
         }
       case _              => ()
     }
-
-    def sortCardOneOnly(attr: String, card: Int): Unit = if (sortMarker.nonEmpty && card != 1)
-      abort(s"Only cardinality-one attributes can be sorted. Found `$attr` of cardinality $card.")
 
     def getSort = if (sortMarker.nonEmpty) {
       val sort = sortMarker
@@ -438,6 +435,8 @@ private[molecule] trait Dsl2Model extends TreeOps
 
       case '_' =>
         //xx(160, attrStr)
+        if (sortMarker.nonEmpty)
+          abort(s"Can't sort by tacit values. Found: $attrStr.$sortMarker")
         resolveTacitAttr(tree, t, prev, p, attrStr)
 
       case _ =>
@@ -464,7 +463,6 @@ private[molecule] trait Dsl2Model extends TreeOps
           addSpecific(t, castOptNestedEnum(t), jsonOptNestedEnum(t), baseTpe0 = Some("enum"))
         else
           addSpecific(t, castEnum(t), jsonEnum(t), baseTpe0 = Some("enum"))
-        sortCardOneOnly(t.name, t.card)
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, t.card, EnumVal, Some(t.enumPrefix), bi(tree, t), sort = getSort))
 
       } else if (t.isMapAttr) {
@@ -473,7 +471,6 @@ private[molecule] trait Dsl2Model extends TreeOps
           addLambdas(t, castOptNestedMapAttr, jsonOptNestedMapAttr)
         else
           addLambdas(t, castMapAttr, jsonMapAttr)
-        sortCardOneOnly(t.name, t.card)
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, 3, VarValue, None, bi(tree, t)))
 
       } else if (t.isValueAttr) {
@@ -482,7 +479,6 @@ private[molecule] trait Dsl2Model extends TreeOps
           addLambdas(t, castOptNestedAttr, jsonOptNestedAttr)
         else
           addLambdas(t, castAttr, jsonAttr)
-        sortCardOneOnly(t.name, t.card)
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, t.card, VarValue, gvs = bi(tree, t), sort = getSort))
 
       } else if (attrStr.head == '_') {
@@ -528,7 +524,6 @@ private[molecule] trait Dsl2Model extends TreeOps
           addLambdas(t, castOptNestedRefAttr, jsonOptNestedRefAttr, baseTpe0 = Some("ref"))
         else
           addLambdas(t, castAttr, jsonAttr, baseTpe0 = Some("ref"))
-        sortCardOneOnly(t.name, t.card)
         traverseElement(prev, p, Atom(t.nsFull, t.name, "ref", t.card, VarValue, gvs = bi(tree, t), sort = getSort))
 
       } else {
@@ -548,7 +543,6 @@ private[molecule] trait Dsl2Model extends TreeOps
           addLambdas(t, castOptNestedOptEnum, jsonOptNestedOptEnum, baseTpe0 = Some("enum"))
         else
           addLambdas(t, castOptEnum, jsonOptEnum, baseTpe0 = Some("enum"))
-        sortCardOneOnly(t.name, t.card)
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, t.card, EnumVal, Some(t.enumPrefix), bi(tree, t), sort = getSort))
 
       } else if (t.isMapAttr$) {
@@ -557,7 +551,6 @@ private[molecule] trait Dsl2Model extends TreeOps
           addLambdas(t, castOptNestedOptMapAttr, jsonOptNestedOptMapAttr)
         else
           addLambdas(t, castOptMapAttr, jsonOptMapAttr)
-        sortCardOneOnly(t.name, t.card)
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, 3, VarValue, None, bi(tree, t)))
 
       } else if (t.isValueAttr$) {
@@ -566,7 +559,6 @@ private[molecule] trait Dsl2Model extends TreeOps
           addLambdas(t, castOptNestedOptAttr, jsonOptNestedOptAttr)
         else
           addLambdas(t, castOptAttr, jsonOptAttr)
-        sortCardOneOnly(t.name, t.card)
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, t.card, VarValue, gvs = bi(tree, t), sort = getSort))
 
       } else if (t.isRefAttr$) {
@@ -575,7 +567,6 @@ private[molecule] trait Dsl2Model extends TreeOps
           addLambdas(t, castOptNestedOptRefAttr, jsonOptNestedOptRefAttr, baseTpe0 = Some("ref"))
         else
           addLambdas(t, castOptRefAttr, jsonOptRefAttr, baseTpe0 = Some("ref"))
-        sortCardOneOnly(t.name, t.card)
         traverseElement(prev, p, Atom(t.nsFull, t.name, "ref", t.card, VarValue, gvs = bi(tree, t), sort = getSort))
 
       } else {
@@ -589,31 +580,27 @@ private[molecule] trait Dsl2Model extends TreeOps
         abort(s"Tacit `$attrStr` can only be used with an applied value i.e. `$attrStr(<value>)`")
 
       } else if (genericType == "schema") {
-        traverseElement(prev, p, Generic("Schema", attrStr, "schema", NoValue, getSort))
+        traverseElement(prev, p, Generic("Schema", attrStr, "schema", NoValue))
 
       } else if (t.isEnum) {
         if (optNestedLevel > 0)
           castss = (castOptNestedOptEnum(t) :: castss.head) :: castss.tail
-        sortCardOneOnly(t.name, t.card)
-        traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, t.card, EnumVal, Some(t.enumPrefix), bi(tree, t), sort = getSort))
+        traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, t.card, EnumVal, Some(t.enumPrefix), bi(tree, t)))
 
       } else if (t.isMapAttr) {
         if (optNestedLevel > 0)
           castss = (castOptNestedOptMapAttr(t) :: castss.head) :: castss.tail
-        sortCardOneOnly(t.name, t.card)
         traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, 3, VarValue, None, bi(tree, t)))
 
       } else if (t.isValueAttr) {
         if (optNestedLevel > 0)
           castss = (castOptNestedOptAttr(t) :: castss.head) :: castss.tail
-        sortCardOneOnly(t.name, t.card)
-        traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, t.card, VarValue, gvs = bi(tree, t), sort = getSort))
+        traverseElement(prev, p, Atom(t.nsFull, t.name, t.tpeS, t.card, VarValue, gvs = bi(tree, t)))
 
       } else if (t.isRefAttr) {
         if (optNestedLevel > 0)
           castss = (castOptNestedOptRefAttr(t) :: castss.head) :: castss.tail
-        sortCardOneOnly(t.name, t.card)
-        traverseElement(prev, p, Atom(t.nsFull, t.name, "ref", t.card, VarValue, gvs = bi(tree, t), sort = getSort))
+        traverseElement(prev, p, Atom(t.nsFull, t.name, "ref", t.card, VarValue, gvs = bi(tree, t)))
 
       } else {
         abort("Unexpected tacit attribute: " + t)
@@ -768,7 +755,6 @@ private[molecule] trait Dsl2Model extends TreeOps
               val newProp = Prop(cls, attrStr, tpeStr, 4, "KeyedMap")
               obj = addNode(obj, newProp, objLevel)
             }
-            sortCardOneOnly(t.name, 4)
             traverseElement(prev1, p, Atom(nsFull, mapAttr.toString, tpeStr, 4, VarValue, None, Nil, Seq(extract(q"$key").toString)))
         }
 
@@ -1060,7 +1046,6 @@ private[molecule] trait Dsl2Model extends TreeOps
           obj = addNode(obj, newProp, objLevel)
           //xx(421, obj)
         }
-        sortCardOneOnly(t.name, 4)
         traverseElement(prev, richTree(prev),
           Atom(nsFull, keyedAttr.toString, tpeStr, 4, modelValue(op.toString(), t, q"Seq(..$values)"), None, Nil, Seq(extract(q"$key").toString))
         )
@@ -1080,7 +1065,6 @@ private[molecule] trait Dsl2Model extends TreeOps
         if (attrStr == "AVET")
           Generic("AVET", "range", "avet", value, getSort)
         else {
-          sortCardOneOnly(t.name, t.card)
           Atom(t.name, t.name, t.tpeS, t.card, value, t.enumPrefixOpt, bi(tree, t), sort = getSort)
         }
 
@@ -1098,7 +1082,6 @@ private[molecule] trait Dsl2Model extends TreeOps
       } else if (t.isMapAttr) {
         //xx(94, attrStr, value)
         addLambdas(t, castMapAttr, if (isOptNested) jsonOptNestedMapAttr else jsonMapAttr)
-        sortCardOneOnly(t.name, 3)
         Atom(t.nsFull, attrStr, t.tpeS, 3, value, None, bi(tree, t))
 
       } else if (t.isMapAttr$) {
@@ -1109,19 +1092,16 @@ private[molecule] trait Dsl2Model extends TreeOps
           if (isOptNested) jsonOptNestedOptApplyMapAttr else jsonOptApplyMapAttr,
           group0 = Some("OptApplyMap")
         )
-        sortCardOneOnly(t.name, 3)
         Atom(t.nsFull, attrStr, t.tpeS, 3, value, None, bi(tree, t))
 
       } else if (t.isRefAttr || t.isRefAttr$) {
         //xx(96, attrStr, value)
         addAttrOrAggr(attrStr, t, "ref", true)
-        sortCardOneOnly(t.name, t.card)
         Atom(t.nsFull, attrStr, "ref", t.card, value, t.enumPrefixOpt, bi(tree, t), sort = getSort)
 
       } else if (t.isAttr) {
         //xx(97, attrStr, value)
         addAttrOrAggr(attrStr, t, t.tpeS, true)
-        sortCardOneOnly(t.name, t.card)
         Atom(t.nsFull, attrStr, t.tpeS, t.card, value, t.enumPrefixOpt, bi(tree, t), sort = getSort)
 
       } else {

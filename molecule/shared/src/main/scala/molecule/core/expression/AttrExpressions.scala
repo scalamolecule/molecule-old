@@ -2,7 +2,7 @@ package molecule.core.expression
 
 import molecule.core.ast.elements
 import molecule.core.ast.elements._
-import molecule.core.dsl.attributes.Attr
+import molecule.core.dsl.attributes.{Attr, SortMarkers}
 
 
 /** Attribute expression markers and methods.
@@ -49,7 +49,7 @@ trait AttrExpressions {
      * }}}
      * For cardinality-many attributes, ''all'' values of the attribute are retracted.
      */
-    def apply(): Ns with Attr = ???
+    def apply(): Ns with Attr with SortMarkers[Ns] = ???
 
     /** Match one or more attribute values.
      * <br><br>
@@ -82,7 +82,7 @@ trait AttrExpressions {
      * @param moreValues Optional additional attribute values to be matched
      * @return Filtered molecule
      */
-    def apply(value: T, moreValues: T*): Ns with Attr = ???
+    def apply(value: T, moreValues: T*): Ns with Attr with SortMarkers[Ns] = ???
 
     /** Match one or more Iterables of attribute values.
      * <br><br>
@@ -127,7 +127,7 @@ trait AttrExpressions {
      * @param moreValues Optional additional Iterables of attribute values to be matched
      * @return Filtered molecule
      */
-    def apply(values: Iterable[T], moreValues: Iterable[T]*): Ns with Attr = ???
+    def apply(values: Iterable[T], moreValues: Iterable[T]*): Ns with Attr with SortMarkers[Ns] = ???
 
 
     /** Mark tacit attribute to be unified in self-join.
@@ -151,7 +151,7 @@ trait AttrExpressions {
      * @param unifyer `unify` marker to unify self-join by this attribute values
      * @return Self-join molecule
      */
-    def apply(unifyer: unify_stable): Ns with Attr = ???
+    def apply(unifyer: unify_stable): Ns with Attr with SortMarkers[Ns] = ???
 
 
     /** Match attribute values different from one or more applied values.
@@ -174,7 +174,7 @@ trait AttrExpressions {
      * @param moreValues Optional additional negated attribute values
      * @return Filtered molecule
      */
-    def not(value: T, moreValues: T*): Ns with Attr = ???
+    def not(value: T, moreValues: T*): Ns with Attr with SortMarkers[Ns] = ???
 
 
     /** Match attribute values different from applied Iterable of values.
@@ -193,7 +193,7 @@ trait AttrExpressions {
      * @param values Iterable of negated attribute values
      * @return Filtered molecule
      */
-    def not(values: Iterable[T]): Ns with Attr = ???
+    def not(values: Iterable[T]): Ns with Attr with SortMarkers[Ns] = ???
 
 
     /** Match attribute values different from one or more applied values.
@@ -216,7 +216,7 @@ trait AttrExpressions {
      * @param moreValues Optional additional negated attribute values
      * @return Filtered molecule
      */
-    def !=(value: T, moreValues: T*): Ns with Attr = ???
+    def !=(value: T, moreValues: T*): Ns with Attr with SortMarkers[Ns] = ???
 
 
     /** Match attribute values different from applied Iterable of values.
@@ -235,7 +235,7 @@ trait AttrExpressions {
      * @param values Iterable of negated attribute values
      * @return Filtered molecule
      */
-    def !=(values: Seq[T]): Ns with Attr = ???
+    def !=(values: Seq[T]): Ns with Attr with SortMarkers[Ns] = ???
   }
 
 
@@ -381,7 +381,7 @@ trait AttrExpressions {
      * @param upper Upper value
      * @return Molecule
      */
-    def <(upper: T): Ns with Attr = ???
+    def <(upper: T): Ns with Attr with SortMarkers[Ns] = ???
 
 
     /** Match attribute values less than or equal to upper value.
@@ -395,7 +395,7 @@ trait AttrExpressions {
      * @param upper Upper value
      * @return Molecule
      */
-    def <=(upper: T): Ns with Attr = ???
+    def <=(upper: T): Ns with Attr with SortMarkers[Ns] = ???
 
 
     /** Match attribute values bigger than lower value
@@ -409,7 +409,7 @@ trait AttrExpressions {
      * @param lower Lower value
      * @return Molecule
      */
-    def >(lower: T): Ns with Attr = ???
+    def >(lower: T): Ns with Attr with SortMarkers[Ns] = ???
 
 
     /** Match attribute values bigger than or equal to lower value.
@@ -423,7 +423,7 @@ trait AttrExpressions {
      * @param lower Lower value
      * @return Molecule
      */
-    def >=(lower: T): Ns with Attr = ???
+    def >=(lower: T): Ns with Attr with SortMarkers[Ns] = ???
 
     // Input
 
@@ -443,7 +443,7 @@ trait AttrExpressions {
      * @param value Input marker `?` for equality match
      * @return Input molecule
      */
-    def apply(value: qm): In with Attr = ???
+    def apply(value: qm): In with Attr with SortMarkers[In] = ???
 
 
     /** Mark molecule as input molecule awaiting attribute negation value(s).
@@ -462,7 +462,7 @@ trait AttrExpressions {
      * @param value Input marker `?` for negation value
      * @return Input molecule
      */
-    def not(value: qm): In with Attr = ???
+    def not(value: qm): In with Attr with SortMarkers[In] = ???
 
 
     /** Mark molecule as input molecule awaiting attribute negation value(s).
@@ -481,7 +481,7 @@ trait AttrExpressions {
      * @param value Input marker `?` for negation value
      * @return Input molecule
      */
-    def !=(value: qm): In with Attr = ???
+    def !=(value: qm): In with Attr with SortMarkers[In] = ???
 
 
     /** Mark molecule as input molecule awaiting attribute upper value.
@@ -500,7 +500,7 @@ trait AttrExpressions {
      * @param upper Input marker `?` for upper value
      * @return Input molecule
      */
-    def <(upper: qm): In with Attr = ???
+    def <(upper: qm): In with Attr with SortMarkers[In] = ???
 
 
     /** Mark molecule as input molecule awaiting attribute upper value.
@@ -519,7 +519,7 @@ trait AttrExpressions {
      * @param upper Input marker `?` for upper value
      * @return Input molecule
      */
-    def <=(upper: qm): In with Attr = ???
+    def <=(upper: qm): In with Attr with SortMarkers[In] = ???
 
 
     /** Mark molecule as input molecule awaiting attribute lower value.
@@ -538,7 +538,7 @@ trait AttrExpressions {
      * @param lower Input marker `?` for lower value
      * @return Input molecule
      */
-    def >(lower: qm): In with Attr = ???
+    def >(lower: qm): In with Attr with SortMarkers[In] = ???
 
 
     /** Mark molecule as input molecule awaiting attribute lower value.
@@ -557,7 +557,7 @@ trait AttrExpressions {
      * @param lower Input marker `?` for lower value
      * @return Input molecule
      */
-    def >=(lower: qm): In with Attr = ???
+    def >=(lower: qm): In with Attr with SortMarkers[In] = ???
 
 
     /** Filter attribute values with logical expression.
@@ -578,7 +578,7 @@ trait AttrExpressions {
      * @param expr1 OR expression
      * @return Molecule
      */
-    def apply(expr1: Exp1[T]): Ns with Attr = ???
+    def apply(expr1: Exp1[T]): Ns with Attr with SortMarkers[Ns] = ???
 
 
     /** Filter attribute values with logical expression.
@@ -602,7 +602,7 @@ trait AttrExpressions {
      * @param expr2 OR/AND expression
      * @return Molecule
      */
-    def apply(expr2: Exp2[T, T]): Ns with Attr = ???
+    def apply(expr2: Exp2[T, T]): Ns with Attr with SortMarkers[Ns] = ???
 
 
     /** Expression AST for building OR/AND expressions.
@@ -635,13 +635,12 @@ trait AttrExpressions {
      * @param expr3 OR/AND expression
      * @return Molecule
      */
-    def apply(expr3: Exp3[T, T, T]): Ns with Attr = ???
+    def apply(expr3: Exp3[T, T, T]): Ns with Attr with SortMarkers[Ns] = ???
   }
 
 
   /** Expression methods of card-one attributes. */
   trait OneExpr[Ns, In, T] extends ValueAttrExpr[Ns, In, T]
-
 
   /** Expression methods of card-many attributes. */
   trait ManyExpr[Ns, In, T] extends ValueAttrExpr[Ns, In, T] with ManyAttrExpr[Ns, T, (T, T), T] {
@@ -1181,7 +1180,7 @@ trait AttrExpressions {
      * @param some Optional attribute value to be saved
      * @return Save-molecule
      */
-    def apply(some: Option[T]): Ns with Attr = ???
+    def apply(some: Option[T]): Ns with Attr with SortMarkers[Ns] = ???
   }
 
   /** Expression methods of String attributes with fulltext search. */
@@ -1228,7 +1227,7 @@ trait AttrExpressions {
      * @param moreWords Optional additional search words
      * @return Filtered molecule
      */
-    def contains(word: String, moreWords: String*): Ns with Attr = ???
+    def contains(word: String, moreWords: String*): Ns with Attr with SortMarkers[Ns] = ???
 
     // todo: this set of String searchers instead - check Django ORM and other ORMs too
     // def startsWith(str: String): Ns with Attr = ???
@@ -1282,7 +1281,7 @@ trait AttrExpressions {
      * @param words Search words
      * @return Input molecule awaiting search word(s)
      */
-    def contains(words: qm): In with Attr = ???
+    def contains(words: qm): In with Attr with SortMarkers[Ns] = ???
   }
 }
 

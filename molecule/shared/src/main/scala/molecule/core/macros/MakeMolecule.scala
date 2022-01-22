@@ -1,6 +1,5 @@
 package molecule.core.macros
 
-import molecule.core.ast.elements.{Atom, Generic}
 import molecule.datomic.base.transform.Model2Query
 import scala.language.higherKinds
 import scala.reflect.macros.blackbox
@@ -49,38 +48,6 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
         """
       }
 
-      def compare: Tree = if (doSort) {
-        def comp(i: Int, tpe: String, sort: String): (Int, Tree) = {
-          val (a, b) = tpe match {
-            case "Int" | "Long" => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
-            case "String"       => (q"a.get($i).toString", q"b.get($i).toString")
-          }
-          sort match {
-            case r"a([1-5])$order" => (order.toInt, q"$a.compareTo($b)")
-            case r"d([1-5])$order" => (order.toInt, q"$b.compareTo($a)")
-          }
-        }
-        val comparers = model0.elements.foldLeft(0, Seq.empty[(Int, Tree)]) {
-          case ((i, acc), Atom(_, _, tpe, _, _, _, _, _, sort)) if sort.nonEmpty => (i + 1, acc :+ comp(i, tpe, sort))
-          case ((i, acc), Generic(_, _, tpe, _, sort)) if sort.nonEmpty          => (i + 1, acc :+ comp(i, tpe, sort))
-          case ((i, acc), _)                                                     => (i + 1, acc)
-        }._2.sortBy(_._1).map(_._2)
-        q"""
-          final override def sortRows: Boolean = true
-          final override def compare(a: jList[AnyRef], b: jList[AnyRef]): Int = {
-            var result    = 0
-            var index     = 0
-            val comparers = Seq(
-              ..$comparers
-            )
-            do {
-              result = comparers(index)
-              index += 1
-            } while (index < ${comparers.size} && result == 0)
-            result
-          }
-        """
-      } else q""
 
       if (hasVariables) {
         val identifiers = mapIdentifiers(model0.elements).toMap
@@ -88,14 +55,14 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
           final private val _resolvedModel: Model = resolveIdentifiers($model0, $identifiers)
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel)) {
             ..$transformers
-            ..$compare
+            ..${compare(model0, doSort)}
           }
         """
       } else {
         q"""
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model0, ${Model2Query(model0)}) {
             ..$transformers
-            ..$compare
+            ..${compare(model0, doSort)}
           }
         """
       }

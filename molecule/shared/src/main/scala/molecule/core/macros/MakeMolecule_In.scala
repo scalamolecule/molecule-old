@@ -25,7 +25,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
       postJsons,
       isOptNested,
       optNestedRefIndexes, optNestedTacitIndexes,
-      sorted
+      doSort
       )                  = getModel(dsl)
     val imports          = getImports(genericImports)
     val InputMoleculeTpe = inputMolecule_i_o(InTypes.size, OutTypes.size)
@@ -143,6 +143,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
             final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $tplCasts
             final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
             final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
+            ..${compare(model0, doSort)}
           }
         """
       }

@@ -1,6 +1,6 @@
 package molecule.core.api
 
-import java.util.{Date, List => jList}
+import java.util.{Comparator, Date, List => jList}
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.ops.ColOps
