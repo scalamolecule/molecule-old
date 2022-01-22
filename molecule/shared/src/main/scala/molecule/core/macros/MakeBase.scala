@@ -98,7 +98,7 @@ private[molecule] trait MakeBase extends Dsl2Model {
   }
 
   def compare(model0: Model, doSort: Boolean): Tree = if (doSort) {
-    def comp(i: Int, opt: Boolean, tpe: String, isEnum: Boolean, sort: String): (Int, Tree) = {
+    def comp(i: Int, attr: String, opt: Boolean, tpe: String, isEnum: Boolean, sort: String): (Int, Tree) = {
       if (opt) {
         val (order, pair) = sort match {
           case r"a([1-5])$order" => (order.toInt, q"(a.get($i), b.get($i))") // ascending
@@ -147,7 +147,7 @@ private[molecule] trait MakeBase extends Dsl2Model {
           case "URI"          => (q"m1.values.iterator.next.asInstanceOf[URI]", q"m2.values.iterator.next.asInstanceOf[URI]")
           case "BigInt"       => (q"m1.values.iterator.next.asInstanceOf[jBigInt]", q"m2.values.iterator.next.asInstanceOf[jBigInt]")
           case "BigDecimal"   => (q"m1.values.iterator.next.asInstanceOf[jBigDec]", q"m2.values.iterator.next.asInstanceOf[jBigDec]")
-          case other          => abort("Unexpected attribute type: " + other)
+          case other          => abort(s"Unexpected type '$other' for optional sort attribute `$attr`")
         }
         val result        =
           q"""$pair match {
@@ -168,7 +168,16 @@ private[molecule] trait MakeBase extends Dsl2Model {
           case "URI"                  => (q"a.get($i).asInstanceOf[URI]", q"b.get($i).asInstanceOf[URI]")
           case "BigInt"               => (q"a.get($i).asInstanceOf[jBigInt]", q"b.get($i).asInstanceOf[jBigInt]")
           case "BigDecimal"           => (q"a.get($i).asInstanceOf[jBigDec]", q"b.get($i).asInstanceOf[jBigDec]")
-          case other                  => abort("Unexpected attribute type: " + other)
+          case "datom"                => attr match {
+            case "e"         => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
+            case "a"         => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "v"         => (q"a.get($i).toString", q"b.get($i).toString")
+            case "t"         => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
+            case "tx"        => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
+            case "txInstant" => (q"a.get($i).asInstanceOf[Date]", q"b.get($i).asInstanceOf[Date]")
+            case "op"        => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
+          }
+          case other                  => abort(s"Unexpected type '$other' for sort attribute `$attr`")
         }
         sort match {
           case r"a([1-5])$order" => (order.toInt, q"$a.compareTo($b)") // ascending
@@ -178,12 +187,19 @@ private[molecule] trait MakeBase extends Dsl2Model {
     }
     val comparers = model0.elements.foldLeft(0, Seq.empty[(Int, Tree)]) {
       case ((i, acc), Atom(_, attr, tpe, _, _, enumPrefix, _, _, sort)) if sort.nonEmpty =>
-        (i + 1, acc :+ comp(i, attr.last == '$', tpe, enumPrefix.nonEmpty, sort))
+        (i + 1, acc :+ comp(i, attr, attr.last == '$', tpe, enumPrefix.nonEmpty, sort))
 
       case ((i, acc), Generic(_, attr, tpe, _, sort)) if sort.nonEmpty =>
-        (i + 1, acc :+ comp(i, false, tpe, false, sort))
+        (i + 1, acc :+ comp(i, attr, false, tpe, false, sort))
 
-      case ((i, acc), _) => (i + 1, acc)
+      case ((i, acc), Atom(_, attr, _, _, _, _, _, _, _)) =>
+        (if (attr.last == '_') i else i + 1, acc)
+
+      case ((i, acc), Generic(_, attr, _, _, _)) =>
+        (if (attr.last == '_') i else i + 1, acc)
+
+      case ((i, acc), _) =>
+        (i, acc)
     }._2.sortBy(_._1).map(_._2)
     q"""
           final override def sortRows: Boolean = true

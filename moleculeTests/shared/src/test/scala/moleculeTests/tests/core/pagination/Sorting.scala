@@ -1,7 +1,7 @@
 package moleculeTests.tests.core.pagination
 
 import molecule.core.util.Executor._
-import molecule.datomic.api.in1_out5._
+import molecule.datomic.api.in1_out7._
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
@@ -227,6 +227,43 @@ object Sorting extends AsyncTestSuite {
           (true, "a", uri1, 2, 3),
         )
 
+        // No sorting
+        _ <- Ns.bool.str.uri.int.long.get.map(_ ==> List(
+          (false, "b", uri3, 6, 11),
+          (false, "b", uri3, 6, 12),
+          (false, "a", uri2, 3, 6),
+          (false, "a", uri2, 3, 5),
+          (false, "a", uri1, 1, 1),
+          (false, "a", uri1, 1, 2),
+          (true, "a", uri1, 1, 2),
+          (true, "a", uri1, 1, 1),
+          (true, "a", uri2, 3, 5),
+          (false, "b", uri4, 7, 13),
+          (true, "a", uri2, 3, 6),
+          (false, "b", uri4, 7, 14),
+          (true, "b", uri4, 8, 15),
+          (true, "b", uri3, 6, 11),
+          (true, "b", uri3, 6, 12),
+          (true, "b", uri4, 8, 16),
+          (false, "b", uri3, 5, 10),
+          (false, "a", uri2, 4, 7),
+          (false, "a", uri2, 4, 8),
+          (false, "b", uri3, 5, 9),
+          (false, "a", uri1, 2, 4),
+          (false, "a", uri1, 2, 3),
+          (true, "a", uri1, 2, 3),
+          (false, "b", uri4, 8, 16),
+          (true, "a", uri1, 2, 4),
+          (true, "b", uri3, 5, 9),
+          (true, "a", uri2, 4, 8),
+          (true, "a", uri2, 4, 7),
+          (false, "b", uri4, 8, 15),
+          (true, "b", uri4, 7, 13),
+          (true, "b", uri4, 7, 14),
+          (true, "b", uri3, 5, 10),
+        ))
+
+        // Ascending
         _ <- Ns.bool.a1.str.a2.uri.a3.int.a4.long.a5.get.map(_ ==> List(
           (false, "a", uri1, 1, 1),
           (false, "a", uri1, 1, 2),
@@ -262,6 +299,7 @@ object Sorting extends AsyncTestSuite {
           (true, "b", uri4, 8, 16),
         ))
 
+        // Descending
         _ <- Ns.bool.d1.str.d2.uri.d3.int.d4.long.d5.get.map(_ ==> List(
           (true, "b", uri4, 8, 16),
           (true, "b", uri4, 8, 15),
@@ -297,6 +335,7 @@ object Sorting extends AsyncTestSuite {
           (false, "a", uri1, 1, 1),
         ))
 
+        // Mixed order
         _ <- Ns.bool.a3.str.d1.uri.d4.int.a2.long.d5.get.map(_ ==> List(
           (false, "b", uri3, 5, 10),
           (false, "b", uri3, 5, 9),
@@ -343,12 +382,87 @@ object Sorting extends AsyncTestSuite {
     }
 
 
-    //    "Generic" - core { implicit conn =>
-    //      for {
-    //        _ <- Ns.str.insert(str3, str1, str2)
-    //        _ <- m(Ns.str(?).a1)(Seq(str1, str2)).get.map(_ ==> List(str1, str2))
-    //        _ <- m(Ns.str(?).d1)(Seq(str1, str2)).get.map(_ ==> List(str2, str1))
-    //      } yield ()
-    //    }
+    "Generic datom attributes" - core { implicit conn =>
+      for {
+        r1 <- Ns.int(3).save
+        e1 = r1.eid
+        t1 = r1.t
+        tx1 = r1.tx
+        d1 = r1.txInstant
+
+        r2 <- Ns.int(1).save
+        e2 = r2.eid
+        t2 = r2.t
+        tx2 = r2.tx
+        d2 = r2.txInstant
+
+        r3 <- Ns.int(2).save
+        e3 = r3.eid
+        t3 = r3.t
+        tx3 = r3.tx
+        d3 = r3.txInstant
+
+        // e, t, tx, txInstant
+
+        _ <- Ns.e.a1.int_.get.map(_ ==> List(e1, e2, e3))
+        _ <- Ns.e.d1.int_.get.map(_ ==> List(e3, e2, e1))
+
+        _ <- Ns.int_.t.a1.get.map(_ ==> List(t1, t2, t3))
+        _ <- Ns.int_.t.d1.get.map(_ ==> List(t3, t2, t1))
+
+        _ <- Ns.int_.tx.a1.get.map(_ ==> List(tx1, tx2, tx3))
+        _ <- Ns.int_.tx.d1.get.map(_ ==> List(tx3, tx2, tx1))
+
+        _ <- Ns.int_.txInstant.a1.get.map(_ ==> List(d1, d2, d3))
+        _ <- Ns.int_.txInstant.d1.get.map(_ ==> List(d3, d2, d1))
+
+
+        r4 <- Ns.int(2).long(1).str("a").save
+        e4 = r4.eid
+        t4 = r4.t
+        tx4 = r4.tx
+        d4 = r4.txInstant
+
+        // a, v
+
+        _ <- Ns(e4).e.a.a1.v.t.tx.txInstant.op.get.map(_ ==> List(
+          (e4, ":Ns/int", 2, t4, tx4, d4, true),
+          (e4, ":Ns/long", 1, t4, tx4, d4, true),
+          (e4, ":Ns/str", "a", t4, tx4, d4, true),
+        ))
+        _ <- Ns(e4).e.a.d1.v.t.tx.txInstant.op.get.map(_ ==> List(
+          (e4, ":Ns/str", "a", t4, tx4, d4, true),
+          (e4, ":Ns/long", 1, t4, tx4, d4, true),
+          (e4, ":Ns/int", 2, t4, tx4, d4, true),
+        ))
+        _ <- Ns(e4).e.a.v.a1.t.tx.txInstant.op.get.map(_ ==> List(
+          (e4, ":Ns/long", 1, t4, tx4, d4, true),
+          (e4, ":Ns/int", 2, t4, tx4, d4, true),
+          (e4, ":Ns/str", "a", t4, tx4, d4, true),
+        ))
+        _ <- Ns(e4).e.a.v.d1.t.tx.txInstant.op.get.map(_ ==> List(
+          (e4, ":Ns/str", "a", t4, tx4, d4, true),
+          (e4, ":Ns/int", 2, t4, tx4, d4, true),
+          (e4, ":Ns/long", 1, t4, tx4, d4, true),
+        ))
+
+        r5 <- Ns(e4).long(3).update
+        t5 = r5.t
+
+        // op
+
+        _ <- Ns.long.t.a1.op.a2.getHistory.map(_ ==> List(
+          (1, t4, true),
+          (1, t5, false),
+          (3, t5, true),
+        ))
+        _ <- Ns.long.t.d1.op.d2.getHistory.map(_ ==> List(
+          (3, t5, true),
+          (1, t5, false),
+          (1, t4, true),
+        ))
+
+      } yield ()
+    }
   }
 }
