@@ -6,6 +6,7 @@ import molecule.datomic.api.out2._
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
+import scala.math.ceil
 
 
 object OffsetPagination extends AsyncTestSuite {
@@ -19,12 +20,52 @@ object OffsetPagination extends AsyncTestSuite {
 
         // Simply taking the first 2 rows
         // Note that only the data is returned (without a total count of rows)
+        // asc
         _ <- Ns.int.a1.get(2).map(_ ==> List(1, 2))
-        _ <- Ns.int.d1.get(2).map(_ ==> List(3, 2))
 
-        // Same as
+        // Using limit as above is more efficient than taking subset of all data
         _ <- Ns.int.a1.get.map(_.take(2) ==> List(1, 2))
-        _ <- Ns.int.d1.get.map(_.take(2) ==> List(3, 2))
+
+        // desc
+        _ <- Ns.int.d1.get(2).map(_ ==> List(3, 2))
+      } yield ()
+    }
+
+
+    "Total count, page number" - core { implicit conn =>
+      for {
+        _ <- Ns.int.insert(1, 2, 3)
+
+        limit = 2
+
+        // Add offset to fetch total count too
+
+        // Page 1
+        offset0 = 0
+        _ <- Ns.int.get(limit, offset0).map {
+          // Tuple of (totalCount, pageRows) returned
+          case (totalCount, data) =>
+            totalCount ==> 3
+            data ==> List(1, 2)
+
+            // Calculate page numbers from totalCount and limit size:
+            val totalPages = (totalCount / limit.toDouble).ceil.round
+            totalPages ==> 2
+
+            // Calculate current page number from offset and limit
+            val page = offset0 / limit + 1
+            page ==> 1
+        }
+
+        // Page 2
+        offset2 = 2
+        _ <- Ns.int.get(limit, offset2).map {
+          case (totalCount, data) =>
+            totalCount ==> 3
+            data ==> List(3)
+            val page = offset2 / limit + 1
+            page ==> 2
+        }
       } yield ()
     }
 
@@ -33,13 +74,16 @@ object OffsetPagination extends AsyncTestSuite {
       for {
         _ <- Ns.int.insert(1, 2, 3)
 
-        // Tuple of (totalCount, pageRows) returned
-        // Calculate page numbers from totalCount and limit size:
-        // val total pages = ceil(totalCount / 2) = ceil(3 / 2) = 2
-        _ <- Ns.int.a1.get(2, 0).map(_ ==> (3, List(1, 2)))
+        // Page 1, asc
+        _ <- Ns.int.a1.get(2, 0).map(_._2 ==> List(1, 2))
+
+        // Page 2, asc
         _ <- Ns.int.a1.get(2, 2).map(_._2 ==> List(3))
 
+        // Page 1, desc
         _ <- Ns.int.d1.get(2, 0).map(_._2 ==> List(3, 2))
+
+        // Page 2, desc
         _ <- Ns.int.d1.get(2, 2).map(_._2 ==> List(1))
       } yield ()
     }
@@ -49,7 +93,7 @@ object OffsetPagination extends AsyncTestSuite {
       for {
         _ <- Ns.int.insert(1, 2, 3)
 
-        // Empty result set returned
+        // Empty result set returned for offset exceeding total count
         _ <- Ns.int.a1.get(2, 4).map(_ ==> (3, Nil))
         _ <- Ns.int.d1.get(2, 4).map(_ ==> (3, Nil))
       } yield ()
