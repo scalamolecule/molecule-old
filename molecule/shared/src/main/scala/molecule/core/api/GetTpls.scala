@@ -1,6 +1,8 @@
 package molecule.core.api
 
+import java.util
 import java.util.{Comparator, Date, List => jList}
+import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.ops.ColOps
@@ -82,28 +84,152 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
    * simply named `get` (and not `getList`).
    *
    * @group get
-   * @param maxRows Int Number of rows returned
+   * @param limit   Int Maximum number of rows returned
    * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
    */
-  def get(maxRows: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-    _inputThrowable.fold(
-      futConn.flatMap { conn =>
-        if (conn.isJsPlatform) {
-          conn.jsQueryTpl(
-            _model, _query, _datalog, maxRows, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
-          )
-        } else {
-          if (maxRows == -1) {
-            get(futConn, ec)
+  def get(limit: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
+    if (limit < 1) {
+      Future.failed(MoleculeException("Limit has to be a positive number. Found " + limit))
+    } else {
+      _inputThrowable.fold(
+        futConn.flatMap { conn =>
+          if (conn.isJsPlatform) {
+            conn.jsQueryTpl(
+              _model, _query, _datalog, limit, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
+            )
           } else {
             conn.jvmQuery(_model, _query).map { jColl =>
               val size = jColl.size
-              val max  = if (size < maxRows) size else maxRows
-              if (max == 0) {
-                List.empty[Tpl]
+              val max  = if (size < limit) size else limit
+              max match {
+                case 0 => List.empty[Tpl]
+                case 1 => List(row2tpl(jColl.iterator().next()))
+                case _ =>
+                  val it   = if (sortRows) {
+                    val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
+                    rows.sort(this) // using macro-implemented `compare` method
+                    rows.iterator
+                  } else {
+                    jColl.iterator()
+                  }
+                  val list = List.newBuilder[Tpl]
+                  var i    = 0
+                  while (it.hasNext && i < max) {
+                    list += row2tpl(it.next)
+                    i += 1
+                  }
+                  list.result()
+              }
+            }
+          }
+        }
+      )(Future.failed) // Wrap exception from input failure in Future
+    }
+  }
+
+
+  /** Get Future with List of n rows as tuples matching a molecule.
+   * {{{
+   * Person.name.age.get(1).map(_ ==> List(
+   *   ("Ben", 42)
+   * )
+   * }}}
+   * <br><br>
+   * Since retrieving a List is considered the default fetch format, the getter method is
+   * simply named `get` (and not `getList`).
+   *
+   * @group get
+   * @param limit   Int Maximum number of rows returned
+   * @param offset  Int Maximum number of rows returned
+   * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
+   */
+  def get(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Tpl])] = {
+    if (limit < 1) {
+      Future.failed(MoleculeException("Limit has to be a positive number. Found: " + limit))
+    } else if (offset < 0) {
+      Future.failed(MoleculeException("Offset has to be >= 0. Found: " + offset))
+    } else {
+      _inputThrowable.fold(
+        futConn.flatMap { conn =>
+          if (conn.isJsPlatform) {
+            //          conn.jsQueryTpl(
+            //            _model, _query, _datalog, limit, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
+            //          )
+            // todo
+            Future((42, List.empty[Tpl]))
+          } else {
+            conn.jvmQuery(_model, _query).map { jColl =>
+              val totalCount = jColl.size
+              if (offset > totalCount) {
+                (totalCount, List.empty[Tpl])
               } else {
-                val it   = jColl.iterator
+                val rows = if (sortRows) {
+                  val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
+                  rows.sort(this) // using macro-implemented `compare` method
+                  rows
+                } else {
+                  new java.util.ArrayList(jColl)
+                }
+                val tuples      = List.newBuilder[Tpl] // Build Scala List with tuples of data
+                val max         = offset + limit
+                val end         = totalCount.min(max)
+                var i           = offset
+                while (i < end) {
+                  tuples += row2tpl(rows.get(i))
+                  i += 1
+                }
+                (totalCount, tuples.result())
+              }
+            }
+          }
+        }
+      )(Future.failed) // Wrap exception from input failure in Future
+    }
+  }
+
+
+  /** Get Future with List of n rows as tuples matching a molecule.
+   * {{{
+   * Person.name.age.get(1).map(_ ==> List(
+   *   ("Ben", 42)
+   * )
+   * }}}
+   * <br><br>
+   * Since retrieving a List is considered the default fetch format, the getter method is
+   * simply named `get` (and not `getList`).
+   *
+   * @group get
+   * @param limit   Int Maximum number of rows returned
+   * @param cursor  String Base64 encoded cursor data identifying the last fetched row for retrieving next page data.
+   * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
+   */
+  def get(limit: Int, cursor: String)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Tpl])] = {
+    _inputThrowable.fold(
+      futConn.flatMap { conn =>
+        if (conn.isJsPlatform) {
+          //          conn.jsQueryTpl(
+          //            _model, _query, _datalog, limit, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
+          //          )
+          // todo
+          Future((42, List.empty[Tpl]))
+        } else {
+          conn.jvmQuery(_model, _query).map { jColl =>
+            val totalCount = jColl.size
+            val max        = if (totalCount < limit) totalCount else limit
+            val res        = max match {
+              case 0 => List.empty[Tpl]
+              case 1 => List(row2tpl(jColl.iterator().next()))
+              case _ =>
+                val it   = if (sortRows) {
+                  val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
+                  rows.sort(this) // using macro-implemented `compare` method
+                  rows.iterator
+                } else {
+                  jColl.iterator()
+                }
                 val list = List.newBuilder[Tpl]
                 var i    = 0
                 while (it.hasNext && i < max) {
@@ -111,8 +237,8 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
                   i += 1
                 }
                 list.result()
-              }
             }
+            (totalCount, res)
           }
         }
       }

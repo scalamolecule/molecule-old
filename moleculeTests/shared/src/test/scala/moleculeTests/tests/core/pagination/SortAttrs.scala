@@ -8,7 +8,8 @@ import utest._
 import molecule.core.util.testing.expectCompileError
 
 
-object Sorting extends AsyncTestSuite {
+object SortAttrs extends AsyncTestSuite {
+
 
   lazy val tests = Tests {
 
@@ -378,90 +379,6 @@ object Sorting extends AsyncTestSuite {
           (true, "a", uri2, 4, 8),
           (true, "a", uri2, 4, 7),
         ))
-      } yield ()
-    }
-
-
-    "Generic datom attributes" - core { implicit conn =>
-      for {
-        r1 <- Ns.int(3).save
-        e1 = r1.eid
-        t1 = r1.t
-        tx1 = r1.tx
-        d1 = r1.txInstant
-
-        r2 <- Ns.int(1).save
-        e2 = r2.eid
-        t2 = r2.t
-        tx2 = r2.tx
-        d2 = r2.txInstant
-
-        r3 <- Ns.int(2).save
-        e3 = r3.eid
-        t3 = r3.t
-        tx3 = r3.tx
-        d3 = r3.txInstant
-
-        // e, t, tx, txInstant
-
-        _ <- Ns.e.a1.int_.get.map(_ ==> List(e1, e2, e3))
-        _ <- Ns.e.d1.int_.get.map(_ ==> List(e3, e2, e1))
-
-        _ <- Ns.int_.t.a1.get.map(_ ==> List(t1, t2, t3))
-        _ <- Ns.int_.t.d1.get.map(_ ==> List(t3, t2, t1))
-
-        _ <- Ns.int_.tx.a1.get.map(_ ==> List(tx1, tx2, tx3))
-        _ <- Ns.int_.tx.d1.get.map(_ ==> List(tx3, tx2, tx1))
-
-        _ <- Ns.int_.txInstant.a1.get.map(_ ==> List(d1, d2, d3))
-        _ <- Ns.int_.txInstant.d1.get.map(_ ==> List(d3, d2, d1))
-
-
-        r4 <- Ns.int(2).long(1).str("a").save
-        e4 = r4.eid
-        t4 = r4.t
-        tx4 = r4.tx
-        d4 = r4.txInstant
-
-        // a, v
-
-        _ <- Ns(e4).e.a.a1.v.t.tx.txInstant.op.get.map(_ ==> List(
-          (e4, ":Ns/int", 2, t4, tx4, d4, true),
-          (e4, ":Ns/long", 1, t4, tx4, d4, true),
-          (e4, ":Ns/str", "a", t4, tx4, d4, true),
-        ))
-        _ <- Ns(e4).e.a.d1.v.t.tx.txInstant.op.get.map(_ ==> List(
-          (e4, ":Ns/str", "a", t4, tx4, d4, true),
-          (e4, ":Ns/long", 1, t4, tx4, d4, true),
-          (e4, ":Ns/int", 2, t4, tx4, d4, true),
-        ))
-        _ <- Ns(e4).e.a.v.a1.t.tx.txInstant.op.get.map(_ ==> List(
-          (e4, ":Ns/long", 1, t4, tx4, d4, true),
-          (e4, ":Ns/int", 2, t4, tx4, d4, true),
-          (e4, ":Ns/str", "a", t4, tx4, d4, true),
-        ))
-        _ <- Ns(e4).e.a.v.d1.t.tx.txInstant.op.get.map(_ ==> List(
-          (e4, ":Ns/str", "a", t4, tx4, d4, true),
-          (e4, ":Ns/int", 2, t4, tx4, d4, true),
-          (e4, ":Ns/long", 1, t4, tx4, d4, true),
-        ))
-
-        r5 <- Ns(e4).long(3).update
-        t5 = r5.t
-
-        // op
-
-        _ <- Ns.long.t.a1.op.a2.getHistory.map(_ ==> List(
-          (1, t4, true),
-          (1, t5, false),
-          (3, t5, true),
-        ))
-        _ <- Ns.long.t.d1.op.d2.getHistory.map(_ ==> List(
-          (3, t5, true),
-          (1, t5, false),
-          (1, t4, true),
-        ))
-
       } yield ()
     }
   }

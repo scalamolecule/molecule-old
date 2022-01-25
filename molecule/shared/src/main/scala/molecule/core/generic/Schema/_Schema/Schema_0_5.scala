@@ -43,8 +43,7 @@ trait Schema_0_5_L0[o0[_], p0, A, B, C, D, E] extends Schema_0_5[o0, p0, A, B, C
   final lazy val fulltext$    : Next[fulltext$   , Schema_fulltext_   , Option[Boolean]] = ???
   final lazy val isComponent$ : Next[isComponent$, Schema_isComponent_, Option[Boolean]] = ???
   final lazy val noHistory$   : Next[noHistory$  , Schema_noHistory_  , Option[Boolean]] = ???
-  final lazy val enumm$       : Next[enumm$      , Schema_enumm_      , Option[String ]] = ???
-  
+
   final lazy val id_          : Stay[id          , Schema_id         , Long   ] = ???
   final lazy val part_        : Stay[part        , Schema_part       , String ] = ???
   final lazy val nsFull_      : Stay[nsFull      , Schema_nsFull     , String ] = ???
@@ -95,8 +94,7 @@ trait Schema_0_5_L1[o0[_], p0, o1[_], p1, A, B, C, D, E] extends Schema_0_5[o0, 
   final lazy val fulltext$    : Next[fulltext$   , Schema_fulltext_   , Option[Boolean]] = ???
   final lazy val isComponent$ : Next[isComponent$, Schema_isComponent_, Option[Boolean]] = ???
   final lazy val noHistory$   : Next[noHistory$  , Schema_noHistory_  , Option[Boolean]] = ???
-  final lazy val enumm$       : Next[enumm$      , Schema_enumm_      , Option[String ]] = ???
-  
+
   final lazy val id_          : Stay[id          , Schema_id         , Long   ] = ???
   final lazy val part_        : Stay[part        , Schema_part       , String ] = ???
   final lazy val nsFull_      : Stay[nsFull      , Schema_nsFull     , String ] = ???
@@ -147,8 +145,7 @@ trait Schema_0_5_L2[o0[_], p0, o1[_], p1, o2[_], p2, A, B, C, D, E] extends Sche
   final lazy val fulltext$    : Next[fulltext$   , Schema_fulltext_   , Option[Boolean]] = ???
   final lazy val isComponent$ : Next[isComponent$, Schema_isComponent_, Option[Boolean]] = ???
   final lazy val noHistory$   : Next[noHistory$  , Schema_noHistory_  , Option[Boolean]] = ???
-  final lazy val enumm$       : Next[enumm$      , Schema_enumm_      , Option[String ]] = ???
-  
+
   final lazy val id_          : Stay[id          , Schema_id         , Long   ] = ???
   final lazy val part_        : Stay[part        , Schema_part       , String ] = ???
   final lazy val nsFull_      : Stay[nsFull      , Schema_nsFull     , String ] = ???
@@ -199,8 +196,7 @@ trait Schema_0_5_L3[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, A, B, C, D, E] e
   final lazy val fulltext$    : Next[fulltext$   , Schema_fulltext_   , Option[Boolean]] = ???
   final lazy val isComponent$ : Next[isComponent$, Schema_isComponent_, Option[Boolean]] = ???
   final lazy val noHistory$   : Next[noHistory$  , Schema_noHistory_  , Option[Boolean]] = ???
-  final lazy val enumm$       : Next[enumm$      , Schema_enumm_      , Option[String ]] = ???
-  
+
   final lazy val id_          : Stay[id          , Schema_id         , Long   ] = ???
   final lazy val part_        : Stay[part        , Schema_part       , String ] = ???
   final lazy val nsFull_      : Stay[nsFull      , Schema_nsFull     , String ] = ???
@@ -251,8 +247,7 @@ trait Schema_0_5_L4[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, A, B,
   final lazy val fulltext$    : Next[fulltext$   , Schema_fulltext_   , Option[Boolean]] = ???
   final lazy val isComponent$ : Next[isComponent$, Schema_isComponent_, Option[Boolean]] = ???
   final lazy val noHistory$   : Next[noHistory$  , Schema_noHistory_  , Option[Boolean]] = ???
-  final lazy val enumm$       : Next[enumm$      , Schema_enumm_      , Option[String ]] = ???
-  
+
   final lazy val id_          : Stay[id          , Schema_id         , Long   ] = ???
   final lazy val part_        : Stay[part        , Schema_part       , String ] = ???
   final lazy val nsFull_      : Stay[nsFull      , Schema_nsFull     , String ] = ???
@@ -303,8 +298,7 @@ trait Schema_0_5_L5[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_]
   final lazy val fulltext$    : Next[fulltext$   , Schema_fulltext_   , Option[Boolean]] = ???
   final lazy val isComponent$ : Next[isComponent$, Schema_isComponent_, Option[Boolean]] = ???
   final lazy val noHistory$   : Next[noHistory$  , Schema_noHistory_  , Option[Boolean]] = ???
-  final lazy val enumm$       : Next[enumm$      , Schema_enumm_      , Option[String ]] = ???
-  
+
   final lazy val id_          : Stay[id          , Schema_id         , Long   ] = ???
   final lazy val part_        : Stay[part        , Schema_part       , String ] = ???
   final lazy val nsFull_      : Stay[nsFull      , Schema_nsFull     , String ] = ???
@@ -355,8 +349,7 @@ trait Schema_0_5_L6[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_]
   final lazy val fulltext$    : Next[fulltext$   , Schema_fulltext_   , Option[Boolean]] = ???
   final lazy val isComponent$ : Next[isComponent$, Schema_isComponent_, Option[Boolean]] = ???
   final lazy val noHistory$   : Next[noHistory$  , Schema_noHistory_  , Option[Boolean]] = ???
-  final lazy val enumm$       : Next[enumm$      , Schema_enumm_      , Option[String ]] = ???
-  
+
   final lazy val id_          : Stay[id          , Schema_id         , Long   ] = ???
   final lazy val part_        : Stay[part        , Schema_part       , String ] = ???
   final lazy val nsFull_      : Stay[nsFull      , Schema_nsFull     , String ] = ???
@@ -407,8 +400,7 @@ trait Schema_0_5_L7[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_]
   final lazy val fulltext$    : Next[fulltext$   , Schema_fulltext_   , Option[Boolean]] = ???
   final lazy val isComponent$ : Next[isComponent$, Schema_isComponent_, Option[Boolean]] = ???
   final lazy val noHistory$   : Next[noHistory$  , Schema_noHistory_  , Option[Boolean]] = ???
-  final lazy val enumm$       : Next[enumm$      , Schema_enumm_      , Option[String ]] = ???
-  
+
   final lazy val id_          : Stay[id          , Schema_id         , Long   ] = ???
   final lazy val part_        : Stay[part        , Schema_part       , String ] = ???
   final lazy val nsFull_      : Stay[nsFull      , Schema_nsFull     , String ] = ???

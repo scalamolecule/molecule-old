@@ -147,6 +147,17 @@ private[molecule] trait MakeBase extends Dsl2Model {
           case "URI"          => (q"m1.values.iterator.next.asInstanceOf[URI]", q"m2.values.iterator.next.asInstanceOf[URI]")
           case "BigInt"       => (q"m1.values.iterator.next.asInstanceOf[jBigInt]", q"m2.values.iterator.next.asInstanceOf[jBigInt]")
           case "BigDecimal"   => (q"m1.values.iterator.next.asInstanceOf[jBigDec]", q"m2.values.iterator.next.asInstanceOf[jBigDec]")
+          case "schema"       => attr match {
+            case "doc$"         => (q"m1.values.iterator.next.asInstanceOf[String]", q"m2.values.iterator.next.asInstanceOf[String]")
+            case "index$"       => (q"m1.values.iterator.next.asInstanceOf[Boolean]", q"m2.values.iterator.next.asInstanceOf[Boolean]")
+            case "unique$"      => (
+              q"""getKwName(m1.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.toString)""",
+              q"""getKwName(m2.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.toString)"""
+            )
+            case "fulltext$"    => (q"m1.values.iterator.next.asInstanceOf[jBoolean]", q"m2.values.iterator.next.asInstanceOf[jBoolean]")
+            case "isComponent$" => (q"m1.values.iterator.next.asInstanceOf[jBoolean]", q"m2.values.iterator.next.asInstanceOf[jBoolean]")
+            case "noHistory$"   => (q"m1.values.iterator.next.asInstanceOf[jBoolean]", q"m2.values.iterator.next.asInstanceOf[jBoolean]")
+          }
           case other          => abort(s"Unexpected type '$other' for optional sort attribute `$attr`")
         }
         val result        =
@@ -177,6 +188,26 @@ private[molecule] trait MakeBase extends Dsl2Model {
             case "txInstant" => (q"a.get($i).asInstanceOf[Date]", q"b.get($i).asInstanceOf[Date]")
             case "op"        => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
           }
+          case "schema"               => attr match {
+            case "id"          => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
+            case "part"        => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "nsFull"      => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "ns"          => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "a"           => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "attr"        => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "tpe"         => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "card"        => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "doc"         => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "index"       => (q"a.get($i).asInstanceOf[Boolean]", q"b.get($i).asInstanceOf[Boolean]")
+            case "unique"      => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "fulltext"    => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
+            case "isComponent" => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
+            case "noHistory"   => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
+            case "enumm"       => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "t"           => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
+            case "tx"          => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
+            case "txInstant"   => (q"a.get($i).asInstanceOf[Date]", q"b.get($i).asInstanceOf[Date]")
+          }
           case other                  => abort(s"Unexpected type '$other' for sort attribute `$attr`")
         }
         sort match {
@@ -185,12 +216,13 @@ private[molecule] trait MakeBase extends Dsl2Model {
         }
       }
     }
-    val comparers = model0.elements.foldLeft(0, Seq.empty[(Int, Tree)]) {
+
+    val comparisons = model0.elements.foldLeft(0, Seq.empty[(Int, Tree)]) {
       case ((i, acc), Atom(_, attr, tpe, _, _, enumPrefix, _, _, sort)) if sort.nonEmpty =>
         (i + 1, acc :+ comp(i, attr, attr.last == '$', tpe, enumPrefix.nonEmpty, sort))
 
       case ((i, acc), Generic(_, attr, tpe, _, sort)) if sort.nonEmpty =>
-        (i + 1, acc :+ comp(i, attr, false, tpe, false, sort))
+        (i + 1, acc :+ comp(i, attr, attr.last == '$', tpe, false, sort))
 
       case ((i, acc), Atom(_, attr, _, _, _, _, _, _, _)) =>
         (if (attr.last == '_') i else i + 1, acc)
@@ -200,23 +232,28 @@ private[molecule] trait MakeBase extends Dsl2Model {
 
       case ((i, acc), _) =>
         (i, acc)
-    }._2.sortBy(_._1).map(_._2)
-    q"""
-          final override def sortRows: Boolean = true
-          final override def compare(a: jList[AnyRef], b: jList[AnyRef]): Int = {
-            import java.lang.{Long => jLong, Double => jDouble, Boolean => jBoolean}
-            import java.math.{BigDecimal => jBigDec, BigInteger => jBigInt}
-            var result    = 0
-            var index     = 0
-            val comparers = Seq(
-              ..$comparers
-            )
-            do {
-              result = comparers(index)
-              index += 1
-            } while (index < ${comparers.size} && result == 0)
-            result
-          }
+    }._2
+      .sortBy(_._1) // sort order positions
+      .map(_._2)
+
+    val ordering = comparisons.size match {
+      case 1 => q"${comparisons.head}"
+      case _ =>
+        val moreComparisons = comparisons.tail.map(comparison => q"if (result == 0) result = $comparison")
+        q"""
+          var result = ${comparisons.head}
+          ..$moreComparisons
+          result
         """
+    }
+
+    q"""
+      final override def sortRows: Boolean = true
+      final override def compare(a: jList[AnyRef], b: jList[AnyRef]): Int = {
+        import java.lang.{Long => jLong, Double => jDouble, Boolean => jBoolean}
+        import java.math.{BigDecimal => jBigDec, BigInteger => jBigInt}
+        ..$ordering
+      }
+    """
   } else q""
 }
