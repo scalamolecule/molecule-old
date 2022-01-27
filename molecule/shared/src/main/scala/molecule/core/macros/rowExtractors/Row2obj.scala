@@ -122,7 +122,7 @@ trait Row2obj extends RowValue2cast {
       val propDefs  = nodes.flatMap {
         case p@Prop(_, prop, baseTpe, card, group, optAggrTpe) =>
           val tpe = getTpe(p)
-          //          xx(1, prop, baseTpe, tpe, optAggrTpe)
+          //          xx(1, prop, baseTpe, tpe, group, optAggrTpe)
           colIndex += 1
           // Only generate 1 property, even if attribute is repeated in molecule
           if (!propNames.contains(prop)) {

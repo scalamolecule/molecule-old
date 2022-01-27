@@ -2,6 +2,9 @@ package moleculeTests
 
 import molecule.core.util.Executor._
 import molecule.core.util.Helpers
+import molecule.core.util.testing.expectCompileError
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
+import molecule.datomic.api.out5._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
 
@@ -15,9 +18,20 @@ object AdhocJvm extends AsyncTestSuite with Helpers {
 
       for {
         conn <- futConn
+        //        _ <- Ns.a.apply(min(2)).get
 
+        _ <- Ns.str.insert(
+          "a", "a",
+          "b", "b", "b", "b", "b", "b", "b", "b", "b", "b",
+        )
+        _ <- Ns.str(count).d1.str.a2.inspectGet
+        _ <- Ns.str(count).d1.str.a2.get.map(_ ==> List(
+          (10, "b"),
+          (2, "a"),
+        ))
 
       } yield ()
+
     }
 
 

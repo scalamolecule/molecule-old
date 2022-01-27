@@ -63,7 +63,8 @@ private[molecule] trait Dsl2Model extends TreeOps
   //        private lazy val xx = InspectMacro("Dsl2Model", 100, 900, mkError = true)
   //  private lazy val xx = InspectMacro("Dsl2Model", 100, 900)
   //  private lazy val xx = InspectMacro("Dsl2Model", 43, 44)
-  private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
+//  private lazy val xx = InspectMacro("Dsl2Model", 241, 900, mkError = true)
+    private lazy val xx = InspectMacro("Dsl2Model", 101, 900)
   //  private lazy val xx = InspectMacro("Dsl2Model", 802, 803)
   //    private lazy val xx = InspectMacro("Dsl2Model", 802, 802, mkError = true)
 
@@ -247,7 +248,7 @@ private[molecule] trait Dsl2Model extends TreeOps
 
     def traverseElement(prev: Tree, p: richTree, element: Element): Seq[Element] = {
       if (p.isNS && !p.isFirstNS) {
-        //xx(711, prev, p, element, typess, castss)
+        //xx(711, prev, p, element, typess, castss, p.isFirstNS, p.tpe_, prev.isFirstNS)
         resolve(prev) :+ element
       } else {
         //xx(710, element)
@@ -331,7 +332,9 @@ private[molecule] trait Dsl2Model extends TreeOps
                 resolve(prev)
               }
 
-            case attrStr => resolveAttr(tree, richTree(tree), prev, richTree(prev), attrStr)
+            case attrStr =>
+              //xx(101, attrStr)
+              resolveAttr(tree, richTree(tree), prev, richTree(prev), attrStr)
           }
 
         case q"$prev.$cur.apply(..$args)" =>
@@ -775,8 +778,21 @@ private[molecule] trait Dsl2Model extends TreeOps
         def casts(mode: String, tpe: String): Seq[Element] = {
           mode match {
             case "mandatory" =>
-              //xx(251, "aggrType: " + aggrType)
-              if (aggrType.nonEmpty) {
+              //xx(251, "aggrType: " + aggrType, attrStr)
+              if (aggrType == "Int2") {
+                // Count of generic attribute values
+                addSpecific(
+                  t,
+                  castOneAttr("Int"),
+                  if (isOptNested) jsonOptNestedOneAttr("Int", attrStr) else jsonOneAttr("Int", attrStr),
+                  Some(tq"${TypeName("Int")}"),
+                  false
+                )
+                val cls     = "Schema_" + attrStr
+                val newProp = Prop(cls, attrStr, tpe, 1, "One", Some("Int"))
+                obj = addNode(obj, newProp, objLevel)
+                traverseElement(prev, p, Generic("Schema", attrStr, "schema", value, getSort))
+              } else if (aggrType.nonEmpty) {
                 // Aggregate
                 addSpecific(
                   t,
@@ -879,7 +895,7 @@ private[molecule] trait Dsl2Model extends TreeOps
       def resolve(value: Value, aggrType: String = ""): Seq[Element] = {
         def casts(mandatory: Boolean, tpe: String, genericAttr: String = ""): Seq[Element] = {
           if (mandatory) {
-            //xx(241, "aggrType: " + aggrType, t.nsFull, t.nsFull2, tpe, genericAttr, attrStr, obj)
+            //xx(241, "aggrType: " + aggrType, t.nsFull, t.nsFull2, tpe, genericAttr, attrStr, obj, args)
             if (aggrType == "Int2") {
               // Count of generic attribute values
               addSpecific(
@@ -940,12 +956,13 @@ private[molecule] trait Dsl2Model extends TreeOps
         }
       }
       val element = args match {
-        case q"scala.collection.immutable.List($pkg.count)"            => resolve(Fn("count"), "Int2")
-        case q"scala.collection.immutable.List($pkg.?)"                => abort("Generic input attributes not implemented.")
-        case q"scala.collection.immutable.List($pkg.$fn)" if badFn(fn) => abort(s"Generic attributes only allowed to aggregate `count`. Found: `$fn`")
-        case q"scala.collection.immutable.List($v)"                    => resolve(modelValue("apply", null, v, attrStr))
-        case q"scala.collection.immutable.List(..$vs)"                 => resolve(modelValue("apply", null, q"Seq(..$vs)", attrStr))
-        case _                                                         => abort("Unexpected value applied to generic attribute: " + args)
+        case q"scala.collection.immutable.List($pkg.count)"                        => resolve(Fn("count"), "Int2")
+        case q"scala.collection.immutable.List($pkg.?)"                            => abort("Generic input attributes not implemented.")
+        case q"scala.collection.immutable.List($pkg.$fn)" if badFn(fn)             => abort(s"Generic attributes only allowed to aggregate `count`. Found: `$fn`")
+        case q"scala.collection.immutable.List($pkg.$fn.apply($arg))" if badFn(fn) => abort(s"Generic attributes only allowed to aggregate `count`. Found: `$fn`")
+        case q"scala.collection.immutable.List($v)"                                => resolve(modelValue("apply", null, v, attrStr))
+        case q"scala.collection.immutable.List(..$vs)"                             => resolve(modelValue("apply", null, q"Seq(..$vs)", attrStr))
+        case _                                                                     => abort("Unexpected value applied to generic attribute: " + args)
       }
       //xx(245, t.nsFull, attrStr, args, element, obj)
       element
@@ -1452,7 +1469,7 @@ private[molecule] trait Dsl2Model extends TreeOps
                   )
               }
             }
-          //xx(85, aggrType)
+            //xx(85, aggrType)
         }
         standard = true
         aggrType = ""

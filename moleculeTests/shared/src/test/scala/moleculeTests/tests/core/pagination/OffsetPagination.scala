@@ -95,7 +95,17 @@ object OffsetPagination extends AsyncTestSuite {
 
         // Empty result set returned for offset exceeding total count
         _ <- Ns.int.a1.get(2, 4).map(_ ==> (3, Nil))
-        _ <- Ns.int.d1.get(2, 4).map(_ ==> (3, Nil))
+        _ <- Ns.int.apply(1).d1.get(2, 4).map(_ ==> (3, Nil))
+      } yield ()
+    }
+
+
+    "Aggregate type changes" - core { implicit conn =>
+      for {
+        _ <- Ns.str.insert("a", "a", "b", "c")
+
+        // Empty result set returned for offset exceeding total count
+        _ <- Ns.str.str.apply(count).get.map(_ ==> List(("a", 2), ("b", 1), ("c", 1) ))
       } yield ()
     }
 

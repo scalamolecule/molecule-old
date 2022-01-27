@@ -87,7 +87,6 @@ In the IDE, run `moleculeTests.restore.RecreateTestDbs` in jvm moleculeTests (ma
 Copy all lines below and paste into terminal to start the Peer Server and having it serve all the sample databases used by the tests:
 
     bin/run -m datomic.peer-server -h localhost -p 8998 -a k,s \
-    -d m_txCount,datomic:mem://m_txCount \
     -d m_coretests,datomic:mem://m_coretests \
     -d m_bidirectional,datomic:mem://m_bidirectional \
     -d m_partitions,datomic:mem://m_partitions \

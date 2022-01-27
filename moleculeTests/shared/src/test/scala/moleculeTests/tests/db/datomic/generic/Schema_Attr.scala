@@ -1,10 +1,11 @@
 package moleculeTests.tests.db.datomic.generic
 
+import molecule.core.util.Executor._
+import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out3._
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}
 import moleculeTests.setup.AsyncTestSuite
 import utest._
-import molecule.core.util.Executor._
 
 
 object Schema_Attr extends AsyncTestSuite {
@@ -508,6 +509,31 @@ object Schema_Attr extends AsyncTestSuite {
           _ <- Schema.txInstant.get.map(_ ==> List(txInstant))
         } yield ()
       }
+    }
+
+
+    "Aggregate count" - core { implicit futConn =>
+      for {
+        _ <- Schema.a(count).get.map(_ ==> List(69))
+        _ <- Schema.ns_("Ref1").a(count).get.map(_ ==> List(12))
+
+        _ <- Schema.ns(count).get.map(_ ==> List(5))
+
+        _ <- Schema.part(count).get.map(_ ==> List(1))
+
+        // No other aggregate functions allowed for schema attributes
+        //        _ <- Schema.a(min).get
+        //        _ <- Schema.a(max).get
+        //        _ <- Schema.a(rand).get
+        //        _ <- Schema.a(sample).get
+        //        _ <- Schema.a(sum).get
+        //        _ <- Schema.a(median).get
+        //        _ <- Schema.a(distinct).get
+        //        _ <- Schema.a(countDistinct).get
+        //        _ <- Schema.a(avg).get
+        //        _ <- Schema.a(variance).get
+        //        _ <- Schema.a(stddev).get
+      } yield ()
     }
   }
 }

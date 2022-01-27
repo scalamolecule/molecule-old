@@ -49,22 +49,40 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
           )
         } else {
           conn.jvmQuery(_model, _query).map { jColl =>
-            jColl.size match {
+            val last = jColl.size
+            last match {
               case 0 => List.empty[Tpl]
               case 1 => List(row2tpl(jColl.iterator().next()))
               case _ =>
-                val it   = if (sortRows) {
+                //                val it   = if (sortRows) {
+                //                  val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
+                //                  rows.sort(this) // using macro-implemented `compare` method
+                //                  rows.iterator
+                //                } else {
+                //                  jColl.iterator()
+                //                }
+                //                val list = List.newBuilder[Tpl]
+                //                while (it.hasNext) {
+                //                  list += row2tpl(it.next)
+                //                }
+                //                list.result()
+
+                val rows   = if (sortRows) {
                   val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
                   rows.sort(this) // using macro-implemented `compare` method
-                  rows.iterator
+                  rows
                 } else {
-                  jColl.iterator()
+                  new java.util.ArrayList(jColl)
                 }
-                val list = List.newBuilder[Tpl]
-                while (it.hasNext) {
-                  list += row2tpl(it.next)
+                val tuples = List.newBuilder[Tpl]
+                var i      = 0
+                while (i != last) {
+                  tuples += row2tpl(rows.get(i))
+                  i += 1
                 }
-                list.result()
+                tuples.result()
+
+
             }
           }
         }
@@ -99,26 +117,25 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
             )
           } else {
             conn.jvmQuery(_model, _query).map { jColl =>
-              val size = jColl.size
-              val max  = if (size < limit) size else limit
-              max match {
+              val last = jColl.size.min(limit)
+              last match {
                 case 0 => List.empty[Tpl]
                 case 1 => List(row2tpl(jColl.iterator().next()))
                 case _ =>
-                  val it   = if (sortRows) {
+                  val rows   = if (sortRows) {
                     val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
                     rows.sort(this) // using macro-implemented `compare` method
-                    rows.iterator
+                    rows
                   } else {
-                    jColl.iterator()
+                    new java.util.ArrayList(jColl)
                   }
-                  val list = List.newBuilder[Tpl]
-                  var i    = 0
-                  while (it.hasNext && i < max) {
-                    list += row2tpl(it.next)
+                  val tuples = List.newBuilder[Tpl]
+                  var i      = 0
+                  while (i != last) {
+                    tuples += row2tpl(rows.get(i))
                     i += 1
                   }
-                  list.result()
+                  tuples.result()
               }
             }
           }
@@ -164,22 +181,27 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
               if (offset > totalCount) {
                 (totalCount, List.empty[Tpl])
               } else {
-                val rows = if (sortRows) {
-                  val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
-                  rows.sort(this) // using macro-implemented `compare` method
-                  rows
-                } else {
-                  new java.util.ArrayList(jColl)
+                val last   = totalCount.min(offset + limit)
+                val tuples = last match {
+                  case 0 => List.empty[Tpl]
+                  case 1 => List(row2tpl(jColl.iterator().next()))
+                  case _ =>
+                    val rows   = if (sortRows) {
+                      val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
+                      rows.sort(this) // using macro-implemented `compare` method
+                      rows
+                    } else {
+                      new java.util.ArrayList(jColl)
+                    }
+                    val tuples = List.newBuilder[Tpl] // Build Scala List with tuples of data
+                    var i      = offset
+                    while (i != last) {
+                      tuples += row2tpl(rows.get(i))
+                      i += 1
+                    }
+                    tuples.result()
                 }
-                val tuples      = List.newBuilder[Tpl] // Build Scala List with tuples of data
-                val max         = offset + limit
-                val end         = totalCount.min(max)
-                var i           = offset
-                while (i < end) {
-                  tuples += row2tpl(rows.get(i))
-                  i += 1
-                }
-                (totalCount, tuples.result())
+                (totalCount, tuples)
               }
             }
           }

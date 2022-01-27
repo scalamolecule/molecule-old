@@ -6,7 +6,7 @@ import molecule.core.ast.elements._
 import molecule.core.macros.MacroHelpers
 import molecule.core.marshalling.nodes._
 import molecule.core.ops.exception.LiftablesException
-import molecule.datomic.base.ast.query.{NestedAttrs, _}
+import molecule.datomic.base.ast.query._
 import scala.collection.immutable.HashSet
 import scala.collection.immutable.Set.{Set1, Set2, Set3, Set4}
 import scala.reflect.macros.blackbox
@@ -17,6 +17,11 @@ private[molecule] trait Liftables extends MacroHelpers {
   import c.universe._
 
   def abort(msg: String) = throw LiftablesException(msg)
+
+  def badAggrKw(fn: Name): Boolean = List(
+    "countDistinct", "distinct", "max", "min", "rand", "sample", "avg", "median", "stddev", "sum", "variance"
+  ).contains(fn.toString)
+
 
   // General liftables --------------------------------------------------------------
 
@@ -31,28 +36,28 @@ private[molecule] trait Liftables extends MacroHelpers {
   def mkURI(uri: URI): c.universe.Tree = q"new java.net.URI(${uri.getScheme}, ${uri.getUserInfo}, ${uri.getHost}, ${uri.getPort}, ${uri.getPath}, ${uri.getQuery}, ${uri.getFragment})"
 
   implicit val liftAny: c.universe.Liftable[Any] = Liftable[Any] {
-    case Literal(Constant(s: String))  => q"$s"
-    case Literal(Constant(i: Int))     => q"$i"
-    case Literal(Constant(l: Long))    => q"$l"
-    case Literal(Constant(f: Float))   => q"$f"
-    case Literal(Constant(d: Double))  => q"$d"
-    case Literal(Constant(b: Boolean)) => q"$b"
-    case s: String                     => q"$s"
-    case i: Int                        => q"$i"
-    case l: Long                       => q"$l"
-    case f: Float                      => q"$f"
-    case d: Double                     => q"$d"
-    case b: Boolean                    => q"$b"
-    case date: Date                    => mkDate(date)
-    case bigInt: BigInt                => mkBigInt(bigInt)
-    case bigDec: BigDecimal            => mkBigDecimal(bigDec)
-    case uuid: UUID                    => mkUUID(uuid)
-    case uri: URI                      => mkURI(uri)
-    case _: Qm.type                    => q"Qm"
-    case _: Distinct.type              => q"Distinct"
-    case _: EntValue.type              => q"EntValue"
-    case _: VarValue.type              => q"VarValue"
-    case set: Set[_]                   => set match {
+    case Literal(Constant(s: String))   => q"$s"
+    case Literal(Constant(i: Int))      => q"$i"
+    case Literal(Constant(l: Long))     => q"$l"
+    case Literal(Constant(f: Float))    => q"$f"
+    case Literal(Constant(d: Double))   => q"$d"
+    case Literal(Constant(b: Boolean))  => q"$b"
+    case s: String                      => q"$s"
+    case i: Int                         => q"$i"
+    case l: Long                        => q"$l"
+    case f: Float                       => q"$f"
+    case d: Double                      => q"$d"
+    case b: Boolean                     => q"$b"
+    case date: Date                     => mkDate(date)
+    case bigInt: BigInt                 => mkBigInt(bigInt)
+    case bigDec: BigDecimal             => mkBigDecimal(bigDec)
+    case uuid: UUID                     => mkUUID(uuid)
+    case uri: URI                       => mkURI(uri)
+    case _: Qm.type                     => q"Qm"
+    case _: Distinct.type               => q"Distinct"
+    case _: EntValue.type               => q"EntValue"
+    case _: VarValue.type               => q"VarValue"
+    case set: Set[_]                    => set match {
       case s1: Set1[_]   => q"Set(${any(s1.head)})"
       case s2: Set2[_]   => q"Set(..${s2 map any})"
       case s3: Set3[_]   => q"Set(..${s3 map any})"
@@ -60,9 +65,10 @@ private[molecule] trait Liftables extends MacroHelpers {
       case s: HashSet[_] => q"Set(..${s map any})"
       case emptySet      => q"Set()"
     }
-    case q"scala.None"                 => q"None"
-    case null                          => q"null"
-    case other                         =>
+    case q"scala.None"                  => q"None"
+    case null                           => q"null"
+    case Select(_, kw) if badAggrKw(kw) => abort(s"Only `count` is allowed with Schema attributes. Found: `$kw`")
+    case other                          =>
       abort("Can't lift unexpected code:" +
         "\ncode : " + other +
         "\nclass: " + other.getClass +

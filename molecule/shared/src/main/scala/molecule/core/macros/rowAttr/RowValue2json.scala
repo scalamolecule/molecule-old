@@ -35,19 +35,19 @@ private[molecule] trait RowValue2json extends TreeOps {
     if (t.card == 1) jsonOneAttr(t.tpeS, t.name) else jsonManyAttr(t.tpeS, t.name)
 
   lazy val jsonOneAttr: (String, String) => (Int, Int) => Tree = (baseTpe: String, field: String) => baseTpe match {
-    case "String"     => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
-    case "Int"        => (colIndex: Int, _: Int) => q"jsonOne(sb, $field, row, $colIndex)"
-    case "Long"       => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
-    case "Double"     => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
-    case "Boolean"    => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
-    case "Date"       => (colIndex: Int, _: Int) => q"jsonOneDate(sb, $field, row, $colIndex)"
-    case "UUID"       => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
-    case "URI"        => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
-    case "BigInt"     => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
-    case "BigDecimal" => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
-    case "Any"        => (colIndex: Int, _: Int) => q"jsonOneAny(sb, $field, row, $colIndex)"
-    case "enum"       => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
-    case "ref"        => (colIndex: Int, _: Int) => q"jsonOne(sb, $field, row, $colIndex)"
+    case "String"       => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
+    case "Int" | "Int2" => (colIndex: Int, _: Int) => q"jsonOne(sb, $field, row, $colIndex)"
+    case "Long"         => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
+    case "Double"       => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
+    case "Boolean"      => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
+    case "Date"         => (colIndex: Int, _: Int) => q"jsonOneDate(sb, $field, row, $colIndex)"
+    case "UUID"         => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
+    case "URI"          => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
+    case "BigInt"       => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
+    case "BigDecimal"   => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
+    case "Any"          => (colIndex: Int, _: Int) => q"jsonOneAny(sb, $field, row, $colIndex)"
+    case "enum"         => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
+    case "ref"          => (colIndex: Int, _: Int) => q"jsonOne(sb, $field, row, $colIndex)"
   }
 
   lazy val jsonManyAttr: (String, String) => (Int, Int) => Tree = (baseTpe: String, field: String) => baseTpe match {

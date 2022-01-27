@@ -10,11 +10,14 @@ package molecule.core.generic.Schema
 
 import java.util.Date
 import molecule.core.dsl.base._
+import molecule.core.expression.count.count_09._
 import scala.language.higherKinds
 
 trait Schema_0_9[o0[_], p0, A, B, C, D, E, F, G, H, I] extends Schema with NS_0_09[o0, p0, A, B, C, D, E, F, G, H, I]
 
-trait Schema_0_9_L0[o0[_], p0, A, B, C, D, E, F, G, H, I] extends Schema_0_9[o0, p0, A, B, C, D, E, F, G, H, I] {
+trait Schema_0_9_L0[o0[_], p0, A, B, C, D, E, F, G, H, I]
+  extends Schema_0_9[o0, p0, A, B, C, D, E, F, G, H, I]
+    with Count_09_L0[o0, p0, A, B, C, D, E, F, G, H, I, Schema_0_9_L0] {
   type Next[Attr[_, _], Prop, Tpe] = Attr[Schema_0_10_L0[o0, p0 with Prop, A, B, C, D, E, F, G, H, I, Tpe], Nothing] with Schema_0_10_L0[o0, p0 with Prop, A, B, C, D, E, F, G, H, I, Tpe]
   type Stay[Attr[_, _], Prop, Tpe] = Attr[Schema_0_9_L0[o0, p0          , A, B, C, D, E, F, G, H, I     ], Nothing] with Schema_0_9_L0[o0, p0          , A, B, C, D, E, F, G, H, I     ]
 
@@ -65,7 +68,9 @@ trait Schema_0_9_L0[o0[_], p0, A, B, C, D, E, F, G, H, I] extends Schema_0_9[o0,
 }
 
 
-trait Schema_0_9_L1[o0[_], p0, o1[_], p1, A, B, C, D, E, F, G, H, I] extends Schema_0_9[o0, p0 with o1[p1], A, B, C, D, E, F, G, H, I] {
+trait Schema_0_9_L1[o0[_], p0, o1[_], p1, A, B, C, D, E, F, G, H, I]
+  extends Schema_0_9[o0, p0 with o1[p1], A, B, C, D, E, F, G, H, I]
+    with Count_09_L1[o0, p0, o1, p1, A, B, C, D, E, F, G, H, I, Schema_0_9_L1] {
   type Next[Attr[_, _], Prop, Tpe] = Attr[Schema_0_10_L1[o0, p0, o1, p1 with Prop, A, B, C, D, E, F, G, H, I, Tpe], Nothing] with Schema_0_10_L1[o0, p0, o1, p1 with Prop, A, B, C, D, E, F, G, H, I, Tpe]
   type Stay[Attr[_, _], Prop, Tpe] = Attr[Schema_0_9_L1[o0, p0, o1, p1          , A, B, C, D, E, F, G, H, I     ], Nothing] with Schema_0_9_L1[o0, p0, o1, p1          , A, B, C, D, E, F, G, H, I     ]
 
@@ -116,7 +121,9 @@ trait Schema_0_9_L1[o0[_], p0, o1[_], p1, A, B, C, D, E, F, G, H, I] extends Sch
 }
 
 
-trait Schema_0_9_L2[o0[_], p0, o1[_], p1, o2[_], p2, A, B, C, D, E, F, G, H, I] extends Schema_0_9[o0, p0 with o1[p1 with o2[p2]], A, B, C, D, E, F, G, H, I] {
+trait Schema_0_9_L2[o0[_], p0, o1[_], p1, o2[_], p2, A, B, C, D, E, F, G, H, I]
+  extends Schema_0_9[o0, p0 with o1[p1 with o2[p2]], A, B, C, D, E, F, G, H, I]
+    with Count_09_L2[o0, p0, o1, p1, o2, p2, A, B, C, D, E, F, G, H, I, Schema_0_9_L2] {
   type Next[Attr[_, _], Prop, Tpe] = Attr[Schema_0_10_L2[o0, p0, o1, p1, o2, p2 with Prop, A, B, C, D, E, F, G, H, I, Tpe], Nothing] with Schema_0_10_L2[o0, p0, o1, p1, o2, p2 with Prop, A, B, C, D, E, F, G, H, I, Tpe]
   type Stay[Attr[_, _], Prop, Tpe] = Attr[Schema_0_9_L2[o0, p0, o1, p1, o2, p2          , A, B, C, D, E, F, G, H, I     ], Nothing] with Schema_0_9_L2[o0, p0, o1, p1, o2, p2          , A, B, C, D, E, F, G, H, I     ]
 
@@ -167,7 +174,9 @@ trait Schema_0_9_L2[o0[_], p0, o1[_], p1, o2[_], p2, A, B, C, D, E, F, G, H, I] 
 }
 
 
-trait Schema_0_9_L3[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, A, B, C, D, E, F, G, H, I] extends Schema_0_9[o0, p0 with o1[p1 with o2[p2 with o3[p3]]], A, B, C, D, E, F, G, H, I] {
+trait Schema_0_9_L3[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, A, B, C, D, E, F, G, H, I]
+  extends Schema_0_9[o0, p0 with o1[p1 with o2[p2 with o3[p3]]], A, B, C, D, E, F, G, H, I]
+    with Count_09_L3[o0, p0, o1, p1, o2, p2, o3, p3, A, B, C, D, E, F, G, H, I, Schema_0_9_L3] {
   type Next[Attr[_, _], Prop, Tpe] = Attr[Schema_0_10_L3[o0, p0, o1, p1, o2, p2, o3, p3 with Prop, A, B, C, D, E, F, G, H, I, Tpe], Nothing] with Schema_0_10_L3[o0, p0, o1, p1, o2, p2, o3, p3 with Prop, A, B, C, D, E, F, G, H, I, Tpe]
   type Stay[Attr[_, _], Prop, Tpe] = Attr[Schema_0_9_L3[o0, p0, o1, p1, o2, p2, o3, p3          , A, B, C, D, E, F, G, H, I     ], Nothing] with Schema_0_9_L3[o0, p0, o1, p1, o2, p2, o3, p3          , A, B, C, D, E, F, G, H, I     ]
 
@@ -218,7 +227,9 @@ trait Schema_0_9_L3[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, A, B, C, D, E, F
 }
 
 
-trait Schema_0_9_L4[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, A, B, C, D, E, F, G, H, I] extends Schema_0_9[o0, p0 with o1[p1 with o2[p2 with o3[p3 with o4[p4]]]], A, B, C, D, E, F, G, H, I] {
+trait Schema_0_9_L4[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, A, B, C, D, E, F, G, H, I]
+  extends Schema_0_9[o0, p0 with o1[p1 with o2[p2 with o3[p3 with o4[p4]]]], A, B, C, D, E, F, G, H, I]
+    with Count_09_L4[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4, A, B, C, D, E, F, G, H, I, Schema_0_9_L4] {
   type Next[Attr[_, _], Prop, Tpe] = Attr[Schema_0_10_L4[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4 with Prop, A, B, C, D, E, F, G, H, I, Tpe], Nothing] with Schema_0_10_L4[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4 with Prop, A, B, C, D, E, F, G, H, I, Tpe]
   type Stay[Attr[_, _], Prop, Tpe] = Attr[Schema_0_9_L4[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4          , A, B, C, D, E, F, G, H, I     ], Nothing] with Schema_0_9_L4[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4          , A, B, C, D, E, F, G, H, I     ]
 
@@ -269,7 +280,9 @@ trait Schema_0_9_L4[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, A, B,
 }
 
 
-trait Schema_0_9_L5[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_], p5, A, B, C, D, E, F, G, H, I] extends Schema_0_9[o0, p0 with o1[p1 with o2[p2 with o3[p3 with o4[p4 with o5[p5]]]]], A, B, C, D, E, F, G, H, I] {
+trait Schema_0_9_L5[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_], p5, A, B, C, D, E, F, G, H, I]
+  extends Schema_0_9[o0, p0 with o1[p1 with o2[p2 with o3[p3 with o4[p4 with o5[p5]]]]], A, B, C, D, E, F, G, H, I]
+    with Count_09_L5[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4, o5, p5, A, B, C, D, E, F, G, H, I, Schema_0_9_L5] {
   type Next[Attr[_, _], Prop, Tpe] = Attr[Schema_0_10_L5[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4, o5, p5 with Prop, A, B, C, D, E, F, G, H, I, Tpe], Nothing] with Schema_0_10_L5[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4, o5, p5 with Prop, A, B, C, D, E, F, G, H, I, Tpe]
   type Stay[Attr[_, _], Prop, Tpe] = Attr[Schema_0_9_L5[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4, o5, p5          , A, B, C, D, E, F, G, H, I     ], Nothing] with Schema_0_9_L5[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4, o5, p5          , A, B, C, D, E, F, G, H, I     ]
 
@@ -320,7 +333,9 @@ trait Schema_0_9_L5[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_]
 }
 
 
-trait Schema_0_9_L6[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_], p5, o6[_], p6, A, B, C, D, E, F, G, H, I] extends Schema_0_9[o0, p0 with o1[p1 with o2[p2 with o3[p3 with o4[p4 with o5[p5 with o6[p6]]]]]], A, B, C, D, E, F, G, H, I] {
+trait Schema_0_9_L6[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_], p5, o6[_], p6, A, B, C, D, E, F, G, H, I]
+  extends Schema_0_9[o0, p0 with o1[p1 with o2[p2 with o3[p3 with o4[p4 with o5[p5 with o6[p6]]]]]], A, B, C, D, E, F, G, H, I]
+    with Count_09_L6[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4, o5, p5, o6, p6, A, B, C, D, E, F, G, H, I, Schema_0_9_L6] {
   type Next[Attr[_, _], Prop, Tpe] = Attr[Schema_0_10_L6[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4, o5, p5, o6, p6 with Prop, A, B, C, D, E, F, G, H, I, Tpe], Nothing] with Schema_0_10_L6[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4, o5, p5, o6, p6 with Prop, A, B, C, D, E, F, G, H, I, Tpe]
   type Stay[Attr[_, _], Prop, Tpe] = Attr[Schema_0_9_L6[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4, o5, p5, o6, p6          , A, B, C, D, E, F, G, H, I     ], Nothing] with Schema_0_9_L6[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4, o5, p5, o6, p6          , A, B, C, D, E, F, G, H, I     ]
 
@@ -371,7 +386,9 @@ trait Schema_0_9_L6[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_]
 }
 
 
-trait Schema_0_9_L7[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_], p5, o6[_], p6, o7[_], p7, A, B, C, D, E, F, G, H, I] extends Schema_0_9[o0, p0 with o1[p1 with o2[p2 with o3[p3 with o4[p4 with o5[p5 with o6[p6 with o7[p7]]]]]]], A, B, C, D, E, F, G, H, I] {
+trait Schema_0_9_L7[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_], p5, o6[_], p6, o7[_], p7, A, B, C, D, E, F, G, H, I]
+  extends Schema_0_9[o0, p0 with o1[p1 with o2[p2 with o3[p3 with o4[p4 with o5[p5 with o6[p6 with o7[p7]]]]]]], A, B, C, D, E, F, G, H, I]
+    with Count_09_L7[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4, o5, p5, o6, p6, o7, p7, A, B, C, D, E, F, G, H, I, Schema_0_9_L7] {
   type Next[Attr[_, _], Prop, Tpe] = Attr[Schema_0_10_L7[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4, o5, p5, o6, p6, o7, p7 with Prop, A, B, C, D, E, F, G, H, I, Tpe], Nothing] with Schema_0_10_L7[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4, o5, p5, o6, p6, o7, p7 with Prop, A, B, C, D, E, F, G, H, I, Tpe]
   type Stay[Attr[_, _], Prop, Tpe] = Attr[Schema_0_9_L7[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4, o5, p5, o6, p6, o7, p7          , A, B, C, D, E, F, G, H, I     ], Nothing] with Schema_0_9_L7[o0, p0, o1, p1, o2, p2, o3, p3, o4, p4, o5, p5, o6, p6, o7, p7          , A, B, C, D, E, F, G, H, I     ]
 

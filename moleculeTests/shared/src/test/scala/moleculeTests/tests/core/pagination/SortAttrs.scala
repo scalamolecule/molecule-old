@@ -6,6 +6,7 @@ import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
 import molecule.core.util.testing.expectCompileError
+import moleculeTests.tests.core.pagination.OffsetPagination.core
 
 
 object SortAttrs extends AsyncTestSuite {
@@ -105,6 +106,53 @@ object SortAttrs extends AsyncTestSuite {
     }
 
 
+    "Aggregates" - core { implicit conn =>
+      for {
+        _ <- Ns.str.int insert List(
+          ("a", 1),
+          ("a", 3),
+          ("b", 5),
+          ("c", 6),
+        )
+
+        // Empty result set returned for offset exceeding total count
+        _ <- Ns.str(count).d1.str.a2.get.map(_ ==> List(
+          (2, "a"),
+          (1, "b"),
+          (1, "c"),
+        ))
+        _ <- Ns.str(count).a1.str.a2.get.map(_ ==> List(
+          (1, "b"),
+          (1, "c"),
+          (2, "a"),
+        ))
+
+        _ <- Ns.str(countDistinct).d1.str.a2.get.map(_ ==> List(
+          (2, "a"),
+          (1, "b"),
+          (1, "c"),
+        ))
+        _ <- Ns.str(countDistinct).a1.str.a2.get.map(_ ==> List(
+          (1, "b"),
+          (1, "c"),
+          (2, "a"),
+        ))
+
+        _ <- Ns.str.a1.int(avg).d2.get.map(_ ==> List(
+          ("a", 2),
+          ("b", 5),
+          ("c", 6),
+        ))
+        _ <- Ns.str.a1.int(variance).d2.get.map(_ ==> List(
+          ("a", 2),
+          ("b", 5),
+          ("c", 6),
+        ))
+
+      } yield ()
+    }
+
+
     "Variables" - core { implicit conn =>
       for {
         _ <- Ns.str.insert(str3, str1, str2)
@@ -130,7 +178,7 @@ object SortAttrs extends AsyncTestSuite {
       )
     }
 
-    "Can't apply operatioons on sort marker" - core { implicit conn =>
+    "Can't apply operations on sort marker" - core { implicit conn =>
       expectCompileError("m(Ns.int.a1(max))",
         "molecule.core.transform.exception.Dsl2ModelException: " +
           "Sort marker `a1` can't have any operation applied."

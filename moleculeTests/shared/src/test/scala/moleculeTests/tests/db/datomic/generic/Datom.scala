@@ -10,15 +10,15 @@ import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
 /** Generic Datom attribute interface
-  *
-  * - `e` Entity id (Long)
-  * - `a` Full attribute name like ":Person/name" (String)
-  * - `v` Value of Datoms (Any)
-  * - `t` Transaction pointer (Long)
-  * - `tx` Transaction entity id
-  * - `txInstant` Transaction wall clock time
-  * - `op` Assertion (true) / retraction (false) status
-  */
+ *
+ * - `e` Entity id (Long)
+ * - `a` Full attribute name like ":Person/name" (String)
+ * - `v` Value of Datoms (Any)
+ * - `t` Transaction pointer (Long)
+ * - `tx` Transaction entity id
+ * - `txInstant` Transaction wall clock time
+ * - `op` Assertion (true) / retraction (false) status
+ */
 object Datom extends AsyncTestSuite {
 
   def testData(implicit conn: Future[Conn], ec: ExecutionContext) = {
@@ -575,6 +575,7 @@ object Datom extends AsyncTestSuite {
       } yield ()
     }
 
+
     "Optional tx data not allowed" - core { implicit conn =>
       expectCompileError("""m(Ns.int$.tx.str)""",
         "molecule.core.transform.exception.Dsl2ModelException: " +
@@ -591,6 +592,70 @@ object Datom extends AsyncTestSuite {
       expectCompileError("""m(Ns.int$.op.str)""",
         "molecule.core.transform.exception.Dsl2ModelException: " +
           "Optional attributes (`int$`) can't be followed by generic transaction attributes (`op`).")
+    }
+
+
+    "Other aggregates not allowed" - core { implicit conn =>
+      expectCompileError("m(Ns.int.a(min))",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Generic attributes only allowed to aggregate `count`. Found: `min`"
+      )
+      expectCompileError("m(Ns.int.a(min(2)))",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Generic attributes only allowed to aggregate `count`. Found: `min`"
+      )
+      expectCompileError("m(Ns.int.a(max))",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Generic attributes only allowed to aggregate `count`. Found: `max`"
+      )
+      expectCompileError("m(Ns.int.a(max(2)))",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Generic attributes only allowed to aggregate `count`. Found: `max`"
+      )
+      expectCompileError("m(Ns.int.a(rand))",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Generic attributes only allowed to aggregate `count`. Found: `rand`"
+      )
+      expectCompileError("m(Ns.int.a(rand(2)))",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Generic attributes only allowed to aggregate `count`. Found: `rand`"
+      )
+      expectCompileError("m(Ns.int.a(sample))",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Generic attributes only allowed to aggregate `count`. Found: `sample`"
+      )
+      expectCompileError("m(Ns.int.a(sample(2)))",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Generic attributes only allowed to aggregate `count`. Found: `sample`"
+      )
+      expectCompileError("m(Ns.int.a(sum))",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Generic attributes only allowed to aggregate `count`. Found: `sum`"
+      )
+      expectCompileError("m(Ns.int.a(median))",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Generic attributes only allowed to aggregate `count`. Found: `median`"
+      )
+      expectCompileError("m(Ns.int.a(distinct))",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Generic attributes only allowed to aggregate `count`. Found: `distinct`"
+      )
+      expectCompileError("m(Ns.int.a(countDistinct))",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Generic attributes only allowed to aggregate `count`. Found: `countDistinct`"
+      )
+      expectCompileError("m(Ns.int.a(avg))",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Generic attributes only allowed to aggregate `count`. Found: `avg`"
+      )
+      expectCompileError("m(Ns.int.a(variance))",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Generic attributes only allowed to aggregate `count`. Found: `variance`"
+      )
+      expectCompileError("m(Ns.int.a(stddev))",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Generic attributes only allowed to aggregate `count`. Found: `stddev`"
+      )
     }
   }
 }

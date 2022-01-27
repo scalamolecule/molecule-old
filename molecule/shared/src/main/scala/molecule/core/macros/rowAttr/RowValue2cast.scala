@@ -34,19 +34,19 @@ private[molecule] trait RowValue2cast extends TreeOps {
     if (t.card == 1) castOneAttr(t.tpeS) else castManyAttr(t.tpeS)
 
   lazy val castOneAttr: String => Int => Tree = {
-    case "String"     => (colIndex: Int) => q"castOne[String](row, $colIndex)"
-    case "Int"        => (colIndex: Int) => q"castOneInt(row, $colIndex)"
-    case "Long"       => (colIndex: Int) => q"castOne[Long](row, $colIndex)"
-    case "Double"     => (colIndex: Int) => q"castOne[Double](row, $colIndex)"
-    case "Boolean"    => (colIndex: Int) => q"castOne[Boolean](row, $colIndex)"
-    case "Date"       => (colIndex: Int) => q"castOne[Date](row, $colIndex)"
-    case "UUID"       => (colIndex: Int) => q"castOne[UUID](row, $colIndex)"
-    case "URI"        => (colIndex: Int) => q"castOneURI(row, $colIndex)"
-    case "BigInt"     => (colIndex: Int) => q"castOneBigInt(row, $colIndex)"
-    case "BigDecimal" => (colIndex: Int) => q"castOneBigDecimal(row, $colIndex)"
-    case "Any"        => (colIndex: Int) => q"castOneAny(row, $colIndex)"
-    case "enum"       => (colIndex: Int) => q"row.get($colIndex).asInstanceOf[String]"
-    case "ref"        => (colIndex: Int) => q"castOne[Long](row, $colIndex)"
+    case "String"       => (colIndex: Int) => q"castOne[String](row, $colIndex)"
+    case "Int" | "Int2" => (colIndex: Int) => q"castOneInt(row, $colIndex)"
+    case "Long"         => (colIndex: Int) => q"castOne[Long](row, $colIndex)"
+    case "Double"       => (colIndex: Int) => q"castOne[Double](row, $colIndex)"
+    case "Boolean"      => (colIndex: Int) => q"castOne[Boolean](row, $colIndex)"
+    case "Date"         => (colIndex: Int) => q"castOne[Date](row, $colIndex)"
+    case "UUID"         => (colIndex: Int) => q"castOne[UUID](row, $colIndex)"
+    case "URI"          => (colIndex: Int) => q"castOneURI(row, $colIndex)"
+    case "BigInt"       => (colIndex: Int) => q"castOneBigInt(row, $colIndex)"
+    case "BigDecimal"   => (colIndex: Int) => q"castOneBigDecimal(row, $colIndex)"
+    case "Any"          => (colIndex: Int) => q"castOneAny(row, $colIndex)"
+    case "enum"         => (colIndex: Int) => q"row.get($colIndex).asInstanceOf[String]"
+    case "ref"          => (colIndex: Int) => q"castOne[Long](row, $colIndex)"
   }
 
   lazy val castManyAttr: String => Int => Tree = {

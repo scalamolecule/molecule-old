@@ -1,7 +1,7 @@
 package moleculeTests.tests.core.obj
 
 import molecule.core.util.Helpers
-import molecule.datomic.api.in1_out18._
+import molecule.datomic.api.in1_out22._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
@@ -43,24 +43,24 @@ object ObjGeneric extends AsyncTestSuite with Helpers {
         (e, t, tx, txInstant, t2, tx2, txInstant2, t3, tx3, txInstant3) <- testData
 
         // Current datom values
-        _ <- Ns(e).int.e.a.v.t.tx.txInstant.getObj.map { d1 =>
-          d1.int ==> 2
-          d1.e ==> e
-          d1.a ==> ":Ns/int"
-          d1.v ==> 2
-          d1.t ==> t2 // last transaction involving `int`
-          d1.tx ==> tx2
-          d1.txInstant ==> txInstant2
+        _ <- Ns(e).int.e.a.v.t.tx.txInstant.getObj.map { datom =>
+          datom.int ==> 2
+          datom.e ==> e
+          datom.a ==> ":Ns/int"
+          datom.v ==> 2
+          datom.t ==> t2 // last transaction involving `int`
+          datom.tx ==> tx2
+          datom.txInstant ==> txInstant2
         }
 
-        _ <- Ns(e).str.e.a.v.t.tx.txInstant.getObj.map { d2 =>
-          d2.str ==> "a"
-          d2.e ==> e
-          d2.a ==> ":Ns/str"
-          d2.v ==> "a"
-          d2.t ==> t3 // last transaction involving `str`
-          d2.tx ==> tx3
-          d2.txInstant ==> txInstant3
+        _ <- Ns(e).str.e.a.v.t.tx.txInstant.getObj.map { datom =>
+          datom.str ==> "a"
+          datom.e ==> e
+          datom.a ==> ":Ns/str"
+          datom.v ==> "a"
+          datom.t ==> t3 // last transaction involving `str`
+          datom.tx ==> tx3
+          datom.txInstant ==> txInstant3
         }
       } yield ()
     }
@@ -104,26 +104,25 @@ object ObjGeneric extends AsyncTestSuite with Helpers {
         intIndex = if (system == SystemPeer) Some(true) else None
         _ <- Schema
           .part.id.a(":Ns/int").nsFull.ns.attr.tpe.card.doc
-          .index$.unique$.fulltext$.isComponent$.noHistory$.enumm$
-          .t.tx.txInstant.getObj.map { o1 =>
-          o1.part ==> "db.part/user"
-          o1.id ==> intAttrId
-          o1.a ==> ":Ns/int"
-          o1.nsFull ==> "Ns"
-          o1.ns ==> "Ns"
-          o1.attr ==> "int"
-          o1.tpe ==> "long"
-          o1.card ==> "one"
-          o1.doc ==> "Card one Int attribute"
-          o1.index$ ==> intIndex
-          o1.unique$ ==> None
-          o1.fulltext$ ==> None
-          o1.isComponent$ ==> None
-          o1.noHistory$ ==> None
-          o1.enumm$ ==> None
-          o1.t // t of creation transaction
-          o1.tx // tx of creation transaction
-          o1.txInstant // txInstant of creation transaction
+          .index$.unique$.fulltext$.isComponent$.noHistory$
+          .t.tx.txInstant.getObj.map { schema =>
+          schema.part ==> "db.part/user"
+          schema.id ==> intAttrId
+          schema.a ==> ":Ns/int"
+          schema.nsFull ==> "Ns"
+          schema.ns ==> "Ns"
+          schema.attr ==> "int"
+          schema.tpe ==> "long"
+          schema.card ==> "one"
+          schema.doc ==> "Card one Int attribute"
+          schema.index$ ==> intIndex
+          schema.unique$ ==> None
+          schema.fulltext$ ==> None
+          schema.isComponent$ ==> None
+          schema.noHistory$ ==> None
+          schema.t // t of creation transaction
+          schema.tx // tx of creation transaction
+          schema.txInstant // txInstant of creation transaction
         }
       } yield ()
     }
@@ -132,22 +131,22 @@ object ObjGeneric extends AsyncTestSuite with Helpers {
       for {
         (e, t, tx, txInstant, t2, tx2, txInstant2, t3, tx3, txInstant3) <- testData
         // Entity `e`
-        _ <- EAVT(e).e.a.v.t.tx.txInstant.op.getObjs.collect { case List(d1, d2) =>
-          d1.e ==> e
-          d1.a ==> ":Ns/str"
-          d1.v ==> "a"
-          d1.t ==> t3 // last transaction involving `str`
-          d1.tx ==> tx3
-          d1.txInstant ==> txInstant3
-          d1.op ==> true
+        _ <- EAVT(e).e.a.v.t.tx.txInstant.op.getObjs.collect { case List(datom1, datom2) =>
+          datom1.e ==> e
+          datom1.a ==> ":Ns/str"
+          datom1.v ==> "a"
+          datom1.t ==> t3 // last transaction involving `str`
+          datom1.tx ==> tx3
+          datom1.txInstant ==> txInstant3
+          datom1.op ==> true
 
-          d2.e ==> e
-          d2.a ==> ":Ns/int"
-          d2.v ==> 2
-          d2.t ==> t2 // last transaction involving `int`
-          d2.tx ==> tx2
-          d2.txInstant ==> txInstant2
-          d2.op ==> true
+          datom2.e ==> e
+          datom2.a ==> ":Ns/int"
+          datom2.v ==> 2
+          datom2.t ==> t2 // last transaction involving `int`
+          datom2.tx ==> tx2
+          datom2.txInstant ==> txInstant2
+          datom2.op ==> true
         }
       } yield ()
     }
@@ -164,22 +163,22 @@ object ObjGeneric extends AsyncTestSuite with Helpers {
 
         // :Ns/int attribute
         _ <- AEVT(":Ns/int").e.a.v.t.tx.txInstant.op.getObjs.collect { case datoms =>
-          val List(d1, d2) = datoms.sortBy(_.t)
-          d1.e ==> e
-          d1.a ==> ":Ns/int"
-          d1.v ==> 2
-          d1.t ==> t2
-          d1.tx ==> tx2
-          d1.txInstant ==> txInstant2
-          d1.op ==> true
+          val List(datom1, datom2) = datoms.sortBy(_.t)
+          datom1.e ==> e
+          datom1.a ==> ":Ns/int"
+          datom1.v ==> 2
+          datom1.t ==> t2
+          datom1.tx ==> tx2
+          datom1.txInstant ==> txInstant2
+          datom1.op ==> true
 
-          d2.e ==> e4
-          d2.a ==> ":Ns/int"
-          d2.v ==> 4
-          d2.t ==> t4
-          d2.tx ==> tx4
-          d2.txInstant ==> txInstant4
-          d2.op ==> true
+          datom2.e ==> e4
+          datom2.a ==> ":Ns/int"
+          datom2.v ==> 4
+          datom2.t ==> t4
+          datom2.tx ==> tx4
+          datom2.txInstant ==> txInstant4
+          datom2.op ==> true
         }
       } yield ()
     }
@@ -189,14 +188,14 @@ object ObjGeneric extends AsyncTestSuite with Helpers {
         (e, t, tx, txInstant, t2, tx2, txInstant2, t3, tx3, txInstant3) <- testData
         // :Ns/int / value 2
 
-        _ <- AVET(":Ns/int", 2).e.a.v.t.tx.txInstant.op.getObj.map { d1 =>
-          d1.e ==> e
-          d1.a ==> ":Ns/int"
-          d1.v ==> 2
-          d1.t ==> t2
-          d1.tx ==> tx2
-          d1.txInstant ==> txInstant2
-          d1.op ==> true
+        _ <- AVET(":Ns/int", 2).e.a.v.t.tx.txInstant.op.getObj.map { datom =>
+          datom.e ==> e
+          datom.a ==> ":Ns/int"
+          datom.v ==> 2
+          datom.t ==> t2
+          datom.tx ==> tx2
+          datom.txInstant ==> txInstant2
+          datom.op ==> true
         }
       } yield ()
     }
@@ -212,14 +211,14 @@ object ObjGeneric extends AsyncTestSuite with Helpers {
         txInstant4 = txR4.txInstant
 
         // Reference
-        _ <- VAET(ref).e.a.v.t.tx.txInstant.op.getObj.map { d1 =>
-          d1.e ==> e
-          d1.a ==> ":Ns/ref1"
-          d1.v ==> ref
-          d1.t ==> t4
-          d1.tx ==> tx4
-          d1.txInstant ==> txInstant4
-          d1.op ==> true
+        _ <- VAET(ref).e.a.v.t.tx.txInstant.op.getObj.map { datom =>
+          datom.e ==> e
+          datom.a ==> ":Ns/ref1"
+          datom.v ==> ref
+          datom.t ==> t4
+          datom.tx ==> tx4
+          datom.txInstant ==> txInstant4
+          datom.op ==> true
         }
       } yield ()
     }
