@@ -18,17 +18,28 @@ object AdhocJvm extends AsyncTestSuite with Helpers {
 
       for {
         conn <- futConn
-        //        _ <- Ns.a.apply(min(2)).get
 
-        _ <- Ns.str.insert(
-          "a", "a",
-          "b", "b", "b", "b", "b", "b", "b", "b", "b", "b",
-        )
-        _ <- Ns.str(count).d1.str.a2.inspectGet
-        _ <- Ns.str(count).d1.str.a2.get.map(_ ==> List(
-          (10, "b"),
-          (2, "a"),
-        ))
+
+//        _ <- Ns.str.insert(
+//          "a", "a",
+//          "b", "b", "b", "b", "b", "b", "b", "b", "b", "b",
+//          "c"
+//        )
+//        _ <- Ns.str(max(2)).d1.inspectGet
+//        _ <- Ns.str(min(2)).d1.inspectGet
+//        _ <- Ns.str(rand(2)).d1.inspectGet
+//        _ <- Ns.str(sample(2)).d1.inspectGet
+
+//        _ <- Ns.str(max(2)).d1.get.map(_ ==> List(
+//          List("c", "b")
+//        ))
+
+
+//        _ <- Ns.str(count).d1.str.a2.inspectGet
+//        _ <- Ns.str(count).d1.str.a2.get.map(_ ==> List(
+//          (10, "b"),
+//          (2, "a"),
+//        ))
 
       } yield ()
 

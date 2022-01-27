@@ -4,23 +4,13 @@ import java.net.URI
 import java.time._
 import java.time.format.DateTimeFormatter
 import java.util.{Date, UUID}
-import molecule.core.ast.elements.{Atom, Bond, Composite, Element, Generic, Model}
+import molecule.core.ast.elements._
 import molecule.core.exceptions.MoleculeException
-import molecule.core.ops.ModelOps.date2str
-import molecule.datomic.base.facade.TxReport
 import molecule.datomic.base.ops.QueryOps.withDecimal
-import scala.concurrent.{ExecutionContext, Future}
+import scala.annotation.tailrec
 
 object Helpers extends Helpers
 trait Helpers extends DateHandling {
-
-  //  final protected object mkDate {
-  //    def apply(year: Int, month: Int = 1, day: Int = 1): Date = {
-  //      val localDate = LocalDate.of(year, month, day)
-  //      val instant   = localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant
-  //      Date.from(instant)
-  //    }
-  //  }
 
   def clean(attr: String): String = attr.last match {
     case '_' => attr.init
@@ -28,22 +18,22 @@ trait Helpers extends DateHandling {
     case _   => attr
   }
 
-  def getKwName(kw: String) = kw.substring(kw.indexOf('/') + 1)
+  def getKwName(kw: String): String = kw.substring(kw.indexOf('/') + 1)
 
   def thousands(i: Long): String =
     i.toString.reverse.grouped(3).mkString(" ").reverse
 
   // Uniform Date formatting to allow text comparisons
-  final protected def f(a: Any) = a match {
+  final protected def f(a: Any): Any = a match {
     case date: Date                          => date2str(date).replace("+", "\\\\+")
     case v if v.toString.startsWith("__n__") => v.toString.drop(5)
     case other                               => other
   }
 
-  def escStr(s: String) =
+  def escStr(s: String): String =
     s.replace("""\""", """\\""").replace(""""""", """\"""")
 
-  def unescStr(s: String) =
+  def unescStr(s: String): String =
     s.replace("""\"""", """"""").replace("""\\""", """\""")
 
   protected def double(arg: Any): String = "__n__" + arg + (if (arg.toString.contains(".")) "" else ".0")
@@ -54,7 +44,7 @@ trait Helpers extends DateHandling {
   def pad(longest: Int, shorter: Int): String = if (longest > shorter) " " * (longest - shorter) else ""
 
   // Ensure decimal digits on JS platform output
-  def jsNumber(tpe: String, v: Any) = {
+  def jsNumber(tpe: String, v: Any): Any = {
     (tpe, v) match {
       case ("Double", v: Double)                                          => if (v.isWhole) s"${v.toLong}.0" else v
       case ("BigDecimal", v: BigDecimal)                                  => if (v.isWhole) s"${v.toBigInt}.0" else v
@@ -127,6 +117,7 @@ trait Helpers extends DateHandling {
   }
 
   def firstNs(model: Model): String = {
+    @tailrec
     def getNs(element: Element): String = element match {
       case Atom(nsFull, _, _, _, _, _, _, _, _) => nsFull
       case Bond(nsFull, _, _, _, _)             => nsFull
@@ -142,11 +133,11 @@ trait Helpers extends DateHandling {
   class log {
     private var buf = Seq.empty[String]
     def apply(s: String): Unit = buf = buf :+ s
-    def print: Unit = println(buf.mkString("\n"))
+    def print(): Unit = println(buf.mkString("\n"))
   }
 
 
-  protected final def time(n: Int, prev: Int = 0) = {
+  protected final def time(n: Int, prev: Int = 0): Unit = {
     var time0 = System.currentTimeMillis()
     val times = collection.mutable.Map.empty[Int, Long]
     if (n < 1 || prev < 0)

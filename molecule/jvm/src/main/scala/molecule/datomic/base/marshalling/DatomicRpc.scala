@@ -127,7 +127,7 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
         //      log(tacitIndexes.mkString("\n"))
         //      log("-------------------------------")
         allRows.forEach(row => log(row.toString))
-        log.print
+        log.print()
 
         val packed = if (isOptNested) {
           OptNested2packed(obj, allRows, maxRows, refIndexes, tacitIndexes).getPacked

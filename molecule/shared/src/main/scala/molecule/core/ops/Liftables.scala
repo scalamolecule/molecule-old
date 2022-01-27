@@ -18,10 +18,6 @@ private[molecule] trait Liftables extends MacroHelpers {
 
   def abort(msg: String) = throw LiftablesException(msg)
 
-  def badAggrKw(fn: Name): Boolean = List(
-    "countDistinct", "distinct", "max", "min", "rand", "sample", "avg", "median", "stddev", "sum", "variance"
-  ).contains(fn.toString)
-
 
   // General liftables --------------------------------------------------------------
 
@@ -67,7 +63,6 @@ private[molecule] trait Liftables extends MacroHelpers {
     }
     case q"scala.None"                  => q"None"
     case null                           => q"null"
-    case Select(_, kw) if badAggrKw(kw) => abort(s"Only `count` is allowed with Schema attributes. Found: `$kw`")
     case other                          =>
       abort("Can't lift unexpected code:" +
         "\ncode : " + other +

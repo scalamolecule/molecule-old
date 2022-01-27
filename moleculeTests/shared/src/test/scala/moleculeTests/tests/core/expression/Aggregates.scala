@@ -424,7 +424,6 @@ object Aggregates extends AsyncTestSuite {
         )
         _ <- Ns.int(4).save
 
-
         _ <- Ns.str.int.get.map(_.sortBy(r => (r._1, r._2)) ==> List(
           ("a", 1),
           ("b", 2),

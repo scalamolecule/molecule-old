@@ -2,9 +2,9 @@ package molecule.core.ops
 
 import molecule.core.dsl.attributes._
 import molecule.core.dsl.base.{FirstNS, NS}
-import molecule.core.macros.MacroHelpers
 import molecule.core.ops.exception.TreeOpsException
 import molecule.datomic.base.ast.query._
+import scala.annotation.tailrec
 import scala.language.existentials
 import scala.reflect.macros.blackbox
 
@@ -14,7 +14,7 @@ private[molecule] trait TreeOps extends Liftables {
 
   import c.universe._
 
-  private lazy val xx = InspectMacro("TreeOps", 3, 2)
+  //  private lazy val xx = InspectMacro("TreeOps", 3, 2)
 
   override def abort(msg: String) = throw TreeOpsException(msg)
 
@@ -28,7 +28,8 @@ private[molecule] trait TreeOps extends Liftables {
   }
 
   implicit class richTree(val t: Tree) {
-    lazy val tpe_         : Type           = if (t == null) abort("[molecule.ops.TreeOps.richTree] Can't handle null.") else c.typecheck(t).tpe
+    lazy val tpe_         : Type           =
+      if (t == null) abort("[molecule.ops.TreeOps.richTree] Can't handle null.") else c.typecheck(t).tpe
     lazy val at           : att            = att(t)
     lazy val nsFull       : String         = if (t.isFirstNS) t.symbol.name.toString else at.nsFull.toString
     lazy val name         : String         = at.toString
@@ -232,19 +233,20 @@ private[molecule] trait TreeOps extends Liftables {
   }
 
   def namespaceSymbol(tree: Tree): Symbol = {
+    @tailrec
     def traverse(t: Tree): Symbol = t match {
-      case q"$a.and($b)  "                                     => traverse(a)
-      case q"$a.and[..$ts]($b)  "                              => traverse(a)
-      case q"$a.or($b)  "                                      => traverse(a)
-      case q"$a.eqs($b)  "                                     => traverse(a)
-      case q"$a.or[..$ts]($b)  "                               => traverse(a)
-      case q"TermValue.apply($a)  "                            => traverse(a)
-      case q"immutable.this.List.apply[$tpe](..$a)  "          => traverse(a.head)
-      case q"collection.this.Seq.apply[$tpe](..$a)  "          => traverse(a.head)
-      case Select(nsFull, attr) if nsFull.tpe <:< typeOf[NS]   => nsFull.tpe.typeSymbol
-      case nsFull@Select(_, name) if nsFull.tpe <:< typeOf[NS] => nsFull.tpe.typeSymbol
-      case _                                                   => (t collect {
-        case nsFull@Select(_, name) if nsFull.tpe <:< typeOf[NS] => nsFull.tpe.typeSymbol
+      case q"$a.and($_)  "                                  => traverse(q"$a")
+      case q"$a.and[..$_]($_)  "                            => traverse(q"$a")
+      case q"$a.or($_)  "                                   => traverse(q"$a")
+      case q"$a.eqs($_)  "                                  => traverse(q"$a")
+      case q"$a.or[..$_]($_)  "                             => traverse(q"$a")
+      case q"TermValue.apply($a)  "                         => traverse(q"$a")
+      case q"immutable.this.List.apply[$_](..$a)  "         => traverse(q"${a.head}")
+      case q"collection.this.Seq.apply[$_](..$a)  "         => traverse(q"${a.head}")
+      case Select(nsFull, _) if nsFull.tpe <:< typeOf[NS]   => nsFull.tpe.typeSymbol
+      case nsFull@Select(_, _) if nsFull.tpe <:< typeOf[NS] => nsFull.tpe.typeSymbol
+      case _                                                => (t collect {
+        case nsFull@Select(_, _) if nsFull.tpe <:< typeOf[NS] => nsFull.tpe.typeSymbol
       }).distinct.reverse.head
     }
 
@@ -303,11 +305,19 @@ private[molecule] trait TreeOps extends Liftables {
             case _ if tpe <:< weakTypeOf[RefAttr[_]]            => typeOf[Long]
             case _ if tpe <:< weakTypeOf[RefAttr$[_]]           => typeOf[Long]
             case _ if tpe <:< weakTypeOf[Enum]                  => typeOf[String]
-            case _ if tpe <:< weakTypeOf[ValueAttr[_, _, _, _]] => t.typeSignature.baseType(weakTypeOf[ValueAttr[_, _, _, _]].typeSymbol).typeArgs.last
-            case _ if tpe <:< weakTypeOf[ValueAttr$[_]]         => t.typeSignature.baseType(weakTypeOf[ValueAttr$[_]].typeSymbol).typeArgs.head
-            case _ if tpe <:< weakTypeOf[MapAttr[_, _, _, _]]   => t.typeSignature.baseType(weakTypeOf[MapAttr[_, _, _, _]].typeSymbol).typeArgs.last
-            case _ if tpe <:< weakTypeOf[MapAttr$[_, _, _]]     => t.typeSignature.baseType(weakTypeOf[MapAttr$[_, _, _]].typeSymbol).typeArgs.last
-            case _                                              => NoType
+            case _ if tpe <:< weakTypeOf[ValueAttr[_, _, _, _]] =>
+              t.typeSignature.baseType(weakTypeOf[ValueAttr[_, _, _, _]].typeSymbol).typeArgs.last
+
+            case _ if tpe <:< weakTypeOf[ValueAttr$[_]] =>
+              t.typeSignature.baseType(weakTypeOf[ValueAttr$[_]].typeSymbol).typeArgs.head
+
+            case _ if tpe <:< weakTypeOf[MapAttr[_, _, _, _]] =>
+              t.typeSignature.baseType(weakTypeOf[MapAttr[_, _, _, _]].typeSymbol).typeArgs.last
+
+            case _ if tpe <:< weakTypeOf[MapAttr$[_, _, _]] =>
+              t.typeSignature.baseType(weakTypeOf[MapAttr$[_, _, _]].typeSymbol).typeArgs.last
+
+            case _ => NoType
           }
         } else {
           NoType
@@ -363,7 +373,9 @@ private[molecule] trait TreeOps extends Liftables {
       attrType.baseClasses.find {
         cl => cl.isClass && !cl.isModuleClass && cl.name.toString == attrName
       }.get.asClass.toType.members.collect {
-        case v: TermSymbol if v.isPrivate && v.isLazy && v.typeSignature.typeSymbol.asType.toType =:= typeOf[EnumValue.type] => v.name.decodedName.toString.trim
+        case v: TermSymbol
+          if v.isPrivate && v.isLazy && v.typeSignature.typeSymbol.asType.toType =:= typeOf[EnumValue.type] =>
+          v.name.decodedName.toString.trim
       }.toList.reverse
     }
 
@@ -381,10 +393,10 @@ private[molecule] trait TreeOps extends Liftables {
 
   object att {
     def apply(tree: Tree): att = tree match {
-      case q"$prev.apply(..$vs)"          => new att(c.typecheck(prev).symbol)
-      case q"$prev.apply[..$tpes](..$vs)" => new att(c.typecheck(prev).symbol)
-      case q"$prev.$op(..$vs)"            => new att(c.typecheck(prev).symbol)
-      case t                              => new att(c.typecheck(t).symbol)
+      case q"$prev.apply(..$_)"       => new att(c.typecheck(q"$prev").symbol)
+      case q"$prev.apply[..$_](..$_)" => new att(c.typecheck(q"$prev").symbol)
+      case q"$prev.$_(..$_)"          => new att(c.typecheck(q"$prev").symbol)
+      case t                          => new att(c.typecheck(q"$t").symbol)
     }
     def apply(ts: TermSymbol): att = new att(ts)
     def apply(tpe: Type): att = new att(tpe.typeSymbol)

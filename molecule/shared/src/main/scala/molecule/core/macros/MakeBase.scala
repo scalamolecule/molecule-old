@@ -40,10 +40,10 @@ private[molecule] trait MakeBase extends Dsl2Model {
         ArrowAssoc(v) -> q"${TermName(v.substring(9))}"
       )
 
-    case (key: String, v: Any) if key.startsWith("__ident__") =>
+    case (key: String, _: Any) if key.startsWith("__ident__") =>
       Seq(ArrowAssoc(key) -> q"${TermName(key.substring(9))}")
 
-    case (key: Any, v: String) if v.startsWith("__ident__") =>
+    case (_: Any, v: String) if v.startsWith("__ident__") =>
       Seq(ArrowAssoc(v) -> q"${TermName(v.substring(9))}")
 
     case ident: String if ident.startsWith("__ident__") =>
@@ -222,7 +222,7 @@ private[molecule] trait MakeBase extends Dsl2Model {
         (i + 1, acc :+ comp(i, attr, attr.last == '$', tpe, enumPrefix.nonEmpty, sort))
 
       case ((i, acc), Generic(_, attr, tpe, _, sort)) if sort.nonEmpty =>
-        (i + 1, acc :+ comp(i, attr, attr.last == '$', tpe, false, sort))
+        (i + 1, acc :+ comp(i, attr, attr.last == '$', tpe, isEnum = false, sort))
 
       case ((i, acc), Atom(_, attr, _, _, _, _, _, _, _)) =>
         (if (attr.last == '_') i else i + 1, acc)

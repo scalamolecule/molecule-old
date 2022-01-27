@@ -185,6 +185,29 @@ object SortAttrs extends AsyncTestSuite {
       )
     }
 
+    "Can't sort attributes with applied aggregate with limit" - core { implicit conn =>
+      expectCompileError("m(Ns.int(min(2)).a1)",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Can't sort by attributes with aggregate min/max/rand/sample with applied limit. " +
+          "Found: int(min(2)).a1"
+      )
+      expectCompileError("m(Ns.int(max(2)).a1)",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Can't sort by attributes with aggregate min/max/rand/sample with applied limit. " +
+          "Found: int(max(2)).a1"
+      )
+      expectCompileError("m(Ns.int(rand(2)).a1)",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Can't sort by attributes with aggregate min/max/rand/sample with applied limit. " +
+          "Found: int(rand(2)).a1"
+      )
+      expectCompileError("m(Ns.int(sample(2)).a1)",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Can't sort by attributes with aggregate min/max/rand/sample with applied limit. " +
+          "Found: int(sample(2)).a1"
+      )
+    }
+
 
     "2 sort markers" - core { implicit conn =>
       for {

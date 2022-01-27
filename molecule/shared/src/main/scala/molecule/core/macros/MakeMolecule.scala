@@ -9,7 +9,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
   import c.universe._
 
   //  private lazy val xx = InspectMacro("MakeMolecule", 6, mkError = true)
-  private lazy val xx = InspectMacro("MakeMolecule", 6)
+  private lazy val xx = InspectMacro("MakeMolecule", 60)
 
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, OutTypes: Type*): Tree = {
@@ -24,9 +24,10 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
       doSort
       ) = getModel(dsl)
 
-    val imports        = getImports(genericImports)
-    val OutMoleculeTpe = molecule_o(OutTypes.size)
-    val outMolecule    = TypeName(c.freshName("outMolecule$"))
+    val imports         = getImports(genericImports)
+    val OutMoleculeTpe  = molecule_o(OutTypes.size)
+    val outMoleculeName = c.freshName("outMolecule$")
+    val outMolecule     = TypeName(outMoleculeName)
     lazy val levels = castss.size - txMetas
     lazy val jsTpl  = Some(if (OutTypes.length == 1) q"Tuple1(packed2tpl(vs))" else q"packed2tpl(vs)")
     lazy val jvmTpl = Some(if (OutTypes.length == 1) q"Tuple1(row2tpl(row))" else q"row2tpl(row)")

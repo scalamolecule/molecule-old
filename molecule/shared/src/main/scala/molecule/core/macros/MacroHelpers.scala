@@ -4,7 +4,6 @@ import molecule.core.ast.elements._
 import molecule.core.exceptions.MoleculeCompileException
 import molecule.core.util.Helpers
 import scala.reflect.macros.blackbox
-import scala.util.matching
 
 private[molecule] trait MacroHelpers extends Helpers {
   val c: blackbox.Context
@@ -25,7 +24,7 @@ private[molecule] trait MacroHelpers extends Helpers {
     def raw: String = showRaw(tree)
   }
 
-  def abortTree(tree: Tree, msg: String, inspect: Boolean = true) = {
+  def abortTree(tree: Tree, msg: String, inspect: Boolean = true): Nothing = {
     val e    : StackTraceElement = Thread.currentThread.getStackTrace.tail.find(mth => mth.getMethodName != "abortTree").getOrElse {
       throw MoleculeCompileException("[MacroHelpers:abortTree] Couldn't find method where `abortTree` was called!")
     }
@@ -56,14 +55,13 @@ private[molecule] trait MacroHelpers extends Helpers {
             case TxMetaData(elements) => indent + "TxMetaData(\n" + elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
             case Composite(elements)  => indent + "Composite(\n" + elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
             case m: Model             => indent + "Model(\n" + m.elements.zipWithIndex.map { case (y, j) => traverse(y, level + 1, j + 1) }.mkString("\n") + ")"
-            case (a, b)               => {
+            case (a, b)               =>
               val bb = b match {
                 case it: Iterable[_] => traverse(it, level, 0)
                 case other           => other
               }
               indent + s"$a -> " + bb
-            }
-            case value                => indent + value
+            case value => indent + value
           }
         }
 
@@ -81,10 +79,10 @@ private[molecule] trait MacroHelpers extends Helpers {
   }
 
   object st {
-    val stack = collection.mutable.LinkedHashMap[Int, Tree]()
+    val stack: collection.mutable.LinkedHashMap[Int, Tree] = collection.mutable.LinkedHashMap[Int, Tree]()
     def apply(i: Int, t: Tree): Unit = {
       stack(i) = t
     }
-    override def toString = stack.mkString("\n")
+    override def toString: String = stack.mkString("\n")
   }
 }
