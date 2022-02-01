@@ -359,8 +359,8 @@ object Model2Query extends Helpers {
     case "attr"        => resolveSchemaMandatory(g, q.schemaAttr, "String")
     case "enumm"       => resolveSchemaMandatory(g, q.schemaEnum, "String")
     case "ident"       => resolveSchemaMandatory(g, q.schemaIdent, "String")
-    case "tpe"         => resolveSchemaMandatory(g, q.schemaTpe, "String")
-    case "card"        => resolveSchemaMandatory(g, q.schemaCard, "String")
+    case "valueType"   => resolveSchemaMandatory(g, q.schemaTpe, "String")
+    case "cardinality" => resolveSchemaMandatory(g, q.schemaCard, "String")
     case "doc"         => resolveSchemaMandatory(g, q.schemaDoc, "String")
     case "unique"      => resolveSchemaMandatory(g, q.schemaUnique, "String")
     case "isComponent" => resolveSchemaMandatory(g, q.schemaIsComponent, "Boolean")
@@ -379,8 +379,8 @@ object Model2Query extends Helpers {
     case "attr_"        => resolveSchemaTacit(g, q.schemaAttr, "String")
     case "enumm_"       => resolveSchemaTacit(g, q.schemaEnum, "String")
     case "ident_"       => resolveSchemaTacit(g, q.schemaIdent, "String")
-    case "tpe_"         => resolveSchemaTacit(g, q.schemaTpe, "String")
-    case "card_"        => resolveSchemaTacit(g, q.schemaCard, "String")
+    case "valueType_"   => resolveSchemaTacit(g, q.schemaTpe, "String")
+    case "cardinality_" => resolveSchemaTacit(g, q.schemaCard, "String")
     case "doc_"         => resolveSchemaTacit(g, q.schemaDoc, "String")
     case "unique_"      => resolveSchemaTacit(g, q.schemaUnique, "String")
     case "isComponent_" => resolveSchemaTacit(g, q.schemaIsComponent, "Boolean")
@@ -391,8 +391,8 @@ object Model2Query extends Helpers {
     case "tx_"          => resolveSchemaTacit(g, q.schema, "Long")
     case "txInstant_"   => resolveSchemaTacit(g, q.schemaTxInstant, "Date")
 
-    case "ident$" | "tpe$" | "card$" | "unique$" => resolveSchemaOptionalEnumValue(g, q)
-    case _                                       => resolveSchemaOptional(g, q)
+    case "ident$" | "valueType$" | "cardinality$" | "unique$" => resolveSchemaOptionalEnumValue(g, q)
+    case _                                                    => resolveSchemaOptional(g, q)
   }
 
   def resolveSchemaMandatory(g: Generic, q: Query, tpe: String): Query = {

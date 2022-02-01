@@ -686,8 +686,8 @@ private[molecule] trait Dsl2Model extends TreeOps
         case "attr"        => castGeneric("String")
         case "enumm"       => castGeneric("String")
         case "ident"       => castGeneric("String")
-        case "tpe"         => castGeneric("String")
-        case "card"        => castGeneric("String")
+        case "valueType"   => castGeneric("String")
+        case "cardinality" => castGeneric("String")
         case "doc"         => castGeneric("String")
         case "unique"      => castGeneric("String")
         case "isComponent" => castGeneric("Boolean")
@@ -702,7 +702,7 @@ private[molecule] trait Dsl2Model extends TreeOps
 
 
     def resolveOptionalSchemaAttr(t: richTree, prev: Tree, p: richTree, attrStr: String): Seq[Element] = attrStr match {
-      case "ident$" | "tpe$" | "card$" | "unique$" =>
+      case "ident$" | "valueType$" | "cardinality$" | "unique$" =>
         addLambdas(t, castOptEnum, if (isOptNested) jsonOptNestedOptEnum else jsonOptEnum, baseTpe0 = Some("enum"))
         traverseElement(prev, p, Generic("Schema", attrStr, "schema", NoValue, getSort))
 
@@ -862,8 +862,8 @@ private[molecule] trait Dsl2Model extends TreeOps
           case "attr"        => casts("mandatory", "String")
           case "enumm"       => casts("mandatory", "String")
           case "ident"       => casts("mandatory", "String")
-          case "tpe"         => casts("mandatory", "String")
-          case "card"        => casts("mandatory", "String")
+          case "valueType"   => casts("mandatory", "String")
+          case "cardinality" => casts("mandatory", "String")
           case "doc"         => casts("mandatory", "String")
           case "unique"      => casts("mandatory", "String")
           case "isComponent" => casts("mandatory", "Boolean")
@@ -882,8 +882,8 @@ private[molecule] trait Dsl2Model extends TreeOps
           case "attr_"        => casts("tacit", "String")
           case "enumm_"       => casts("tacit", "String")
           case "ident_"       => casts("tacit", "String")
-          case "tpe_"         => casts("tacit", "String")
-          case "card_"        => casts("tacit", "String")
+          case "valueType_"   => casts("tacit", "String")
+          case "cardinality_" => casts("tacit", "String")
           case "doc_"         => casts("tacit", "String")
           case "unique_"      => casts("tacit", "String")
           case "isComponent_" => casts("tacit", "Boolean")
@@ -895,8 +895,8 @@ private[molecule] trait Dsl2Model extends TreeOps
           case "txInstant_"   => casts("tacit", "Date")
 
           case "ident$"       => casts("optional", "String")
-          case "tpe$"         => casts("optional", "String")
-          case "card$"        => casts("optional", "String")
+          case "valueType$"   => casts("optional", "String")
+          case "cardinality$" => casts("optional", "String")
           case "doc$"         => casts("optional", "String")
           case "unique$"      => casts("optional", "String")
           case "isComponent$" => casts("optional", "Boolean")
@@ -1166,8 +1166,8 @@ private[molecule] trait Dsl2Model extends TreeOps
         case "attr" | "attr_"               => resolve("String")
         case "enumm" | "enumm_"             => resolve("String")
         case "ident" | "ident_"             => resolve("String")
-        case "tpe" | "tpe_"                 => resolve("String")
-        case "card" | "card_"               => resolve("String")
+        case "valueType" | "valueType_"     => resolve("String")
+        case "cardinality" | "cardinality_" => resolve("String")
         case "doc" | "doc_"                 => resolve("String")
         case "unique" | "unique_"           => resolve("String")
         case "isComponent" | "isComponent_" => resolve("Boolean")

@@ -22,8 +22,8 @@ trait Schema extends GenericNs {
   final class attr       [Stay, Next] extends OneString [Stay, Next] with Indexed
   final class enumm      [Stay, Next] extends OneString [Stay, Next] with Indexed
   final class ident      [Stay, Next] extends OneString [Stay, Next] with Indexed
-  final class tpe        [Stay, Next] extends OneString [Stay, Next] with Indexed
-  final class card       [Stay, Next] extends OneString [Stay, Next] with Indexed
+  final class valueType  [Stay, Next] extends OneString [Stay, Next] with Indexed
+  final class cardinality[Stay, Next] extends OneString [Stay, Next] with Indexed
   final class doc        [Stay, Next] extends OneString [Stay, Next] with Indexed with Fulltext[Stay, Next]
   final class unique     [Stay, Next] extends OneString [Stay, Next] with Indexed
   final class isComponent[Stay, Next] extends OneBoolean[Stay, Next] with Indexed
@@ -35,8 +35,8 @@ trait Schema extends GenericNs {
   final class txInstant  [Stay, Next] extends OneDate   [Stay, Next] with Indexed
 
   final class ident$      [Stay, Next] extends OneString$ [Stay] with Indexed
-  final class tpe$        [Stay, Next] extends OneString$ [Stay] with Indexed
-  final class card$       [Stay, Next] extends OneString$ [Stay] with Indexed
+  final class valueType$  [Stay, Next] extends OneString$ [Stay] with Indexed
+  final class cardinality$[Stay, Next] extends OneString$ [Stay] with Indexed
   final class doc$        [Stay, Next] extends OneString$ [Stay] with Indexed with Fulltext[Stay, Next]
   final class unique$     [Stay, Next] extends OneString$ [Stay] with Indexed
   final class isComponent$[Stay, Next] extends OneBoolean$[Stay] with Indexed
@@ -55,8 +55,8 @@ trait Schema_ns          { lazy val ns         : String  = ??? }
 trait Schema_attr        { lazy val attr       : String  = ??? }
 trait Schema_enumm       { lazy val enumm      : String  = ??? }
 trait Schema_ident       { lazy val ident      : String  = ??? }
-trait Schema_tpe         { lazy val tpe        : String  = ??? }
-trait Schema_card        { lazy val card       : String  = ??? }
+trait Schema_valueType   { lazy val valueType  : String  = ??? }
+trait Schema_cardinality { lazy val cardinality: String  = ??? }
 trait Schema_doc         { lazy val doc        : String  = ??? }
 trait Schema_unique      { lazy val unique     : String  = ??? }
 trait Schema_isComponent { lazy val isComponent: Boolean = ??? }
@@ -70,8 +70,8 @@ trait Schema_txInstant   { lazy val txInstant  : Date    = ??? }
 // Please note that `$` has been subsituted with `_` to allow packaging to jars.
 // To be interpreted as optional and not tacit
 trait Schema_ident_       { lazy val ident$      : Option[String ] = ??? }
-trait Schema_tpe_         { lazy val tpe$        : Option[String ] = ??? }
-trait Schema_card_        { lazy val card$       : Option[String ] = ??? }
+trait Schema_valueType_   { lazy val valueType$  : Option[String ] = ??? }
+trait Schema_cardinality_ { lazy val cardinality$: Option[String ] = ??? }
 trait Schema_doc_         { lazy val doc$        : Option[String ] = ??? }
 trait Schema_unique_      { lazy val unique$     : Option[String ] = ??? }
 trait Schema_isComponent_ { lazy val isComponent$: Option[Boolean] = ??? }

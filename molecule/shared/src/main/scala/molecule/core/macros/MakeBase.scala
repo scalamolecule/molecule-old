@@ -162,7 +162,7 @@ private[molecule] trait MakeBase extends Dsl2Model {
           case "schema" => attr match {
             case "doc$" => (q"m1.values.iterator.next.asInstanceOf[String]", q"m2.values.iterator.next.asInstanceOf[String]")
 
-            case "ident$" | "tpe$" | "card$" | "unique$" => (
+            case "ident$" | "valueType$" | "cardinality$" | "unique$" => (
               q"""getKwName(m1.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.toString)""",
               q"""getKwName(m2.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.toString)"""
             )
@@ -214,8 +214,8 @@ private[molecule] trait MakeBase extends Dsl2Model {
               case "a"           => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
               case "attr"        => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
               case "ident"       => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
-              case "tpe"         => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
-              case "card"        => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+              case "valueType"   => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+              case "cardinality" => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
               case "doc"         => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
               case "unique"      => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
               case "isComponent" => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")

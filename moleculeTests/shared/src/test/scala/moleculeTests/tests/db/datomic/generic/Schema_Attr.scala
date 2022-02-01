@@ -340,7 +340,7 @@ object Schema_Attr extends AsyncTestSuite {
         // - `Integer` are internally saved as type `long` in Datomic
         // Molecule transparently converts back and forth so that application code only have to consider the Scala type.
 
-        _ <- Schema.tpe.get.map(_.sorted ==> List(
+        _ <- Schema.valueType.get.map(_.sorted ==> List(
           "bigdec",
           "bigint",
           "boolean",
@@ -353,7 +353,7 @@ object Schema_Attr extends AsyncTestSuite {
           "uuid",
         ))
 
-        _ <- Schema.ns.a1.tpe(count).get.map(_ ==> List(
+        _ <- Schema.ns.a1.valueType(count).get.map(_ ==> List(
           ("Ns", 10),
           ("Ref1", 3),
           ("Ref2", 3),
@@ -361,10 +361,10 @@ object Schema_Attr extends AsyncTestSuite {
           ("Ref4", 3),
         ))
 
-        _ <- Schema.tpe("string").get.map(_ ==> List("string"))
-        _ <- Schema.tpe("string", "long").get.map(_ ==> List("string", "long"))
+        _ <- Schema.valueType("string").get.map(_ ==> List("string"))
+        _ <- Schema.valueType("string", "long").get.map(_ ==> List("string", "long"))
 
-        _ <- Schema.tpe.not("instant").get.map(_.sorted ==> List(
+        _ <- Schema.valueType.not("instant").get.map(_.sorted ==> List(
           "bigdec",
           "bigint",
           "boolean",
@@ -375,7 +375,7 @@ object Schema_Attr extends AsyncTestSuite {
           "uri",
           "uuid",
         ))
-        _ <- Schema.tpe.not("instant", "boolean").get.map(_.sorted ==> List(
+        _ <- Schema.valueType.not("instant", "boolean").get.map(_.sorted ==> List(
           "bigdec",
           "bigint",
           "double",
@@ -387,22 +387,22 @@ object Schema_Attr extends AsyncTestSuite {
         ))
 
         // We can though filter by one or more tacit value types
-        _ <- Schema.tpe_("string").ns.get.map(_.sorted ==> List(
+        _ <- Schema.valueType_("string").ns.get.map(_.sorted ==> List(
           "Ns", "Ref1", "Ref2", "Ref3", "Ref4"))
         // Only namespace `ns` has attributes of type Boolean
-        _ <- Schema.tpe_("boolean").ns.get.map(_.sorted ==> List("Ns"))
+        _ <- Schema.valueType_("boolean").ns.get.map(_.sorted ==> List("Ns"))
 
         // Namespaces with attributes of type string or long
-        _ <- Schema.tpe_("string", "long").ns.get.map(_.sorted ==> List(
+        _ <- Schema.valueType_("string", "long").ns.get.map(_.sorted ==> List(
           "Ns", "Ref1", "Ref2", "Ref3", "Ref4"))
 
         // Negate tacit attribute type
         // Note though that since other attributes have other types, the namespace is still returned
-        _ <- Schema.tpe_.not("string").ns.get.map(_.sorted ==> List(
+        _ <- Schema.valueType_.not("string").ns.get.map(_.sorted ==> List(
           "Ns", "Ref1", "Ref2", "Ref3", "Ref4"))
 
         // If we exclude all attribute types in a namespace, it won't be returned
-        _ <- Schema.tpe_.not("string", "long", "ref").ns.get.map(_.sorted ==> List("Ns"))
+        _ <- Schema.valueType_.not("string", "long", "ref").ns.get.map(_.sorted ==> List("Ns"))
 
       } yield ()
     }
@@ -410,26 +410,26 @@ object Schema_Attr extends AsyncTestSuite {
 
     "card" - core { implicit conn =>
       for {
-        _ <- Schema.card.get.map(_ ==> List("one", "many"))
+        _ <- Schema.cardinality.get.map(_ ==> List("one", "many"))
 
-        _ <- Schema.card(count).get.map(_.head ==> 2)
+        _ <- Schema.cardinality(count).get.map(_.head ==> 2)
 
-        _ <- Schema.card("one").get.map(_ ==> List("one"))
-        _ <- Schema.card("one", "many").get.map(_ ==> List("one", "many"))
+        _ <- Schema.cardinality("one").get.map(_ ==> List("one"))
+        _ <- Schema.cardinality("one", "many").get.map(_ ==> List("one", "many"))
 
-        _ <- Schema.card.not("one").get.map(_ ==> List("many"))
-        _ <- Schema.card.not("one", "many").get.map(_ ==> Nil)
+        _ <- Schema.cardinality.not("one").get.map(_ ==> List("many"))
+        _ <- Schema.cardinality.not("one", "many").get.map(_ ==> Nil)
 
-        _ <- Schema.card_("one").a.get.map(_.size ==> card1count)
-        _ <- Schema.card_("many").a.get.map(_.size ==> card2count)
+        _ <- Schema.cardinality_("one").a.get.map(_.size ==> card1count)
+        _ <- Schema.cardinality_("many").a.get.map(_.size ==> card2count)
 
         // Attributes of cardinality one or many, well that's all
-        _ <- Schema.card_("one", "many").a.get.map(_.size ==> attrCount)
+        _ <- Schema.cardinality_("one", "many").a.get.map(_.size ==> attrCount)
 
         // Negate tacit namespace name
-        _ <- Schema.card_.not("one").a.get.map(_.size ==> card2count) // many
-        _ <- Schema.card_.not("many").a.get.map(_.size ==> card1count) // one
-        _ <- Schema.card_.not("one", "many").a.get.map(_.size ==> 0)
+        _ <- Schema.cardinality_.not("one").a.get.map(_.size ==> card2count) // many
+        _ <- Schema.cardinality_.not("many").a.get.map(_.size ==> card1count) // one
+        _ <- Schema.cardinality_.not("one", "many").a.get.map(_.size ==> 0)
       } yield ()
     }
 

@@ -205,12 +205,12 @@ object QueryOps extends Helpers with JavaUtil {
     def schemaTpe: Query = q.schema
       .where(Var("id"), KW("db", "valueType"), "tpeId")
       .where(Var("tpeId"), KW("db", "ident"), "tpeIdent")
-      .func("name", Seq(Var("tpeIdent")), ScalarBinding(Var("tpe")))
+      .func("name", Seq(Var("tpeIdent")), ScalarBinding(Var("valueType")))
 
     def schemaCard: Query = q.schema
       .where(Var("id"), KW("db", "cardinality"), "cardId")
       .where(Var("cardId"), KW("db", "ident"), "cardIdent")
-      .func("name", Seq(Var("cardIdent")), ScalarBinding(Var("card")))
+      .func("name", Seq(Var("cardIdent")), ScalarBinding(Var("cardinality")))
 
     def schemaDoc: Query = q.schema
       .where(Var("id"), KW("db", "doc"), "doc")

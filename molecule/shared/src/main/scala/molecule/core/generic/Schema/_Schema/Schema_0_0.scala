@@ -29,8 +29,8 @@ trait Schema_0_0_L0[o0[_], p0]
   final lazy val attr         : Next[attr       , Schema_attr       , String ] = ???
   final lazy val enumm        : Next[enumm      , Schema_enumm      , String ] = ???
   final lazy val ident        : Next[ident      , Schema_ident      , String ] = ???
-  final lazy val tpe          : Next[tpe        , Schema_tpe        , String ] = ???
-  final lazy val card         : Next[card       , Schema_card       , String ] = ???
+  final lazy val valueType    : Next[valueType  , Schema_valueType  , String ] = ???
+  final lazy val cardinality  : Next[cardinality, Schema_cardinality, String ] = ???
   final lazy val doc          : Next[doc        , Schema_doc        , String ] = ???
   final lazy val unique       : Next[unique     , Schema_unique     , String ] = ???
   final lazy val isComponent  : Next[isComponent, Schema_isComponent, Boolean] = ???
@@ -42,8 +42,8 @@ trait Schema_0_0_L0[o0[_], p0]
   final lazy val txInstant    : Next[txInstant  , Schema_txInstant  , Date   ] = ???
 
   final lazy val ident$       : Next[ident$      , Schema_ident_      , Option[String ]] = ???
-  final lazy val tpe$         : Next[tpe$        , Schema_tpe_        , Option[String ]] = ???
-  final lazy val card$        : Next[card$       , Schema_card_       , Option[String ]] = ???
+  final lazy val valueType$   : Next[valueType$  , Schema_valueType_  , Option[String ]] = ???
+  final lazy val cardinality$ : Next[cardinality$, Schema_cardinality_, Option[String ]] = ???
   final lazy val doc$         : Next[doc$        , Schema_doc_        , Option[String ]] = ???
   final lazy val unique$      : Next[unique$     , Schema_unique_     , Option[String ]] = ???
   final lazy val isComponent$ : Next[isComponent$, Schema_isComponent_, Option[Boolean]] = ???
@@ -59,8 +59,8 @@ trait Schema_0_0_L0[o0[_], p0]
   final lazy val attr_        : Stay[attr       , Schema_attr       , String ] = ???
   final lazy val enumm_       : Stay[enumm      , Schema_enumm      , String ] = ???
   final lazy val ident_       : Stay[ident      , Schema_ident      , String ] = ???
-  final lazy val tpe_         : Stay[tpe        , Schema_tpe        , String ] = ???
-  final lazy val card_        : Stay[card       , Schema_card       , String ] = ???
+  final lazy val valueType_   : Stay[valueType  , Schema_valueType  , String ] = ???
+  final lazy val cardinality_ : Stay[cardinality, Schema_cardinality, String ] = ???
   final lazy val doc_         : Stay[doc        , Schema_doc        , String ] = ???
   final lazy val unique_      : Stay[unique     , Schema_unique     , String ] = ???
   final lazy val isComponent_ : Stay[isComponent, Schema_isComponent, Boolean] = ???
@@ -87,8 +87,8 @@ trait Schema_0_0_L1[o0[_], p0, o1[_], p1]
   final lazy val attr         : Next[attr       , Schema_attr       , String ] = ???
   final lazy val enumm        : Next[enumm      , Schema_enumm      , String ] = ???
   final lazy val ident        : Next[ident      , Schema_ident      , String ] = ???
-  final lazy val tpe          : Next[tpe        , Schema_tpe        , String ] = ???
-  final lazy val card         : Next[card       , Schema_card       , String ] = ???
+  final lazy val valueType    : Next[valueType  , Schema_valueType  , String ] = ???
+  final lazy val cardinality  : Next[cardinality, Schema_cardinality, String ] = ???
   final lazy val doc          : Next[doc        , Schema_doc        , String ] = ???
   final lazy val unique       : Next[unique     , Schema_unique     , String ] = ???
   final lazy val isComponent  : Next[isComponent, Schema_isComponent, Boolean] = ???
@@ -100,8 +100,8 @@ trait Schema_0_0_L1[o0[_], p0, o1[_], p1]
   final lazy val txInstant    : Next[txInstant  , Schema_txInstant  , Date   ] = ???
 
   final lazy val ident$       : Next[ident$      , Schema_ident_      , Option[String ]] = ???
-  final lazy val tpe$         : Next[tpe$        , Schema_tpe_        , Option[String ]] = ???
-  final lazy val card$        : Next[card$       , Schema_card_       , Option[String ]] = ???
+  final lazy val valueType$   : Next[valueType$  , Schema_valueType_  , Option[String ]] = ???
+  final lazy val cardinality$ : Next[cardinality$, Schema_cardinality_, Option[String ]] = ???
   final lazy val doc$         : Next[doc$        , Schema_doc_        , Option[String ]] = ???
   final lazy val unique$      : Next[unique$     , Schema_unique_     , Option[String ]] = ???
   final lazy val isComponent$ : Next[isComponent$, Schema_isComponent_, Option[Boolean]] = ???
@@ -117,8 +117,8 @@ trait Schema_0_0_L1[o0[_], p0, o1[_], p1]
   final lazy val attr_        : Stay[attr       , Schema_attr       , String ] = ???
   final lazy val enumm_       : Stay[enumm      , Schema_enumm      , String ] = ???
   final lazy val ident_       : Stay[ident      , Schema_ident      , String ] = ???
-  final lazy val tpe_         : Stay[tpe        , Schema_tpe        , String ] = ???
-  final lazy val card_        : Stay[card       , Schema_card       , String ] = ???
+  final lazy val valueType_   : Stay[valueType  , Schema_valueType  , String ] = ???
+  final lazy val cardinality_ : Stay[cardinality, Schema_cardinality, String ] = ???
   final lazy val doc_         : Stay[doc        , Schema_doc        , String ] = ???
   final lazy val unique_      : Stay[unique     , Schema_unique     , String ] = ???
   final lazy val isComponent_ : Stay[isComponent, Schema_isComponent, Boolean] = ???
@@ -145,8 +145,8 @@ trait Schema_0_0_L2[o0[_], p0, o1[_], p1, o2[_], p2]
   final lazy val attr         : Next[attr       , Schema_attr       , String ] = ???
   final lazy val enumm        : Next[enumm      , Schema_enumm      , String ] = ???
   final lazy val ident        : Next[ident      , Schema_ident      , String ] = ???
-  final lazy val tpe          : Next[tpe        , Schema_tpe        , String ] = ???
-  final lazy val card         : Next[card       , Schema_card       , String ] = ???
+  final lazy val valueType    : Next[valueType  , Schema_valueType  , String ] = ???
+  final lazy val cardinality  : Next[cardinality, Schema_cardinality, String ] = ???
   final lazy val doc          : Next[doc        , Schema_doc        , String ] = ???
   final lazy val unique       : Next[unique     , Schema_unique     , String ] = ???
   final lazy val isComponent  : Next[isComponent, Schema_isComponent, Boolean] = ???
@@ -158,8 +158,8 @@ trait Schema_0_0_L2[o0[_], p0, o1[_], p1, o2[_], p2]
   final lazy val txInstant    : Next[txInstant  , Schema_txInstant  , Date   ] = ???
 
   final lazy val ident$       : Next[ident$      , Schema_ident_      , Option[String ]] = ???
-  final lazy val tpe$         : Next[tpe$        , Schema_tpe_        , Option[String ]] = ???
-  final lazy val card$        : Next[card$       , Schema_card_       , Option[String ]] = ???
+  final lazy val valueType$   : Next[valueType$  , Schema_valueType_  , Option[String ]] = ???
+  final lazy val cardinality$ : Next[cardinality$, Schema_cardinality_, Option[String ]] = ???
   final lazy val doc$         : Next[doc$        , Schema_doc_        , Option[String ]] = ???
   final lazy val unique$      : Next[unique$     , Schema_unique_     , Option[String ]] = ???
   final lazy val isComponent$ : Next[isComponent$, Schema_isComponent_, Option[Boolean]] = ???
@@ -175,8 +175,8 @@ trait Schema_0_0_L2[o0[_], p0, o1[_], p1, o2[_], p2]
   final lazy val attr_        : Stay[attr       , Schema_attr       , String ] = ???
   final lazy val enumm_       : Stay[enumm      , Schema_enumm      , String ] = ???
   final lazy val ident_       : Stay[ident      , Schema_ident      , String ] = ???
-  final lazy val tpe_         : Stay[tpe        , Schema_tpe        , String ] = ???
-  final lazy val card_        : Stay[card       , Schema_card       , String ] = ???
+  final lazy val valueType_   : Stay[valueType  , Schema_valueType  , String ] = ???
+  final lazy val cardinality_ : Stay[cardinality, Schema_cardinality, String ] = ???
   final lazy val doc_         : Stay[doc        , Schema_doc        , String ] = ???
   final lazy val unique_      : Stay[unique     , Schema_unique     , String ] = ???
   final lazy val isComponent_ : Stay[isComponent, Schema_isComponent, Boolean] = ???
@@ -203,8 +203,8 @@ trait Schema_0_0_L3[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3]
   final lazy val attr         : Next[attr       , Schema_attr       , String ] = ???
   final lazy val enumm        : Next[enumm      , Schema_enumm      , String ] = ???
   final lazy val ident        : Next[ident      , Schema_ident      , String ] = ???
-  final lazy val tpe          : Next[tpe        , Schema_tpe        , String ] = ???
-  final lazy val card         : Next[card       , Schema_card       , String ] = ???
+  final lazy val valueType    : Next[valueType  , Schema_valueType  , String ] = ???
+  final lazy val cardinality  : Next[cardinality, Schema_cardinality, String ] = ???
   final lazy val doc          : Next[doc        , Schema_doc        , String ] = ???
   final lazy val unique       : Next[unique     , Schema_unique     , String ] = ???
   final lazy val isComponent  : Next[isComponent, Schema_isComponent, Boolean] = ???
@@ -216,8 +216,8 @@ trait Schema_0_0_L3[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3]
   final lazy val txInstant    : Next[txInstant  , Schema_txInstant  , Date   ] = ???
 
   final lazy val ident$       : Next[ident$      , Schema_ident_      , Option[String ]] = ???
-  final lazy val tpe$         : Next[tpe$        , Schema_tpe_        , Option[String ]] = ???
-  final lazy val card$        : Next[card$       , Schema_card_       , Option[String ]] = ???
+  final lazy val valueType$   : Next[valueType$  , Schema_valueType_  , Option[String ]] = ???
+  final lazy val cardinality$ : Next[cardinality$, Schema_cardinality_, Option[String ]] = ???
   final lazy val doc$         : Next[doc$        , Schema_doc_        , Option[String ]] = ???
   final lazy val unique$      : Next[unique$     , Schema_unique_     , Option[String ]] = ???
   final lazy val isComponent$ : Next[isComponent$, Schema_isComponent_, Option[Boolean]] = ???
@@ -233,8 +233,8 @@ trait Schema_0_0_L3[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3]
   final lazy val attr_        : Stay[attr       , Schema_attr       , String ] = ???
   final lazy val enumm_       : Stay[enumm      , Schema_enumm      , String ] = ???
   final lazy val ident_       : Stay[ident      , Schema_ident      , String ] = ???
-  final lazy val tpe_         : Stay[tpe        , Schema_tpe        , String ] = ???
-  final lazy val card_        : Stay[card       , Schema_card       , String ] = ???
+  final lazy val valueType_   : Stay[valueType  , Schema_valueType  , String ] = ???
+  final lazy val cardinality_ : Stay[cardinality, Schema_cardinality, String ] = ???
   final lazy val doc_         : Stay[doc        , Schema_doc        , String ] = ???
   final lazy val unique_      : Stay[unique     , Schema_unique     , String ] = ???
   final lazy val isComponent_ : Stay[isComponent, Schema_isComponent, Boolean] = ???
@@ -261,8 +261,8 @@ trait Schema_0_0_L4[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4]
   final lazy val attr         : Next[attr       , Schema_attr       , String ] = ???
   final lazy val enumm        : Next[enumm      , Schema_enumm      , String ] = ???
   final lazy val ident        : Next[ident      , Schema_ident      , String ] = ???
-  final lazy val tpe          : Next[tpe        , Schema_tpe        , String ] = ???
-  final lazy val card         : Next[card       , Schema_card       , String ] = ???
+  final lazy val valueType    : Next[valueType  , Schema_valueType  , String ] = ???
+  final lazy val cardinality  : Next[cardinality, Schema_cardinality, String ] = ???
   final lazy val doc          : Next[doc        , Schema_doc        , String ] = ???
   final lazy val unique       : Next[unique     , Schema_unique     , String ] = ???
   final lazy val isComponent  : Next[isComponent, Schema_isComponent, Boolean] = ???
@@ -274,8 +274,8 @@ trait Schema_0_0_L4[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4]
   final lazy val txInstant    : Next[txInstant  , Schema_txInstant  , Date   ] = ???
 
   final lazy val ident$       : Next[ident$      , Schema_ident_      , Option[String ]] = ???
-  final lazy val tpe$         : Next[tpe$        , Schema_tpe_        , Option[String ]] = ???
-  final lazy val card$        : Next[card$       , Schema_card_       , Option[String ]] = ???
+  final lazy val valueType$   : Next[valueType$  , Schema_valueType_  , Option[String ]] = ???
+  final lazy val cardinality$ : Next[cardinality$, Schema_cardinality_, Option[String ]] = ???
   final lazy val doc$         : Next[doc$        , Schema_doc_        , Option[String ]] = ???
   final lazy val unique$      : Next[unique$     , Schema_unique_     , Option[String ]] = ???
   final lazy val isComponent$ : Next[isComponent$, Schema_isComponent_, Option[Boolean]] = ???
@@ -291,8 +291,8 @@ trait Schema_0_0_L4[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4]
   final lazy val attr_        : Stay[attr       , Schema_attr       , String ] = ???
   final lazy val enumm_       : Stay[enumm      , Schema_enumm      , String ] = ???
   final lazy val ident_       : Stay[ident      , Schema_ident      , String ] = ???
-  final lazy val tpe_         : Stay[tpe        , Schema_tpe        , String ] = ???
-  final lazy val card_        : Stay[card       , Schema_card       , String ] = ???
+  final lazy val valueType_   : Stay[valueType  , Schema_valueType  , String ] = ???
+  final lazy val cardinality_ : Stay[cardinality, Schema_cardinality, String ] = ???
   final lazy val doc_         : Stay[doc        , Schema_doc        , String ] = ???
   final lazy val unique_      : Stay[unique     , Schema_unique     , String ] = ???
   final lazy val isComponent_ : Stay[isComponent, Schema_isComponent, Boolean] = ???
@@ -319,8 +319,8 @@ trait Schema_0_0_L5[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_]
   final lazy val attr         : Next[attr       , Schema_attr       , String ] = ???
   final lazy val enumm        : Next[enumm      , Schema_enumm      , String ] = ???
   final lazy val ident        : Next[ident      , Schema_ident      , String ] = ???
-  final lazy val tpe          : Next[tpe        , Schema_tpe        , String ] = ???
-  final lazy val card         : Next[card       , Schema_card       , String ] = ???
+  final lazy val valueType    : Next[valueType  , Schema_valueType  , String ] = ???
+  final lazy val cardinality  : Next[cardinality, Schema_cardinality, String ] = ???
   final lazy val doc          : Next[doc        , Schema_doc        , String ] = ???
   final lazy val unique       : Next[unique     , Schema_unique     , String ] = ???
   final lazy val isComponent  : Next[isComponent, Schema_isComponent, Boolean] = ???
@@ -332,8 +332,8 @@ trait Schema_0_0_L5[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_]
   final lazy val txInstant    : Next[txInstant  , Schema_txInstant  , Date   ] = ???
 
   final lazy val ident$       : Next[ident$      , Schema_ident_      , Option[String ]] = ???
-  final lazy val tpe$         : Next[tpe$        , Schema_tpe_        , Option[String ]] = ???
-  final lazy val card$        : Next[card$       , Schema_card_       , Option[String ]] = ???
+  final lazy val valueType$   : Next[valueType$  , Schema_valueType_  , Option[String ]] = ???
+  final lazy val cardinality$ : Next[cardinality$, Schema_cardinality_, Option[String ]] = ???
   final lazy val doc$         : Next[doc$        , Schema_doc_        , Option[String ]] = ???
   final lazy val unique$      : Next[unique$     , Schema_unique_     , Option[String ]] = ???
   final lazy val isComponent$ : Next[isComponent$, Schema_isComponent_, Option[Boolean]] = ???
@@ -349,8 +349,8 @@ trait Schema_0_0_L5[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_]
   final lazy val attr_        : Stay[attr       , Schema_attr       , String ] = ???
   final lazy val enumm_       : Stay[enumm      , Schema_enumm      , String ] = ???
   final lazy val ident_       : Stay[ident      , Schema_ident      , String ] = ???
-  final lazy val tpe_         : Stay[tpe        , Schema_tpe        , String ] = ???
-  final lazy val card_        : Stay[card       , Schema_card       , String ] = ???
+  final lazy val valueType_   : Stay[valueType  , Schema_valueType  , String ] = ???
+  final lazy val cardinality_ : Stay[cardinality, Schema_cardinality, String ] = ???
   final lazy val doc_         : Stay[doc        , Schema_doc        , String ] = ???
   final lazy val unique_      : Stay[unique     , Schema_unique     , String ] = ???
   final lazy val isComponent_ : Stay[isComponent, Schema_isComponent, Boolean] = ???
@@ -377,8 +377,8 @@ trait Schema_0_0_L6[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_]
   final lazy val attr         : Next[attr       , Schema_attr       , String ] = ???
   final lazy val enumm        : Next[enumm      , Schema_enumm      , String ] = ???
   final lazy val ident        : Next[ident      , Schema_ident      , String ] = ???
-  final lazy val tpe          : Next[tpe        , Schema_tpe        , String ] = ???
-  final lazy val card         : Next[card       , Schema_card       , String ] = ???
+  final lazy val valueType    : Next[valueType  , Schema_valueType  , String ] = ???
+  final lazy val cardinality  : Next[cardinality, Schema_cardinality, String ] = ???
   final lazy val doc          : Next[doc        , Schema_doc        , String ] = ???
   final lazy val unique       : Next[unique     , Schema_unique     , String ] = ???
   final lazy val isComponent  : Next[isComponent, Schema_isComponent, Boolean] = ???
@@ -390,8 +390,8 @@ trait Schema_0_0_L6[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_]
   final lazy val txInstant    : Next[txInstant  , Schema_txInstant  , Date   ] = ???
 
   final lazy val ident$       : Next[ident$      , Schema_ident_      , Option[String ]] = ???
-  final lazy val tpe$         : Next[tpe$        , Schema_tpe_        , Option[String ]] = ???
-  final lazy val card$        : Next[card$       , Schema_card_       , Option[String ]] = ???
+  final lazy val valueType$   : Next[valueType$  , Schema_valueType_  , Option[String ]] = ???
+  final lazy val cardinality$ : Next[cardinality$, Schema_cardinality_, Option[String ]] = ???
   final lazy val doc$         : Next[doc$        , Schema_doc_        , Option[String ]] = ???
   final lazy val unique$      : Next[unique$     , Schema_unique_     , Option[String ]] = ???
   final lazy val isComponent$ : Next[isComponent$, Schema_isComponent_, Option[Boolean]] = ???
@@ -407,8 +407,8 @@ trait Schema_0_0_L6[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_]
   final lazy val attr_        : Stay[attr       , Schema_attr       , String ] = ???
   final lazy val enumm_       : Stay[enumm      , Schema_enumm      , String ] = ???
   final lazy val ident_       : Stay[ident      , Schema_ident      , String ] = ???
-  final lazy val tpe_         : Stay[tpe        , Schema_tpe        , String ] = ???
-  final lazy val card_        : Stay[card       , Schema_card       , String ] = ???
+  final lazy val valueType_   : Stay[valueType  , Schema_valueType  , String ] = ???
+  final lazy val cardinality_ : Stay[cardinality, Schema_cardinality, String ] = ???
   final lazy val doc_         : Stay[doc        , Schema_doc        , String ] = ???
   final lazy val unique_      : Stay[unique     , Schema_unique     , String ] = ???
   final lazy val isComponent_ : Stay[isComponent, Schema_isComponent, Boolean] = ???
@@ -435,8 +435,8 @@ trait Schema_0_0_L7[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_]
   final lazy val attr         : Next[attr       , Schema_attr       , String ] = ???
   final lazy val enumm        : Next[enumm      , Schema_enumm      , String ] = ???
   final lazy val ident        : Next[ident      , Schema_ident      , String ] = ???
-  final lazy val tpe          : Next[tpe        , Schema_tpe        , String ] = ???
-  final lazy val card         : Next[card       , Schema_card       , String ] = ???
+  final lazy val valueType    : Next[valueType  , Schema_valueType  , String ] = ???
+  final lazy val cardinality  : Next[cardinality, Schema_cardinality, String ] = ???
   final lazy val doc          : Next[doc        , Schema_doc        , String ] = ???
   final lazy val unique       : Next[unique     , Schema_unique     , String ] = ???
   final lazy val isComponent  : Next[isComponent, Schema_isComponent, Boolean] = ???
@@ -448,8 +448,8 @@ trait Schema_0_0_L7[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_]
   final lazy val txInstant    : Next[txInstant  , Schema_txInstant  , Date   ] = ???
 
   final lazy val ident$       : Next[ident$      , Schema_ident_      , Option[String ]] = ???
-  final lazy val tpe$         : Next[tpe$        , Schema_tpe_        , Option[String ]] = ???
-  final lazy val card$        : Next[card$       , Schema_card_       , Option[String ]] = ???
+  final lazy val valueType$   : Next[valueType$  , Schema_valueType_  , Option[String ]] = ???
+  final lazy val cardinality$ : Next[cardinality$, Schema_cardinality_, Option[String ]] = ???
   final lazy val doc$         : Next[doc$        , Schema_doc_        , Option[String ]] = ???
   final lazy val unique$      : Next[unique$     , Schema_unique_     , Option[String ]] = ???
   final lazy val isComponent$ : Next[isComponent$, Schema_isComponent_, Option[Boolean]] = ???
@@ -465,8 +465,8 @@ trait Schema_0_0_L7[o0[_], p0, o1[_], p1, o2[_], p2, o3[_], p3, o4[_], p4, o5[_]
   final lazy val attr_        : Stay[attr       , Schema_attr       , String ] = ???
   final lazy val enumm_       : Stay[enumm      , Schema_enumm      , String ] = ???
   final lazy val ident_       : Stay[ident      , Schema_ident      , String ] = ???
-  final lazy val tpe_         : Stay[tpe        , Schema_tpe        , String ] = ???
-  final lazy val card_        : Stay[card       , Schema_card       , String ] = ???
+  final lazy val valueType_   : Stay[valueType  , Schema_valueType  , String ] = ???
+  final lazy val cardinality_ : Stay[cardinality, Schema_cardinality, String ] = ???
   final lazy val doc_         : Stay[doc        , Schema_doc        , String ] = ???
   final lazy val unique_      : Stay[unique     , Schema_unique     , String ] = ???
   final lazy val isComponent_ : Stay[isComponent, Schema_isComponent, Boolean] = ???

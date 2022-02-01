@@ -211,7 +211,7 @@ object SortSchemaAttrs extends AsyncTestSuite {
 
     "tpe" - core { implicit conn =>
       for {
-        _ <- Schema.tpe.a1.get.map(_ ==> List(
+        _ <- Schema.valueType.a1.get.map(_ ==> List(
           "bigdec",
           "bigint",
           "boolean",
@@ -223,7 +223,7 @@ object SortSchemaAttrs extends AsyncTestSuite {
           "uri",
           "uuid",
         ))
-        _ <- Schema.tpe.d1.get.map(_ ==> List(
+        _ <- Schema.valueType.d1.get.map(_ ==> List(
           "uuid",
           "uri",
           "string",
@@ -237,14 +237,14 @@ object SortSchemaAttrs extends AsyncTestSuite {
         ))
 
         // Sort by count of types used in each namespace
-        _ <- Schema.ns.a2.tpe(count).a1.get.map(_ ==> List(
+        _ <- Schema.ns.a2.valueType(count).a1.get.map(_ ==> List(
           ("Ref1", 3),
           ("Ref2", 3),
           ("Ref3", 3),
           ("Ref4", 3),
           ("Ns", 10),
         ))
-        _ <- Schema.ns.a2.tpe(count).d1.get.map(_ ==> List(
+        _ <- Schema.ns.a2.valueType(count).d1.get.map(_ ==> List(
           ("Ns", 10),
           ("Ref1", 3),
           ("Ref2", 3),
@@ -257,16 +257,16 @@ object SortSchemaAttrs extends AsyncTestSuite {
 
     "card" - partition { implicit conn =>
       for {
-        _ <- Schema.card.a1.get.map(_ ==> List("many", "one"))
-        _ <- Schema.card.d1.get.map(_ ==> List("one", "many"))
+        _ <- Schema.cardinality.a1.get.map(_ ==> List("many", "one"))
+        _ <- Schema.cardinality.d1.get.map(_ ==> List("one", "many"))
 
         // Sort by count of cardinalities used in each namespace
-        _ <- Schema.nsFull.a2.card(count).a1.get.map(_ ==> List(
+        _ <- Schema.nsFull.a2.cardinality(count).a1.get.map(_ ==> List(
           ("gen_Profession", 1),
           ("gen_Person", 2),
           ("lit_Book", 2),
         ))
-        _ <- Schema.nsFull.a2.card(count).d1.get.map(_ ==> List(
+        _ <- Schema.nsFull.a2.cardinality(count).d1.get.map(_ ==> List(
           ("gen_Person", 2),
           ("lit_Book", 2),
           ("gen_Profession", 1),
@@ -312,23 +312,23 @@ object SortSchemaAttrs extends AsyncTestSuite {
     "unique" - core { implicit conn =>
       for {
         // Mandatory
-        _ <- Schema.ns_("Ref2").card_("one").a.a2.unique.a1.get.map(_ ==> List(
+        _ <- Schema.ns_("Ref2").cardinality_("one").a.a2.unique.a1.get.map(_ ==> List(
           (":Ref2/str2", "identity"),
           (":Ref2/int2", "value"),
         ))
-        _ <- Schema.ns_("Ref2").card_("one").a.a2.unique.d1.get.map(_ ==> List(
+        _ <- Schema.ns_("Ref2").cardinality_("one").a.a2.unique.d1.get.map(_ ==> List(
           (":Ref2/int2", "value"),
           (":Ref2/str2", "identity"),
         ))
 
         // Optional
-        _ <- Schema.ns_("Ref2").card_("one").a.a2.unique$.a1.get.map(_ ==> List(
+        _ <- Schema.ns_("Ref2").cardinality_("one").a.a2.unique$.a1.get.map(_ ==> List(
           (":Ref2/enum2", None),
           (":Ref2/ref3", None),
           (":Ref2/str2", Some("identity")),
           (":Ref2/int2", Some("value")),
         ))
-        _ <- Schema.ns_("Ref2").card_("one").a.a2.unique$.d1.get.map(_ ==> List(
+        _ <- Schema.ns_("Ref2").cardinality_("one").a.a2.unique$.d1.get.map(_ ==> List(
           (":Ref2/int2", Some("value")),
           (":Ref2/str2", Some("identity")),
           (":Ref2/enum2", None),
@@ -345,18 +345,18 @@ object SortSchemaAttrs extends AsyncTestSuite {
     "isComponent" - core { implicit conn =>
       for {
         // Mandatory (not much sense in sorting by one value: true)
-        _ <- Schema.ns_("Ref1").card_("one").a.a2.isComponent.a1.get.map(_ ==> List((":Ref1/refSub2", true)))
-        _ <- Schema.ns_("Ref1").card_("one").a.a2.isComponent.d1.get.map(_ ==> List((":Ref1/refSub2", true)))
+        _ <- Schema.ns_("Ref1").cardinality_("one").a.a2.isComponent.a1.get.map(_ ==> List((":Ref1/refSub2", true)))
+        _ <- Schema.ns_("Ref1").cardinality_("one").a.a2.isComponent.d1.get.map(_ ==> List((":Ref1/refSub2", true)))
 
         // Optional
-        _ <- Schema.ns_("Ref1").card_("one").a.a2.isComponent$.a1.get.map(_ ==> List(
+        _ <- Schema.ns_("Ref1").cardinality_("one").a.a2.isComponent$.a1.get.map(_ ==> List(
           (":Ref1/enum1", None),
           (":Ref1/int1", None),
           (":Ref1/ref2", None),
           (":Ref1/str1", None),
           (":Ref1/refSub2", Some(true)),
         ))
-        _ <- Schema.ns_("Ref1").card_("one").a.a2.isComponent$.d1.get.map(_ ==> List(
+        _ <- Schema.ns_("Ref1").cardinality_("one").a.a2.isComponent$.d1.get.map(_ ==> List(
           (":Ref1/refSub2", Some(true)),
           (":Ref1/enum1", None),
           (":Ref1/int1", None),
@@ -386,17 +386,17 @@ object SortSchemaAttrs extends AsyncTestSuite {
     "noHistory" - core { implicit conn =>
       for {
         // Mandatory (not much sense in sorting by one value)
-        _ <- Schema.ns_("Ref2").card_("many").a.a2.noHistory.a1.get.map(_ ==> List(
+        _ <- Schema.ns_("Ref2").cardinality_("many").a.a2.noHistory.a1.get.map(_ ==> List(
           (":Ref2/ints2", true),
         ))
 
         // Optional
-        _ <- Schema.ns_("Ref2").card_("many").a.a2.noHistory$.a1.get.map(_ ==> List(
+        _ <- Schema.ns_("Ref2").cardinality_("many").a.a2.noHistory$.a1.get.map(_ ==> List(
           (":Ref2/refs3", None),
           (":Ref2/strs2", None),
           (":Ref2/ints2", Some(true)),
         ))
-        _ <- Schema.ns_("Ref2").card_("many").a.a2.noHistory$.d1.get.map(_ ==> List(
+        _ <- Schema.ns_("Ref2").cardinality_("many").a.a2.noHistory$.d1.get.map(_ ==> List(
           (":Ref2/ints2", Some(true)),
           (":Ref2/refs3", None),
           (":Ref2/strs2", None),
@@ -503,17 +503,17 @@ object SortSchemaAttrs extends AsyncTestSuite {
     "fulltext" - core { implicit conn =>
       for {
         // Mandatory (not much sense in sorting by one possible value: true)
-        _ <- Schema.ns_("Ref2").card_("one").a.a2.fulltext.a1.get.map(_ ==> List((":Ref2/str2", true)))
-        _ <- Schema.ns_("Ref2").card_("one").a.a2.fulltext.d1.get.map(_ ==> List((":Ref2/str2", true)))
+        _ <- Schema.ns_("Ref2").cardinality_("one").a.a2.fulltext.a1.get.map(_ ==> List((":Ref2/str2", true)))
+        _ <- Schema.ns_("Ref2").cardinality_("one").a.a2.fulltext.d1.get.map(_ ==> List((":Ref2/str2", true)))
 
         // Optional
-        _ <- Schema.ns_("Ref2").card_("one").a.a2.fulltext$.a1.get.map(_ ==> List(
+        _ <- Schema.ns_("Ref2").cardinality_("one").a.a2.fulltext$.a1.get.map(_ ==> List(
           (":Ref2/enum2", None),
           (":Ref2/int2", None),
           (":Ref2/ref3", None),
           (":Ref2/str2", Some(true)),
         ))
-        _ <- Schema.ns_("Ref2").card_("one").a.a2.fulltext$.d1.get.map(_ ==> List(
+        _ <- Schema.ns_("Ref2").cardinality_("one").a.a2.fulltext$.d1.get.map(_ ==> List(
           (":Ref2/str2", Some(true)),
           (":Ref2/enum2", None),
           (":Ref2/int2", None),

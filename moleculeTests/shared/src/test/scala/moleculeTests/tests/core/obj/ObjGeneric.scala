@@ -103,17 +103,16 @@ object ObjGeneric extends AsyncTestSuite with Helpers {
         }
         intIndex = if (system == SystemPeer) Some(true) else None
         _ <- Schema
-          .part.id.a(":Ns/int").nsFull.ns.attr.tpe.card.doc
-          .index$.unique$.fulltext$.isComponent$.noHistory$
-          .t.tx.txInstant.getObj.map { schema =>
-          schema.part ==> "db.part/user"
+          .part.id.a(":Ns/int").nsFull.ns.attr.valueType.cardinality.doc
+          .index$.unique$.fulltext$.isComponent$.noHistory$.t.tx.txInstant.getObj.map { schema =>
           schema.id ==> intAttrId
           schema.a ==> ":Ns/int"
+          schema.part ==> "db.part/user"
           schema.nsFull ==> "Ns"
           schema.ns ==> "Ns"
           schema.attr ==> "int"
-          schema.tpe ==> "long"
-          schema.card ==> "one"
+          schema.valueType ==> "long"
+          schema.cardinality ==> "one"
           schema.doc ==> "Card one Int attribute"
           schema.index$ ==> intIndex
           schema.unique$ ==> None
