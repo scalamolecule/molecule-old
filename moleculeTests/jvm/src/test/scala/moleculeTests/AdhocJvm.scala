@@ -32,20 +32,6 @@ object AdhocJvm extends AsyncTestSuite with Helpers with JavaConversions {
         //        t0 <- db.basisT
 
 
-//        _ <- Ns.double.doubles insert List(
-//          (1.1, Set(1.1, 2.2)),
-//          (2.2, Set(2.2, 3.3)),
-//          (3.3, Set(3.3, 4.4)))
-//
-//        _ <- Ns.double(sum).inspectGet
-//        _ <- Ns.double(avg).inspectGet
-//
-//        _ <- Ns.double(sum).get.map(res => round(res.head, 6) ==> 6.6)
-//        _ <- Ns.double(sum).get.map(_.head ==> 6.6000000000000005)
-//
-//        _ <- Ns.double(avg).get.map(res => round(res.head, 6) ==> 2.2)
-//        _ <- Ns.double(avg).get.map(_.head ==> 2.1999999999999997)
-
 
         _ <- Schema.ns_("Ref4").a.a1.valueType.cardinality.get.map(_ ==> List(
           (":Ref4/int4", "long", "one"),
