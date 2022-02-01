@@ -24,7 +24,9 @@ object Model2Query extends Helpers {
   var _model             : Model       = _
   var txMeta             : Boolean     = false
   var txMetaComposite    : Boolean     = false
-  val datomGeneric                     = Seq("e", "e_", "tx", "t", "txInstant", "op", "tx_", "t_", "txInstant_", "op_", "a", "a_", "v", "v_")
+  val datomGeneric                     = Seq(
+    "e", "e_", "tx", "t", "txInstant", "op", "tx_", "t_", "txInstant_", "op_", "a", "a_", "v", "v_"
+  )
 
   def abort(msg: String): Nothing = throw Model2QueryException(msg)
 
@@ -95,12 +97,14 @@ object Model2Query extends Helpers {
               && query.wh.clauses.isEmpty
               && !nested.elements.last.isInstanceOf[Nested]
           ) v else w
-          nestedEntityClauses = nestedEntityClauses :+ Funct("identity", Seq(Var(refV)), ScalarBinding(Var("sort" + nestedEntityClauses.size)))
+          nestedEntityClauses = nestedEntityClauses :+
+            Funct("identity", Seq(Var(refV)), ScalarBinding(Var("sort" + nestedEntityClauses.size)))
         }
         makeNested(model, query, nested, e, v, prevNs, prevAttr, prevRefNs)
       case composite: Composite   => makeComposite(model, query, composite, e, v, prevNs, prevAttr, prevRefNs)
       case Self                   => (query, w, y, prevNs, prevAttr, prevRefNs)
-      case other                  => abort("Unresolved query variables from model: " + (other, e, v, prevNs, prevAttr, prevRefNs))
+      case other                  =>
+        abort("Unresolved query variables from model: " + (other, e, v, prevNs, prevAttr, prevRefNs))
     }
   }
 

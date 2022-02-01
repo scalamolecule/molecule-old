@@ -62,7 +62,6 @@ object CoreTestDataModel {
     val refsSub2 = many[Ref2].isComponent
 
     val nss = many[Ns]
-
     val intMap1 = mapInt
   }
 
@@ -79,9 +78,6 @@ object CoreTestDataModel {
   trait Ref3 {
     val str3  = oneString
     val int3  = oneInt
-    val enum3 = oneEnum("enum30", "enum31", "enum32")
-    val strs3 = manyString
-    val ints3 = manyInt
     val ref4  = one[Ref4]
     val refs4 = many[Ref4]
   }
@@ -89,8 +85,5 @@ object CoreTestDataModel {
   trait Ref4 {
     val str4  = oneString
     val int4  = oneInt
-    val enum4 = oneEnum("enum40", "enum41", "enum42")
-    val strs4 = manyString
-    val ints4 = manyInt
   }
 }

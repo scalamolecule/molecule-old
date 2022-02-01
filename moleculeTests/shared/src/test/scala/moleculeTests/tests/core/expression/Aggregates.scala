@@ -1,11 +1,11 @@
 package moleculeTests.tests.core.expression
 
-import molecule.core.exceptions.MoleculeException
 import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out3._
 import molecule.datomic.base.facade.Conn
-import moleculeTests.setup.AsyncTestSuite
+import molecule.datomic.base.util.SystemPeerServer
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
+import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -76,7 +76,7 @@ object Aggregates extends AsyncTestSuite {
 
   def round(value: Double, decimals: Int): Double = {
     val factor = scala.math.pow(10, decimals)
-    (value * factor).round / factor.toDouble
+    (value * factor).round / factor
   }
 
 
@@ -90,19 +90,16 @@ object Aggregates extends AsyncTestSuite {
         _ <- Ns.int(sum).get.map(_.head ==> (1 + 2 + 3))
         _ <- Ns.long(sum).get.map(_.head ==> 6L)
 
-        //    // Peer server seems more picky with precision
-        //    // For full precision, please use BigDecimal or save as Long and divide
-        //    if (system == SystemPeerServer)
-        //      round(Ns.double(sum).get.map(_.head, 6) ==> 6.6)
-        //    //      Ns.double(sum).get.map(_.head ==> 6.6000000000000005)
-        //    else
-        //      _ <- Ns.double(sum).get.map(_.head ==> 6.6)
-
-        _ <- Ns.str(sum).get
-          .map(_ ==> "Unexpected success")
-          .recover { case MoleculeException(msg, _) =>
-            msg ==> "Can't apply `sum` aggregate to non-number attribute `str` of type `String`."
+        _ <- if (system == SystemPeerServer) {
+          // Peer server seems more picky with precision
+          // For full precision using Peer Server, please use BigDecimal or save as Long and divide
+          Ns.double(sum).get.map { res =>
+            round(res.head, 6) ==> 6.6
           }
+          //      Ns.double(sum).get.map(_.head ==> 6.6000000000000005)
+        } else {
+          Ns.double(sum).get.map(_.head ==> 6.6)
+        }
 
       } yield ()
     }
@@ -128,6 +125,51 @@ object Aggregates extends AsyncTestSuite {
         //        round (Ns.double(avg).get.map(_.head, 6) ==> 2.2)
         //        else
         //        _ <- Ns.double(avg).get.map(_.head ==> 2.1999999999999997)
+      } yield ()
+    }
+
+
+    "sum" - core { implicit conn =>
+      for {
+        _ <- testData
+
+        _ <- Ns.int(sum).get.map(_.head ==> (1 + 2 + 3))
+        _ <- Ns.long(sum).get.map(_.head ==> 6L)
+
+        _ <- if (system == SystemPeerServer) {
+          // Peer server seems more picky with precision
+          // For full precision using Peer Server, please use BigDecimal or save as Long and divide
+          Ns.double(sum).get.map(res => round(res.head, 6) ==> 6.6)
+          //      Ns.double(sum).get.map(_.head ==> 6.6000000000000005)
+        } else {
+          Ns.double(sum).get.map(_.head ==> 6.6)
+        }
+      } yield ()
+    }
+
+    "avg" - core { implicit conn =>
+      for {
+        _ <- testData
+        _ <- Ns.int(avg).get.map(_.head ==> (1 + 2 + 3) / 3)
+        _ <- Ns.long(avg).get.map(_.head ==> 2)
+
+        _ <- if (system == SystemPeerServer) {
+          // Peer server seems more picky with precision
+          // For full precision using Peer Server, please use BigDecimal or save as Long and divide
+          Ns.double(avg).get.map(res => round(res.head, 6) ==> 2.2)
+          //      Ns.double(sum).get.map(_.head ==> 6.6000000000000005)
+        } else {
+          Ns.double(avg).get.map(_.head ==> 2.1999999999999997)
+        }
+      } yield ()
+    }
+
+    "median" - core { implicit conn =>
+      for {
+        _ <- testData
+        _ <- Ns.int(median).get.map(_.head ==> 2)
+        _ <- Ns.long(median).get.map(_.head ==> 2L)
+        _ <- Ns.double(median).get.map(_.head ==> 2.2)
       } yield ()
     }
 

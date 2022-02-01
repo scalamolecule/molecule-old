@@ -90,7 +90,7 @@ object Aggregates extends AsyncTestSuite {
         ))
 
         // How many (Datomic) types does this schema use?
-        _ <- Schema.tpe.get.map(_ ==> List(
+        _ <- Schema.valueType.get.map(_ ==> List(
           "string", // String
           "double", // Double
           "long", // Int

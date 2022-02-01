@@ -1,6 +1,7 @@
 package moleculeTests.tests.db.datomic.generic
 
 import molecule.core.exceptions.MoleculeException
+import molecule.core.util.Executor._
 import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out5._
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer}
@@ -12,7 +13,6 @@ import scala.concurrent.Future
 object LogTest extends Base {
 
   lazy val tests = Tests {
-    import molecule.core.util.Executor._
 
     "Basics" - core { implicit conn =>
       for {
@@ -214,14 +214,14 @@ object LogTest extends Base {
             // Start - t3 (exclusive)
             // Includes all Datomic database bootstrapping and schema transactions
             //            _ <- Log(None, Some(tx3)).t.get.map(_.size ==> 396)
-            _ <- Log(None, Some(tx3)).t.get.map(_.size ==> 401)
+            _ <- Log(None, Some(tx3)).t.get.map(_.size ==> 365)
 
             // Start - end !! The whole database!
             //            _ <- Log(None, None).t.get.map(_.size ==> 427)
-            _ <- Log(None, None).t.get.map(_.size ==> 432)
+            _ <- Log(None, None).t.get.map(_.size ==> 396)
             // Same as this shortcut
             //            res <- Log().t.get.map(_.size ==> 427)
-            res <- Log().t.get.map(_.size ==> 432)
+            res <- Log().t.get.map(_.size ==> 396)
           } yield res
         } else if (system == SystemDevLocal) {
           for {

@@ -12,12 +12,10 @@ import scala.concurrent.Future
 object Schema_AttrOptions extends AsyncTestSuite {
 
   // Differing counts and ids for different systems
-  val List(attrCount, a1, a2, a3, card1count, card2count) = system match {
-    //    case SystemPeer       => List(68, 106, 108, 109, 30, 38)
-    case SystemPeer     => List(69, 106, 108, 109, 30, 39)
-    case SystemDevLocal => List(69, 105, 107, 108, 31, 40)
-    //    case SystemDevLocal   => List(71, 105, 107, 108, 31, 40)
-    case SystemPeerServer => List(71, 104, 106, 107, 31, 40)
+  val attrCount = system match {
+    case SystemPeer       => 63
+    case SystemDevLocal   => 63
+    case SystemPeerServer => 65
   }
 
 

@@ -28,25 +28,25 @@ object SortSchemaAttrs extends AsyncTestSuite {
           (76, ":Ns/bool"),
         ))
         _ <- Schema.id.d1.a.get(5).map(_ ==> List(
-          (140, ":Ref4/ints4"),
-          (139, ":Ref4/strs4"),
-          (138, ":Ref4/enum4"),
-          (137, ":Ref4/int4"),
-          (136, ":Ref4/str4"),
+          (134, ":Ref4/int4"),
+          (133, ":Ref4/str4"),
+          (132, ":Ref3/refs4"),
+          (131, ":Ref3/ref4"),
+          (130, ":Ref3/int3"),
         ))
 
         // Sort by count of attribute id's in each namespace
-        _ <- Schema.ns.a2.id(count).d1.get.map(_ ==> List(
+        _ <- Schema.ns.id(count).d1.get.map(_ ==> List(
           ("Ns", 38),
           ("Ref1", 12),
           ("Ref2", 7),
-          ("Ref3", 7),
-          ("Ref4", 5),
+          ("Ref3", 4),
+          ("Ref4", 2),
         ))
-        _ <- Schema.ns.a2.id(count).a1.get.map(_ ==> List(
-          ("Ref4", 5),
+        _ <- Schema.ns.id(count).a1.get.map(_ ==> List(
+          ("Ref4", 2),
+          ("Ref3", 4),
           ("Ref2", 7),
-          ("Ref3", 7),
           ("Ref1", 12),
           ("Ns", 38),
         ))
@@ -69,9 +69,9 @@ object SortSchemaAttrs extends AsyncTestSuite {
 
         // Sort by count of attributes in each namespace
         _ <- Schema.ns.a2.a(count).a1.get.map(_ ==> List(
-          ("Ref4", 5),
+          ("Ref4", 2),
+          ("Ref3", 4),
           ("Ref2", 7),
-          ("Ref3", 7),
           ("Ref1", 12),
           ("Ns", 38),
         ))
@@ -79,8 +79,8 @@ object SortSchemaAttrs extends AsyncTestSuite {
           ("Ns", 38),
           ("Ref1", 12),
           ("Ref2", 7),
-          ("Ref3", 7),
-          ("Ref4", 5),
+          ("Ref3", 4),
+          ("Ref4", 2),
         ))
       } yield ()
     }
@@ -156,17 +156,17 @@ object SortSchemaAttrs extends AsyncTestSuite {
         ))
 
         // Sort by count of attributes in each namespace
-        _ <- Schema.ns.a2.attr(count).d1.get.map(_ ==> List(
+        _ <- Schema.ns.attr(count).d1.get.map(_ ==> List(
           ("Ns", 38),
           ("Ref1", 12),
           ("Ref2", 7),
-          ("Ref3", 7),
-          ("Ref4", 5),
+          ("Ref3", 4),
+          ("Ref4", 2),
         ))
-        _ <- Schema.ns.a2.attr(count).a1.get.map(_ ==> List(
-          ("Ref4", 5),
+        _ <- Schema.ns.attr(count).a1.get.map(_ ==> List(
+          ("Ref4", 2),
+          ("Ref3", 4),
           ("Ref2", 7),
-          ("Ref3", 7),
           ("Ref1", 12),
           ("Ns", 38),
         ))
@@ -193,15 +193,11 @@ object SortSchemaAttrs extends AsyncTestSuite {
           (":Ref1/enum1", 3),
           (":Ref1/enums1", 3),
           (":Ref2/enum2", 3),
-          (":Ref3/enum3", 3),
-          (":Ref4/enum4", 3),
         ))
         _ <- Schema.a.a2.enumm(count).a1.get.map(_ ==> List(
           (":Ref1/enum1", 3),
           (":Ref1/enums1", 3),
           (":Ref2/enum2", 3),
-          (":Ref3/enum3", 3),
-          (":Ref4/enum4", 3),
           (":Ns/enumm", 10),
           (":Ns/enums", 10),
         ))
@@ -238,10 +234,10 @@ object SortSchemaAttrs extends AsyncTestSuite {
 
         // Sort by count of types used in each namespace
         _ <- Schema.ns.a2.valueType(count).a1.get.map(_ ==> List(
+          ("Ref4", 2),
           ("Ref1", 3),
           ("Ref2", 3),
           ("Ref3", 3),
-          ("Ref4", 3),
           ("Ns", 10),
         ))
         _ <- Schema.ns.a2.valueType(count).d1.get.map(_ ==> List(
@@ -249,7 +245,7 @@ object SortSchemaAttrs extends AsyncTestSuite {
           ("Ref1", 3),
           ("Ref2", 3),
           ("Ref3", 3),
-          ("Ref4", 3),
+          ("Ref4", 2),
         ))
       } yield ()
     }
@@ -491,8 +487,8 @@ object SortSchemaAttrs extends AsyncTestSuite {
               ("Ns", 38),
               ("Ref1", 12),
               ("Ref2", 7),
-              ("Ref3", 7),
-              ("Ref4", 5),
+              ("Ref3", 4),
+              ("Ref4", 2),
             )
           })
         )

@@ -200,7 +200,7 @@ object QueryOps extends Helpers with JavaUtil {
       .func("name", Seq(Var("idIdent")), ScalarBinding(Var("attr")))
 
     def schemaIdent: Query = q.schema
-      .func("name", Seq(Var("idIdent")), ScalarBinding(Var("ident")))
+      .func("str", Seq(Var("idIdent")), ScalarBinding(Var("ident")))
 
     def schemaTpe: Query = q.schema
       .where(Var("id"), KW("db", "valueType"), "tpeId")

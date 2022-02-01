@@ -358,9 +358,9 @@ private[molecule] trait Dsl2Model extends TreeOps
           disAllowSortMarker(attr.toString)
           resolveTypedApply(tree, richTree(q"$prev"))
 
-        case q"$_.$attr.$_(..$_)" =>
+        case q"$_.$_(..$_)" =>
           //xx(400, tree)
-          disAllowSortMarker(attr.toString)
+          //          disAllowSortMarker(attr.toString)
           resolveOperation(tree)
 
         case q"$prev.$manyRef.*[..$_]($nested)" =>

@@ -11,11 +11,11 @@ import utest._
 object Schema_Attr extends AsyncTestSuite {
 
   // Differing counts and ids for different systems
-  val List(attrCount, a1, a2, a3, card1count, card2count) = (system, protocol) match {
-    case (SystemPeer, "free")  => List(69, 97, 99, 100, 30, 39)
-    case (SystemPeer, _)       => List(69, 106, 108, 109, 30, 39)
-    case (SystemDevLocal, _)   => List(69, 107, 109, 110, 30, 39)
-    case (SystemPeerServer, _) => List(71, 104, 106, 107, 31, 40)
+  val List(attrCount, uuidMapId, bigIntMapId, bigDecMapId, card1count, card2count) = (system, protocol) match {
+    case (SystemPeer, "free")  => List(63, 97, 99, 100, 28, 35)
+    case (SystemPeer, _)       => List(63, 106, 108, 109, 28, 35)
+    case (SystemDevLocal, _)   => List(63, 107, 109, 110, 28, 35)
+    case (SystemPeerServer, _) => List(65, 104, 106, 107, 29, 36)
   }
 
   lazy val tests = Tests {
@@ -33,11 +33,11 @@ object Schema_Attr extends AsyncTestSuite {
         _ <- Schema.id.not(97, 98).get.map(_.size ==> attrCount - 2)
 
         // We can though filter by one or more tacit attribute ids
-        _ <- Schema.id_(a1).attr.get.map(_ ==> List("uuidMap"))
-        _ <- Schema.id_(a2, a3).attr.get.map(_ ==> List("bigIntMap", "bigDecMap"))
+        _ <- Schema.id_(uuidMapId).attr.get.map(_ ==> List("uuidMap"))
+        _ <- Schema.id_(bigIntMapId, bigDecMapId).attr.get.map(_ ==> List("bigIntMap", "bigDecMap"))
 
-        _ <- Schema.id_.not(a1).attr.get.map(_.size ==> attrCount - 1)
-        _ <- Schema.id_.not(a2, a3).attr.get.map(_.size ==> attrCount - 2)
+        _ <- Schema.id_.not(uuidMapId).attr.get.map(_.size ==> attrCount - 1)
+        _ <- Schema.id_.not(bigIntMapId, bigDecMapId).attr.get.map(_.size ==> attrCount - 2)
       } yield ()
     }
 
@@ -117,24 +117,24 @@ object Schema_Attr extends AsyncTestSuite {
 
         // Negate tacit namespace name
         _ <- Schema.nsFull_.not("Ns").attr.get.map(_.sorted ==> List(
-          "enum1", "enum2", "enum3", "enum4", "enums1",
+          "enum1", "enum2", "enums1",
           "int1", "int2", "int3", "int4", "intMap1",
-          "ints1", "ints2", "ints3", "ints4",
+          "ints1", "ints2",
           "nss",
           "ref2", "ref3", "ref4", "refSub2",
           "refs2", "refs3", "refs4", "refsSub2",
           "str1", "str2", "str3", "str4",
-          "strs1", "strs2", "strs3", "strs4"
+          "strs1", "strs2"
         ))
         _ <- Schema.nsFull_.not("Ns", "Ref2").attr.get.map(_.sorted ==> List(
-          "enum1", "enum3", "enum4", "enums1",
+          "enum1", "enums1",
           "int1", "int3", "int4", "intMap1",
-          "ints1", "ints3", "ints4",
+          "ints1",
           "nss",
           "ref2", "ref4", "refSub2",
           "refs2", "refs4", "refsSub2",
           "str1", "str3", "str4",
-          "strs1", "strs3", "strs4"
+          "strs1"
         ))
       } yield ()
     }
@@ -171,24 +171,24 @@ object Schema_Attr extends AsyncTestSuite {
 
         // Negate tacit namespace name
         _ <- Schema.ns_.not("Ns").attr.get.map(_.sorted ==> List(
-          "enum1", "enum2", "enum3", "enum4", "enums1",
+          "enum1", "enum2", "enums1",
           "int1", "int2", "int3", "int4", "intMap1",
-          "ints1", "ints2", "ints3", "ints4",
+          "ints1", "ints2",
           "nss",
           "ref2", "ref3", "ref4", "refSub2",
           "refs2", "refs3", "refs4", "refsSub2",
           "str1", "str2", "str3", "str4",
-          "strs1", "strs2", "strs3", "strs4"
+          "strs1", "strs2"
         ))
         _ <- Schema.ns_.not("Ns", "Ref2").attr.get.map(_.sorted ==> List(
-          "enum1", "enum3", "enum4", "enums1",
+          "enum1", "enums1",
           "int1", "int3", "int4", "intMap1",
-          "ints1", "ints3", "ints4",
+          "ints1",
           "nss",
           "ref2", "ref4", "refSub2",
           "refs2", "refs4", "refsSub2",
           "str1", "str3", "str4",
-          "strs1", "strs3", "strs4"
+          "strs1"
         ))
       } yield ()
     }
@@ -230,15 +230,13 @@ object Schema_Attr extends AsyncTestSuite {
     "enum" - core { implicit conn =>
       for {
         // Count all enum values
-        _ <- Schema.enumm(count).get.map(_.head ==> 22)
+        _ <- Schema.enumm(count).get.map(_.head ==> 16)
 
         // Count enum values per namespace
         _ <- Schema.ns.a1.enumm(count).get.map(_ ==> List(
           ("Ns", 10),
           ("Ref1", 3),
           ("Ref2", 3),
-          ("Ref3", 3),
-          ("Ref4", 3),
         ))
 
         // Attribute/enum values in namespace `ref2`
@@ -257,9 +255,7 @@ object Schema_Attr extends AsyncTestSuite {
             "enum5", "enum6", "enum7", "enum8", "enum9"),
           ":Ref1/enum1" -> List("enum10", "enum11", "enum12"),
           ":Ref1/enums1" -> List("enum10", "enum11", "enum12"),
-          ":Ref2/enum2" -> List("enum20", "enum21", "enum22"),
-          ":Ref3/enum3" -> List("enum30", "enum31", "enum32"),
-          ":Ref4/enum4" -> List("enum40", "enum41", "enum42"),
+          ":Ref2/enum2" -> List("enum20", "enum21", "enum22")
         ))
 
         // Enums of a specific attribute
@@ -287,8 +283,6 @@ object Schema_Attr extends AsyncTestSuite {
           ("Ns", 10),
           ("Ref1", 3),
           ("Ref2", 3),
-          ("Ref3", 3),
-          ("Ref4", 3),
         ))
 
         // Enums per namespace per attribute
@@ -300,8 +294,6 @@ object Schema_Attr extends AsyncTestSuite {
           ("Ref1", "enum1", 3),
           ("Ref1", "enums1", 3),
           ("Ref2", "enum2", 3),
-          ("Ref3", "enum3", 3),
-          ("Ref4", "enum4", 3),
         ))
 
         // Attributes with some enum value
@@ -317,8 +309,6 @@ object Schema_Attr extends AsyncTestSuite {
           ":Ref1/enum1",
           ":Ref1/enums1",
           ":Ref2/enum2",
-          ":Ref3/enum3",
-          ":Ref4/enum4",
         ))
 
         // If we exclude all enum values of an attribute it won't be returned
@@ -326,14 +316,12 @@ object Schema_Attr extends AsyncTestSuite {
           ":Ns/enumm",
           ":Ns/enums",
           ":Ref2/enum2",
-          ":Ref3/enum3",
-          ":Ref4/enum4",
         ))
       } yield ()
     }
 
 
-    "tpe" - core { implicit conn =>
+    "valueType" - core { implicit conn =>
       for {
         // Datomic types of schema attributes
         // Note that attributes defined being of Scala type
@@ -358,7 +346,7 @@ object Schema_Attr extends AsyncTestSuite {
           ("Ref1", 3),
           ("Ref2", 3),
           ("Ref3", 3),
-          ("Ref4", 3),
+          ("Ref4", 2),
         ))
 
         _ <- Schema.valueType("string").get.map(_ ==> List("string"))
@@ -408,7 +396,7 @@ object Schema_Attr extends AsyncTestSuite {
     }
 
 
-    "card" - core { implicit conn =>
+    "cardinality" - core { implicit conn =>
       for {
         _ <- Schema.cardinality.get.map(_ ==> List("one", "many"))
 

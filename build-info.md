@@ -6,6 +6,8 @@
 Compile to 2.13 only:
 
     sbt clean compile
+    # or
+    sbt compile
 
 Compile to 2.12 only:
 
@@ -18,6 +20,7 @@ Compile to 2.12 and 2.13:
 To have molecule jars generated, add `-Dmolecule=true`
 
     sbt clean +compile -Dmolecule=true
+    sbt +compile -Dmolecule=true
 
 ## Compile JS
 

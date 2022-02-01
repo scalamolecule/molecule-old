@@ -7,8 +7,7 @@ import molecule.datomic.api.in1_out15._
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.db.datomic.generic.Schema_Attr.{a1, a2, a3, attrCount}
-import moleculeTests.tests.db.datomic.generic.Schema_AttrOptions.attrCount
+import moleculeTests.tests.core.expression.Aggregates.round
 import utest._
 
 
@@ -33,6 +32,43 @@ object AdhocJvm extends AsyncTestSuite with Helpers with JavaConversions {
         //        t0 <- db.basisT
 
 
+//        _ <- Ns.double.doubles insert List(
+//          (1.1, Set(1.1, 2.2)),
+//          (2.2, Set(2.2, 3.3)),
+//          (3.3, Set(3.3, 4.4)))
+//
+//        _ <- Ns.double(sum).inspectGet
+//        _ <- Ns.double(avg).inspectGet
+//
+//        _ <- Ns.double(sum).get.map(res => round(res.head, 6) ==> 6.6)
+//        _ <- Ns.double(sum).get.map(_.head ==> 6.6000000000000005)
+//
+//        _ <- Ns.double(avg).get.map(res => round(res.head, 6) ==> 2.2)
+//        _ <- Ns.double(avg).get.map(_.head ==> 2.1999999999999997)
+
+
+        _ <- Schema.ns_("Ref4").a.a1.valueType.cardinality.get.map(_ ==> List(
+          (":Ref4/int4", "long", "one"),
+          (":Ref4/str4", "string", "one"),
+        ))
+
+
+        // Add new `foo` attribute
+        _ <- conn.transact(
+          """[
+            |  {
+            |   :db/ident         :Ref4/foo
+            |   :db/valueType     :db.type/long
+            |   :db/cardinality   :db.cardinality/many
+            |  }
+            |]""".stripMargin
+        )
+
+        _ <- Schema.ns_("Ref4").a.a1.valueType.cardinality.get.map(_ ==> List(
+          (":Ref4/foo", "long", "many"),
+          (":Ref4/int4", "long", "one"),
+          (":Ref4/str4", "string", "one"),
+        ))
 
 
         txr <- conn.transact(
@@ -75,6 +111,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers with JavaConversions {
         )
 
         db <- conn.db
+
 
 
         _ <- Schema.tx.a1.id.a2.a.ident.valueType.cardinality.doc$.unique$.isComponent$.noHistory$.index$.fulltext$.inspectGet
@@ -125,7 +162,7 @@ object AdhocJvm extends AsyncTestSuite with Helpers with JavaConversions {
             | :where [:db.part/db :db.install/attribute ?a]
             |        [(datomic.api/ident $ ?a) ?ident]
             |        (entity-at ?a ?tx ?t ?inst ?op ?action ?v)
-            |        [(> ?tx 13194139534312)]
+            |        [(>= ?tx 13194139534312)]
             |]""".stripMargin,
           db.getDatomicDb.asInstanceOf[Database].history(),
           """[
