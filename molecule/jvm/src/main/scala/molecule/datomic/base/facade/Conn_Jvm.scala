@@ -45,7 +45,16 @@ trait Conn_Jvm extends Conn with JavaConversions {
 
   final override def query(datalogQuery: String, inputs: Any*)
                           (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = {
-    rawQuery(datalogQuery, inputs.toSeq.asInstanceOf[Seq[AnyRef]]).map { raw =>
+    val javaInputs = inputs.toSeq.map {
+      case l: Iterable[_] => Util.list(
+        l.map {
+          case l2: Iterable[_] => Util.list(l2.map(_.asInstanceOf[AnyRef]).toSeq: _*)
+          case v               => v.asInstanceOf[AnyRef]
+        }.toSeq: _*
+      )
+      case v              => v.asInstanceOf[AnyRef]
+    }
+    rawQuery(datalogQuery, javaInputs).map { raw =>
       if (
         raw.isInstanceOf[PersistentVector]
           && !raw.asInstanceOf[PersistentVector].isEmpty

@@ -10,7 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class DatomicDb_Js(rpc: MoleculeRpc, connProxy: ConnProxy) extends DatomicDb {
 
-  private[molecule] def getDatomicDb: AnyRef = connProxy
+  def getDatomicDb: AnyRef = connProxy
 
   private[molecule] def entity(conn: Conn, eid: Any): DatomicEntity = {
     DatomicEntity_Js(conn, eid)

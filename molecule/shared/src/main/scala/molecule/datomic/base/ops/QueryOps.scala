@@ -20,11 +20,10 @@ object QueryOps extends Helpers with JavaUtil {
 
   def castStr(tpe: String): String = tpe match {
     case "Int" | "ref" => "Long"
-    //    case "Float"       => "Double"
-    case "Date" => "java.util.Date"
-    case "UUID" => "java.util.UUID"
-    case "URI"  => "java.net.URI"
-    case other  => other
+    case "Date"        => "java.util.Date"
+    case "UUID"        => "java.util.UUID"
+    case "URI"         => "java.net.URI"
+    case other         => other
   }
 
   def withDecimal(v: Any): String = {
@@ -48,7 +47,7 @@ object QueryOps extends Helpers with JavaUtil {
     def find(fn: String, args: Seq[Any], v: String): Query =
       find(AggrExpr(fn, args, Var(v)))
 
-    def aggrV(a: Atom) =
+    def aggrV(a: Atom): Option[String] =
       q.wh.clauses.collectFirst {
         case DataClause(_, _, KW(ns, attr, _), Var(attrV), _, _)
           if a.nsFull == ns && a.attr == attr => attrV
@@ -115,7 +114,6 @@ object QueryOps extends Helpers with JavaUtil {
       q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e), KW(nsFull, attr, refNs), qv1, Empty, NoBinding)))
     }
 
-
     def where(e: QueryValue, a: KW, v: String, txV: String = ""): Query = if (txV.nonEmpty)
       q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, e, a, Var(v), Var(txV))))
     else
@@ -131,9 +129,8 @@ object QueryOps extends Helpers with JavaUtil {
       args.zipWithIndex.foldLeft(q) {
         case (q1, (arg, i)) if uriV.nonEmpty => q1.where(e, a, v + "_uri" + (i + 1))
           .func(s"""ground (java.net.URI. "$arg")""", Empty, v + "_uri" + (i + 1))
-        case (q1, (arg, i))                  => q1.where(e, a, Val(arg))
+        case (q1, (arg, _))                  => q1.where(e, a, Val(arg))
       }.where(e, a, v)
-
 
     def whereAndEnum[T](e: String, a: Atom, v: String, prefix: String, args: Seq[T]): Query = {
       args.foldLeft(q) { case (q1, arg) => q1.where(e, a, Val("__enum__" + prefix + arg)) }.enumm(e, a, v)
@@ -150,7 +147,7 @@ object QueryOps extends Helpers with JavaUtil {
 
     def nots(e: String, a: Atom, v: String, argss: Seq[Any]): Query = {
       argss.zipWithIndex.foldLeft(q) {
-        case (q1, (set: Set[_], i)) if a.tpe == "URI" =>
+        case (q1, (set: Set[_], _)) if a.tpe == "URI" =>
           val notClauses = set.toSeq.zipWithIndex.flatMap { case (uri, j) =>
             val x = Var(v + "_" + (j + 1))
             Seq(
@@ -172,20 +169,23 @@ object QueryOps extends Helpers with JavaUtil {
 
     // Schema attribute/values ..........................................
 
-    def schema: Query = q.wh.clauses.reverse.collectFirst {
-      case Funct("=", Seq(Var("sys"), Val(false)), _) => q
+    def schema: Query = q.wh.clauses.collectFirst {
+      case DataClause(_, _, KW("db.install", "attribute", _), _, _, _) => q
     }.getOrElse(
       q.where(Var("_"), KW("db.install", "attribute"), "id", "tx")
+        .func(">=", Seq(Var("tx"), Val(txBase + 1000)))
         .where(Var("id"), KW("db", "ident"), "idIdent")
         .func("namespace", Seq(Var("idIdent")), ScalarBinding(Var("nsFull")))
-        .func(".matches ^String",
-          Seq(Var("nsFull"), Val(
-            "^(db|db.alter|db.excise|db.install|db.part|db.sys|fressian" + // peer/client
-              "|db.entity|db.attr" + // client
-              "|:?-.*)" // molecule-admin prefix to mark retracted attributes
-          )),
-          ScalarBinding(Var("sys")))
-        .func("=", Seq(Var("sys"), Val(false)))
+        // Filter out attributes marked as obsolete (having `-` prefix to namespace, as in :-Ns/str)
+        // (used by molecule-admin)
+        .func(".matches ^String", Seq(Var("nsFull"), Val("^(:?-.*)")), ScalarBinding(Var("obsolete")))
+        .func("=", Seq(Var("obsolete"), Val(false)))
+    )
+
+    def schemaResolved: Query = q.wh.clauses.collectFirst {
+      case Funct("first", _, _) => q
+    }.getOrElse(
+      q.schema
         .func(".contains ^String", Seq(Var("nsFull"), Val("_")), ScalarBinding(Var("isPart")))
         .func(".split ^String", Seq(Var("nsFull"), Val("_")), ScalarBinding(Var("nsParts")))
         .func("first", Seq(Var("nsParts")), ScalarBinding(Var("part0")))
@@ -198,6 +198,9 @@ object QueryOps extends Helpers with JavaUtil {
 
     def schemaAttr: Query = q.schema
       .func("name", Seq(Var("idIdent")), ScalarBinding(Var("attr")))
+
+    def schemaIdent: Query = q.schema
+      .func("name", Seq(Var("idIdent")), ScalarBinding(Var("ident")))
 
     def schemaTpe: Query = q.schema
       .where(Var("id"), KW("db", "valueType"), "tpeId")
@@ -233,10 +236,8 @@ object QueryOps extends Helpers with JavaUtil {
       .where(Var("id"), KW("db", "noHistory"), "noHistory")
 
     def schemaEnum: Query = {
-      val q1 = q.wh.clauses.collectFirst {
-        case Funct("name", _, ScalarBinding(Var("a"))) => q.schema
-      }.getOrElse(q.schema.func("name", Seq(Var("idIdent")), ScalarBinding(Var("attr"))))
-      q1.where(Var("_"), KW("db", "ident"), "enumIdent")
+      q.schemaResolved.schemaAttr
+        .where(Var("_"), KW("db", "ident"), "enumIdent")
         .func("namespace", Seq(Var("enumIdent")), ScalarBinding(Var("enumNs")))
         .func("str", Seq(Var("nsFull"), Val("."), Var("attr")), ScalarBinding(Var("enumSubNs")))
         .func("=", Seq(Var("enumSubNs"), Var("enumNs")))
@@ -249,13 +250,12 @@ object QueryOps extends Helpers with JavaUtil {
     def schemaTxInstant: Query = q.schema
       .where("tx", "db", "txInstant", Var("txInstant"), "", "")
 
+    def schemaPullEnumValue(v: String): Query =
+      q.copy(f = Find(q.f.outputs :+ Pull(v + "_pull", "db", v, Some(""))))
+        .func("identity", Seq(Var("id")), ScalarBinding(Var(v + "_pull")))
 
     def schemaPull(v: String): Query =
       q.copy(f = Find(q.f.outputs :+ Pull(v + "_pull", "db", v)))
-        .func("identity", Seq(Var("id")), ScalarBinding(Var(v + "_pull")))
-
-    def schemaPullUnique(v: String): Query =
-      q.copy(f = Find(q.f.outputs :+ Pull(v + "_pull", "db", v, Some(""))))
         .func("identity", Seq(Var("id")), ScalarBinding(Var(v + "_pull")))
 
     def not(attr: String): Query =
@@ -293,7 +293,6 @@ object QueryOps extends Helpers with JavaUtil {
     }
 
     def datomA(e: String, v: String, v1: String): Query = {
-      var nss = false
       q.wh.clauses.reverse.collectFirst {
         case Funct("str", Seq(Var(`v1`)), _)                                            =>
           q
@@ -364,14 +363,16 @@ object QueryOps extends Helpers with JavaUtil {
           (ok, cl +: acc)
 
       }
-      val cls           : Seq[Clause]        = if (hasTxV == 1) {
+
+      val cls: Seq[Clause] = if (hasTxV == 1) {
         cls0
       } else {
         Seq(
           DataClause(ImplDS, Var(e), KW("?", e + "_attr"), Var(v), Var(v + "_tx"))
         )
       }
-      val q1                                 = q.copy(wh = Where(cls))
+
+      val q1 = q.copy(wh = Where(cls))
 
       // Add necessary bind to ident to prepare working with tx value
       q1.wh.clauses.reverse.collectFirst {
@@ -487,7 +488,7 @@ object QueryOps extends Helpers with JavaUtil {
           case Val(arg) => q
             .func(s"""ground (java.net.URI. "$arg")""", Empty, v + "_" + (i + 1) + "a")
             .func(".compareTo ^java.net.URI", Seq(Var(v), Var(v + "_" + (i + 1) + "a")), ScalarBinding(w))
-          case other    => q
+          case _        => q
             .func(".compareTo ^" + castStr(tpeS), Seq(Var(v), qv), ScalarBinding(w))
         }
 
@@ -529,7 +530,7 @@ object QueryOps extends Helpers with JavaUtil {
     def fulltext(e: String, a: Atom, v: String, qv: Var): Query =
       q.func("fulltext", Seq(DS, KW(a.nsFull, a.attr), qv), RelationBinding(Seq(Var(e), Var(v))))
 
-    def mappings(e: String, a: Atom, args0: Seq[(String, Any)]): Query = {
+    def mappings(e: String, args0: Seq[(String, Any)]): Query = {
       val ruleName = "rule" + (q.i.rules.map(_.name).distinct.size + 1)
       val newRules = args0.foldLeft(q.i.rules) { case (rules, (key, value)) =>
         val dataClauses = Seq(Funct(".matches ^String", Seq(Var(e), Val("^(" + key + ")@(" + value + ")$")), NoBinding))
@@ -597,7 +598,7 @@ object QueryOps extends Helpers with JavaUtil {
           .func(op, Seq(Var(v + 5), Val(0)))
         case "UUID"    => q1.compareTo(op, a, v + 3, Var(v + "Value"), 1)
         case "URI"     => q1.compareTo(op, a, v + 3, Var(v + "Value"), 1)
-        case number    => q1
+        case _         => q1
           .func("read-string", Seq(Var(v + 3)), ScalarBinding(Var(v + 4)))
           .func(op, Seq(Var(v + 4), Var(v + "Value")))
       }
@@ -618,7 +619,7 @@ object QueryOps extends Helpers with JavaUtil {
           .func(op, Seq(Var(v + 4), Val(0)))
         case "UUID"    => q1.compareTo(op, a, v + 2, Var(v + "Value"), 1)
         case "URI"     => q1.compareTo(op, a, v + 2, Var(v + "Value"), 1)
-        case number    => q1
+        case _         => q1
           .func("read-string", Seq(Var(v + 2)), ScalarBinding(Var(v + 3)))
           .func(op, Seq(Var(v + 3), Var(v + "Value")))
       }
@@ -638,7 +639,7 @@ object QueryOps extends Helpers with JavaUtil {
       val orRules  = if (flag && a.card == 2) {
         // Fulltext search for card-many attribute
         val ruleClauses = args.zipWithIndex.map { case (arg, i) =>
-          Funct("fulltext", Seq(DS(""), KW(a.nsFull, a.attr), Val(arg)),
+          Funct("fulltext", Seq(DS(), KW(a.nsFull, a.attr), Val(arg)),
             RelationBinding(List(Var(e), Var(e + "_" + (i + 1)))))
         }
         Seq(Rule(ruleName, Seq(Var(e)), ruleClauses))
@@ -677,8 +678,8 @@ object QueryOps extends Helpers with JavaUtil {
               DataClause(ImplDS, Var(e), KW(a.nsFull, a.attr), Var(specialV), Empty),
               Funct(s"""ground (java.net.URI. "${doubleEsc(uri)}")""", Nil, ScalarBinding(Var(specialV)))
             )
-            case fulltext if flag         => Seq(
-              Funct("fulltext", Seq(DS(""), KW(a.nsFull, a.attr), Val(arg)),
+            case _ if flag                => Seq(
+              Funct("fulltext", Seq(DS(), KW(a.nsFull, a.attr), Val(arg)),
                 RelationBinding(List(Var(e), Var(e + "_" + (i + 1))))))
 
             case _ if a.tpe == "Double" => Seq(

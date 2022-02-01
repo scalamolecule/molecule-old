@@ -8,7 +8,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /** Minimal facade to immutable Datomic database instance. */
 trait DatomicDb {
 
-  private[molecule] def getDatomicDb: AnyRef
+  def getDatomicDb: AnyRef
 
   private[molecule] def entity(conn: Conn, id: Any): DatomicEntity
 

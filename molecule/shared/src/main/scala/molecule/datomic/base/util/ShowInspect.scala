@@ -26,7 +26,9 @@ import scala.util.control.NonFatal
  * produced transaction statements or sample data.
  * */
 trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl] =>
-  def maxRows = 500
+  lazy val maxRows = 500
+
+  private def p(v: Any, i: Int): String = v.toString.padTo(i, ' ')
 
   /** Inspect call to `get` on a molecule (without affecting the db).
    * <br><br>
@@ -41,12 +43,13 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
    * @group inspectGet
    * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    */
+
   def inspectGet(implicit futConn: Future[Conn]): Future[Unit] = {
 
     def renderIndex(): Future[Unit] = {
       def render(rows: jCollection[_ <: jList[_]]): Unit = {
         val pE = 14
-        val pA = 20
+        val pA = 22
         val pV = 50
         val pT = 6
         val pD = 28
@@ -54,11 +57,10 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
         print(
           s"""
              |${_model.toString}
-             |     """.stripMargin)
+             |      """.stripMargin)
 
         var pad = 0
-        def p(v: Any, i: Int): String = v.toString.padTo(i, ' ') + "   "
-        val n = {
+        val n   = {
           val dataElements: Seq[Generic] = _model.elements.
             collect {
               case e@Generic(_, attr, _, _, _) if attr != "args_" && attr != "range" => e
@@ -83,20 +85,20 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
           case 0 => rows forEach { row =>
             i += 1;
             if (i <= maxRows) {
-              println(p(i, 2))
+              println(p(i, 3))
             }
           }
           case 1 => rows.forEach { row =>
             i += 1;
             if (i <= maxRows) {
-              println(p(i, 2) +
+              println(p(i, 3) +
                 p(row.get(0), n(0)))
             }
           }
           case 2 => rows.forEach { row =>
             i += 1;
             if (i <= maxRows) {
-              println(p(i, 2) +
+              println(p(i, 3) +
                 p(row.get(0), n(0)) +
                 p(row.get(1), n(1)))
             }
@@ -104,7 +106,7 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
           case 3 => rows.forEach { row =>
             i += 1;
             if (i <= maxRows) {
-              println(p(i, 2) +
+              println(p(i, 3) +
                 p(row.get(0), n(0)) +
                 p(row.get(1), n(1)) +
                 p(row.get(2), n(2)))
@@ -113,7 +115,7 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
           case 4 => rows.forEach { row =>
             i += 1;
             if (i <= maxRows) {
-              println(p(i, 2) +
+              println(p(i, 3) +
                 p(row.get(0), n(0)) +
                 p(row.get(1), n(1)) +
                 p(row.get(2), n(2)) +
@@ -123,7 +125,7 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
           case 5 => rows.forEach { row =>
             i += 1;
             if (i <= maxRows) {
-              println(p(i, 2) +
+              println(p(i, 3) +
                 p(row.get(0), n(0)) +
                 p(row.get(1), n(1)) +
                 p(row.get(2), n(2)) +
@@ -134,7 +136,7 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
           case 6 => rows.forEach { row =>
             i += 1;
             if (i <= maxRows) {
-              println(p(i, 2) +
+              println(p(i, 3) +
                 p(row.get(0), n(0)) +
                 p(row.get(1), n(1)) +
                 p(row.get(2), n(2)) +
@@ -146,7 +148,7 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
           case 7 => rows.forEach { row =>
             i += 1;
             if (i <= maxRows) {
-              println(p(i, 2) +
+              println(p(i, 3) +
                 p(row.get(0), n(0)) +
                 p(row.get(1), n(1)) +
                 p(row.get(2), n(2)) +
@@ -170,18 +172,23 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
       } yield render(rows)
     }
 
-    def jsRows(conn: Conn): Future[jCollection[_ <: jList[_]]] = {
+    //    def jsRows(conn: Conn): Future[jCollection[_ <: jList[_]]] = {
+    def jsRows(conn: Conn): Future[jCollection[jList[AnyRef]]] = {
       // Converting tuples to java list (for now - not critical for inspection of 500 rows)
       conn.jsQueryTpl(
         _model, _query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
       ).map { listOfTuples =>
-        listOfTuples.map {
+        val x = listOfTuples.map {
           case tpl: Product => Collections.list(tpl.productIterator.asJavaEnumeration)
           case v            =>
             val list = new util.ArrayList[Any](1)
             list.add(v)
             Collections.list(Collections.enumeration(list))
         }.asJava
+
+        val x1 = x.asInstanceOf[jCollection[jList[AnyRef]]]
+
+        x1
       }
     }
 
@@ -209,7 +216,8 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
       (0 to levels).toList.map(level => (1, false, false, false)) ++ outMatrix
     }
 
-    def resolve(rawRows: Iterable[_ <: jList[_]]): Seq[ListBuffer[Any]] = {
+    //    def resolve(jColl: jCollection[_ <: jList[_]]): Seq[ListBuffer[Any]] = {
+    def resolve(jColl: jCollection[jList[AnyRef]]): Seq[ListBuffer[Any]] = {
       def cardOneOpt(v: Any, isDate: Boolean): Option[String] = {
         if (v == null) {
           Option.empty[String]
@@ -296,11 +304,18 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
         }
       }
 
-      var rowLength = 0
-      val rows1     = new ListBuffer[ListBuffer[Any]]
-      var i         = 0
-      var j         = 0
-      val it        = rawRows.iterator
+      var rowLength                        = 0
+      val rows1                            = new ListBuffer[ListBuffer[Any]]
+      var i                                = 0
+      var j                                = 0
+      val it: util.Iterator[jList[AnyRef]] = (if (sortRows) {
+        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
+        rows.sort(this) // using macro-implemented `compare` method
+        rows
+      } else {
+        new java.util.ArrayList(jColl)
+      }).iterator
+      //      val it        = jColl.iterator
       while (it.hasNext) {
         j = 0
         val rawRow = it.next()
@@ -340,7 +355,7 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
         for {
           db <- conn.db
           rawRows <- if (conn.isJsPlatform) jsRows(conn) else conn.datalogQuery(_model, _query, Some(db))
-          rows = resolve(rawRows.asScala.take(maxRows))
+          rows = resolve(rawRows)
         } yield {
           val rulesOut: String = if (_query.i.rules.isEmpty)
             "none\n\n"
@@ -352,7 +367,7 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
           else
             "\n" + ins.zipWithIndex.map(r => s"${r._2 + 1}: ${r._1}").mkString("\n") + "\n\n"
 
-          val outs = rows.zipWithIndex.map(r => s"${r._2 + 1}: ${r._1.mkString("[", "  ", "]")}").mkString("\n")
+          val outs = rows.zipWithIndex.map(r => p(s"${r._2 + 1}:", 4) + s"${r._1.mkString("[", "  ", "]")}").mkString("\n")
 
           // print both raw and optimized
           //      val query    = _nestedQuery.getOrElse(_query)

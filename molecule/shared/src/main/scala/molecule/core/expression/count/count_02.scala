@@ -6,7 +6,7 @@ import molecule.core.dsl.attributes.SortMarkers
 object count_02 {
 
   trait Count_02_L0[o0[_], p0, A, B, Ns[_[_],_,_,_]] {
-        def apply(v: Keywords.count)        : Ns[o0, p0, A, Int    ] with SortMarkers[Ns[o0, p0, A, Int    ]] = ???
+    def apply(v: Keywords.count)        : Ns[o0, p0, A, Int    ] with SortMarkers[Ns[o0, p0, A, Int    ]] = ???
   }
 
   trait Count_02_L1[o0[_], p0, o1[_], p1, A, B, Ns[_[_],_,_[_],_,_,_]] {

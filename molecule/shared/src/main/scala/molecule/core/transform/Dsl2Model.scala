@@ -309,8 +309,14 @@ private[molecule] trait Dsl2Model extends TreeOps
         //xx(201, attr, args)
         if (args.nonEmpty && sortMarker.nonEmpty) {
           args.head match {
-            case q"$_.$aggrFn.apply($limit)" if List("min", "max", "rand", "sample").contains(aggrFn.toString) =>
-              abort(s"Can't sort by attributes with aggregate min/max/rand/sample with applied limit. " +
+            case q"$_.$aggrFn" if List("rand", "sample").contains(aggrFn.toString) =>
+              abort(s"Sorting by random/sample values not supported. Found: $attr($aggrFn).$sortMarker")
+
+            case q"$_.distinct" =>
+              abort(s"Can't sort list of distinct values. Found: $attr(distinct).$sortMarker")
+
+            case q"$_.$aggrFn.apply($limit)" if List("min", "max", "rand", "sample", "distinct").contains(aggrFn.toString) =>
+              abort(s"Can't sort list of values from attributes with aggregate min/max/rand/sample with applied limit. " +
                 s"Found: $attr($aggrFn($limit)).$sortMarker")
 
             case _ => ()
@@ -678,15 +684,16 @@ private[molecule] trait Dsl2Model extends TreeOps
         case "nsFull"      => castGeneric("String")
         case "ns"          => castGeneric("String")
         case "attr"        => castGeneric("String")
+        case "enumm"       => castGeneric("String")
+        case "ident"       => castGeneric("String")
         case "tpe"         => castGeneric("String")
         case "card"        => castGeneric("String")
         case "doc"         => castGeneric("String")
-        case "index"       => castGeneric("Boolean")
         case "unique"      => castGeneric("String")
-        case "fulltext"    => castGeneric("Boolean")
         case "isComponent" => castGeneric("Boolean")
         case "noHistory"   => castGeneric("Boolean")
-        case "enumm"       => castGeneric("String")
+        case "index"       => castGeneric("Boolean")
+        case "fulltext"    => castGeneric("Boolean")
         case "t"           => castGeneric("Long")
         case "tx"          => castGeneric("Long")
         case "txInstant"   => castGeneric("Date")
@@ -695,10 +702,7 @@ private[molecule] trait Dsl2Model extends TreeOps
 
 
     def resolveOptionalSchemaAttr(t: richTree, prev: Tree, p: richTree, attrStr: String): Seq[Element] = attrStr match {
-      case "id$" | "part$" | "nsFull$" | "ns$" | "attr$" | "tpe$" | "card$" =>
-        abort("Schema attributes that are present with all attribute definitions are not allowed to be optional.")
-
-      case "unique$" =>
+      case "ident$" | "tpe$" | "card$" | "unique$" =>
         addLambdas(t, castOptEnum, if (isOptNested) jsonOptNestedOptEnum else jsonOptEnum, baseTpe0 = Some("enum"))
         traverseElement(prev, p, Generic("Schema", attrStr, "schema", NoValue, getSort))
 
@@ -856,15 +860,16 @@ private[molecule] trait Dsl2Model extends TreeOps
           case "nsFull"      => casts("mandatory", "String")
           case "ns"          => casts("mandatory", "String")
           case "attr"        => casts("mandatory", "String")
+          case "enumm"       => casts("mandatory", "String")
+          case "ident"       => casts("mandatory", "String")
           case "tpe"         => casts("mandatory", "String")
           case "card"        => casts("mandatory", "String")
           case "doc"         => casts("mandatory", "String")
-          case "index"       => casts("mandatory", "Boolean")
           case "unique"      => casts("mandatory", "String")
-          case "fulltext"    => casts("mandatory", "Boolean")
           case "isComponent" => casts("mandatory", "Boolean")
           case "noHistory"   => casts("mandatory", "Boolean")
-          case "enumm"       => casts("mandatory", "String")
+          case "index"       => casts("mandatory", "Boolean")
+          case "fulltext"    => casts("mandatory", "Boolean")
           case "t"           => casts("mandatory", "Long")
           case "tx"          => casts("mandatory", "Long")
           case "txInstant"   => casts("mandatory", "Date")
@@ -875,25 +880,29 @@ private[molecule] trait Dsl2Model extends TreeOps
           case "nsFull_"      => casts("tacit", "String")
           case "ns_"          => casts("tacit", "String")
           case "attr_"        => casts("tacit", "String")
+          case "enumm_"       => casts("tacit", "String")
+          case "ident_"       => casts("tacit", "String")
           case "tpe_"         => casts("tacit", "String")
           case "card_"        => casts("tacit", "String")
           case "doc_"         => casts("tacit", "String")
-          case "index_"       => casts("tacit", "Boolean")
           case "unique_"      => casts("tacit", "String")
-          case "fulltext_"    => casts("tacit", "Boolean")
           case "isComponent_" => casts("tacit", "Boolean")
           case "noHistory_"   => casts("tacit", "Boolean")
-          case "enumm_"       => casts("tacit", "String")
+          case "index_"       => casts("tacit", "Boolean")
+          case "fulltext_"    => casts("tacit", "Boolean")
           case "t_"           => casts("tacit", "Long")
           case "tx_"          => casts("tacit", "Long")
           case "txInstant_"   => casts("tacit", "Date")
 
+          case "ident$"       => casts("optional", "String")
+          case "tpe$"         => casts("optional", "String")
+          case "card$"        => casts("optional", "String")
           case "doc$"         => casts("optional", "String")
-          case "index$"       => casts("optional", "Boolean")
           case "unique$"      => casts("optional", "String")
-          case "fulltext$"    => casts("optional", "Boolean")
           case "isComponent$" => casts("optional", "Boolean")
           case "noHistory$"   => casts("optional", "Boolean")
+          case "index$"       => casts("optional", "Boolean")
+          case "fulltext$"    => casts("optional", "Boolean")
         }
       }
       val element = args match {
@@ -977,8 +986,8 @@ private[molecule] trait Dsl2Model extends TreeOps
         case q"scala.collection.immutable.List($_.?)"                                   => abort("Generic input attributes not implemented.")
         case q"scala.collection.immutable.List($_.$fn)" if badFn(fn.toString)           => abort(s"Generic attributes only allowed to aggregate `count`. Found: `$fn`")
         case q"scala.collection.immutable.List($_.$fn.apply($_))" if badFn(fn.toString) => abort(s"Generic attributes only allowed to aggregate `count`. Found: `$fn`")
-        case q"scala.collection.immutable.List($v)"                                     => resolve(modelValue("apply", null, q"$v", attrStr))
-        case q"scala.collection.immutable.List(..$vs)"                                  => resolve(modelValue("apply", null, q"Seq(..$vs)", attrStr))
+        case q"scala.collection.immutable.List($v)"                                     => resolve(modelValue("apply", null, q"$v"))
+        case q"scala.collection.immutable.List(..$vs)"                                  => resolve(modelValue("apply", null, q"Seq(..$vs)"))
         case _                                                                          => abort("Unexpected value applied to generic attribute: " + args)
       }
       //xx(245, t.nsFull, attrStr, args, element, obj)
@@ -1155,15 +1164,16 @@ private[molecule] trait Dsl2Model extends TreeOps
         case "nsFull" | "nsFull_"           => resolve("String")
         case "ns" | "ns_"                   => resolve("String")
         case "attr" | "attr_"               => resolve("String")
+        case "enumm" | "enumm_"             => resolve("String")
+        case "ident" | "ident_"             => resolve("String")
         case "tpe" | "tpe_"                 => resolve("String")
         case "card" | "card_"               => resolve("String")
         case "doc" | "doc_"                 => resolve("String")
-        case "index" | "index_"             => resolve("Boolean")
         case "unique" | "unique_"           => resolve("String")
-        case "fulltext" | "fulltext_"       => resolve("Boolean")
         case "isComponent" | "isComponent_" => resolve("Boolean")
         case "noHistory" | "noHistory_"     => resolve("Boolean")
-        case "enumm" | "enumm_"             => resolve("String")
+        case "index" | "index_"             => resolve("Boolean")
+        case "fulltext" | "fulltext_"       => resolve("Boolean")
         case "t" | "t_"                     => resolve("Long")
         case "tx" | "tx_"                   => resolve("Long")
         case "txInstant" | "txInstant_"     => resolve("Date")
@@ -1496,7 +1506,7 @@ private[molecule] trait Dsl2Model extends TreeOps
 
     // Values ================================================================================
 
-    def modelValue(op: String, attr: Tree, values0: Tree, attrStr: String = ""): Value = {
+    def modelValue(op: String, attr: Tree, values0: Tree): Value = {
       val t = if (attr == null) null else richTree(attr)
       def errValue(i: Int, v: Any): Nothing = abort(s"($i) Unexpected resolved model value for `${t.name}.$op`: $v")
       val values = getValues(values0, t)

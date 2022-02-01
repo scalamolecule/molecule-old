@@ -108,47 +108,158 @@ object SortAttrs extends AsyncTestSuite {
 
     "Aggregates" - core { implicit conn =>
       for {
-        _ <- Ns.str.int insert List(
-          ("a", 1),
-          ("a", 3),
-          ("b", 5),
-          ("c", 6),
+        _ <- Ns.int.str insert List(
+          (1, "a"),
+          (2, "b"),
+          (3, "a"),
+          (4, "c"),
         )
 
-        // Empty result set returned for offset exceeding total count
-        _ <- Ns.str(count).d1.str.a2.get.map(_ ==> List(
-          (2, "a"),
-          (1, "b"),
-          (1, "c"),
+        // min
+        _ <- Ns.int(min).a1.str.get.map(_ ==> List(
+          (1, "a"),
+          (2, "b"),
+          (4, "c"),
         ))
+        _ <- Ns.int(min).d1.str.get.map(_ ==> List(
+          (4, "c"),
+          (2, "b"),
+          (1, "a"),
+        ))
+        _ = expectCompileError("m(Ns.int(min(2)).a1)",
+          "molecule.core.transform.exception.Dsl2ModelException: " +
+            "Can't sort list of values from attributes with aggregate min/max/rand/sample with applied limit. " +
+            "Found: int(min(2)).a1"
+        )
+
+        // max
+        _ <- Ns.int(max).a1.str.get.map(_ ==> List(
+          (2, "b"),
+          (3, "a"),
+          (4, "c"),
+        ))
+        _ <- Ns.int(max).d1.str.get.map(_ ==> List(
+          (4, "c"),
+          (3, "a"),
+          (2, "b"),
+        ))
+        _ = expectCompileError("m(Ns.int(max(2)).a1)",
+          "molecule.core.transform.exception.Dsl2ModelException: " +
+            "Can't sort list of values from attributes with aggregate min/max/rand/sample with applied limit. " +
+            "Found: int(max(2)).a1"
+        )
+
+        // rand
+        _ = expectCompileError("m(Ns.int(rand).a1)",
+          "molecule.core.transform.exception.Dsl2ModelException: " +
+            "Sorting by random/sample values not supported. Found: int(rand).a1"
+        )
+        _ = expectCompileError("m(Ns.int(rand(2)).a1)",
+          "molecule.core.transform.exception.Dsl2ModelException: " +
+            "Can't sort list of values from attributes with aggregate min/max/rand/sample with applied limit. " +
+            "Found: int(rand(2)).a1"
+        )
+
+        // sample
+        _ = expectCompileError("m(Ns.int(sample).a1)",
+          "molecule.core.transform.exception.Dsl2ModelException: " +
+            "Sorting by random/sample values not supported. Found: int(sample).a1"
+        )
+        _ = expectCompileError("m(Ns.int(sample(2)).a1)",
+          "molecule.core.transform.exception.Dsl2ModelException: " +
+            "Can't sort list of values from attributes with aggregate min/max/rand/sample with applied limit. " +
+            "Found: int(sample(2)).a1"
+        )
+
+        // distinct
+        _ = expectCompileError("m(Ns.int(distinct).a1)",
+          "molecule.core.transform.exception.Dsl2ModelException: " +
+            "Can't sort list of distinct values. Found: int(distinct).a1"
+        )
+        
+        // sum
+        _ <- Ns.int(sum).a1.str.a2.get.map(_ ==> List(
+          (2, "b"),
+          (4, "a"),
+          (4, "c"),
+        ))
+        _ <- Ns.int(sum).d1.str.d2.get.map(_ ==> List(
+          (4, "c"),
+          (4, "a"),
+          (2, "b"),
+        ))
+
+        // median
+        _ <- Ns.int(median).a1.str.a2.get.map(_ ==> List(
+          (2, "a"),
+          (2, "b"),
+          (4, "c"),
+        ))
+        _ <- Ns.int(median).d1.str.d2.get.map(_ ==> List(
+          (4, "c"),
+          (2, "b"),
+          (2, "a"),
+        ))
+
+        // count
         _ <- Ns.str(count).a1.str.a2.get.map(_ ==> List(
           (1, "b"),
           (1, "c"),
           (2, "a"),
         ))
-
-        _ <- Ns.str(countDistinct).d1.str.a2.get.map(_ ==> List(
+        _ <- Ns.str(count).d1.str.a2.get.map(_ ==> List(
           (2, "a"),
           (1, "b"),
           (1, "c"),
         ))
+
+        // countDistinct
         _ <- Ns.str(countDistinct).a1.str.a2.get.map(_ ==> List(
+          (1, "a"),
           (1, "b"),
           (1, "c"),
-          (2, "a"),
+        ))
+        _ <- Ns.str(countDistinct).d1.str.d2.get.map(_ ==> List(
+          (1, "c"),
+          (1, "b"),
+          (1, "a"),
         ))
 
-        _ <- Ns.str.a1.int(avg).d2.get.map(_ ==> List(
-          ("a", 2),
-          ("b", 5),
-          ("c", 6),
+        // avg
+        _ <- Ns.int(avg).a1.str.a2.get.map(_ ==> List(
+          (2.0, "a"),
+          (2.0, "b"),
+          (4.0, "c"),
         ))
-        _ <- Ns.str.a1.int(variance).d2.get.map(_ ==> List(
-          ("a", 2),
-          ("b", 5),
-          ("c", 6),
+        _ <- Ns.int(avg).d1.str.d2.get.map(_ ==> List(
+          (4.0, "c"),
+          (2.0, "b"),
+          (2.0, "a"),
         ))
 
+        // variance
+        _ <- Ns.int(variance).a1.str.a2.get.map(_ ==> List(
+          (0.0, "b"),
+          (0.0, "c"),
+          (1.0, "a"),
+        ))
+        _ <- Ns.int(variance).d1.str.d2.get.map(_ ==> List(
+          (1.0, "a"),
+          (0.0, "c"),
+          (0.0, "b"),
+        ))
+
+        // stddev
+        _ <- Ns.int(stddev).a1.str.a2.get.map(_ ==> List(
+          (0.0, "b"),
+          (0.0, "c"),
+          (1.0, "a"),
+        ))
+        _ <- Ns.int(stddev).d1.str.d2.get.map(_ ==> List(
+          (1.0, "a"),
+          (0.0, "c"),
+          (0.0, "b"),
+        ))
       } yield ()
     }
 
@@ -182,29 +293,6 @@ object SortAttrs extends AsyncTestSuite {
       expectCompileError("m(Ns.int.a1(max))",
         "molecule.core.transform.exception.Dsl2ModelException: " +
           "Sort marker `a1` can't have any operation applied."
-      )
-    }
-
-    "Can't sort attributes with applied aggregate with limit" - core { implicit conn =>
-      expectCompileError("m(Ns.int(min(2)).a1)",
-        "molecule.core.transform.exception.Dsl2ModelException: " +
-          "Can't sort by attributes with aggregate min/max/rand/sample with applied limit. " +
-          "Found: int(min(2)).a1"
-      )
-      expectCompileError("m(Ns.int(max(2)).a1)",
-        "molecule.core.transform.exception.Dsl2ModelException: " +
-          "Can't sort by attributes with aggregate min/max/rand/sample with applied limit. " +
-          "Found: int(max(2)).a1"
-      )
-      expectCompileError("m(Ns.int(rand(2)).a1)",
-        "molecule.core.transform.exception.Dsl2ModelException: " +
-          "Can't sort by attributes with aggregate min/max/rand/sample with applied limit. " +
-          "Found: int(rand(2)).a1"
-      )
-      expectCompileError("m(Ns.int(sample(2)).a1)",
-        "molecule.core.transform.exception.Dsl2ModelException: " +
-          "Can't sort by attributes with aggregate min/max/rand/sample with applied limit. " +
-          "Found: int(sample(2)).a1"
       )
     }
 

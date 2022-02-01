@@ -1,5 +1,6 @@
 package moleculeTests.tests.core.expression
 
+import molecule.core.exceptions.MoleculeException
 import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out3._
 import molecule.datomic.base.facade.Conn
@@ -96,6 +97,12 @@ object Aggregates extends AsyncTestSuite {
         //    //      Ns.double(sum).get.map(_.head ==> 6.6000000000000005)
         //    else
         //      _ <- Ns.double(sum).get.map(_.head ==> 6.6)
+
+        _ <- Ns.str(sum).get
+          .map(_ ==> "Unexpected success")
+          .recover { case MoleculeException(msg, _) =>
+            msg ==> "Can't apply `sum` aggregate to non-number attribute `str` of type `String`."
+          }
 
       } yield ()
     }

@@ -8,11 +8,14 @@ import molecule.core.util.Executor._
 
 object Schema_Partition extends AsyncTestSuite {
 
+
   lazy val tests = Tests {
 
     "part" - partition { implicit conn =>
       for {
         _ <- Schema.part.get.map(_ ==> List("lit", "gen"))
+
+        _ <- Schema.part(count).get.map(_.head ==> 2)
 
         _ <- Schema.part("gen").get.map(_ ==> List("gen"))
         _ <- Schema.part("gen", "lit").get.map(_ ==> List("lit", "gen"))
@@ -56,6 +59,10 @@ object Schema_Partition extends AsyncTestSuite {
       for {
         // Partition-prefixed namespaces
         _ <- Schema.nsFull.get.map(_.sorted ==> List("gen_Person", "gen_Profession", "lit_Book"))
+
+        _ <- Schema.nsFull(count).get.map(_.head ==> 3)
+        _ <- Schema.part_("gen").nsFull(count).get.map(_.head ==> 2)
+
         // Namespaces without partition prefix
         _ <- Schema.ns.get.map(_.sorted ==> List("Book", "Person", "Profession"))
 

@@ -14,11 +14,12 @@ object Schema_AttrOptions extends AsyncTestSuite {
   // Differing counts and ids for different systems
   val List(attrCount, a1, a2, a3, card1count, card2count) = system match {
     //    case SystemPeer       => List(68, 106, 108, 109, 30, 38)
-    case SystemPeer       => List(69, 106, 108, 109, 30, 39)
-    case SystemDevLocal   => List(69, 105, 107, 108, 31, 40)
-//    case SystemDevLocal   => List(71, 105, 107, 108, 31, 40)
+    case SystemPeer     => List(69, 106, 108, 109, 30, 39)
+    case SystemDevLocal => List(69, 105, 107, 108, 31, 40)
+    //    case SystemDevLocal   => List(71, 105, 107, 108, 31, 40)
     case SystemPeerServer => List(71, 104, 106, 107, 31, 40)
   }
+
 
   lazy val tests = Tests {
 
@@ -29,11 +30,17 @@ object Schema_AttrOptions extends AsyncTestSuite {
           "Card one String attribute",
           "Card one Int attribute"
         ))
+
         // See what attributes is
         _ <- Schema.a.doc.get.map(_ ==> List(
           (":Ns/str", "Card one String attribute"),
           (":Ns/int", "Card one Int attribute")
         ))
+
+        // Two distinct doc comments
+        _ <- Schema.doc(count).get.map(_.head ==> 2)
+        // Two doc comments (duplicate comments would aggregate with the id added)
+        _ <- Schema.id_.doc(count).get.map(_.head ==> 2)
 
         // Filtering by a complete `doc_` is probably not that useful
         _ <- Schema.doc("Card one Int attribute").get.map(_ ==> List(
@@ -100,6 +107,179 @@ object Schema_AttrOptions extends AsyncTestSuite {
     }
 
 
+    "unique" - core { implicit conn =>
+      for {
+        // Unique options
+        _ <- Schema.unique.get.map(_ ==> List("identity", "value"))
+
+        // Two unique option types
+        _ <- Schema.unique(count).get.map(_.head ==> 2)
+
+        // Unique options
+        _ <- Schema.a.unique.get.map(_ ==> List(
+          (":Ref2/str2", "identity"),
+          (":Ref2/int2", "value"),
+        ))
+
+        _ <- Schema.a.unique("identity").get.map(_ ==> List((":Ref2/str2", "identity")))
+        _ <- Schema.a.unique("value").get.map(_ ==> List((":Ref2/int2", "value")))
+
+        _ <- Schema.a.unique.not("identity").get.map(_ ==> List((":Ref2/int2", "value")))
+        _ <- Schema.a.unique.not("value").get.map(_ ==> List((":Ref2/str2", "identity")))
+
+        // Filter attributes by tacit `unique_` option
+        _ <- Schema.unique_.a.get.map(_ ==> List(":Ref2/int2", ":Ref2/str2"))
+
+        _ <- Schema.unique_("identity").a.get.map(_ ==> List(":Ref2/str2"))
+        _ <- Schema.unique_.not("value").a.get.map(_ ==> List(":Ref2/str2"))
+
+        // Get optional attribute indexing status with `index$`
+        _ <- Schema.attr_("str", "str2", "int2").a.unique$.get.map(_.sorted ==> List(
+          (":Ns/str", None),
+          (":Ref2/int2", Some("value")),
+          (":Ref2/str2", Some("identity")),
+        ))
+
+        // Filter by applying optional attribute uniqueness status
+        _ <- Schema.attr_("str", "str2", "int2").a.unique$(Some("identity")).get.map(_ ==> List(
+          (":Ref2/str2", Some("identity"))
+        ))
+        _ <- Schema.attr_("str", "str2", "int2").a.unique$(Some("value")).get.map(_ ==> List(
+          (":Ref2/int2", Some("value"))
+        ))
+        _ <- Schema.attr_("str", "str2", "int2").a.unique$(None).get.map(_ ==> List(
+          (":Ns/str", None)
+        ))
+
+        // Number of non-unique attributes
+        _ <- Schema.unique(count).get.map(_.head ==> 2)
+        _ <- Schema.a.unique$(None).get.map(_.size ==> attrCount - 2)
+      } yield ()
+    }
+
+
+    "isComponent" - core { implicit conn =>
+      for {
+        // Component status options - either true or non-asserted
+        _ <- Schema.isComponent.get.map(_ ==> List(true)) // no false
+
+        _ <- Schema.isComponent(count).get.map(_.head ==> 1) // only true
+
+        // Component attributes
+        _ <- Schema.a.isComponent.get.map(_ ==> List(
+          (":Ns/refSub1", true),
+          (":Ns/refsSub1", true),
+          (":Ref1/refsSub2", true),
+          (":Ref1/refSub2", true),
+        ))
+
+        _ <- Schema.a.isComponent(true).get.map(_.size ==> 4)
+        // Option is either true or non-asserted (nil/None), never false
+        _ <- Schema.a.isComponent(false).get.map(_.size ==> 0)
+
+        _ <- Schema.a.isComponent.not(true).get.map(_.size ==> 0)
+        _ <- Schema.a.isComponent.not(false).get.map(_.size ==> 4)
+
+        // Filter attributes with tacit `isComponent_` option
+        _ <- Schema.isComponent_.a.get.map(_ ==> List(
+          ":Ns/refsSub1",
+          ":Ref1/refSub2",
+          ":Ref1/refsSub2",
+          ":Ns/refSub1",
+        ))
+        _ <- Schema.isComponent_(true).a.get.map(_ ==> List(
+          ":Ns/refsSub1",
+          ":Ref1/refSub2",
+          ":Ref1/refsSub2",
+          ":Ns/refSub1",
+        ))
+        _ <- Schema.isComponent_.not(false).a.get.map(_ ==> List(
+          ":Ns/refsSub1",
+          ":Ref1/refSub2",
+          ":Ref1/refsSub2",
+          ":Ns/refSub1",
+        ))
+
+        // Get optional attribute component status with `isComponent$`
+        _ <- Schema.attr_("bool", "refSub1").a.isComponent$.get.map(_.sorted ==> List(
+          (":Ns/bool", None),
+          (":Ns/refSub1", Some(true)),
+        ))
+
+        // Filter by applying optional attribute component status
+        some = Some(true)
+        _ <- Schema.attr_("bool", "refSub1").a.isComponent$(some).get.map(_ ==> List(
+          (":Ns/refSub1", Some(true))))
+
+        _ <- Schema.attr_("bool", "refSub1").a.isComponent$(Some(true)).get.map(_ ==> List(
+          (":Ns/refSub1", Some(true))))
+
+        none = None
+        _ <- Schema.attr_("bool", "refSub1").a.isComponent$(none).get.map(_ ==> List(
+          (":Ns/bool", None)))
+
+        _ <- Schema.attr_("bool", "refSub1").a.isComponent$(None).get.map(_ ==> List(
+          (":Ns/bool", None)))
+
+        // Number of non-component attributes
+        _ <- Schema.a.isComponent$(None).get.map(_.size ==> attrCount - 4)
+      } yield ()
+    }
+
+
+    "noHistory" - core { implicit conn =>
+      for {
+        // No-history status options - either true or non-asserted
+        _ <- Schema.noHistory.get.map(_ ==> List(true)) // no false
+
+        _ <- Schema.noHistory(count).get.map(_.head ==> 1) // only true
+
+        // No-history attributes
+        _ <- Schema.a.noHistory.get.map(_ ==> List(
+          (":Ref2/ints2", true))
+        )
+
+        _ <- Schema.a.noHistory(true).get.map(_.size ==> 1)
+        // Option is either true or non-asserted (nil/None), never false
+        _ <- Schema.a.noHistory(false).get.map(_.size ==> 0)
+
+        _ <- Schema.a.noHistory.not(true).get.map(_.size ==> 0)
+        _ <- Schema.a.noHistory.not(false).get.map(_.size ==> 1)
+
+
+        // Filter attributes with tacit `noHistory_` option
+        _ <- Schema.noHistory_.a.get.map(_ ==> List(":Ref2/ints2"))
+        _ <- Schema.noHistory_(true).a.get.map(_ ==> List(":Ref2/ints2"))
+        _ <- Schema.noHistory_.not(false).a.get.map(_ ==> List(":Ref2/ints2"))
+
+
+        // Get optional attribute no-history status with `noHistory$`
+        _ <- Schema.attr_("bool", "ints2").a.noHistory$.get.map(_.sorted ==> List(
+          (":Ns/bool", None),
+          (":Ref2/ints2", Some(true)),
+        ))
+
+        // Filter by applying optional attribute no-history status
+        some = Some(true)
+        _ <- Schema.attr_("bool", "ints2").a.noHistory$(some).get.map(_ ==> List(
+          (":Ref2/ints2", Some(true))))
+
+        _ <- Schema.attr_("bool", "ints2").a.noHistory$(Some(true)).get.map(_ ==> List(
+          (":Ref2/ints2", Some(true))))
+
+        none = None
+        _ <- Schema.attr_("bool", "ints2").a.noHistory$(none).get.map(_ ==> List(
+          (":Ns/bool", None)))
+
+        _ <- Schema.attr_("bool", "ints2").a.noHistory$(None).get.map(_ ==> List(
+          (":Ns/bool", None)))
+
+        // Number of non-component attributes
+        _ <- Schema.a.noHistory$(None).get.map(_.size ==> attrCount - 1)
+      } yield ()
+    }
+
+
     "index" - core { implicit conn =>
       if (system == SystemPeer) {
         for {
@@ -108,6 +288,8 @@ object Schema_AttrOptions extends AsyncTestSuite {
           // All attributes are indexed
           _ <- Schema.index.get.map(_ ==> List(true)) // no false
           _ <- Schema.a.index.get.map(_.size ==> attrCount)
+
+          _ <- Schema.index(count).get.map(_.head ==> 1) // only true
 
           _ <- Schema.a.index(true).get.map(_.size ==> attrCount)
           _ <- Schema.a.index(false).get.map(_.size ==> 0)
@@ -152,65 +334,14 @@ object Schema_AttrOptions extends AsyncTestSuite {
     }
 
 
-    "unique" - core { implicit conn =>
-      for {
-        // Unique options
-        _ <- Schema.unique.get.map(_ ==> List("identity", "value"))
-
-        // Unique options
-        _ <- Schema.a.unique.get.map(_ ==> List(
-          (":Ref2/str2", "identity"),
-          (":Ref2/int2", "value"),
-        ))
-
-        _ <- Schema.a.unique("identity").get.map(_ ==> List((":Ref2/str2", "identity")))
-        _ <- Schema.a.unique("value").get.map(_ ==> List((":Ref2/int2", "value")))
-
-        _ <- Schema.a.unique.not("identity").get.map(_ ==> List((":Ref2/int2", "value")))
-        _ <- Schema.a.unique.not("value").get.map(_ ==> List((":Ref2/str2", "identity")))
-
-        // Filter attributes by tacit `unique_` option
-        _ <- Schema.unique_.a.get.map(_ ==> List(":Ref2/int2", ":Ref2/str2"))
-
-        _ <- Schema.unique_("identity").a.get.map(_ ==> List(":Ref2/str2"))
-        _ <- Schema.unique_.not("value").a.get.map(_ ==> List(":Ref2/str2"))
-
-        // Get optional attribute indexing status with `index$`
-        _ <- Schema.attr_("str", "str2", "int2").a.unique$.get.map(_.sorted ==> List(
-          (":Ns/str", None),
-          (":Ref2/int2", Some("value")),
-          (":Ref2/str2", Some("identity")),
-        ))
-
-        // Filter by applying optional attribute uniqueness status
-
-        some1 = Some("identity")
-        _ <- Schema.attr_("str", "str2", "int2").a.unique$(some1).get.map(_ ==> List(
-          (":Ref2/str2", Some("identity"))
-        ))
-
-        some2 = Some("value")
-        _ <- Schema.attr_("str", "str2", "int2").a.unique$(some2).get.map(_ ==> List(
-          (":Ref2/int2", Some("value"))
-        ))
-
-        none = None
-        _ <- Schema.attr_("str", "str2", "int2").a.unique$(none).get.map(_ ==> List(
-          (":Ns/str", None)
-        ))
-
-        // Number of non-unique attributes
-        _ <- Schema.a.unique$(None).get.map(_.size ==> attrCount - 2)
-      } yield ()
-    }
-
-
     "fulltext" - core { implicit conn =>
       // Fulltext option only available in Peer
       if (system == SystemPeer) {
         for {
           // Fulltext options
           _ <- Schema.fulltext.get.map(_ ==> List(true)) // no false
+
+          _ <- Schema.fulltext(count).get.map(_.head ==> 1) // only true
 
           // Count attribute fulltext statuses (only true)
           _ <- Schema.fulltext.get.map(_.length ==> 1)
@@ -279,126 +410,5 @@ object Schema_AttrOptions extends AsyncTestSuite {
         } yield ()
       }
     }
-
-
-    "isComponent" - core { implicit conn =>
-      for {
-        // Component status options - either true or non-asserted
-        _ <- Schema.isComponent.get.map(_ ==> List(true)) // no false
-        _ <- Schema.isComponent.get.map(_.length ==> 1)
-
-        // Component attributes
-        _ <- Schema.a.isComponent.get.map(_ ==> List(
-          (":Ns/refSub1", true),
-          (":Ns/refsSub1", true),
-          (":Ref1/refsSub2", true),
-          (":Ref1/refSub2", true),
-        ))
-
-        _ <- Schema.a.isComponent(true).get.map(_.size ==> 4)
-        // Option is either true or non-asserted (nil/None), never false
-        _ <- Schema.a.isComponent(false).get.map(_.size ==> 0)
-
-        _ <- Schema.a.isComponent.not(true).get.map(_.size ==> 0)
-        _ <- Schema.a.isComponent.not(false).get.map(_.size ==> 4)
-
-        // Filter attributes with tacit `isComponent_` option
-        _ <- Schema.isComponent_.a.get.map(_ ==> List(
-          ":Ns/refsSub1",
-          ":Ref1/refSub2",
-          ":Ref1/refsSub2",
-          ":Ns/refSub1",
-        ))
-        _ <- Schema.isComponent_(true).a.get.map(_ ==> List(
-          ":Ns/refsSub1",
-          ":Ref1/refSub2",
-          ":Ref1/refsSub2",
-          ":Ns/refSub1",
-        ))
-        _ <- Schema.isComponent_.not(false).a.get.map(_ ==> List(
-          ":Ns/refsSub1",
-          ":Ref1/refSub2",
-          ":Ref1/refsSub2",
-          ":Ns/refSub1",
-        ))
-
-        // Get optional attribute component status with `isComponent$`
-        _ <- Schema.attr_("bool", "refSub1").a.isComponent$.get.map(_.sorted ==> List(
-          (":Ns/bool", None),
-          (":Ns/refSub1", Some(true)),
-        ))
-
-        // Filter by applying optional attribute component status
-        some = Some(true)
-        _ <- Schema.attr_("bool", "refSub1").a.isComponent$(some).get.map(_ ==> List(
-          (":Ns/refSub1", Some(true))))
-
-        _ <- Schema.attr_("bool", "refSub1").a.isComponent$(Some(true)).get.map(_ ==> List(
-          (":Ns/refSub1", Some(true))))
-
-        none = None
-        _ <- Schema.attr_("bool", "refSub1").a.isComponent$(none).get.map(_ ==> List(
-          (":Ns/bool", None)))
-
-        _ <- Schema.attr_("bool", "refSub1").a.isComponent$(None).get.map(_ ==> List(
-          (":Ns/bool", None)))
-
-        // Number of non-component attributes
-        _ <- Schema.a.isComponent$(None).get.map(_.size ==> attrCount - 4)
-      } yield ()
-    }
-
-
-    "noHistory" - core { implicit conn =>
-      for {
-        // No-history status options - either true or non-asserted
-        _ <- Schema.noHistory.get.map(_ ==> List(true)) // no false
-        _ <- Schema.noHistory.get.map(_.length ==> 1)
-
-        // No-history attributes
-        _ <- Schema.a.noHistory.get.map(_ ==> List(
-          (":Ref2/ints2", true))
-        )
-
-        _ <- Schema.a.noHistory(true).get.map(_.size ==> 1)
-        // Option is either true or non-asserted (nil/None), never false
-        _ <- Schema.a.noHistory(false).get.map(_.size ==> 0)
-
-        _ <- Schema.a.noHistory.not(true).get.map(_.size ==> 0)
-        _ <- Schema.a.noHistory.not(false).get.map(_.size ==> 1)
-
-
-        // Filter attributes with tacit `noHistory_` option
-        _ <- Schema.noHistory_.a.get.map(_ ==> List(":Ref2/ints2"))
-        _ <- Schema.noHistory_(true).a.get.map(_ ==> List(":Ref2/ints2"))
-        _ <- Schema.noHistory_.not(false).a.get.map(_ ==> List(":Ref2/ints2"))
-
-
-        // Get optional attribute no-history status with `noHistory$`
-        _ <- Schema.attr_("bool", "ints2").a.noHistory$.get.map(_.sorted ==> List(
-          (":Ns/bool", None),
-          (":Ref2/ints2", Some(true)),
-        ))
-
-        // Filter by applying optional attribute no-history status
-        some = Some(true)
-        _ <- Schema.attr_("bool", "ints2").a.noHistory$(some).get.map(_ ==> List(
-          (":Ref2/ints2", Some(true))))
-
-        _ <- Schema.attr_("bool", "ints2").a.noHistory$(Some(true)).get.map(_ ==> List(
-          (":Ref2/ints2", Some(true))))
-
-        none = None
-        _ <- Schema.attr_("bool", "ints2").a.noHistory$(none).get.map(_ ==> List(
-          (":Ns/bool", None)))
-
-        _ <- Schema.attr_("bool", "ints2").a.noHistory$(None).get.map(_ ==> List(
-          (":Ns/bool", None)))
-
-        // Number of non-component attributes
-        _ <- Schema.a.noHistory$(None).get.map(_.size ==> attrCount - 1)
-      } yield ()
-    }
-
   }
 }

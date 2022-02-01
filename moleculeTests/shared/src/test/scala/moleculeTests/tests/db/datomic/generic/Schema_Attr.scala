@@ -22,21 +22,15 @@ object Schema_Attr extends AsyncTestSuite {
 
     "id" - core { implicit conn =>
       for {
-        _ <- Schema.id.get.map(_.size ==> attrCount)
-
         _ <- Schema.id.get(5).map(_ ==> List(97, 98, 99, 100, 101))
+
+        _ <- Schema.id(count).get.map(_.head ==> attrCount)
 
         _ <- Schema.id(97).get(5).map(_ ==> List(97))
         _ <- Schema.id(97, 98).get(5).map(_ ==> List(97, 98))
 
         _ <- Schema.id.not(97).get.map(_.size ==> attrCount - 1)
         _ <- Schema.id.not(97, 98).get.map(_.size ==> attrCount - 2)
-
-        _ <- Schema.id.get.map(_.length ==> attrCount)
-
-        // Since all attributes have an id, a tacit `id_` makes no difference
-        _ <- Schema.id_.attr.get.map(_.size ==> attrCount)
-        _ <- Schema.id_.attr.get(3).map(_ ==> List("double", "str1", "uri"))
 
         // We can though filter by one or more tacit attribute ids
         _ <- Schema.id_(a1).attr.get.map(_ ==> List("uuidMap"))
@@ -50,7 +44,9 @@ object Schema_Attr extends AsyncTestSuite {
 
     "a" - core { implicit conn =>
       for {
-        _ <- Schema.a.get.map(_.size ==> attrCount)
+        _ <- Schema.a(count).get.map(_.head ==> attrCount)
+        _ <- Schema.ns_("Ref1").a(count).get.map(_ ==> List(12))
+
         _ <- Schema.a.get(3).map(_ ==> List(":Ns/double", ":Ns/doubleMap", ":Ref2/ints2"))
 
         _ <- Schema.a(":Ns/str").get.map(_ ==> List(":Ns/str"))
@@ -59,13 +55,7 @@ object Schema_Attr extends AsyncTestSuite {
         _ <- Schema.a.not(":Ns/str").get.map(_.size ==> attrCount - 1)
         _ <- Schema.a.not(":Ns/str", ":Ns/int").get.map(_.size ==> attrCount - 2)
 
-        // Since all attributes have an `ident`, a tacit `ident_` makes no difference
-        _ <- Schema.a_.ns.get.map(_.size ==> 5)
-
-        // We can though filter by one or more tacit ident names
         _ <- Schema.a_(":Ns/str").ns.get.map(_.sorted ==> List("Ns"))
-
-        // Namespaces with attributes ident ":Ns/str" or ":Ref1/str1"
         _ <- Schema.a_(":Ns/str", ":Ref1/str1").ns.get.map(_.sorted ==> List("Ns", "Ref1"))
 
         // Negate tacit ident value
@@ -82,34 +72,32 @@ object Schema_Attr extends AsyncTestSuite {
           ":Ref2/ref3",
           ":Ref2/refs3",
         ).ns.get.map(_.sorted ==> List("Ns", "Ref1", "Ref3", "Ref4"))
+
       } yield ()
     }
 
 
-    "part when not defined" - core { implicit conn =>
-      // Default `db.part/user` partition name returned when no custom partitions are defined
-      Schema.part.get.map(_ ==> List("db.part/user"))
+    "part (default when not defined)" - core { implicit conn =>
+      for {
+        // Default `db.part/user` partition name returned when no custom partitions are defined
+        _ <- Schema.part.get.map(_ ==> List("db.part/user"))
 
-      // Note that when no custom partitions are defined, namespaces are not prefixed with any partition name
+        _ <- Schema.part(count).get.map(_.head ==> 1)
+      } yield ()
     }
 
 
     "nsFull" - core { implicit conn =>
       for {
-        // `nsfull` always starts with lowercase letter as used in Datomic queries
-        // - when partitions are defined: concatenates `part` + `ns`
-        // - when partitions are not defined: `ns` starting with lower case letter
-
         _ <- Schema.nsFull.get.map(_ ==> List("Ns", "Ref4", "Ref2", "Ref3", "Ref1"))
+
+        _ <- Schema.nsFull(count).get.map(_.head ==> 5)
 
         _ <- Schema.nsFull("Ref1").get.map(_ ==> List("Ref1"))
         _ <- Schema.nsFull("Ref1", "Ref2").get.map(_ ==> List("Ref2", "Ref1"))
 
         _ <- Schema.nsFull.not("Ref1").get.map(_.sorted ==> List("Ns", "Ref2", "Ref3", "Ref4"))
         _ <- Schema.nsFull.not("Ref1", "Ref2").get.map(_.sorted ==> List("Ns", "Ref3", "Ref4"))
-
-        _ <- Schema.nsFull.get.map(_.length ==> 5)
-
 
         // Since all attributes have a namespace, a tacit `nsFull_` makes no difference
         _ <- Schema.nsFull_.attr.get.map(_.size ==> attrCount)
@@ -156,7 +144,7 @@ object Schema_Attr extends AsyncTestSuite {
       for {
         _ <- Schema.ns.get.map(_ ==> List("Ns", "Ref4", "Ref2", "Ref3", "Ref1"))
 
-        _ <- Schema.nsFull.get.map(_ ==> List("Ns", "Ref4", "Ref2", "Ref3", "Ref1"))
+        _ <- Schema.ns(count).get.map(_.head ==> 5)
 
         _ <- Schema.ns("Ref1").get.map(_ ==> List("Ref1"))
         _ <- Schema.ns("Ref1", "Ref2").get.map(_ ==> List("Ref2", "Ref1"))
@@ -164,11 +152,6 @@ object Schema_Attr extends AsyncTestSuite {
         _ <- Schema.ns.not("Ref1").get.map(_.sorted ==> List("Ns", "Ref2", "Ref3", "Ref4"))
         _ <- Schema.ns.not("Ref1", "Ref2").get.map(_.sorted ==> List("Ns", "Ref3", "Ref4"))
 
-
-        // Since all attributes have a namespace, a tacit `ns_` makes no difference
-        _ <- Schema.ns_.attr.get.map(_.size ==> attrCount)
-
-        // We can though filter by one or more tacit namespace names
         _ <- Schema.ns_("Ref1").attr.get.map(_.sorted ==> List(
           "enum1", "enums1", "int1", "intMap1", "ints1", "nss",
           "ref2", "refSub2", "refs2", "refsSub2", "str1", "strs1"
@@ -213,8 +196,9 @@ object Schema_Attr extends AsyncTestSuite {
 
     "attr" - core { implicit conn =>
       for {
-        _ <- Schema.attr.get.map(_.size ==> attrCount)
         _ <- Schema.attr.get(5).map(_ ==> List("double", "str1", "uri", "dates", "int"))
+
+        _ <- Schema.attr(count).get.map(_.head ==> attrCount)
 
         _ <- Schema.attr("str").get.map(_ ==> List("str"))
         _ <- Schema.attr("str", "int").get.map(_ ==> List("str", "int"))
@@ -222,16 +206,7 @@ object Schema_Attr extends AsyncTestSuite {
         _ <- Schema.attr.not("str").get.map(_.size ==> attrCount - 1)
         _ <- Schema.attr.not("str", "int").get.map(_.size ==> attrCount - 2)
 
-        _ <- Schema.attr.get.map(_.length ==> attrCount)
-
-
-        // Since all attributes have an attribute name, a tacit `a_` makes no difference
-        _ <- Schema.attr_.ns.get.map(_.size ==> 5)
-
-        // We can though filter by one or more tacit attribute names
         _ <- Schema.attr_("str").ns.get.map(_.sorted ==> List("Ns"))
-
-        // Namespaces with attributes named "str" or "str1"
         _ <- Schema.attr_("str", "str1").ns.get.map(_.sorted ==> List("Ns", "Ref1"))
 
         // Negate tacit attribute name
@@ -252,151 +227,20 @@ object Schema_Attr extends AsyncTestSuite {
     }
 
 
-    "tpe" - core { implicit conn =>
-      for {
-        // Datomic types of schema attributes
-        // Note that attributes defined being of Scala type
-        // - `Integer` are internally saved as type `long` in Datomic
-        // Molecule transparently converts back and forth so that application code only have to consider the Scala type.
-
-        _ <- if (system == SystemPeer)
-          Schema.tpe.get.map(_.sorted ==> List(
-            "bigdec",
-            "bigint",
-            "boolean",
-            "double",
-            "instant",
-            "long",
-            "ref",
-            "string",
-            "uri",
-            "uuid",
-          ))
-        else
-          Schema.tpe.get.map(_.sorted ==> List(
-            "bigdec",
-            "bigint",
-            "boolean",
-            "double",
-            "instant",
-            "long",
-            "ref",
-            "string",
-            "uri",
-            "uuid",
-          ))
-
-        _ <- Schema.tpe("string").get.map(_ ==> List("string"))
-        _ <- Schema.tpe("string", "long").get.map(_ ==> List("string", "long"))
-
-        _ <- if (system == SystemPeer) {
-          for {
-            _ <- Schema.tpe.not("instant").get.map(_.sorted ==> List(
-              "bigdec",
-              "bigint",
-              "boolean",
-              "double",
-              "long",
-              "ref",
-              "string",
-              "uri",
-              "uuid",
-            ))
-            res <- Schema.tpe.not("instant", "boolean").get.map(_.sorted ==> List(
-              "bigdec",
-              "bigint",
-              "double",
-              "long",
-              "ref",
-              "string",
-              "uri",
-              "uuid",
-            ))
-          } yield res
-        } else {
-          for {
-            // Client without bytes type
-            _ <- Schema.tpe.not("instant").get.map(_.sorted ==> List(
-              "bigdec",
-              "bigint",
-              "boolean",
-              "double",
-              "long",
-              "ref",
-              "string",
-              "uri",
-              "uuid",
-            ))
-            res <- Schema.tpe.not("instant", "boolean").get.map(_.sorted ==> List(
-              "bigdec",
-              "bigint",
-              "double",
-              "long",
-              "ref",
-              "string",
-              "uri",
-              "uuid",
-            ))
-          } yield res
-        }
-
-        // Since all attributes have a value type, a tacit `tpe_` makes no difference
-        _ <- Schema.ns.get.map(_.size ==> 5)
-        _ <- Schema.tpe_.ns.get.map(_.size ==> 5)
-
-        // We can though filter by one or more tacit value types
-        _ <- Schema.tpe_("string").ns.get.map(_.sorted ==> List(
-          "Ns", "Ref1", "Ref2", "Ref3", "Ref4"))
-        // Only namespace `ns` has attributes of type Boolean
-        _ <- Schema.tpe_("boolean").ns.get.map(_.sorted ==> List("Ns"))
-
-        // Namespaces with attributes of type string or long
-        _ <- Schema.tpe_("string", "long").ns.get.map(_.sorted ==> List(
-          "Ns", "Ref1", "Ref2", "Ref3", "Ref4"))
-
-        // Negate tacit attribute type
-        // Note though that since other attributes have other types, the namespace is still returned
-        _ <- Schema.tpe_.not("string").ns.get.map(_.sorted ==> List(
-          "Ns", "Ref1", "Ref2", "Ref3", "Ref4"))
-
-        // If we exclude all attribute types in a namespace, it won't be returned
-        _ <- Schema.tpe_.not("string", "long", "ref").ns.get.map(_.sorted ==> List("Ns"))
-      } yield ()
-    }
-
-
-    "card" - core { implicit conn =>
-      for {
-        _ <- Schema.card.get.map(_ ==> List("one", "many"))
-
-        _ <- Schema.card("one").get.map(_ ==> List("one"))
-        _ <- Schema.card("one", "many").get.map(_ ==> List("one", "many"))
-
-        _ <- Schema.card.not("one").get.map(_ ==> List("many"))
-        _ <- Schema.card.not("one", "many").get.map(_ ==> Nil)
-
-
-        // Since all attributes have a cardinality, a tacit `card_` makes no difference
-        _ <- Schema.a.get.map(_.size ==> attrCount)
-        _ <- Schema.card_.a.get.map(_.size ==> attrCount)
-
-        // We can though filter by cardinality
-        _ <- Schema.card_("one").a.get.map(_.size ==> card1count)
-        _ <- Schema.card_("many").a.get.map(_.size ==> card2count)
-
-        // Attributes of cardinality one or many, well that's all
-        _ <- Schema.card_("one", "many").a.get.map(_.size ==> attrCount)
-
-        // Negate tacit namespace name
-        _ <- Schema.card_.not("one").a.get.map(_.size ==> card2count) // many
-        _ <- Schema.card_.not("many").a.get.map(_.size ==> card1count) // one
-        _ <- Schema.card_.not("one", "many").a.get.map(_.size ==> 0)
-      } yield ()
-    }
-
-
     "enum" - core { implicit conn =>
       for {
+        // Count all enum values
+        _ <- Schema.enumm(count).get.map(_.head ==> 22)
+
+        // Count enum values per namespace
+        _ <- Schema.ns.a1.enumm(count).get.map(_ ==> List(
+          ("Ns", 10),
+          ("Ref1", 3),
+          ("Ref2", 3),
+          ("Ref3", 3),
+          ("Ref4", 3),
+        ))
+
         // Attribute/enum values in namespace `ref2`
         _ <- Schema.ns_("Ref2").attr.enumm.get.map(_.sorted ==> List(
           ("enum2", "enum20"),
@@ -489,6 +333,107 @@ object Schema_Attr extends AsyncTestSuite {
     }
 
 
+    "tpe" - core { implicit conn =>
+      for {
+        // Datomic types of schema attributes
+        // Note that attributes defined being of Scala type
+        // - `Integer` are internally saved as type `long` in Datomic
+        // Molecule transparently converts back and forth so that application code only have to consider the Scala type.
+
+        _ <- Schema.tpe.get.map(_.sorted ==> List(
+          "bigdec",
+          "bigint",
+          "boolean",
+          "double",
+          "instant",
+          "long",
+          "ref",
+          "string",
+          "uri",
+          "uuid",
+        ))
+
+        _ <- Schema.ns.a1.tpe(count).get.map(_ ==> List(
+          ("Ns", 10),
+          ("Ref1", 3),
+          ("Ref2", 3),
+          ("Ref3", 3),
+          ("Ref4", 3),
+        ))
+
+        _ <- Schema.tpe("string").get.map(_ ==> List("string"))
+        _ <- Schema.tpe("string", "long").get.map(_ ==> List("string", "long"))
+
+        _ <- Schema.tpe.not("instant").get.map(_.sorted ==> List(
+          "bigdec",
+          "bigint",
+          "boolean",
+          "double",
+          "long",
+          "ref",
+          "string",
+          "uri",
+          "uuid",
+        ))
+        _ <- Schema.tpe.not("instant", "boolean").get.map(_.sorted ==> List(
+          "bigdec",
+          "bigint",
+          "double",
+          "long",
+          "ref",
+          "string",
+          "uri",
+          "uuid",
+        ))
+
+        // We can though filter by one or more tacit value types
+        _ <- Schema.tpe_("string").ns.get.map(_.sorted ==> List(
+          "Ns", "Ref1", "Ref2", "Ref3", "Ref4"))
+        // Only namespace `ns` has attributes of type Boolean
+        _ <- Schema.tpe_("boolean").ns.get.map(_.sorted ==> List("Ns"))
+
+        // Namespaces with attributes of type string or long
+        _ <- Schema.tpe_("string", "long").ns.get.map(_.sorted ==> List(
+          "Ns", "Ref1", "Ref2", "Ref3", "Ref4"))
+
+        // Negate tacit attribute type
+        // Note though that since other attributes have other types, the namespace is still returned
+        _ <- Schema.tpe_.not("string").ns.get.map(_.sorted ==> List(
+          "Ns", "Ref1", "Ref2", "Ref3", "Ref4"))
+
+        // If we exclude all attribute types in a namespace, it won't be returned
+        _ <- Schema.tpe_.not("string", "long", "ref").ns.get.map(_.sorted ==> List("Ns"))
+
+      } yield ()
+    }
+
+
+    "card" - core { implicit conn =>
+      for {
+        _ <- Schema.card.get.map(_ ==> List("one", "many"))
+
+        _ <- Schema.card(count).get.map(_.head ==> 2)
+
+        _ <- Schema.card("one").get.map(_ ==> List("one"))
+        _ <- Schema.card("one", "many").get.map(_ ==> List("one", "many"))
+
+        _ <- Schema.card.not("one").get.map(_ ==> List("many"))
+        _ <- Schema.card.not("one", "many").get.map(_ ==> Nil)
+
+        _ <- Schema.card_("one").a.get.map(_.size ==> card1count)
+        _ <- Schema.card_("many").a.get.map(_.size ==> card2count)
+
+        // Attributes of cardinality one or many, well that's all
+        _ <- Schema.card_("one", "many").a.get.map(_.size ==> attrCount)
+
+        // Negate tacit namespace name
+        _ <- Schema.card_.not("one").a.get.map(_.size ==> card2count) // many
+        _ <- Schema.card_.not("many").a.get.map(_.size ==> card1count) // one
+        _ <- Schema.card_.not("one", "many").a.get.map(_.size ==> 0)
+      } yield ()
+    }
+
+
     "t, tx, txInstant" - core { implicit futConn =>
       // Peer and dev-local schema transaction was last transaction
       if (system != SystemPeerServer) {
@@ -507,33 +452,13 @@ object Schema_Attr extends AsyncTestSuite {
 
           // Schema transaction wall clock time
           _ <- Schema.txInstant.get.map(_ ==> List(txInstant))
+
+          // All schema is transacted in one transaction
+          _ <- Schema.t(count).get.map(_.head ==> 1)
+          _ <- Schema.tx(count).get.map(_.head ==> 1)
+          _ <- Schema.txInstant(count).get.map(_.head ==> 1)
         } yield ()
       }
-    }
-
-
-    "Aggregate count" - core { implicit futConn =>
-      for {
-        _ <- Schema.a(count).get.map(_ ==> List(69))
-        _ <- Schema.ns_("Ref1").a(count).get.map(_ ==> List(12))
-
-        _ <- Schema.ns(count).get.map(_ ==> List(5))
-
-        _ <- Schema.part(count).get.map(_ ==> List(1))
-
-        // No other aggregate functions allowed for schema attributes
-        //        _ <- Schema.a(min).get
-        //        _ <- Schema.a(max).get
-        //        _ <- Schema.a(rand).get
-        //        _ <- Schema.a(sample).get
-        //        _ <- Schema.a(sum).get
-        //        _ <- Schema.a(median).get
-        //        _ <- Schema.a(distinct).get
-        //        _ <- Schema.a(countDistinct).get
-        //        _ <- Schema.a(avg).get
-        //        _ <- Schema.a(variance).get
-        //        _ <- Schema.a(stddev).get
-      } yield ()
     }
   }
 }

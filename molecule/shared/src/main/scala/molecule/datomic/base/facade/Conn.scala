@@ -174,7 +174,7 @@ trait Conn extends ColOps with BooPicklers {
    * } yield ()
    * }}}
    *
-   * @param datalogQuery Datomic query string
+   * @param datalogQuery Datalog query string
    * @param inputs       Optional input(s) to query
    * @return Future[List[List[AnyRef]]]
    * */
