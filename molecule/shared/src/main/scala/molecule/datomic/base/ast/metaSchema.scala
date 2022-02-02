@@ -10,27 +10,46 @@ object metaSchema extends Helpers {
         if (parts.isEmpty) "" else parts.mkString("\n    ", ",\n\n\n    ", "")
       }))"""
 
+    def nsMapValues: Map[String, MetaNs] = {
+      (for {
+        part <- parts
+        ns <- part.nss
+      } yield {
+        ns.nameFull -> ns
+      }).toMap
+    }
+
     def nsMap: String = {
       val parts2 = parts.map(part =>
         part.nss.map(ns => s""""${ns.nameFull}" -> $ns""").mkString("\n      ", ",\n\n      ", "")
       )
-      val nss   = if (parts2.isEmpty) "" else parts2.mkString(",\n\n      ")
+      val nss    = if (parts2.isEmpty) "" else parts2.mkString(",\n\n      ")
       s"Map($nss)"
     }
 
+    def attrMapValues: Map[String, (Int, String)] = {
+      (for {
+        part <- parts
+        ns <- part.nss
+        attr <- ns.attrs
+      } yield {
+        s":${ns.nameFull}/${attr.name}" -> (attr.card, attr.tpe)
+      }).toMap
+    }
+
     def attrMap: String = {
-      val attrData = for{
+      val attrData = for {
         part <- parts
         ns <- part.nss
         attr <- ns.attrs
       } yield {
         (s":${ns.nameFull}/${attr.name}", attr.card, attr.tpe)
       }
-      val maxSp = attrData.map(_._1.length).max
-      val attrs = attrData.map{
+      val maxSp    = attrData.map(_._1.length).max
+      val attrs    = attrData.map {
         case (a, card, tpe) => s""""$a"${padS(maxSp, a)} -> ($card, "$tpe")"""
       }
-      val attrsStr = if(attrs.isEmpty) "" else attrs.mkString("\n      ", ",\n      ", "")
+      val attrsStr = if (attrs.isEmpty) "" else attrs.mkString("\n      ", ",\n      ", "")
       s"Map($attrsStr)"
     }
   }

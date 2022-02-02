@@ -6,10 +6,12 @@ import molecule.core.ast.elements._
 import molecule.core.macros.MacroHelpers
 import molecule.core.marshalling.nodes._
 import molecule.core.ops.exception.LiftablesException
+import molecule.datomic.base.ast.metaSchema._
 import molecule.datomic.base.ast.query._
 import scala.collection.immutable.HashSet
 import scala.collection.immutable.Set.{Set1, Set2, Set3, Set4}
 import scala.reflect.macros.blackbox
+
 
 private[molecule] trait Liftables extends MacroHelpers {
   val c: blackbox.Context
@@ -497,4 +499,36 @@ private[molecule] trait Liftables extends MacroHelpers {
   }
 
   implicit val liftModel: c.universe.Liftable[Model] = Liftable[Model] { model => q"Model(Seq(..${model.elements}))" }
+
+
+  // Liftables for MetaSchema --------------------------------------------------------------
+
+  implicit val liftTopValue: c.universe.Liftable[TopValue] = Liftable[TopValue] { tv =>
+    q"TopValue(${tv.entityCount}, ${tv.value}, ${tv.label$})"
+  }
+  implicit val liftMetaAttr: c.universe.Liftable[MetaAttr] = Liftable[MetaAttr] { a =>
+    q"""MetaAttr(
+      ${a.pos},
+      ${a.name},
+      ${a.card},
+      ${a.tpe},
+      Seq(..${a.enums}),
+      ${a.refNs$},
+      Seq(..${a.options}),
+      ${a.doc$},
+      ${a.attrGroup$},
+      ${a.entityCount$},
+      ${a.distinctValueCount$},
+      ${a.descrAttr$},
+      Seq(..${a.topValues})
+    )""" }
+  implicit val liftMetaNs: c.universe.Liftable[MetaNs] = Liftable[MetaNs] { ns =>
+    q"MetaNs(${ns.pos}, ${ns.name}, ${ns.nameFull}, ${ns.descr$}, ${ns.entityCount$}, Seq(..${ns.attrs}))"
+  }
+  implicit val liftMetaPart: c.universe.Liftable[MetaPart] = Liftable[MetaPart] { p =>
+    q"MetaPart(${p.pos}, ${p.name}, ${p.descr$}, ${p.entityCount$}, Seq(..${p.nss}))"
+  }
+  implicit val liftMetaSchema: c.universe.Liftable[MetaSchema] = Liftable[MetaSchema] { metaSchema =>
+    q"MetaSchema(Seq(..${metaSchema.parts}))"
+  }
 }

@@ -16,6 +16,7 @@ import moleculeTests.dataModels.examples.datomic.seattle.schema.SeattleSchema
 import moleculeTests.dataModels.examples.gremlin.gettingStarted.schema.{ModernGraph1Schema, ModernGraph2Schema}
 import molecule.core.util.Executor._
 import moleculeBuildInfo.BuildInfo
+import moleculeTests.EmptySchema
 import scala.concurrent.Future
 
 
@@ -39,6 +40,7 @@ trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
     test(Future(Conn_Js(proxy, "localhost", 8080)))
   }
 
+  def emptyImpl[T](test: Future[Conn] => T): T = inMem(test, EmptySchema, "")
   def coreImpl[T](test: Future[Conn] => T): T = inMem(test, CoreTestSchema, "m_coretests")
   def corePeerOnlyImpl[T](test: Future[Conn] => T): T = if (system == SystemPeer) coreImpl(test) else ().asInstanceOf[T]
   def bidirectionalImpl[T](test: Future[Conn] => T): T = inMem(test, BidirectionalSchema, "m_bidirectional")

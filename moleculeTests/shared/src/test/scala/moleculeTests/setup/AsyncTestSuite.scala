@@ -1,11 +1,12 @@
 package moleculeTests.setup
 
-import molecule.datomic.base.facade.Conn
+import molecule.core.data.SchemaTransaction
+import molecule.datomic.base.facade.{Conn, TxReport}
 import molecule.datomic.base.util.{System, SystemDevLocal, SystemPeer, SystemPeerServer}
 import moleculeTests.setup.core.CoreData
 import utest._
 import utest.framework.Formatter
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 trait AsyncTestSuite extends TestSuite with CoreData
   // Platform-specific implementations (JS/JVM)
@@ -42,6 +43,7 @@ trait AsyncTestSuite extends TestSuite with CoreData
     }
   }
 
+  def empty[T](test: Future[Conn] => T): T = emptyImpl(test)
   def core[T](test: Future[Conn] => T): T = coreImpl(test)
   def corePeerOnly[T](test: Future[Conn] => T): T = corePeerOnlyImpl(test)
   def bidirectional[T](test: Future[Conn] => T): T = bidirectionalImpl(test)
@@ -61,4 +63,15 @@ trait AsyncTestSuite extends TestSuite with CoreData
   // At least 1 ms delay between transactions involving Dates to avoid overlapping
   // (can't use Thread.sleep(1000) on js platform)
   def delay = (1 to 50000).sum
+
+
+  def transact(schema: SchemaTransaction)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[TxReport] = {
+    futConn.flatMap { conn =>
+      system match {
+        case SystemPeer       => conn.transact(schema.datomicPeer.head)
+        case SystemDevLocal   => conn.transact(schema.datomicClient.head)
+        case SystemPeerServer => conn.transact(schema.datomicClient.head)
+      }
+    }
+  }
 }

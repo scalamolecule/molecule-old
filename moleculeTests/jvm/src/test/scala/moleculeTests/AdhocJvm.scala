@@ -1,15 +1,13 @@
 package moleculeTests
 
-import datomic.{Database, Peer}
+import molecule.core.data.model.{oneInt, oneString}
+import molecule.core.macros.GetTransactSchema.schema
 import molecule.core.util.Executor._
 import molecule.core.util.{Helpers, JavaConversions}
 import molecule.datomic.api.in1_out15._
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}
-import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.core.expression.Aggregates.round
 import utest._
-
 
 object AdhocJvm extends AsyncTestSuite with Helpers with JavaConversions {
 
@@ -24,154 +22,154 @@ object AdhocJvm extends AsyncTestSuite with Helpers with JavaConversions {
     case (SystemPeerServer, _) => List(71, 104, 106, 107, 31, 40)
   }
 
+
   lazy val tests = Tests {
 
-    "adhocJvm" - core { implicit futConn =>
+    "adhocJvm" - empty { implicit futConn =>
       for {
         conn <- futConn
         //        t0 <- db.basisT
 
 
 
-        _ <- Schema.ns_("Ref4").a.a1.valueType.cardinality.get.map(_ ==> List(
-          (":Ref4/int4", "long", "one"),
-          (":Ref4/str4", "string", "one"),
+        _ <- transact(schema {
+          trait Foo {
+            val int: oneInt = oneInt
+          }
+        })
+
+        _ <- Schema.a.valueType.cardinality.get.map(_ ==> List(
+          (":Foo/int", "long", "one"),
+        ))
+
+        _ <- transact(schema {
+          trait Foo {
+            val int = oneInt
+            val str = oneString
+          }
+        })
+
+        _ <- Schema.a.valueType.cardinality.get.map(_ ==> List(
+          (":Foo/int", "long", "one"),
+          (":Foo/str", "string", "one"),
         ))
 
 
-        // Add new `foo` attribute
-        _ <- conn.transact(
-          """[
-            |  {
-            |   :db/ident         :Ref4/foo
-            |   :db/valueType     :db.type/long
-            |   :db/cardinality   :db.cardinality/many
-            |  }
-            |]""".stripMargin
-        )
-
-        _ <- Schema.ns_("Ref4").a.a1.valueType.cardinality.get.map(_ ==> List(
-          (":Ref4/foo", "long", "many"),
-          (":Ref4/int4", "long", "one"),
-          (":Ref4/str4", "string", "one"),
-        ))
-
-
-        txr <- conn.transact(
-          """[
-            |  {:db/ident         :Ns/aaaaaaaaaaaaaaaa
-            |   :db/valueType     :db.type/long
-            |   :db/cardinality   :db.cardinality/one
-            |   :db/index         true
-            |  }
-            |]""".stripMargin
-        )
-        t1 = txr.t
-
-        txr2 <- conn.transact(
-          """[
-            |  {:db/id     :Ns/str
-            |   :db/doc    "text 2"
-            |   :db/unique :db.unique/value
-            | }
-            |]""".stripMargin
-        )
-        t2 = txr2.t
-
-
-        _ <- Ns.int(1).str("a").save
-
-
-        _ <- conn.transact(
-          """[
-            |  {
-            |    :db/id        :Ns/int
-            |    :db/ident     :Ns/int2
-            |    :db/noHistory true
-            |  }
-            |]""".stripMargin
-        )
-        _ <- conn.transact(
-          """[[:db/retract :Ref2/ints2 :db/noHistory true]
-            | [:db/add :db.part/db :db.alter/attribute :Ref2/ints2]]""".stripMargin
-        )
-
-        db <- conn.db
-
-
-
+        //        txr <- conn.transact(
+        //          """[
+        //            |  {:db/ident         :Ns/aaaaaaaaaaaaaaaa
+        //            |   :db/valueType     :db.type/long
+        //            |   :db/cardinality   :db.cardinality/one
+        //            |   :db/index         true
+        //            |  }
+        //            |]""".stripMargin
+        //        )
+        //        t1 = txr.t
+        //
+        //        txr2 <- conn.transact(
+        //          """[
+        //            |  {:db/id     :Ns/str
+        //            |   :db/doc    "text 2"
+        //            |   :db/unique :db.unique/value
+        //            | }
+        //            |]""".stripMargin
+        //        )
+        //        t2 = txr2.t
+        //
+        //
+        //        _ <- Ns.int(1).str("a").save
+        //
+        //
+        //        _ <- conn.transact(
+        //          """[
+        //            |  {
+        //            |    :db/id        :Ns/int
+        //            |    :db/ident     :Ns/int2
+        //            |    :db/noHistory true
+        //            |  }
+        //            |]""".stripMargin
+        //        )
+        //        _ <- conn.transact(
+        //          """[[:db/retract :Ref2/ints2 :db/noHistory true]
+        //            | [:db/add :db.part/db :db.alter/attribute :Ref2/ints2]]""".stripMargin
+        //        )
+        //
+        //        db <- conn.db
+        //
+        //
+        //
         _ <- Schema.tx.a1.id.a2.a.ident.valueType.cardinality.doc$.unique$.isComponent$.noHistory$.index$.fulltext$.inspectGet
-//        _ <- Schema.tx.a1.id.a2.a.ident$.valueType$.cardinality$.doc$.unique$.isComponent$.noHistory$.index$.fulltext$.inspectGet
+        //        _ <- Schema.tx.a1.id.a2.a.ident$.valueType$.cardinality$.doc$.unique$.isComponent$.noHistory$.index$.fulltext$.inspectGet
         //                _ <- Schema.tx.a1.id.a2.a.ident$.tpe$.card$.doc$.unique$.isComponent$.noHistory$.index$.fulltext$.getHistory
         //        _ <- Schema.a.inspectGet
         //        _ <- Schema.a.uniqueValue.inspectGet
 
-//        _ = println("-----------------------")
-//        _ <- conn.query(
-//          """[:find  ?a
-//            |        (pull ?uniqueIdentity_pull [{:db/unique [:db/ident]}])
-//            | :in    $ [?attr ...]
-//            | :where [_ :db.install/attribute ?id ?tx]
-//            |        [(>= ?tx 13194139534312)]
-//            |        [?id :db/ident ?idIdent]
-//            |        [(name ?idIdent) ?attr]
-//            |        [(str ?idIdent) ?a]
-//            |        [(identity ?id) ?uniqueIdentity_pull]]""".stripMargin, Seq("str", "str2")
-//        ).map { r =>
-//          r.foreach(println)
-//          r
-//        }
-//        _ = println("-----------------------")
-//        _ <- conn.query(
-//          """[:find  ?a ?attr
-//            | :where [_ :db.install/attribute ?id ?tx]
-//            |        [(>= ?tx 13194139534312)]
-//            |        [?id :db/ident ?idIdent]
-//            |        [(namespace ?idIdent) ?nsFull]
-//            |        [(name ?idIdent) ?attr]
-//            |        [(.contains ^String ?nsFull "_") ?isPart]
-//            |        [(.split ^String ?nsFull "_") ?nsParts]
-//            |        [(first ?nsParts) ?part0]
-//            |        [(if ?isPart ?part0 "db.part/user") ?part]
-//            |        [(last ?nsParts) ?ns]
-//            |        [(str ?idIdent) ?a]
-//            |        ]""".stripMargin
-//        ).map { r =>
-//          r.foreach(println)
-//          r
-//        }
+        //        _ = println("-----------------------")
+        //        _ <- conn.query(
+        //          """[:find  ?a
+        //            |        (pull ?uniqueIdentity_pull [{:db/unique [:db/ident]}])
+        //            | :in    $ [?attr ...]
+        //            | :where [_ :db.install/attribute ?id ?tx]
+        //            |        [(>= ?tx 13194139534312)]
+        //            |        [?id :db/ident ?idIdent]
+        //            |        [(name ?idIdent) ?attr]
+        //            |        [(str ?idIdent) ?a]
+        //            |        [(identity ?id) ?uniqueIdentity_pull]]""".stripMargin, Seq("str", "str2")
+        //        ).map { r =>
+        //          r.foreach(println)
+        //          r
+        //        }
+        //        _ = println("-----------------------")
+        //        _ <- conn.query(
+        //          """[:find  ?a ?attr
+        //            | :where [_ :db.install/attribute ?id ?tx]
+        //            |        [(>= ?tx 13194139534312)]
+        //            |        [?id :db/ident ?idIdent]
+        //            |        [(namespace ?idIdent) ?nsFull]
+        //            |        [(name ?idIdent) ?attr]
+        //            |        [(.contains ^String ?nsFull "_") ?isPart]
+        //            |        [(.split ^String ?nsFull "_") ?nsParts]
+        //            |        [(first ?nsParts) ?part0]
+        //            |        [(if ?isPart ?part0 "db.part/user") ?part]
+        //            |        [(last ?nsParts) ?ns]
+        //            |        [(str ?idIdent) ?a]
+        //            |        ]""".stripMargin
+        //        ).map { r =>
+        //          r.foreach(println)
+        //          r
+        //        }
 
-        _ = println("-----------------------")
-        _ = Peer.q(
-          """[:find  ?tx ?op ?a ?ident ?action ?v
-            | :in    $ %
-            | :where [:db.part/db :db.install/attribute ?a]
-            |        [(datomic.api/ident $ ?a) ?ident]
-            |        (entity-at ?a ?tx ?t ?inst ?op ?action ?v)
-            |        [(>= ?tx 13194139534312)]
-            |]""".stripMargin,
-          db.getDatomicDb.asInstanceOf[Database].history(),
-          """[
-            |  [
-            |    (entity-at [?e] ?tx ?t ?inst ?op ?actionIdent ?v)
-            |    [?e ?actionAttr ?v ?tx ?op]
-            |    [?actionAttr :db/ident ?actionIdent]
-            |    [(datomic.api/tx->t ?tx) ?t]
-            |    [?tx :db/txInstant ?inst]
-            |  ]
-            |]""".stripMargin
-        ).asScala.toSeq.map { row0 =>
-          val l = row0.asScala
-          (l.head.toString.toLong, l(1).toString, l(2).toString.toLong, l(3).toString, l(4).toString, l(5).toString)
-        }
-          .sortBy(r => (r._1, r._3))
-          .foreach { r =>
-            if (r._1 != last) {
-              println("")
-            }
-            last = r._1
-            println(r)
-          }
+        //        _ = println("-----------------------")
+        //        _ = Peer.q(
+        //          """[:find  ?tx ?op ?a ?ident ?action ?v
+        //            | :in    $ %
+        //            | :where [:db.part/db :db.install/attribute ?a]
+        //            |        [(datomic.api/ident $ ?a) ?ident]
+        //            |        (entity-at ?a ?tx ?t ?inst ?op ?action ?v)
+        //            |        [(>= ?tx 13194139534312)]
+        //            |]""".stripMargin,
+        //          db.getDatomicDb.asInstanceOf[Database].history(),
+        //          """[
+        //            |  [
+        //            |    (entity-at [?e] ?tx ?t ?inst ?op ?actionIdent ?v)
+        //            |    [?e ?actionAttr ?v ?tx ?op]
+        //            |    [?actionAttr :db/ident ?actionIdent]
+        //            |    [(datomic.api/tx->t ?tx) ?t]
+        //            |    [?tx :db/txInstant ?inst]
+        //            |  ]
+        //            |]""".stripMargin
+        //        ).asScala.toSeq.map { row0 =>
+        //          val l = row0.asScala
+        //          (l.head.toString.toLong, l(1).toString, l(2).toString.toLong, l(3).toString, l(4).toString, l(5).toString)
+        //        }
+        //          .sortBy(r => (r._1, r._3))
+        //          .foreach { r =>
+        //            if (r._1 != last) {
+        //              println("")
+        //            }
+        //            last = r._1
+        //            println(r)
+        //          }
 
 
         // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

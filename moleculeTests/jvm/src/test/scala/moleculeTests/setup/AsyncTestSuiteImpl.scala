@@ -10,6 +10,7 @@ import molecule.datomic.client.facade.{Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.Datomic_Peer
 import moleculeBuildInfo.BuildInfo
 import moleculeBuildInfo.BuildInfo.datomicHome
+import moleculeTests.EmptySchema
 import moleculeTests.dataModels.core.base.schema.CoreTestSchema
 import moleculeTests.dataModels.core.bidirectionals.schema.BidirectionalSchema
 import moleculeTests.dataModels.core.ref.schema.{NestedSchema, SelfJoinSchema}
@@ -43,6 +44,7 @@ trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
     test(futConn)
   }
 
+  def emptyImpl[T](test: Future[Conn] => T): T = inMem(test, EmptySchema, "")
   def coreImpl[T](test: Future[Conn] => T): T = inMem(test, CoreTestSchema, "m_coretests")
   def corePeerOnlyImpl[T](test: Future[Conn] => T): T = if (system == SystemPeer) coreImpl(test) else ().asInstanceOf[T]
   def bidirectionalImpl[T](test: Future[Conn] => T): T = inMem(test, BidirectionalSchema, "m_bidirectional")
