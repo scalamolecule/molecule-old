@@ -20,14 +20,6 @@ trait Datom {
   final class tx        [Stay_, Next_] extends OneLong   [Stay_, Next_] with Indexed
   final class txInstant [Stay_, Next_] extends OneDate   [Stay_, Next_] with Indexed
   final class op        [Stay_, Next_] extends OneBoolean[Stay_, Next_] with Indexed
-  
-  final class e$        [Stay_, Next_] extends OneLong$   [Stay_] with Indexed
-  final class a$        [Stay_, Next_] extends OneString$ [Stay_] with Indexed
-  final class v$        [Stay_, Next_] extends OneAny$    [Stay_] with Indexed
-  final class t$        [Stay_, Next_] extends OneLong$   [Stay_] with Indexed
-  final class tx$       [Stay_, Next_] extends OneLong$   [Stay_] with Indexed
-  final class txInstant$[Stay_, Next_] extends OneDate$   [Stay_] with Indexed
-  final class op$       [Stay_, Next_] extends OneBoolean$[Stay_] with Indexed
 }
 
 trait Datom_[props] { def Datom: props = ??? }
@@ -39,14 +31,4 @@ trait Datom_t          { lazy val t         : Long    = ??? }
 trait Datom_tx         { lazy val tx        : Long    = ??? }
 trait Datom_txInstant  { lazy val txInstant : Date    = ??? }
 trait Datom_op         { lazy val op        : Boolean = ??? }
-
-// Please note that `$` has been subsituted with `_` to allow packaging to jars.
-// To be interpreted as optional and not tacit
-trait Datom_e_         { lazy val e$        : Option[Long   ] = ??? }
-trait Datom_a_         { lazy val a$        : Option[String ] = ??? }
-trait Datom_v_         { lazy val v$        : Option[Any    ] = ??? }
-trait Datom_t_         { lazy val t$        : Option[Long   ] = ??? }
-trait Datom_tx_        { lazy val tx$       : Option[Long   ] = ??? }
-trait Datom_txInstant_ { lazy val txInstant$: Option[Date   ] = ??? }
-trait Datom_op_        { lazy val op$       : Option[Boolean] = ??? }
 

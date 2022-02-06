@@ -37,15 +37,39 @@ trait QuerySchemaHistory { self: Conn_Peer =>
       val jColl = Peer.q(
         """[:find  ?tx ?t ?txInst ?op
           |        ?attrId ?attrIdent
+          |        ?a ?part ?nsFull ?ns ?attr
           |        ?schemaId ?schemaIdent ?schemaValue
           | :where [:db.part/db :db.install/attribute ?attrId]
           |        [(datomic.api/ident $ ?attrId) ?attrIdent]
+          |        [(str ?attrIdent) ?a]
+          |        [(namespace ?attrIdent) ?nsFull]
+          |        [(.contains ^String ?nsFull "_") ?isPart]
+          |        [(.split ^String ?nsFull "_") ?nsParts]
+          |        [(first ?nsParts) ?part0]
+          |        [(last ?nsParts) ?ns]
+          |        [(if ?isPart ?part0 "db.part/user") ?part]
+          |        [(name ?attrIdent) ?attr]
           |        [?attrId ?schemaId ?schemaValue ?tx ?op]
           |        [(datomic.api/ident $ ?schemaId) ?schemaIdent]
           |        [(datomic.api/tx->t ?tx) ?t]
           |        [(>= ?t 1000)]
           |        [?tx :db/txInstant ?txInst]
           |]""".stripMargin,
+        //        //          |        [(>= ?tx 13194139534312)]
+        //        //          |        [?attrId :db/ident ?attrIdent]
+
+        //        """[:find  ?tx ?t ?txInst ?op
+        //          |        ?attrId ?attrIdent
+        //          |        ?schemaId ?schemaIdent ?schemaValue
+        //          | :where [:db.part/db :db.install/attribute ?attrId]
+        //          |        [(datomic.api/ident $ ?attrId) ?attrIdent]
+        //          |        [?attrId ?schemaId ?schemaValue ?tx ?op]
+        //          |        [(datomic.api/ident $ ?schemaId) ?schemaIdent]
+        //          |        [(datomic.api/tx->t ?tx) ?t]
+        //          |        [(.matches ^String ?nsFull "(db|db.alter|db.excise|db.install|db.part|db.sys|fressian|db.entity|db.attr|-.*)") ?sys]
+        //          |        [(= ?sys false)]
+        //          |        [?tx :db/txInstant ?txInst]
+        //          |]""".stripMargin,
         //          |        [(>= ?tx 13194139534312)]
         //          |        [?attrId :db/ident ?attrIdent]
         db.getDatomicDb.asInstanceOf[Database].history()
@@ -65,7 +89,7 @@ trait QuerySchemaHistory { self: Conn_Peer =>
       var list               = new ju.ArrayList[AnyRef](length)
 
       rows.forEach { row =>
-        //        println(row)
+        println(row)
         tx = row.get(0)
         add = row.get(3).asInstanceOf[jBoolean]
         attrId = row.get(4)
@@ -142,15 +166,15 @@ trait QuerySchemaHistory { self: Conn_Peer =>
           list.add(row.get(5).toString)
           list.add(null)
 
-          row.get(7).toString match {
-            case ":db/ident" if add => list.set(2, row.get(8).toString)
+          row.get(12).toString match {
+            case ":db/ident" if add => list.set(2, row.get(13).toString)
             case _                  =>
           }
           //          println("A " + list)
 
         } else {
-          row.get(7).toString match {
-            case ":db/ident" if add => list.set(2, row.get(8).toString)
+          row.get(12).toString match {
+            case ":db/ident" if add => list.set(2, row.get(13).toString)
             case _                  =>
           }
           //          println("B " + list)

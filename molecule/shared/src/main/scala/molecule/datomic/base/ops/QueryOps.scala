@@ -172,14 +172,14 @@ object QueryOps extends Helpers with JavaUtil {
     def schema: Query = q.wh.clauses.collectFirst {
       case DataClause(_, _, KW("db.install", "attribute", _), _, _, _) => q
     }.getOrElse(
-      q.where(Var("_"), KW("db.install", "attribute"), "id", "tx")
-        .where(Var("id"), KW("db", "ident"), "idIdent")
+      q.where(Var("_"), KW("db.install", "attribute"), "attrId", "tx")
+        .where(Var("attrId"), KW("db", "ident"), "idIdent")
         .func("namespace", Seq(Var("idIdent")), ScalarBinding(Var("nsFull")))
         .func(".matches ^String",
           Seq(Var("nsFull"), Val(
-            "^(db|db.alter|db.excise|db.install|db.part|db.sys|fressian" + // peer/client
+            "(db|db.alter|db.excise|db.install|db.part|db.sys|fressian" + // peer/client
               "|db.entity|db.attr" + // client
-              "|:?-.*)" // '-' prefix to mark obsolete attributes
+              "|-.*)" // '-' prefix to mark obsolete attributes
           )),
           ScalarBinding(Var("sys")))
         .func("=", Seq(Var("sys"), Val(false)))
@@ -206,37 +206,37 @@ object QueryOps extends Helpers with JavaUtil {
       .func("str", Seq(Var("idIdent")), ScalarBinding(Var("ident")))
 
     def schemaTpe: Query = q.schema
-      .where(Var("id"), KW("db", "valueType"), "tpeId")
+      .where(Var("attrId"), KW("db", "valueType"), "tpeId")
       .where(Var("tpeId"), KW("db", "ident"), "tpeIdent")
       .func("name", Seq(Var("tpeIdent")), ScalarBinding(Var("valueType")))
 
     def schemaCard: Query = q.schema
-      .where(Var("id"), KW("db", "cardinality"), "cardId")
+      .where(Var("attrId"), KW("db", "cardinality"), "cardId")
       .where(Var("cardId"), KW("db", "ident"), "cardIdent")
       .func("name", Seq(Var("cardIdent")), ScalarBinding(Var("cardinality")))
 
     def schemaDoc: Query = q.schema
-      .where(Var("id"), KW("db", "doc"), "doc")
+      .where(Var("attrId"), KW("db", "doc"), "doc")
 
     def schemaDocFulltext(arg: String): Query =
-      q.func("fulltext", Seq(DS, KW("db", "doc"), Val(arg)), RelationBinding(Seq(Var("id"), Var("docValue"))))
+      q.func("fulltext", Seq(DS, KW("db", "doc"), Val(arg)), RelationBinding(Seq(Var("attrId"), Var("docValue"))))
 
     def schemaIndex: Query = q.schema
-      .where(Var("id"), KW("db", "index"), "index")
+      .where(Var("attrId"), KW("db", "index"), "index")
 
     def schemaUnique: Query = q.schema
-      .where(Var("id"), KW("db", "unique"), "uniqueId")
+      .where(Var("attrId"), KW("db", "unique"), "uniqueId")
       .where(Var("uniqueId"), KW("db", "ident"), "uniqueIdent")
       .func("name", Seq(Var("uniqueIdent")), ScalarBinding(Var("unique")))
 
     def schemaFulltext: Query = q.schema
-      .where(Var("id"), KW("db", "fulltext"), "fulltext")
+      .where(Var("attrId"), KW("db", "fulltext"), "fulltext")
 
     def schemaIsComponent: Query = q.schema
-      .where(Var("id"), KW("db", "isComponent"), "isComponent")
+      .where(Var("attrId"), KW("db", "isComponent"), "isComponent")
 
     def schemaNoHistory: Query = q.schema
-      .where(Var("id"), KW("db", "noHistory"), "noHistory")
+      .where(Var("attrId"), KW("db", "noHistory"), "noHistory")
 
     def schemaEnum: Query = {
       q.schemaResolved.schemaAttr
@@ -255,14 +255,14 @@ object QueryOps extends Helpers with JavaUtil {
 
     def schemaPullEnumValue(v: String): Query =
       q.copy(f = Find(q.f.outputs :+ Pull(v + "_pull", "db", v, Some(""))))
-        .func("identity", Seq(Var("id")), ScalarBinding(Var(v + "_pull")))
+        .func("identity", Seq(Var("attrId")), ScalarBinding(Var(v + "_pull")))
 
     def schemaPull(v: String): Query =
       q.copy(f = Find(q.f.outputs :+ Pull(v + "_pull", "db", v)))
-        .func("identity", Seq(Var("id")), ScalarBinding(Var(v + "_pull")))
+        .func("identity", Seq(Var("attrId")), ScalarBinding(Var(v + "_pull")))
 
     def not(attr: String): Query =
-      q.copy(wh = Where(q.wh.clauses :+ NotClause(Var("id"), KW("db", attr))))
+      q.copy(wh = Where(q.wh.clauses :+ NotClause(Var("attrId"), KW("db", attr))))
 
 
     // Datom attribute/values ..........................................

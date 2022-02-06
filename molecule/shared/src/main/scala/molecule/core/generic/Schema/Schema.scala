@@ -14,7 +14,7 @@ import molecule.core.generic.GenericNs
 import scala.language.higherKinds
 
 trait Schema extends GenericNs {
-  final class id         [Stay, Next] extends OneLong   [Stay, Next] with Indexed
+  final class attrId     [Stay, Next] extends OneLong   [Stay, Next] with Indexed
   final class a          [Stay, Next] extends OneString [Stay, Next] with Indexed
   final class part       [Stay, Next] extends OneString [Stay, Next] with Indexed
   final class nsFull     [Stay, Next] extends OneString [Stay, Next] with Indexed
@@ -47,7 +47,7 @@ trait Schema extends GenericNs {
 
 trait Schema_[props] { def Schema: props = ??? }
 
-trait Schema_id          { lazy val id         : Long    = ??? }
+trait Schema_attrId      { lazy val attrId     : Long    = ??? }
 trait Schema_a           { lazy val a          : String  = ??? }
 trait Schema_part        { lazy val part       : String  = ??? }
 trait Schema_nsFull      { lazy val nsFull     : String  = ??? }

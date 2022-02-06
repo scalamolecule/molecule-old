@@ -34,268 +34,210 @@ object AdhocJvm extends AsyncTestSuite with Helpers with JavaConversions {
 
   lazy val tests = Tests {
 
-    "adhocJvm" - core { implicit futConn =>
+    //    "adhocJvm" - core { implicit futConn =>
+    "adhocJvm" - empty { implicit futConn =>
       for {
         conn <- futConn
 
-        _ <- conn.query(
-//          """[:find  ?isComponent
-//            | :where [_ :db.install/attribute ?id ?tx]
-//            |        [(>= ?tx 13194139534312)]
-//            |        [?id :db/ident ?idIdent]
-//            |        [(namespace ?idIdent) ?nsFull]
-//            |        [(.matches ^String ?nsFull "^(:?-.*)") ?obsolete]
-//            |        [(= ?obsolete false)]
-//            |        [?id :db/isComponent ?isComponent]]""".stripMargin
 
-//          """[:find  ?tx ?idIdent ?isComponent ?nsFull ?obsolete
-          """[:find  ?tx ?idIdent ?isComponent ?nsFull
-            | :where [_ :db.install/attribute ?id ?tx]
-            |        [?id :db/ident ?idIdent]
-            |        [(namespace ?idIdent) ?nsFull]
-            |        [?id :db/isComponent ?isComponent]
-            |        ]""".stripMargin
-//            |        [(>= ?tx 13194139533318)]
-//            |        [(>= ?tx 13194139534312)]
-//            |        [(.matches ^String ?nsFull "^(:?-.*)") ?obsolete]
-//            |        [(= ?obsolete false)]
-        ).map(res => res.foreach(println))
+        _ <- transact(schema {
+          trait Foo {
+            val int = oneInt.noHistory.doc("hej")
+            //            val str = oneString
+          }
+        })
 
-        _ <- Schema.isComponent.inspectGet
-        _ <- Schema.isComponent.get.map(_ ==> List(true)) // no false
+        //        _ <- Schema.a.ident.get.map(_ ==> List(
+        //          (":Foo/int", ":Foo/int"),
+        //        ))
 
-        /*
-        --------------------------------------------------------------------------
-Model(List(
-  Generic("Schema", "isComponent", "schema", NoValue, "")))
+        _ <- conn.changeAttrName(":Foo/intX", ":Foo/int2")
+          .map(_ ==> "Unexpected succes")
+          .recover { case MoleculeException(msg, _) =>
+            msg ==> "Couldn't find current attribute ident `:Foo/intX` in the database. " +
+              s"Please check the supplied current ident in order to change the name."
+          }
 
-Query(
-  Find(List(
-    Var("isComponent"))),
-  Where(List(
-    DataClause(ImplDS, Var("_"), KW("db.install", "attribute", ""), Var("id"), Var("tx"), NoBinding),
-    Funct(">=", Seq(Var("tx"), Val(13194139534312L)), NoBinding),
-    DataClause(ImplDS, Var("id"), KW("db", "ident", ""), Var("idIdent"), NoBinding, NoBinding),
-    Funct("namespace", Seq(Var("idIdent")), ScalarBinding(Var("nsFull"))),
-    Funct(".matches ^String", Seq(Var("nsFull"), Val("^(:?-.*)")), ScalarBinding(Var("obsolete"))),
-    Funct("=", Seq(Var("obsolete"), Val(false)), NoBinding),
-    DataClause(ImplDS, Var("id"), KW("db", "isComponent", ""), Var("isComponent"), NoBinding, NoBinding))))
+        _ <- conn.changeAttrName(":Foo/int", ":Foo/int2")
+        //        _ <- Schema.a.ident.get.map(_ ==> List(
+        //          (":Foo/int2", ":Foo/int2"),
+        //        ))
 
-[:find  ?isComponent
- :where [_ :db.install/attribute ?id ?tx]
-        [(>= ?tx 13194139534312)]
-        [?id :db/ident ?idIdent]
-        [(namespace ?idIdent) ?nsFull]
-        [(.matches ^String ?nsFull "^(:?-.*)") ?obsolete]
-        [(= ?obsolete false)]
-        [?id :db/isComponent ?isComponent]]
-
-RULES: none
-
-INPUTS: none
-
-OUTPUTS:
-
-(showing up to 500 rows)
---------------------------------------------------------------------------
-         */
 
         //        _ <- transact(schema {
-//          trait Foo {
-//            val int = oneInt.noHistory.doc("hej")
-//            //            val str = oneString
-//          }
-//        })
-//
-//        //        _ <- Schema.a.ident.get.map(_ ==> List(
-//        //          (":Foo/int", ":Foo/int"),
-//        //        ))
-//
-//        _ <- conn.changeAttrName(":Foo/intX", ":Foo/int2")
-//          .map(_ ==> "Unexpected succes")
-//          .recover { case MoleculeException(msg, _) =>
-//            msg ==> "Couldn't find current attribute ident `:Foo/intX` in the database. " +
-//              s"Please check the supplied current ident in order to change the name."
-//          }
-//
-//        _ <- conn.changeAttrName(":Foo/int", ":Foo/int2")
-//        //        _ <- Schema.a.ident.get.map(_ ==> List(
-//        //          (":Foo/int2", ":Foo/int2"),
-//        //        ))
-//
-//
-////        _ <- transact(schema {
-////          trait Foo {
-////            val str = oneString
-////          }
-////        })
-//
-//        _ <- conn.changeAttrName(":Foo/int2", ":Bar/hello")
-//        //        _ <- Schema.a.ident.get.map(_ ==> List(
-//        //          (":Bar/hello", ":Bar/hello"),
-//        //        ))
-//
-//        // todo - ok that we can work on old ident?
-//        _ <- conn.transact("""[[:db/add :Foo/int :db/noHistory false]]""".stripMargin)
-//        // or retracting (but see no reason for doing that
-//        //                _ <- conn.transact(
-//        //                  """[[:db/retract :Foo/int2 :db/noHistory true]
-//        //                    | [:db/add :db.part/db :db.alter/attribute :Foo/int2]]""".stripMargin
-//        //                )
-//
-//
-//        db <- conn.db
-//        _ = println("-----------------------")
-//        _ = Peer.q(
-//                    """[:find  ?attrId ?attrIdent
-//                      |        ?schemaId ?schemaIdent ?schemaValue ?tx ?t ?txInst ?op
-//                      | :where [:db.part/db :db.install/attribute ?attrId]
-//                      |        [(datomic.api/ident $ ?attrId) ?attrIdent]
-//                      |        [?attrId ?schemaId ?schemaValue ?tx ?op]
-//                      |        [(datomic.api/ident $ ?schemaId) ?schemaIdent]
-//                      |        [(>= ?tx 13194139534312)]
-//                      |        [(datomic.api/tx->t ?tx) ?t]
-//                      |        [?tx :db/txInstant ?txInst]
-//                      |]""".stripMargin,
-////                      |        [?attrId :db/ident ?attrIdent]
-////                      |        [?schemaId :db/ident ?schemaIdent]
-//                    db.getDatomicDb.asInstanceOf[Database].history()
-//          //          """[:find  ?tx ?t ?txInst ?op
-//          //            |        ?attrId ?attrIdent
-//          //            |        ?schemaId ?schemaIdent ?schemaValue
-//          //            | :where [:db.part/db :db.install/attribute ?attrId]
-//          //            |        [?attrId :db/ident ?attrIdent]
-//          //            |        [?attrId ?schemaId ?schemaValue ?tx ?op]
-//          //            |        [?schemaId :db/ident ?schemaIdent]
-//          //            |        [(>= ?tx 13194139534312)]
-//          //            |        [(datomic.api/tx->t ?tx) ?t]
-//          //            |        [?tx :db/txInstant ?txInst]
-//          //            |]""".stripMargin,
-//          //                    """[:find  ?tx ?t ?op ?a ?ident ?action ?v
-//          //                      | :in    $ %
-//          //                      | :where [:db.part/db :db.install/attribute ?a]
-//          //                      |        [(datomic.api/ident $ ?a) ?ident]
-//          //                      |        (entity-at ?a ?tx ?t ?inst ?op ?action ?v)
-//          //                      |        [(>= ?tx 13194139534312)]
-//          //                      |]""".stripMargin,
-//          //          db.getDatomicDb.asInstanceOf[Database].history(),
-//          //                    """[
-//          //                      |  [
-//          //                      |    (entity-at [?e] ?tx ?t ?inst ?op ?action ?v)
-//          //                      |    [?e ?actionAttr ?v ?tx ?op]
-//          //                      |    [?actionAttr :db/ident ?action]
-//          //                      |    [(datomic.api/tx->t ?tx) ?t]
-//          //                      |    [?tx :db/txInstant ?inst]
-//          //                      |  ]
-//          //                      |]""".stripMargin
-//
-////          """[:find ?tx ?t ?op ?a ?ident ?action ?v
-////            | :in $ %
-////            | :where
-////            |   [:db.part/db :db.install/attribute ?a]
-////            |   [(datomic.api/ident $ ?a) ?ident]
-////            |   (or
-////            |       (tpe-at ?a ?tx ?t ?inst ?op ?action ?v)
-////            |       (card-at ?a ?tx ?t ?inst ?op ?action ?v)
-////            |       (entity-at ?a ?tx ?t ?inst ?op ?action ?v)
-////            |       )
-////            |   [(> ?tx 13194139534312)]
-////            |]""".stripMargin,
-////          db.getDatomicDb.asInstanceOf[Database].history(),
-////          """[
-////            |  [
-////            |    (tpe-at [?e] ?tx ?t ?inst ?op ?actionIdent ?v)
-////            |    [?e :db/valueType ?tpeId ?tx ?op]
-////            |    [:db/valueType :db/ident ?actionIdent]
-////            |    [?tpeId :db/ident ?tpeKw]
-////            |    [(name ?tpeKw) ?v]
-////            |    [(datomic.api/tx->t ?tx) ?t]
-////            |    [?tx :db/txInstant ?inst]
-////            |  ]
-////            |  [
-////            |    (card-at [?e] ?tx ?t ?inst ?op ?actionIdent ?v)
-////            |    [?e :db/cardinality ?cardId ?tx ?op]
-////            |    [:db/cardinality :db/ident ?actionIdent]
-////            |    [?cardId :db/ident ?cardKw]
-////            |    [(name ?cardKw) ?v]
-////            |    [(datomic.api/tx->t ?tx) ?t]
-////            |    [?tx :db/txInstant ?inst]
-////            |  ]
-////            |  [
-////            |    (entity-at [?e] ?tx ?t ?inst ?op ?actionIdent ?v)
-////            |    [?e ?actionAttr ?v ?tx ?op]
-////            |    [?actionAttr :db/ident ?actionIdent]
-////            |    [(datomic.api/tx->t ?tx) ?t]
-////            |    [?tx :db/txInstant ?inst]
-////            |  ]
-////            |]""".stripMargin
-//        ).asScala.toSeq.map { row0 =>
-////                    println(row0)
-//          val l = row0.asScala
-//          (
-//            l(6).toString.toLong, // t
-//            l(0).toString.toLong, // attrId
-//            l(1).toString, // attrIdent
-//            l(2).toString.toLong, // schemaId
-//            l(3).toString, // schemaIdent
-//            l(4).toString, // schemaValue
-//            l(8).toString, // op
-//
-//            //            l(5).toString.toLong, // tx
-//            //            l(7).toString,        // txInstant
-//
-//            //            l(0).toString.toLong, // attrId
-//            //            l(1).toString,        // attrIdent
-//            //            l(2).toString.toLong, // schemaId
-//            //            l(3).toString,        // schemaIdent
-//            //            l(4).toString,        // schemaValue
-//            //            l(5).toString.toLong, // tx
-//            //            l(6).toString.toLong, // t
-//            //            l(7).toString,        // txInstant
-//            //            l(8).toString,        // op
-//          )
-//        }
-//          .sortBy(r => (r._1, r._2, r._4))
-//          .foreach { r =>
-//            if (r._1 != last) {
-//              println("")
-//            }
-//            last = r._1
-//            println(r)
-//          }
-//
-//
-//        //        _ = println("-----------------------")
-//        _ <- Schema.t.a.ident.valueType.cardinality.noHistory$.get.map(_ ==> List(
-//          (1001, ":Bar/hello", ":Bar/hello", "long", "one", Some(false)),
-////          (1003, ":Foo/str", ":Foo/str", "string", "one", None)
-//        ))
-//        //        _ <- Schema.t.a.ident.valueType.cardinality.noHistory.get.map(_ ==> List(
-//        //          (1001, ":Bar/hello", ":Bar/hello", "long", "one", false)
-//        //        ))
-//
-////        _ <- Schema
-////          .tx.t.txInstant
-////          .id.a
-////          .ident$.valueType$.cardinality$
-////          .doc$.unique$.isComponent$.noHistory$.index$.fulltext$.getHistory.map(_ ==> List(
-////          (1001, ":Bar/hello", Some(":Foo/int"), Some("long"), Some("one"), Some(true)),
-////          (1002, ":Bar/hello", Some(":Foo/int2"), None, None, None),
-////          (1003, ":Bar/hello", Some(":Bar/hello"), None, None, None),
-////          (1004, ":Bar/hello", None, None, None, Some(false)),
-////        ))
-//
-//        _ <- Schema.t.a.ident.getHistory.map(_ ==> List(
-//          (1001, ":Bar/hello", ":Foo/int"),
-//          (1002, ":Bar/hello", ":Foo/int2"),
-//          (1003, ":Bar/hello", ":Bar/hello"),
-//        ))
-////        _ <- Schema.t.a.ident$.valueType$.cardinality$.noHistory$.getHistory.map(_ ==> List(
-////          (1001, ":Bar/hello", Some(":Foo/int"), Some("long"), Some("one"), Some(true)),
-////          (1002, ":Bar/hello", Some(":Foo/int2"), None, None, None),
-////          (1003, ":Bar/hello", Some(":Bar/hello"), None, None, None),
-////          (1004, ":Bar/hello", None, None, None, Some(false)),
-////        ))
+        //          trait Foo {
+        //            val str = oneString
+        //          }
+        //        })
+
+        _ <- conn.changeAttrName(":Foo/int2", ":Bar/hello")
+        //        _ <- Schema.a.ident.get.map(_ ==> List(
+        //          (":Bar/hello", ":Bar/hello"),
+        //        ))
+
+        // todo - ok that we can work on old ident?
+        _ <- conn.transact("""[[:db/add :Foo/int :db/noHistory false]]""".stripMargin)
+        // or retracting (but see no reason for doing that
+        //                _ <- conn.transact(
+        //                  """[[:db/retract :Foo/int2 :db/noHistory true]
+        //                    | [:db/add :db.part/db :db.alter/attribute :Foo/int2]]""".stripMargin
+        //                )
+
+
+        db <- conn.db
+        _ = println("-----------------------")
+        _ = Peer.q(
+          """[:find  ?attrId ?attrIdent
+            |        ?schemaId ?schemaIdent ?schemaValue ?tx ?t ?txInst ?op
+            | :where [:db.part/db :db.install/attribute ?attrId]
+            |        [(datomic.api/ident $ ?attrId) ?attrIdent]
+            |        [?attrId ?schemaId ?schemaValue ?tx ?op]
+            |        [(datomic.api/ident $ ?schemaId) ?schemaIdent]
+            |        [(datomic.api/tx->t ?tx) ?t]
+            |        [(>= ?t 1000)]
+            |        [?tx :db/txInstant ?txInst]
+            |]""".stripMargin,
+          //                      |        [?attrId :db/ident ?attrIdent]
+          //                      |        [?schemaId :db/ident ?schemaIdent]
+          db.getDatomicDb.asInstanceOf[Database].history()
+          //          """[:find  ?tx ?t ?txInst ?op
+          //            |        ?attrId ?attrIdent
+          //            |        ?schemaId ?schemaIdent ?schemaValue
+          //            | :where [:db.part/db :db.install/attribute ?attrId]
+          //            |        [?attrId :db/ident ?attrIdent]
+          //            |        [?attrId ?schemaId ?schemaValue ?tx ?op]
+          //            |        [?schemaId :db/ident ?schemaIdent]
+          //            |        [(>= ?tx 13194139534312)]
+          //            |        [(datomic.api/tx->t ?tx) ?t]
+          //            |        [?tx :db/txInstant ?txInst]
+          //            |]""".stripMargin,
+          //                    """[:find  ?tx ?t ?op ?a ?ident ?action ?v
+          //                      | :in    $ %
+          //                      | :where [:db.part/db :db.install/attribute ?a]
+          //                      |        [(datomic.api/ident $ ?a) ?ident]
+          //                      |        (entity-at ?a ?tx ?t ?inst ?op ?action ?v)
+          //                      |        [(>= ?tx 13194139534312)]
+          //                      |]""".stripMargin,
+          //          db.getDatomicDb.asInstanceOf[Database].history(),
+          //                    """[
+          //                      |  [
+          //                      |    (entity-at [?e] ?tx ?t ?inst ?op ?action ?v)
+          //                      |    [?e ?actionAttr ?v ?tx ?op]
+          //                      |    [?actionAttr :db/ident ?action]
+          //                      |    [(datomic.api/tx->t ?tx) ?t]
+          //                      |    [?tx :db/txInstant ?inst]
+          //                      |  ]
+          //                      |]""".stripMargin
+
+          //          """[:find ?tx ?t ?op ?a ?ident ?action ?v
+          //            | :in $ %
+          //            | :where
+          //            |   [:db.part/db :db.install/attribute ?a]
+          //            |   [(datomic.api/ident $ ?a) ?ident]
+          //            |   (or
+          //            |       (tpe-at ?a ?tx ?t ?inst ?op ?action ?v)
+          //            |       (card-at ?a ?tx ?t ?inst ?op ?action ?v)
+          //            |       (entity-at ?a ?tx ?t ?inst ?op ?action ?v)
+          //            |       )
+          //            |   [(> ?tx 13194139534312)]
+          //            |]""".stripMargin,
+          //          db.getDatomicDb.asInstanceOf[Database].history(),
+          //          """[
+          //            |  [
+          //            |    (tpe-at [?e] ?tx ?t ?inst ?op ?actionIdent ?v)
+          //            |    [?e :db/valueType ?tpeId ?tx ?op]
+          //            |    [:db/valueType :db/ident ?actionIdent]
+          //            |    [?tpeId :db/ident ?tpeKw]
+          //            |    [(name ?tpeKw) ?v]
+          //            |    [(datomic.api/tx->t ?tx) ?t]
+          //            |    [?tx :db/txInstant ?inst]
+          //            |  ]
+          //            |  [
+          //            |    (card-at [?e] ?tx ?t ?inst ?op ?actionIdent ?v)
+          //            |    [?e :db/cardinality ?cardId ?tx ?op]
+          //            |    [:db/cardinality :db/ident ?actionIdent]
+          //            |    [?cardId :db/ident ?cardKw]
+          //            |    [(name ?cardKw) ?v]
+          //            |    [(datomic.api/tx->t ?tx) ?t]
+          //            |    [?tx :db/txInstant ?inst]
+          //            |  ]
+          //            |  [
+          //            |    (entity-at [?e] ?tx ?t ?inst ?op ?actionIdent ?v)
+          //            |    [?e ?actionAttr ?v ?tx ?op]
+          //            |    [?actionAttr :db/ident ?actionIdent]
+          //            |    [(datomic.api/tx->t ?tx) ?t]
+          //            |    [?tx :db/txInstant ?inst]
+          //            |  ]
+          //            |]""".stripMargin
+        ).asScala.toSeq.map { row0 =>
+          //                    println(row0)
+          val l = row0.asScala
+          (
+            l(6).toString.toLong, // t
+            l(0).toString.toLong, // attrId
+            l(1).toString, // attrIdent
+            l(2).toString.toLong, // schemaId
+            l(3).toString, // schemaIdent
+            l(4).toString, // schemaValue
+            l(8).toString, // op
+
+            //            l(5).toString.toLong, // tx
+            //            l(7).toString,        // txInstant
+
+            //            l(0).toString.toLong, // attrId
+            //            l(1).toString,        // attrIdent
+            //            l(2).toString.toLong, // schemaId
+            //            l(3).toString,        // schemaIdent
+            //            l(4).toString,        // schemaValue
+            //            l(5).toString.toLong, // tx
+            //            l(6).toString.toLong, // t
+            //            l(7).toString,        // txInstant
+            //            l(8).toString,        // op
+          )
+        }
+          .sortBy(r => (r._1, r._2, r._4))
+          .foreach { r =>
+            if (r._1 != last) {
+              println("")
+            }
+            last = r._1
+            println(r)
+          }
+
+
+        //        _ = println("-----------------------")
+//        _ <- Schema.t.part.nsFull.ns.attr.a.inspectGet
+
+        _ <- Schema.t.a.ident.valueType("long").cardinality.noHistory$.get.map(_ ==> List(
+          (1001, ":Bar/hello", ":Bar/hello", "long", "one", Some(false)),
+          //          (1003, ":Foo/str", ":Foo/str", "string", "one", None)
+        ))
+        //        _ <- Schema.t.a.ident.valueType.cardinality.noHistory.get.map(_ ==> List(
+        //          (1001, ":Bar/hello", ":Bar/hello", "long", "one", false)
+        //        ))
+
+        //        _ <- Schema
+        //          .tx.t.txInstant
+        //          .id.a
+        //          .ident$.valueType$.cardinality$
+        //          .doc$.unique$.isComponent$.noHistory$.index$.fulltext$.getHistory.map(_ ==> List(
+        //          (1001, ":Bar/hello", Some(":Foo/int"), Some("long"), Some("one"), Some(true)),
+        //          (1002, ":Bar/hello", Some(":Foo/int2"), None, None, None),
+        //          (1003, ":Bar/hello", Some(":Bar/hello"), None, None, None),
+        //          (1004, ":Bar/hello", None, None, None, Some(false)),
+        //        ))
+
+        _ <- Schema.t.a.ident.getHistory.map(_ ==> List(
+          (1001, ":Bar/hello", ":Foo/int"),
+          (1002, ":Bar/hello", ":Foo/int2"),
+          (1003, ":Bar/hello", ":Bar/hello"),
+        ))
+        //        _ <- Schema.t.a.ident$.valueType$.cardinality$.noHistory$.getHistory.map(_ ==> List(
+        //          (1001, ":Bar/hello", Some(":Foo/int"), Some("long"), Some("one"), Some(true)),
+        //          (1002, ":Bar/hello", Some(":Foo/int2"), None, None, None),
+        //          (1003, ":Bar/hello", Some(":Bar/hello"), None, None, None),
+        //          (1004, ":Bar/hello", None, None, None, Some(false)),
+        //        ))
 
 
         /*

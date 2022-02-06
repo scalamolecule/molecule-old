@@ -22,22 +22,21 @@ object Schema_Attr extends AsyncTestSuite {
 
     "id" - core { implicit conn =>
       for {
-        _ <- Schema.id.get(5).map(_ ==> List(97, 98, 99, 100, 101))
+        _ <- Schema.attrId.get(5).map(_ ==> List(97, 98, 99, 100, 101))
 
-        _ <- Schema.id(count).get.map(_.head ==> attrCount)
+        _ <- Schema.attrId(count).get.map(_.head ==> attrCount)
 
-        _ <- Schema.id(97).get(5).map(_ ==> List(97))
-        _ <- Schema.id(97, 98).get(5).map(_ ==> List(97, 98))
+        _ <- Schema.attrId(97).get(5).map(_ ==> List(97))
+        _ <- Schema.attrId(97, 98).get(5).map(_ ==> List(97, 98))
 
-        _ <- Schema.id.not(97).get.map(_.size ==> attrCount - 1)
-        _ <- Schema.id.not(97, 98).get.map(_.size ==> attrCount - 2)
+        _ <- Schema.attrId.not(97).get.map(_.size ==> attrCount - 1)
+        _ <- Schema.attrId.not(97, 98).get.map(_.size ==> attrCount - 2)
 
-        // We can though filter by one or more tacit attribute ids
-        _ <- Schema.id_(uuidMapId).attr.get.map(_ ==> List("uuidMap"))
-        _ <- Schema.id_(bigIntMapId, bigDecMapId).attr.get.map(_ ==> List("bigIntMap", "bigDecMap"))
+        _ <- Schema.attrId_(uuidMapId).attr.get.map(_ ==> List("uuidMap"))
+        _ <- Schema.attrId_(bigIntMapId, bigDecMapId).attr.get.map(_ ==> List("bigIntMap", "bigDecMap"))
 
-        _ <- Schema.id_.not(uuidMapId).attr.get.map(_.size ==> attrCount - 1)
-        _ <- Schema.id_.not(bigIntMapId, bigDecMapId).attr.get.map(_.size ==> attrCount - 2)
+        _ <- Schema.attrId_.not(uuidMapId).attr.get.map(_.size ==> attrCount - 1)
+        _ <- Schema.attrId_.not(bigIntMapId, bigDecMapId).attr.get.map(_.size ==> attrCount - 2)
       } yield ()
     }
 

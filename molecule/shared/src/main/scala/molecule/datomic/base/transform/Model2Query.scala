@@ -355,7 +355,7 @@ object Model2Query extends Helpers {
   // Schema ....................................................................................
 
   def resolveSchema(q: Query, g: Generic): Query = g.attr match {
-    case "id"          => resolveSchemaMandatory(g, q.schema, "Long")
+    case "attrId"          => resolveSchemaMandatory(g, q.schema, "Long")
     case "a"           => resolveSchemaMandatory(g, q.schemaA, "String")
     case "part"        => resolveSchemaMandatory(g, q.schemaResolved, "String")
     case "nsFull"      => resolveSchemaMandatory(g, q.schemaResolved, "String")
@@ -375,7 +375,7 @@ object Model2Query extends Helpers {
     case "tx"          => resolveSchemaMandatory(g, q.schema, "Long")
     case "txInstant"   => resolveSchemaMandatory(g, q.schemaTxInstant, "Date")
 
-    case "id_"          => resolveSchemaTacit(g, q.schema, "Long")
+    case "attrId_"          => resolveSchemaTacit(g, q.schema, "Long")
     case "a_"           => resolveSchemaTacit(g, q.schemaA, "String")
     case "part_"        => resolveSchemaTacit(g, q.schemaResolved, "String")
     case "nsFull_"      => resolveSchemaTacit(g, q.schemaResolved, "String")
@@ -438,7 +438,7 @@ object Model2Query extends Helpers {
       case NoValue        => q.schemaPullEnumValue(v)
       case Eq(arg :: Nil) =>
         q.find(v + 2)
-          .where(Var("id"), KW("db", v), v)
+          .where(Var("attrId"), KW("db", v), v)
           .ident(v, v + 1)
           .kw(v + 1, v + 2)
           .func("=", Seq(Var(v + 2), Val(arg)))
@@ -453,8 +453,8 @@ object Model2Query extends Helpers {
       case NoValue        => q.schemaPull(v)
       case Eq(arg :: Nil) =>
         q.find(v)
-          .where(Var("id"), KW("db", v), v)
-          .where("id", "db", v, Val(arg), "", "")
+          .where(Var("attrId"), KW("db", v), v)
+          .where("attrId", "db", v, Val(arg), "", "")
       case Fn("not", _)   => q.schemaPull(v).not(v) // None
       case other          => abort(s"Unexpected value for optional schema attribute `${g.attr}`: " + other)
     }

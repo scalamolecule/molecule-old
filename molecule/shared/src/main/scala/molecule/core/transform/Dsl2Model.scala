@@ -678,7 +678,7 @@ private[molecule] trait Dsl2Model extends TreeOps
       }
       //xx(122, attrStr, p.nsFull, p.nsFull2)
       attrStr match {
-        case "id"          => castGeneric("Long")
+        case "attrId"      => castGeneric("Long")
         case "a"           => castGeneric("String")
         case "part"        => castGeneric("String")
         case "nsFull"      => castGeneric("String")
@@ -854,7 +854,7 @@ private[molecule] trait Dsl2Model extends TreeOps
         }
         // Sorted by usage likelihood
         attrStr match {
-          case "id"          => casts("mandatory", "Long")
+          case "attrId"      => casts("mandatory", "Long")
           case "a"           => casts("mandatory", "String")
           case "part"        => casts("mandatory", "String")
           case "nsFull"      => casts("mandatory", "String")
@@ -874,7 +874,7 @@ private[molecule] trait Dsl2Model extends TreeOps
           case "tx"          => casts("mandatory", "Long")
           case "txInstant"   => casts("mandatory", "Date")
 
-          case "id_"          => casts("tacit", "Long")
+          case "attrId_"      => casts("tacit", "Long")
           case "a_"           => casts("tacit", "String")
           case "part_"        => casts("tacit", "String")
           case "nsFull_"      => casts("tacit", "String")
@@ -1158,7 +1158,7 @@ private[molecule] trait Dsl2Model extends TreeOps
         Generic("Schema", attrStr, "schema", value, getSort)
       }
       attrStr match {
-        case "id" | "id_"                   => resolve("Long")
+        case "attrId" | "attrId_"           => resolve("Long")
         case "a" | "a_"                     => resolve("String")
         case "part" | "part_"               => resolve("String")
         case "nsFull" | "nsFull_"           => resolve("String")

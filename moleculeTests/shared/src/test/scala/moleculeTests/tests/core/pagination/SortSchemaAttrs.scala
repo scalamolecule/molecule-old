@@ -20,14 +20,14 @@ object SortSchemaAttrs extends AsyncTestSuite {
     "id" - core { implicit conn =>
       for {
         // Ordering by id shows the order of attributes defined in the Data Model
-        _ <- Schema.id.a1.a.get(5).map(_ ==> List(
+        _ <- Schema.attrId.a1.a.get(5).map(_ ==> List(
           (72, ":Ns/str"),
           (73, ":Ns/int"),
           (74, ":Ns/long"),
           (75, ":Ns/double"),
           (76, ":Ns/bool"),
         ))
-        _ <- Schema.id.d1.a.get(5).map(_ ==> List(
+        _ <- Schema.attrId.d1.a.get(5).map(_ ==> List(
           (134, ":Ref4/int4"),
           (133, ":Ref4/str4"),
           (132, ":Ref3/refs4"),
@@ -36,14 +36,14 @@ object SortSchemaAttrs extends AsyncTestSuite {
         ))
 
         // Sort by count of attribute id's in each namespace
-        _ <- Schema.ns.id(count).d1.get.map(_ ==> List(
+        _ <- Schema.ns.attrId(count).d1.get.map(_ ==> List(
           ("Ns", 38),
           ("Ref1", 12),
           ("Ref2", 7),
           ("Ref3", 4),
           ("Ref4", 2),
         ))
-        _ <- Schema.ns.id(count).a1.get.map(_ ==> List(
+        _ <- Schema.ns.attrId(count).a1.get.map(_ ==> List(
           ("Ref4", 2),
           ("Ref3", 4),
           ("Ref2", 7),

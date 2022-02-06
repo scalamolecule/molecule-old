@@ -38,7 +38,7 @@ object Schema_AttrOptions extends AsyncTestSuite {
         // Two distinct doc comments
         _ <- Schema.doc(count).get.map(_.head ==> 2)
         // Two doc comments (duplicate comments would aggregate with the id added)
-        _ <- Schema.id_.doc(count).get.map(_.head ==> 2)
+        _ <- Schema.attrId_.doc(count).get.map(_.head ==> 2)
 
         // Filtering by a complete `doc_` is probably not that useful
         _ <- Schema.doc("Card one Int attribute").get.map(_ ==> List(
@@ -116,7 +116,7 @@ object Schema_AttrOptions extends AsyncTestSuite {
         // Unique options
         _ <- Schema.a.unique.get.map(_ ==> List(
           (":Ref2/str2", "identity"),
-          (":Ref2/int2", "value"),
+          (":Ref2/int2", "value")
         ))
 
         _ <- Schema.a.unique("identity").get.map(_ ==> List((":Ref2/str2", "identity")))
@@ -135,7 +135,7 @@ object Schema_AttrOptions extends AsyncTestSuite {
         _ <- Schema.attr_("str", "str2", "int2").a.unique$.get.map(_.sorted ==> List(
           (":Ns/str", None),
           (":Ref2/int2", Some("value")),
-          (":Ref2/str2", Some("identity")),
+          (":Ref2/str2", Some("identity"))
         ))
 
         // Filter by applying optional attribute uniqueness status
@@ -168,7 +168,7 @@ object Schema_AttrOptions extends AsyncTestSuite {
           (":Ns/refSub1", true),
           (":Ns/refsSub1", true),
           (":Ref1/refsSub2", true),
-          (":Ref1/refSub2", true),
+          (":Ref1/refSub2", true)
         ))
 
         _ <- Schema.a.isComponent(true).get.map(_.size ==> 4)
@@ -183,25 +183,25 @@ object Schema_AttrOptions extends AsyncTestSuite {
           ":Ns/refsSub1",
           ":Ref1/refSub2",
           ":Ref1/refsSub2",
-          ":Ns/refSub1",
+          ":Ns/refSub1"
         ))
         _ <- Schema.isComponent_(true).a.get.map(_ ==> List(
           ":Ns/refsSub1",
           ":Ref1/refSub2",
           ":Ref1/refsSub2",
-          ":Ns/refSub1",
+          ":Ns/refSub1"
         ))
         _ <- Schema.isComponent_.not(false).a.get.map(_ ==> List(
           ":Ns/refsSub1",
           ":Ref1/refSub2",
           ":Ref1/refsSub2",
-          ":Ns/refSub1",
+          ":Ns/refSub1"
         ))
 
         // Get optional attribute component status with `isComponent$`
         _ <- Schema.attr_("bool", "refSub1").a.isComponent$.get.map(_.sorted ==> List(
           (":Ns/bool", None),
-          (":Ns/refSub1", Some(true)),
+          (":Ns/refSub1", Some(true))
         ))
 
         // Filter by applying optional attribute component status
@@ -254,7 +254,7 @@ object Schema_AttrOptions extends AsyncTestSuite {
         // Get optional attribute no-history status with `noHistory$`
         _ <- Schema.attr_("bool", "ints2").a.noHistory$.get.map(_.sorted ==> List(
           (":Ns/bool", None),
-          (":Ref2/ints2", Some(true)),
+          (":Ref2/ints2", Some(true))
         ))
 
         // Filter by applying optional attribute no-history status
@@ -310,18 +310,18 @@ object Schema_AttrOptions extends AsyncTestSuite {
           // Get optional attribute indexing status with `index$`
           _ <- Schema.attr_("bool", "str").a.index$.get.map(_.sortBy(_._1) ==> List(
             (":Ns/bool", Some(true)),
-            (":Ns/str", Some(true)),
+            (":Ns/str", Some(true))
           ))
 
           // Filter by applying optional attribute indexing status
           some = Some(true)
           _ <- Schema.attr_("bool", "str").a.index$(some).get.map(_ ==> List(
             (":Ns/bool", Some(true)),
-            (":Ns/str", Some(true)),
+            (":Ns/str", Some(true))
           ))
           _ <- Schema.attr_("bool", "str").a.index$(Some(true)).get.map(_ ==> List(
             (":Ns/bool", Some(true)),
-            (":Ns/str", Some(true)),
+            (":Ns/str", Some(true))
           ))
 
           none = None
@@ -387,7 +387,7 @@ object Schema_AttrOptions extends AsyncTestSuite {
           // Get optional attribute fulltext status with `fulltext$`
           _ <- Schema.attr_("bool", "str").a.fulltext$.get.map(_.sortBy(_._1) ==> List(
             (":Ns/bool", None),
-            (":Ns/str", Some(true)),
+            (":Ns/str", Some(true))
           ))
 
           // Filter by applying optional attribute fulltext search status

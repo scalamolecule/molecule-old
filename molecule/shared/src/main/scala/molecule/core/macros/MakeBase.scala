@@ -207,7 +207,7 @@ private[molecule] trait MakeBase extends Dsl2Model {
             }
 
             case "schema" => attr match {
-              case "id"          => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
+              case "attrId"      => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
               case "part"        => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
               case "nsFull"      => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
               case "ns"          => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
