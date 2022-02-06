@@ -89,7 +89,7 @@ object Schema_AttrOptions extends AsyncTestSuite {
         // Get optional attribute doc text with `doc$`
         _ <- Schema.attr_("bool", "str").a.doc$.get.map(_ ==> List(
           (":Ns/str", Some("Card one String attribute")),
-          (":Ns/bool", None),
+          (":Ns/bool", None)
         ))
 
         // Filter by applying optional attribute doc text string

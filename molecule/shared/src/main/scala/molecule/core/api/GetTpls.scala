@@ -1,6 +1,7 @@
 package molecule.core.api
 
 import java.util.{Date, List => jList}
+import molecule.core.ast.elements.Generic
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
@@ -36,14 +37,12 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
     _inputThrowable.fold(
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
-
-          //          println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-          //          println(_model)
-          //          println("----------------")
-          //          println(_query)
-          //          println("----------------")
-          //          println(_datalog)
-
+          // println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+          // println(_model)
+          // println("----------------")
+          // println(_query)
+          // println("----------------")
+          // println(_datalog)
           conn.jsQueryTpl(
             _model, _query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
           )
@@ -54,19 +53,6 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
               case 0 => List.empty[Tpl]
               case 1 => List(row2tpl(jColl.iterator().next()))
               case _ =>
-                //                val it   = if (sortRows) {
-                //                  val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
-                //                  rows.sort(this) // using macro-implemented `compare` method
-                //                  rows.iterator
-                //                } else {
-                //                  jColl.iterator()
-                //                }
-                //                val list = List.newBuilder[Tpl]
-                //                while (it.hasNext) {
-                //                  list += row2tpl(it.next)
-                //                }
-                //                list.result()
-
                 val rows   = if (sortRows) {
                   val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
                   rows.sort(this) // using macro-implemented `compare` method
@@ -81,8 +67,6 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
                   i += 1
                 }
                 tuples.result()
-
-
             }
           }
         }
@@ -266,6 +250,47 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
     )(Future.failed) // Wrap exception from input failure in Future
   }
 
+  def getHistory(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
+    _model.elements.head match {
+      case Generic("Schema", _, _, _, _) =>
+        conn.map(_.usingAdhocDbView(History)).flatMap { conn =>
+          if (conn.isJsPlatform) {
+            conn.jsQueryTpl(
+              _model, _query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
+            )
+          } else {
+            conn.jvmQuery(_model, _query, history = true).map { jColl =>
+              val last = jColl.size
+              last match {
+                case 0 => List.empty[Tpl]
+                case 1 => List(row2tpl(jColl.iterator().next()))
+                case _ =>
+                  val rows   = if (sortRows) {
+                    val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
+                    rows.sort(this) // using macro-implemented `compare` method
+                    rows
+                  } else {
+                    new java.util.ArrayList(jColl)
+                  }
+                  val tuples = List.newBuilder[Tpl]
+                  var i      = 0
+                  while (i != last) {
+                    tuples += row2tpl(rows.get(i))
+                    i += 1
+                  }
+                  tuples.result()
+              }
+            }
+          }
+        }
+
+      case _ => get(conn.map(_.usingAdhocDbView(History)), ec)
+    }
+  }
+
+  def getHistoryOLD(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
+    get(conn.map(_.usingAdhocDbView(History)), ec)
+  }
 
   // get as of ================================================================================================
 
@@ -949,9 +974,9 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return List[Tpl] where Tpl is tuple of data matching molecule
    */
-  def getHistory(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-    get(conn.map(_.usingAdhocDbView(History)), ec)
-  }
+  //  def getHistory(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
+  //    get(conn.map(_.usingAdhocDbView(History)), ec)
+  //  }
 
 
   // `getHistory(limit: Int, offset: Int = 0)` is not implemented since the whole data set normally needs to be sorted

@@ -106,6 +106,8 @@ case class Conn_Js(
     txReport <- rpc.transact(connProxy, Stmts2Edn(stmts, this))
   } yield txReport
 
+  def changeAttrName(oldIdent0: String, newIdent0: String)
+                    (implicit ec: ExecutionContext): Future[TxReport] = ???
 
   private def jsMoleculeQuery(
     model: Model,

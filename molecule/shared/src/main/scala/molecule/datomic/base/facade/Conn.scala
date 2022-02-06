@@ -142,6 +142,10 @@ trait Conn extends ColOps with BooPicklers {
     Future.failed(jvmOnly("transact(javaStmts: jList[_])"))
 
 
+  def changeAttrName(oldIdent0: String, newIdent0: String)
+                    (implicit ec: ExecutionContext): Future[TxReport]
+
+
   /** Query Datomic directly with Datalog query and optional Scala inputs.
    * {{{
    * for {
@@ -320,7 +324,8 @@ trait Conn extends ColOps with BooPicklers {
 
   private[molecule] def jvmQuery(
     model: Model,
-    query: Query
+    query: Query,
+    history: Boolean = false
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] =
     Future.failed(jvmOnly("jvmQuery(model: Model, query: Query)"))
 

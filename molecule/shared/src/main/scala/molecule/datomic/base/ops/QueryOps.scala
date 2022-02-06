@@ -173,13 +173,16 @@ object QueryOps extends Helpers with JavaUtil {
       case DataClause(_, _, KW("db.install", "attribute", _), _, _, _) => q
     }.getOrElse(
       q.where(Var("_"), KW("db.install", "attribute"), "id", "tx")
-        .func(">=", Seq(Var("tx"), Val(txBase + 1000)))
         .where(Var("id"), KW("db", "ident"), "idIdent")
         .func("namespace", Seq(Var("idIdent")), ScalarBinding(Var("nsFull")))
-        // Filter out attributes marked as obsolete (having `-` prefix to namespace, as in :-Ns/str)
-        // (used by molecule-admin)
-        .func(".matches ^String", Seq(Var("nsFull"), Val("^(:?-.*)")), ScalarBinding(Var("obsolete")))
-        .func("=", Seq(Var("obsolete"), Val(false)))
+        .func(".matches ^String",
+          Seq(Var("nsFull"), Val(
+            "^(db|db.alter|db.excise|db.install|db.part|db.sys|fressian" + // peer/client
+              "|db.entity|db.attr" + // client
+              "|:?-.*)" // '-' prefix to mark obsolete attributes
+          )),
+          ScalarBinding(Var("sys")))
+        .func("=", Seq(Var("sys"), Val(false)))
     )
 
     def schemaResolved: Query = q.wh.clauses.collectFirst {

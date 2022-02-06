@@ -7,10 +7,12 @@ import clojure.lang.{PersistentArrayMap, PersistentVector}
 import com.cognitect.transit.impl.URIImpl
 import datomic.Util.{read, readAll}
 import datomic.{Peer, Util}
+import molecule.core.exceptions.MoleculeException
 import molecule.core.util.JavaConversions
 import molecule.datomic.base.ast.transactionModel.{Cas, Enum, RetractEntity, Statement, TempId}
 import molecule.datomic.base.util.Inspect
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 trait Conn_Jvm extends Conn with JavaConversions {
 
@@ -41,6 +43,36 @@ trait Conn_Jvm extends Conn with JavaConversions {
 
   final override def transact(javaStmts: jList[_])(implicit ec: ExecutionContext): Future[TxReport] =
     transactRaw(javaStmts, Future.successful(Seq.empty[Statement]))
+
+
+  def changeAttrName(curIdent0: String, newIdent0: String)
+                    (implicit ec: ExecutionContext): Future[TxReport] = try {
+    def ok(ident: String): String = ident match {
+      case r":[a-zA-Z][a-zA-Z0-9_]+/[a-z][a-zA-Z0-9]+" => ident
+      case _                                           => throw MoleculeException(
+        s"Invalid attribute ident `$ident`. Should be in the format :<Ns>/<attr>"
+      )
+    }
+    val (curIdent, newIdent) = (ok(curIdent0), ok(newIdent0))
+    query(s"[:find (count ?id) :where [?id :db/ident $curIdent]]").flatMap { res =>
+      if (res == List(List(1))) {
+        transact(
+          s"""[
+             |  {
+             |    :db/id     $curIdent
+             |    :db/ident  $newIdent
+             |  }
+             |]""".stripMargin)
+      } else {
+        Future.failed(MoleculeException(
+          s"Couldn't find current attribute ident `$curIdent` in the database. " +
+            s"Please check the supplied current ident in order to change the name."
+        ))
+      }
+    }
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
+  }
 
 
   final override def query(datalogQuery: String, inputs: Any*)

@@ -13,7 +13,6 @@ import molecule.core.generic.Schema._
   *  - '''string''' - String
   *  - '''boolean''' - Boolean
   *  - '''long''' - Int, Long
-  *  - '''float''' - Double
   *  - '''double''' - Double
   *  - '''bigint''' - BigInt
   *  - '''bigdec''' - BigDecimal

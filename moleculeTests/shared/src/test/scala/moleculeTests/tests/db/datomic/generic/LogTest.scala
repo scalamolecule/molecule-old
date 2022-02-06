@@ -212,27 +212,24 @@ object LogTest extends Base {
         _ <- if (system == SystemPeer) {
           for {
             // Start - t3 (exclusive)
-            // Includes all Datomic database bootstrapping and schema transactions
-            //            _ <- Log(None, Some(tx3)).t.get.map(_.size ==> 396)
+            // Includes all Datomic database bootstrapping and custom schema transactions
             _ <- Log(None, Some(tx3)).t.get.map(_.size ==> 365)
 
             // Start - end !! The whole database!
-            //            _ <- Log(None, None).t.get.map(_.size ==> 427)
             _ <- Log(None, None).t.get.map(_.size ==> 396)
             // Same as this shortcut
-            //            res <- Log().t.get.map(_.size ==> 427)
             res <- Log().t.get.map(_.size ==> 396)
           } yield res
         } else if (system == SystemDevLocal) {
           for {
             // Start - t3 (exclusive)
-            // Includes all Datomic database bootstrapping and schema transactions
-            _ <- Log(None, Some(tx3)).t.get.map(_.size ==> 544)
+            // Includes all Datomic database bootstrapping and custom schema transactions
+            _ <- Log(None, Some(tx3)).t.get.map(_.size ==> 514)
 
             // Start - end !! The whole database!
-            _ <- Log(None, None).t.get.map(_.size ==> 575)
+            _ <- Log(None, None).t.get.map(_.size ==> 545)
             // Same as this shortcut
-            res <- Log().t.get.map(_.size ==> 575)
+            res <- Log().t.get.map(_.size ==> 545)
           } yield res
         } else Future.unit
       } yield ()
