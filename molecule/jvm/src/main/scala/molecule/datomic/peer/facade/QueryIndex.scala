@@ -165,7 +165,7 @@ trait QueryIndex { self: Conn_Peer =>
           (d: Datom) =>
             for {
               v1 <- x1(d)
-            } yield list(
+            } yield javaList(
               v1.asInstanceOf[AnyRef]
             )
 
@@ -176,7 +176,7 @@ trait QueryIndex { self: Conn_Peer =>
             for {
               v1 <- x1(d)
               v2 <- x2(d)
-            } yield list(
+            } yield javaList(
               v1.asInstanceOf[AnyRef],
               v2.asInstanceOf[AnyRef]
             )
@@ -190,7 +190,7 @@ trait QueryIndex { self: Conn_Peer =>
               v1 <- x1(d)
               v2 <- x2(d)
               v3 <- x3(d)
-            } yield list(
+            } yield javaList(
               v1.asInstanceOf[AnyRef],
               v2.asInstanceOf[AnyRef],
               v3.asInstanceOf[AnyRef]
@@ -208,7 +208,7 @@ trait QueryIndex { self: Conn_Peer =>
               v2 <- x2(d)
               v3 <- x3(d)
               v4 <- x4(d)
-            } yield list(
+            } yield javaList(
               v1.asInstanceOf[AnyRef],
               v2.asInstanceOf[AnyRef],
               v3.asInstanceOf[AnyRef],
@@ -228,7 +228,7 @@ trait QueryIndex { self: Conn_Peer =>
               v3 <- x3(d)
               v4 <- x4(d)
               v5 <- x5(d)
-            } yield list(
+            } yield javaList(
               v1.asInstanceOf[AnyRef],
               v2.asInstanceOf[AnyRef],
               v3.asInstanceOf[AnyRef],
@@ -251,7 +251,7 @@ trait QueryIndex { self: Conn_Peer =>
               v4 <- x4(d)
               v5 <- x5(d)
               v6 <- x6(d)
-            } yield list(
+            } yield javaList(
               v1.asInstanceOf[AnyRef],
               v2.asInstanceOf[AnyRef],
               v3.asInstanceOf[AnyRef],
@@ -277,7 +277,7 @@ trait QueryIndex { self: Conn_Peer =>
               v5 <- x5(d)
               v6 <- x6(d)
               v7 <- x7(d)
-            } yield list(
+            } yield javaList(
               v1.asInstanceOf[AnyRef],
               v2.asInstanceOf[AnyRef],
               v3.asInstanceOf[AnyRef],

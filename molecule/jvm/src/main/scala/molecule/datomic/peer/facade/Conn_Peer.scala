@@ -454,7 +454,7 @@ case class Conn_Peer(
           txDatoms.forEach { datom =>
             // Don't reverse timestamps
             if (datom.a != txInstId) {
-              txStmts.add(list(op(datom), datom.e, datom.a, datom.v))
+              txStmts.add(javaList(op(datom), datom.e, datom.a, datom.v))
             }
           }
           // Update in-memory with-db with datoms of this tx

@@ -170,11 +170,11 @@ object TxFunctions extends Helpers with JavaUtil {
         }
         val txModel    = Model(Seq(TxMetaData(txElements)))
         conn.model2stmts(txModel).saveStmts.map(stmts => conn.stmts2java(stmts))
-      } else Future(list())
+      } else Future(javaList())
 
       // Invoke transaction function to retrieve result
-      res <- conn.transact(list(
-        list(s":${classpathTxFn}_invoker" +: txMetaStmts +: args.map(_.asInstanceOf[AnyRef]): _*)
+      res <- conn.transact(javaList(
+        javaList(s":${classpathTxFn}_invoker" +: txMetaStmts +: args.map(_.asInstanceOf[AnyRef]): _*)
       ))
     } yield res).recoverWith {
       case e@MoleculeException(msg, _) => msg match {

@@ -725,11 +725,11 @@ object QueryOps extends Helpers with JavaUtil {
     }
 
     def inputs: Seq[AnyRef] = q.i.inputs.map {
-      case InVar(RelationBinding(_), _, Nil)         => list()
-      case InVar(RelationBinding(_), _, argss)       => list(argss.map(args => list(args map cast: _*)): _*)
-      case InVar(CollectionBinding(_), _, Nil)       => list()
-      case InVar(CollectionBinding(_), _, argss)     => list(argss.head map cast: _*)
-      case InVar(_, _, Nil)                          => list()
+      case InVar(RelationBinding(_), _, Nil)         => javaList()
+      case InVar(RelationBinding(_), _, argss)       => javaList(argss.map(args => javaList(args map cast: _*)): _*)
+      case InVar(CollectionBinding(_), _, Nil)       => javaList()
+      case InVar(CollectionBinding(_), _, argss)     => javaList(argss.head map cast: _*)
+      case InVar(_, _, Nil)                          => javaList()
       case InVar(_, _, argss) if argss.head.size > 1 => Nil
       case InVar(_, _, argss)                        => cast(argss.head.head)
       case other                                     => throw QueryOpsException(s"UNEXPECTED input: $other\nquery:\n$q")

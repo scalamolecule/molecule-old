@@ -176,7 +176,7 @@ trait QueryIndex { self: Conn_Client =>
           (d: Datom) =>
             for {
               v1 <- x1(d)
-            } yield list(
+            } yield javaList(
               v1.asInstanceOf[Object],
             )
 
@@ -187,7 +187,7 @@ trait QueryIndex { self: Conn_Client =>
             for {
               v1 <- x1(d)
               v2 <- x2(d)
-            } yield list(
+            } yield javaList(
               v1.asInstanceOf[Object],
               v2.asInstanceOf[Object],
             )
@@ -201,7 +201,7 @@ trait QueryIndex { self: Conn_Client =>
               v1 <- x1(d)
               v2 <- x2(d)
               v3 <- x3(d)
-            } yield list(
+            } yield javaList(
               v1.asInstanceOf[Object],
               v2.asInstanceOf[Object],
               v3.asInstanceOf[Object],
@@ -218,7 +218,7 @@ trait QueryIndex { self: Conn_Client =>
               v2 <- x2(d)
               v3 <- x3(d)
               v4 <- x4(d)
-            } yield list(
+            } yield javaList(
               v1.asInstanceOf[Object],
               v2.asInstanceOf[Object],
               v3.asInstanceOf[Object],
@@ -238,7 +238,7 @@ trait QueryIndex { self: Conn_Client =>
               v3 <- x3(d)
               v4 <- x4(d)
               v5 <- x5(d)
-            } yield list(
+            } yield javaList(
               v1.asInstanceOf[Object],
               v2.asInstanceOf[Object],
               v3.asInstanceOf[Object],
@@ -261,7 +261,7 @@ trait QueryIndex { self: Conn_Client =>
               v4 <- x4(d)
               v5 <- x5(d)
               v6 <- x6(d)
-            } yield list(
+            } yield javaList(
               v1.asInstanceOf[Object],
               v2.asInstanceOf[Object],
               v3.asInstanceOf[Object],
@@ -287,7 +287,7 @@ trait QueryIndex { self: Conn_Client =>
               v5 <- x5(d)
               v6 <- x6(d)
               v7 <- x7(d)
-            } yield list(
+            } yield javaList(
               v1.asInstanceOf[Object],
               v2.asInstanceOf[Object],
               v3.asInstanceOf[Object],

@@ -1,12 +1,13 @@
 package molecule.core.util
 
+import java.util
 import java.util.Collections
 import java.util.{Collection => jCollection, List => jList}
 
 
 trait JavaUtil {
 
-  def list(items: AnyRef*): java.util.List[AnyRef] = {
+  def javaList(items: AnyRef*): java.util.List[AnyRef] = {
     if (items == null) {
       new java.util.ArrayList[AnyRef]
     } else {
@@ -17,6 +18,20 @@ trait JavaUtil {
         i += 1
       }
       Collections.unmodifiableList(list)
+    }
+  }
+
+  def javaMap(pairs: (AnyRef, AnyRef)*): java.util.Map[AnyRef, AnyRef] = {
+    if (pairs == null) {
+      new util.HashMap[AnyRef, AnyRef]()
+    } else {
+      val map: java.util.Map[AnyRef, AnyRef] = new util.HashMap[AnyRef, AnyRef](pairs.length)
+      var i  : Int                           = 0
+      while (i < pairs.length) {
+        map.put(pairs(i)._1, pairs(i)._2)
+        i += 1
+      }
+      Collections.unmodifiableMap(map)
     }
   }
 

@@ -39,21 +39,21 @@ case class Conn_Client(
   def testDbSince(t: Long)(implicit ec: ExecutionContext): Future[Unit] = Future {
     sinceT = Some(t)
     sinceD = None
-    _testDb = Some(clientConn.db.`with`(clientConn.withDb, list()).dbAfter)
+    _testDb = Some(clientConn.db.`with`(clientConn.withDb, javaList()).dbAfter)
     withDbInUse = true
   }
 
   def testDbSince(txR: TxReport)(implicit ec: ExecutionContext): Future[Unit] = Future {
     sinceT = Some(txR.t)
     sinceD = None
-    _testDb = Some(clientConn.db.`with`(clientConn.withDb, list()).dbAfter)
+    _testDb = Some(clientConn.db.`with`(clientConn.withDb, javaList()).dbAfter)
     withDbInUse = true
   }
 
   def testDbSince(d: Date)(implicit ec: ExecutionContext): Future[Unit] = Future {
     sinceT = None
     sinceD = Some(d)
-    _testDb = Some(clientConn.db.`with`(clientConn.withDb, list()).dbAfter)
+    _testDb = Some(clientConn.db.`with`(clientConn.withDb, javaList()).dbAfter)
     withDbInUse = true
   }
 
@@ -365,7 +365,7 @@ case class Conn_Client(
       txInstId = txInstants.get(Util.read(":db/id"))
     } yield {
       try {
-        _testDb = Some(clientConn.db.`with`(clientConn.withDb, list()).dbAfter)
+        _testDb = Some(clientConn.db.`with`(clientConn.withDb, javaList()).dbAfter)
         val txs            = clientConn.txRangeArray(Some(nextTimePoint))
         val (retract, add) = (Util.read(":db/retract"), Util.read(":db/add"))
         def op(datom: Datom) = if (datom.added) retract else add
@@ -381,7 +381,7 @@ case class Conn_Client(
             // Don't reverse timestamps
             if (datom.a != txInstId) {
               txStmts.add(
-                list(
+                javaList(
                   op(datom),
                   datom.e.asInstanceOf[Object],
                   datom.a.asInstanceOf[Object],

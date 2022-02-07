@@ -355,7 +355,7 @@ object Model2Query extends Helpers {
   // Schema ....................................................................................
 
   def resolveSchema(q: Query, g: Generic): Query = g.attr match {
-    case "attrId"          => resolveSchemaMandatory(g, q.schema, "Long")
+    case "attrId"      => resolveSchemaMandatory(g, q.schema, "Long")
     case "a"           => resolveSchemaMandatory(g, q.schemaA, "String")
     case "part"        => resolveSchemaMandatory(g, q.schemaResolved, "String")
     case "nsFull"      => resolveSchemaMandatory(g, q.schemaResolved, "String")
@@ -375,7 +375,7 @@ object Model2Query extends Helpers {
     case "tx"          => resolveSchemaMandatory(g, q.schema, "Long")
     case "txInstant"   => resolveSchemaMandatory(g, q.schemaTxInstant, "Date")
 
-    case "attrId_"          => resolveSchemaTacit(g, q.schema, "Long")
+    case "attrId_"      => resolveSchemaTacit(g, q.schema, "Long")
     case "a_"           => resolveSchemaTacit(g, q.schemaA, "String")
     case "part_"        => resolveSchemaTacit(g, q.schemaResolved, "String")
     case "nsFull_"      => resolveSchemaTacit(g, q.schemaResolved, "String")
@@ -395,6 +395,8 @@ object Model2Query extends Helpers {
     case "tx_"          => resolveSchemaTacit(g, q.schema, "Long")
     case "txInstant_"   => resolveSchemaTacit(g, q.schemaTxInstant, "Date")
 
+    //    case "ident$"                                  => resolveSchemaOptional(g, q)
+    //    case "valueType$" | "cardinality$" | "unique$" => resolveSchemaOptionalEnumValue(g, q)
     case "ident$" | "valueType$" | "cardinality$" | "unique$" => resolveSchemaOptionalEnumValue(g, q)
     case _                                                    => resolveSchemaOptional(g, q)
   }
