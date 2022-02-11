@@ -8,13 +8,13 @@ import com.cognitect.transit.impl.URIImpl
 import datomic.Util.{read, readAll}
 import datomic.{Peer, Util}
 import molecule.core.exceptions.MoleculeException
-import molecule.core.util.JavaConversions
+import molecule.core.util.{Helpers, JavaConversions}
 import molecule.datomic.base.ast.transactionModel.{Cas, Enum, RetractEntity, Statement, TempId}
 import molecule.datomic.base.util.Inspect
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-trait Conn_Jvm extends Conn with JavaConversions {
+trait Conn_Jvm extends Conn with JavaConversions with Helpers {
 
   // Molecule api --------------------------------------------------------------
 
@@ -45,31 +45,40 @@ trait Conn_Jvm extends Conn with JavaConversions {
     transactRaw(javaStmts, Future.successful(Seq.empty[Statement]))
 
 
-  def changeAttrName(curIdent0: String, newIdent0: String)
-                    (implicit ec: ExecutionContext): Future[TxReport] = try {
-    def ok(ident: String): String = ident match {
-      case r":[a-zA-Z][a-zA-Z0-9_]+/[a-z][a-zA-Z0-9]+" => ident
-      case _                                           => throw MoleculeException(
-        s"Invalid attribute ident `$ident`. Should be in the format :<Ns>/<attr>"
+  // Schema change
+
+  private def attrExists(ident: String)(implicit ec: ExecutionContext): Future[Boolean] = query(
+    s"[:find (count ?id) :where [?id :db/ident $ident]]"
+  ).map { res =>
+    if (res == List(List(1))) true else throw MoleculeException(
+      s"Couldn't find attribute `$ident` in the database."
+    )
+  }
+
+  def changeAttrName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
+    val (curIdent, newIdent) = (checkIdent(curName), checkIdent(newName))
+    attrExists(curIdent).flatMap(_ => transact(s"[{:db/id $curIdent :db/ident $newIdent}]"))
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
+  }
+
+  def retireAttr(name: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
+    val ident        = checkIdent(name)
+    val retiredIdent = ident.replace(":", ":-")
+    for {
+      _ <- attrExists(ident)
+      _ <- query(s"[:find (count ?v) :where [_ $ident ?v]]").map(data =>
+        if (data.nonEmpty) {
+          val count  = data.head.head.toString.toInt
+          val values = if (count == 1) "value" else "values"
+          throw MoleculeException(
+            s"Can't retire attribute `$ident` having $count $values asserted. " +
+              s"Please retract $values before retiring attribute."
+          )
+        }
       )
-    }
-    val (curIdent, newIdent) = (ok(curIdent0), ok(newIdent0))
-    query(s"[:find (count ?id) :where [?id :db/ident $curIdent]]").flatMap { res =>
-      if (res == List(List(1))) {
-        transact(
-          s"""[
-             |  {
-             |    :db/id     $curIdent
-             |    :db/ident  $newIdent
-             |  }
-             |]""".stripMargin)
-      } else {
-        Future.failed(MoleculeException(
-          s"Couldn't find current attribute ident `$curIdent` in the database. " +
-            s"Please check the supplied current ident in order to change the name."
-        ))
-      }
-    }
+      txReport <- transact(s"[{:db/id $ident :db/ident $retiredIdent}]")
+    } yield txReport
   } catch {
     case NonFatal(exc) => Future.failed(exc)
   }

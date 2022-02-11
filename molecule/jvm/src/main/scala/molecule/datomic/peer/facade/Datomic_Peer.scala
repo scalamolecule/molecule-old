@@ -39,6 +39,7 @@ trait Datomic_Peer extends JavaConversions {
    * | Starter/Pro | dev      | localhost:4334/dbName | newDbName   | With a running Pro transactor  |
    *
    * Host could also be remote. For more info on the db URI syntax:
+   *
    * @see https://docs.datomic.com/on-prem/javadoc/datomic/Peer.html#connect-java.lang.Object-
    * @param schemaTx     Schema transaction object in auto-generated molecule source jar
    * @param protocol     Datomic protocol. Defaults to "mem" for in-memory database.
@@ -70,6 +71,7 @@ trait Datomic_Peer extends JavaConversions {
    * | Starter/Pro | dev      | localhost:4334/ | With a running Pro transactor  |
    *
    * Host could also be remote. For more info on the db URI syntax:
+   *
    * @see https://docs.datomic.com/on-prem/javadoc/datomic/Peer.html#connect-java.lang.Object-
    * @param protocol
    * @param host
@@ -97,6 +99,7 @@ trait Datomic_Peer extends JavaConversions {
    * | Starter/Pro | dev      | localhost:4334/dbName | With a running Pro transactor  |
    *
    * Host could also be remote. For more info on the db URI syntax:
+   *
    * @see https://docs.datomic.com/on-prem/javadoc/datomic/Peer.html#connect-java.lang.Object-
    * @param protocol
    * @param dbIdentifier
@@ -124,6 +127,7 @@ trait Datomic_Peer extends JavaConversions {
    * | Starter/Pro | dev      | localhost:4334/dbName | With a running Pro transactor  |
    *
    * Host could also be remote. For more info on the db URI syntax:
+   *
    * @see https://docs.datomic.com/on-prem/javadoc/datomic/Peer.html#connect-java.lang.Object-
    * @param protocol
    * @param dbIdentifier
@@ -151,6 +155,7 @@ trait Datomic_Peer extends JavaConversions {
    * | Starter/Pro | dev      | localhost:4334/dbName | newDbName   | With a running Pro transactor  |
    *
    * Host could also be remote. For more info on the db URI syntax:
+   *
    * @see https://docs.datomic.com/on-prem/javadoc/datomic/Peer.html#connect-java.lang.Object-
    * @param protocol
    * @param dbIdentifier
@@ -217,9 +222,7 @@ trait Datomic_Peer extends JavaConversions {
       _ <- deleteDatabase(protocol, id)
       _ <- createDatabase(protocol, id)
       conn <- connect(connProxy, protocol, id)
-      _ <- conn.transact(edns.head) //                                   partitions/attributes
-      _ <- if (edns.size > 1) conn.transact(edns(1)) else Future.unit // attributes/aliases
-      _ <- if (edns.size > 2) conn.transact(edns(2)) else Future.unit // aliases
+      _ <- Future.sequence(edns.map(edn => conn.transact(edn)))
     } yield {
       conn
     }
@@ -266,7 +269,6 @@ trait Datomic_Peer extends JavaConversions {
    */
   def transactSchema(
     schema: SchemaTransaction,
-    //    connProxy: ConnProxy,
     protocol: String = "mem",
     dbIdentifier: String = ""
   )(implicit ec: ExecutionContext): Future[Conn_Peer] = {
@@ -274,12 +276,7 @@ trait Datomic_Peer extends JavaConversions {
     val connProxy = DatomicPeerProxy(protocol, id, schema.datomicPeer, schema.attrMap)
     for {
       conn <- connect(connProxy, protocol, id)
-      // todo: why doesn't this work instead of the following 4 lines?
-      //      _ <- Future.sequence(schema.datomicPeer.map(edn => conn.transact(edn)))
-      edns = schema.datomicPeer
-      _ <- conn.transact(edns.head) //                                   partitions/attributes
-      _ <- if (edns.size > 1) conn.transact(edns(1)) else Future.unit // attributes/aliases
-      _ <- if (edns.size > 2) conn.transact(edns(2)) else Future.unit // aliases
+      _ <- Future.sequence(schema.datomicPeer.map(edn => conn.transact(edn)))
     } yield conn
   }
 }

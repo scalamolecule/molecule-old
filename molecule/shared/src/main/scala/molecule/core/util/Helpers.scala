@@ -159,4 +159,12 @@ trait Helpers extends DateHandling {
     println(s"TIME $n: " + formatter.format(d))
     time0 = System.currentTimeMillis()
   }
+
+  protected def checkIdent(name: String): String = name match {
+    case r":-?[a-zA-Z][a-zA-Z0-9_]+/[a-z][a-zA-Z0-9]+" => name
+    case _                                           => throw MoleculeException(
+      s"Invalid attribute name `$name`. " +
+        "Expecting attribute name in the format `:<Ns>/<attr>` or `:<part_Ns>/<attr>`"
+    )
+  }
 }

@@ -1,4 +1,4 @@
-package moleculeTests.tests.db.datomic.schemaDef
+package moleculeTests.tests.db.datomic.partitions
 
 import molecule.datomic.api.out4._
 import moleculeTests.setup.AsyncTestSuite

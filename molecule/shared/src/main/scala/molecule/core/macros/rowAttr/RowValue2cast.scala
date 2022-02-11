@@ -119,6 +119,9 @@ private[molecule] trait RowValue2cast extends TreeOps {
     (colIndex: Int) => q"castOptManyRefAttr(row, $colIndex)"
   }
 
+  lazy val castOptIdent: richTree => Int => Tree =
+    (t: richTree) => (colIndex: Int) => q"castOptIdent(row, $colIndex)"
+
 
   lazy val castMapAttr: richTree => Int => Tree = (t: richTree) => castMapAttr_(t.tpeS)
 

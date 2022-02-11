@@ -702,7 +702,11 @@ private[molecule] trait Dsl2Model extends TreeOps
 
 
     def resolveOptionalSchemaAttr(t: richTree, prev: Tree, p: richTree, attrStr: String): Seq[Element] = attrStr match {
-      case "ident$" | "valueType$" | "cardinality$" | "unique$" =>
+      case "ident$" =>
+        addLambdas(t, castOptIdent, jsonOptEnum)
+        traverseElement(prev, p, Generic("Schema", attrStr, "schema", NoValue, getSort))
+
+      case "valueType$" | "cardinality$" | "unique$" =>
         addLambdas(t, castOptEnum, if (isOptNested) jsonOptNestedOptEnum else jsonOptEnum, baseTpe0 = Some("enum"))
         traverseElement(prev, p, Generic("Schema", attrStr, "schema", NoValue, getSort))
 
@@ -838,6 +842,7 @@ private[molecule] trait Dsl2Model extends TreeOps
               } else {
                 abort(s"Can only apply `count` to mandatory generic attribute. Please remove underscore from `$attrStr`")
               }
+
             case "optional"  =>
               if (aggrType.isEmpty) {
                 val group0 = Some(t.card match {

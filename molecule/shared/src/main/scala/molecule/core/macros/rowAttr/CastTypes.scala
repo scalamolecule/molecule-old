@@ -133,6 +133,11 @@ trait CastTypes extends Helpers {
     case v    => Some(v.asInstanceOf[jMap[String, AnyRef]].values.iterator.next.asInstanceOf[T])
   }
 
+  protected def castOptIdent(row: jList[_], colIndex: Int): Option[String] = row.get(colIndex) match {
+    case null => Option.empty[String]
+    case v    => Some(v.asInstanceOf[jMap[String, AnyRef]].values.iterator.next.toString)
+  }
+
   protected def castOptOneEnum(row: jList[_], colIndex: Int): Option[String] = row.get(colIndex) match {
     case null => Option.empty[String]
     case v    =>

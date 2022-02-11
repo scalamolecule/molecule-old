@@ -395,10 +395,8 @@ object Model2Query extends Helpers {
     case "tx_"          => resolveSchemaTacit(g, q.schema, "Long")
     case "txInstant_"   => resolveSchemaTacit(g, q.schemaTxInstant, "Date")
 
-    //    case "ident$"                                  => resolveSchemaOptional(g, q)
-    //    case "valueType$" | "cardinality$" | "unique$" => resolveSchemaOptionalEnumValue(g, q)
-    case "ident$" | "valueType$" | "cardinality$" | "unique$" => resolveSchemaOptionalEnumValue(g, q)
-    case _                                                    => resolveSchemaOptional(g, q)
+    case "valueType$" | "cardinality$" | "unique$" => resolveSchemaOptionalEnumValue(g, q)
+    case _                                         => resolveSchemaOptional(g, q)
   }
 
   def resolveSchemaMandatory(g: Generic, q: Query, tpe: String): Query = {

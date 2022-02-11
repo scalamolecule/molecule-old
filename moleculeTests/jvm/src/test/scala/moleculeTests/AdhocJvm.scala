@@ -17,6 +17,7 @@ import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}
 import moleculeTests.dataModels.core.base.dataModel.CoreTestDataModel.Ns
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.db.datomic.generic.SchemaChange.transact
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -37,57 +38,25 @@ object AdhocJvm extends AsyncTestSuite with Helpers with JavaConversions {
   lazy val tests = Tests {
 
     //    "adhocJvm" - core { implicit futConn =>
+    //      for {
+    //        conn <- futConn
+    //        _ <- Ns.int(1).str("a").save
+    //        _ <- Ns.int(2).save
+    //        _ <- Ns.int(2).inspectSave
+    //        _ <- Ns.int.get.map(_ ==> List(1, 2))
+    //
+    ////        _ <- Ns.int.str$.getHistory.map(_ ==> List(
+    ////          (1, Some("a")),
+    ////          (2, None),
+    ////        ))
+    //      } yield ()
+    //    }
+
     "adhocJvm" - empty { implicit futConn =>
       for {
         conn <- futConn
+        db <- conn.db
 
-
-        _ <- transact(schema {
-          trait Foo {
-            val int = oneInt.noHistory.uniqueIdentity.doc("hej")
-            //            val str = oneString
-          }
-        })
-
-        //        _ <- Schema.a.ident.get.map(_ ==> List(
-        //          (":Foo/int", ":Foo/int"),
-        //        ))
-
-        _ <- conn.changeAttrName(":Foo/intX", ":Foo/int2")
-          .map(_ ==> "Unexpected succes")
-          .recover { case MoleculeException(msg, _) =>
-            msg ==> "Couldn't find current attribute ident `:Foo/intX` in the database. " +
-              s"Please check the supplied current ident in order to change the name."
-          }
-
-        _ <- conn.changeAttrName(":Foo/int", ":Foo/int2")
-        //        _ <- Schema.a.ident.get.map(_ ==> List(
-        //          (":Foo/int2", ":Foo/int2"),
-        //        ))
-
-
-        //        _ <- transact(schema {
-        //          trait Foo {
-        //            val str = manyString
-        //            val long    = oneLong
-        //            val double  = oneDouble
-        //            val bool    = oneBoolean
-        //            val date    = oneDate
-        //            val uuid    = oneUUID
-        //            val uri     = oneURI
-        //            val bigInt  = oneBigInt
-        //            val bigDec  = oneBigDecimal
-        //            val parent  = one[Baz]
-        //          }
-        //          trait Baz {
-        //            val xx = oneInt
-        //          }
-        //        })
-
-        _ <- conn.changeAttrName(":Foo/int2", ":Bar/hello")
-        //        _ <- Schema.a.ident.get.map(_ ==> List(
-        //          (":Bar/hello", ":Bar/hello"),
-        //        ))
 
         // ok that we can work on old ident?
         _ <- conn.transact("""[[:db/add :Foo/int :db/noHistory false]]""".stripMargin)
@@ -100,41 +69,6 @@ object AdhocJvm extends AsyncTestSuite with Helpers with JavaConversions {
         //            | [:db/add :db.part/db :db.alter/attribute :Foo/int2]]""".stripMargin
         //        )
         //        (1003,72,:Foo/int2,45,:db/noHistory,true,false)
-
-
-        db <- conn.db
-
-//        _ = {
-//          val res  = Peer.q(
-//            """[:find  ?t ?a
-//              |        (pull ?valueType_pull [{:db/valueType [:db/ident]}])
-//              | :where [_ :db.install/attribute ?attrId ?tx]
-//              |        [?attrId :db/ident ?idIdent]
-//              |        [(namespace ?idIdent) ?nsFull]
-//              |        [(.matches ^String ?nsFull "(db|db.alter|db.excise|db.install|db.part|db.sys|fressian|db.entity|db.attr|-.*)") ?sys]
-//              |        [(= ?sys false)]
-//              |        [(- ?tx 13194139533312) ?t]
-//              |        [(str ?idIdent) ?a]
-//              |        [(identity ?attrId) ?valueType_pull]]""".stripMargin,
-//            db.getDatomicDb
-//          )
-//          val res3 = res.iterator().next().get(2)
-//          println("1  " + res3)
-//          println("1  " + Util.map(
-//            Keyword.intern("db", "valueType"),
-//            Util.map(
-//              Keyword.intern("db", "ident"),
-//              Keyword.intern("db.type", "long")
-//            )
-//          ))
-////          println("2  " + res3.getClass)
-////          println("3  " + res3.asInstanceOf[java.util.Map[_,_]])
-////          println("4  " + res3.asInstanceOf[java.util.Map[_,_]].size())
-////          println("5  " + res3.asInstanceOf[java.util.Map[_,_]].values().iterator().next())
-////          println("6  " + res3.asInstanceOf[java.util.Map[_,_]].values().iterator().next().getClass)
-////          println("5  " + res3.asInstanceOf[java.util.Map[_,_]].values().iterator().next().asInstanceOf[])
-//        }
-//        _ = println("-----------------------")
 
 
         _ = Peer.q(
@@ -272,48 +206,48 @@ object AdhocJvm extends AsyncTestSuite with Helpers with JavaConversions {
         //                  .attrId.a
         //                  .ident$.valueType$.cardinality$
         //                  .doc$.unique$.isComponent$.noHistory$.index$.fulltext$.getHistory.map(_ ==> List(
-        //                  (1001, ":Bar/hello", Some(":Foo/int"), Some("long"), Some("one"), Some(true)),
-        //                  (1002, ":Bar/hello", Some(":Foo/int2"), None, None, None),
-        //                  (1003, ":Bar/hello", Some(":Bar/hello"), None, None, None),
-        //                  (1004, ":Bar/hello", None, None, None, Some(false)),
+        //                  (1000, ":Bar/hello", Some(":Foo/int"), Some("long"), Some("one"), Some(true)),
+        //                  (1001, ":Bar/hello", Some(":Foo/int2"), None, None, None),
+        //                  (1002, ":Bar/hello", Some(":Bar/hello"), None, None, None),
+        //                  (1003, ":Bar/hello", None, None, None, Some(false)),
         //                ))
 
-//        _ <- Schema.t.a.valueType.inspectGet
-//        _ <- Schema.t.a.valueType$.inspectGet
+        //        _ <- Schema.t.a.valueType.inspectGet
+        //        _ <- Schema.t.a.valueType$.inspectGet
         //        _ <- Schema.t.a.valueType$.get.map(_ ==> List(
-        //          (1001, ":Bar/hello", Some("long")),
-        ////          (1003, ":Bar/hello", Some(":Bar/hello")),
+        //          (1000, ":Bar/hello", Some("long")),
+        ////          (1002, ":Bar/hello", Some(":Bar/hello")),
         //        ))
 
 
         _ <- Schema.t.a.valueType$.getHistory.map(_ ==> List(
-          (1001, ":Bar/hello", Some("long")),
+          (1000, ":Bar/hello", Some("long")),
+          (1001, ":Bar/hello", None),
           (1002, ":Bar/hello", None),
           (1003, ":Bar/hello", None),
-          (1004, ":Bar/hello", None),
         ))
         //        _ <- Schema.t.a.ident$.getHistory.map(_ ==> List(
-        //          (1001, ":Bar/hello", Some(":Foo/int")),
-        //          (1002, ":Bar/hello", Some(":Foo/int2")),
-        //          (1003, ":Bar/hello", Some(":Bar/hello")),
+        //          (1000, ":Bar/hello", Some(":Foo/int")),
+        //          (1001, ":Bar/hello", Some(":Foo/int2")),
+        //          (1002, ":Bar/hello", Some(":Bar/hello")),
         //        ))
 
         //        _ <- Schema.t.a.ident.getHistory.map(_ ==> List(
-        //          (1001, ":Bar/hello", ":Foo/int"),
-        //          (1002, ":Bar/hello", ":Foo/int2"),
-        //          (1003, ":Bar/hello", ":Bar/hello"),
+        //          (1000, ":Bar/hello", ":Foo/int"),
+        //          (1001, ":Bar/hello", ":Foo/int2"),
+        //          (1002, ":Bar/hello", ":Bar/hello"),
         //        ))
         //
         //        _ <- Schema.t.a.attr.ident.getHistory.map(_ ==> List(
-        //          (1001, ":Bar/hello", "hello", ":Foo/int"),
-        //          (1002, ":Bar/hello", "hello", ":Foo/int2"),
-        //          (1003, ":Bar/hello", "hello", ":Bar/hello"),
+        //          (1000, ":Bar/hello", "hello", ":Foo/int"),
+        //          (1001, ":Bar/hello", "hello", ":Foo/int2"),
+        //          (1002, ":Bar/hello", "hello", ":Bar/hello"),
         //        ))
         //        _ <- Schema.t.a.ident$.valueType$.cardinality$.noHistory$.getHistory.map(_ ==> List(
-        //          (1001, ":Bar/hello", Some(":Foo/int"), Some("long"), Some("one"), Some(true)),
-        //          (1002, ":Bar/hello", Some(":Foo/int2"), None, None, None),
-        //          (1003, ":Bar/hello", Some(":Bar/hello"), None, None, None),
-        //          (1004, ":Bar/hello", None, None, None, Some(false)),
+        //          (1000, ":Bar/hello", Some(":Foo/int"), Some("long"), Some("one"), Some(true)),
+        //          (1001, ":Bar/hello", Some(":Foo/int2"), None, None, None),
+        //          (1002, ":Bar/hello", Some(":Bar/hello"), None, None, None),
+        //          (1003, ":Bar/hello", None, None, None, Some(false)),
         //        ))
 
 

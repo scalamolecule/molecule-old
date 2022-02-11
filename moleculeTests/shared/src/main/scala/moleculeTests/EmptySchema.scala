@@ -13,9 +13,9 @@ import molecule.datomic.base.ast.metaSchema._
 
 object EmptySchema extends SchemaTransaction {
 
-  lazy val datomicPeer = Seq("[]")
+  lazy val datomicPeer = Nil
 
-  lazy val datomicClient = Seq("[]")
+  lazy val datomicClient = Nil
 
   lazy val metaSchema = MetaSchema(Nil)
 
