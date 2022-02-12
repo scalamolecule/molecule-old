@@ -17,7 +17,7 @@ import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}
 import moleculeTests.dataModels.core.base.dataModel.CoreTestDataModel.Ns
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.db.datomic.generic.SchemaChange.transact
+import moleculeTests.tests.db.datomic.generic.SchemaChange_Attr.transact
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
 

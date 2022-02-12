@@ -6,8 +6,9 @@ import datomic.{Peer, Util}
 import datomicScala.client.api.Datom
 import datomicScala.client.api.sync.{Client, Db, Connection => ClientConnection, Datomic => clientDatomic}
 import molecule.core.ast.elements._
+import molecule.core.data.SchemaTransaction
 import molecule.core.exceptions._
-import molecule.core.marshalling.ConnProxy
+import molecule.core.marshalling.{ConnProxy, DatomicDevLocalProxy, DatomicPeerProxy, DatomicPeerServerProxy}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.query.Query

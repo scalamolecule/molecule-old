@@ -3,6 +3,7 @@ package molecule.datomic.base.facade
 import java.io.Reader
 import java.util.{Date, Collection => jCollection, List => jList}
 import molecule.core.ast.elements.Model
+import molecule.core.data.SchemaTransaction
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.nodes.Obj
 import molecule.core.marshalling._
@@ -142,13 +143,6 @@ trait Conn extends ColOps with BooPicklers {
     Future.failed(jvmOnly("transact(javaStmts: jList[_])"))
 
 
-  // Schema change
-
-  def changeAttrName(oldName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport]
-  def changeNamespaceName(oldName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport]
-  def retireAttr(name: String)(implicit ec: ExecutionContext): Future[TxReport]
-
-
   /** Query Datomic directly with Datalog query and optional Scala inputs.
    * {{{
    * for {
@@ -238,7 +232,6 @@ trait Conn extends ColOps with BooPicklers {
   def sync(t: Long): Conn
 
 
-
   // Tx fn helpers -------------------------------------------------------------
 
   // Needs to be public since tx functions use id
@@ -250,6 +243,42 @@ trait Conn extends ColOps with BooPicklers {
 
   private[molecule] def buildTxFnInvoker2(txFn: String, args: Seq[Any]): jList[_] =
     throw jvmPeerOnly("buildTxFnInstall2(txFn: String, args: Seq[Any])")
+
+
+  // Schema change -------------------------------------------------------------
+
+  def changeAttrName(oldName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport]
+  def changeNamespaceName(oldName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport]
+
+  def retireAttr(name: String)(implicit ec: ExecutionContext): Future[TxReport]
+  def retireNamespace(name: String)(implicit ec: ExecutionContext): Future[TxReport]
+  def retirePartition(name: String)(implicit ec: ExecutionContext): Future[TxReport]
+
+  def updateConnProxy(schema: SchemaTransaction): Conn = {
+    connProxy match {
+      case proxy: DatomicPeerProxy =>
+        connProxy = proxy.copy(
+          schema = schema.datomicClient,
+          nsMap = schema.nsMap,
+          attrMap = schema.attrMap,
+        )
+
+      case proxy: DatomicDevLocalProxy =>
+        connProxy = proxy.copy(
+          schema = schema.datomicClient,
+          nsMap = schema.nsMap,
+          attrMap = schema.attrMap,
+        )
+
+      case proxy: DatomicPeerServerProxy =>
+        connProxy = proxy.copy(
+          schema = schema.datomicClient,
+          nsMap = schema.nsMap,
+          attrMap = schema.attrMap,
+        )
+    }
+    this
+  }
 
 
   // Internal ------------------------------------------------------------------

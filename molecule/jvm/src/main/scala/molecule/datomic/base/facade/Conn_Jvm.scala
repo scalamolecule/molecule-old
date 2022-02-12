@@ -45,7 +45,7 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers {
     transactRaw(javaStmts, Future.successful(Seq.empty[Statement]))
 
 
-  // Schema change
+  // Schema change -------------------------------------------------------------
 
   private def attrExists(ident: String)(implicit ec: ExecutionContext): Future[Boolean] = query(
     s"[:find (count ?id) :where [?id :db/ident $ident]]"
@@ -53,6 +53,26 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers {
     if (res == List(List(1))) true else throw MoleculeException(
       s"Couldn't find attribute `$ident` in the database."
     )
+  }
+
+  private def attrHasNoData(ident: String)(implicit ec: ExecutionContext): Future[Unit] = {
+    query(s"[:find (count ?v) :where [_ $ident ?v]]").map(data =>
+      if (data.nonEmpty) {
+        val count  = data.head.head.toString.toInt
+        val values = if (count == 1) "value" else "values"
+        throw MoleculeException(
+          s"Can't retire attribute `$ident` having $count $values asserted. " +
+            s"Please retract $values before retiring attribute."
+        )
+      }
+    ).recoverWith { case exc =>
+      exc.getMessage match {
+        case r".*Unable to resolve entity: :.+/(.+)$attr.*" => Future.failed(
+          MoleculeException(s"Couldn't find attribute `$ident` in the database schema.")
+        )
+        case _                                              => Future.failed(exc)
+      }
+    }
   }
 
   def changeAttrName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
@@ -64,8 +84,15 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers {
 
   def changeNamespaceName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
     val (curNs, newNs) = (okNsName(curName), okNsName(newName))
-    val x = connProxy.nsMap
-    attrExists(curNs).flatMap(_ => transact(s"[{:db/id $curNs :db/ident $newNs}]"))
+    connProxy.nsMap.get(curNs).fold[Future[TxReport]](
+      Future.failed(MoleculeException(s"Couldn't find namespace `$curNs`."))
+    ) { nsMap =>
+      val attrNameChanges = nsMap.attrs.map { metaAttr =>
+        val attr = metaAttr.name
+        s"{:db/id :$curNs/$attr :db/ident :$newNs/$attr}"
+      }.mkString("")
+      transact(s"[$attrNameChanges]")
+    }
   } catch {
     case NonFatal(exc) => Future.failed(exc)
   }
@@ -75,22 +102,38 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers {
     val retiredIdent = ident.replace(":", ":-")
     for {
       _ <- attrExists(ident)
-      _ <- query(s"[:find (count ?v) :where [_ $ident ?v]]").map(data =>
-        if (data.nonEmpty) {
-          val count  = data.head.head.toString.toInt
-          val values = if (count == 1) "value" else "values"
-          throw MoleculeException(
-            s"Can't retire attribute `$ident` having $count $values asserted. " +
-              s"Please retract $values before retiring attribute."
-          )
-        }
-      )
+      _ <- attrHasNoData(ident)
       txReport <- transact(s"[{:db/id $ident :db/ident $retiredIdent}]")
     } yield txReport
   } catch {
     case NonFatal(exc) => Future.failed(exc)
   }
 
+  def retireNamespace(name: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
+    val ns = okNsName(name)
+    connProxy.nsMap.get(ns).fold[Future[TxReport]](
+      Future.failed(MoleculeException(s"Couldn't find namespace `$ns`."))
+    ) { nsMap =>
+      for {
+        _ <- Future.sequence(nsMap.attrs.map(metaAttr => attrHasNoData(s":$ns/${metaAttr.name}")))
+        txReport <- {
+          // Mark all attribute names in namespace with `-` prefix
+          val attrNameChanges = nsMap.attrs.map { metaAttr =>
+            val attr = metaAttr.name
+            s"{:db/id :$ns/$attr :db/ident :-$ns/$attr}"
+          }.mkString("")
+          transact(s"[$attrNameChanges]")
+        }
+      } yield txReport
+    }
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
+  }
+
+  def retirePartition(name: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+
+
+  // Query ---------------------------------------------------------------------
 
   final override def query(datalogQuery: String, inputs: Any*)
                           (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = {

@@ -67,6 +67,7 @@ trait AsyncTestSuite extends TestSuite with CoreData
 
   def transact(schema: SchemaTransaction)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[TxReport] = {
     futConn.flatMap { conn =>
+      conn.updateConnProxy(schema)
       system match {
         case SystemPeer       => conn.transact(schema.datomicPeer.head)
         case SystemDevLocal   => conn.transact(schema.datomicClient.head)

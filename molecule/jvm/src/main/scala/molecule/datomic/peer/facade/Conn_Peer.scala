@@ -5,6 +5,7 @@ import java.{lang => jl, util => ju}
 import datomic.Connection.DB_AFTER
 import datomic._
 import molecule.core.ast.elements._
+import molecule.core.data.SchemaTransaction
 import molecule.core.exceptions._
 import molecule.core.marshalling._
 import molecule.datomic.base.api.DatomicEntity
@@ -277,7 +278,6 @@ case class Conn_Peer(
   protected def testDb(db: DatomicDb_Peer): Unit = {
     _testDb = Some(db.peerDb)
   }
-
 
   private def getAdhocDb(implicit ec: ExecutionContext): Future[Database] = {
     lazy val baseDb: Database = _testDb.getOrElse(peerConn.db)

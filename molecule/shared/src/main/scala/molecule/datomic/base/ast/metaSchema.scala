@@ -66,7 +66,6 @@ object metaSchema extends Helpers {
       s"""MetaPart($pos, "$name", ${o(descr$)}, ${o(entityCount$)}, Seq(${
         if (nss.isEmpty) "" else nss.mkString("\n      ", ",\n\n      ", "")
       }))"""
-
   }
 
 

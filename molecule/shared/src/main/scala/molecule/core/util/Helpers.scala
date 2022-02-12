@@ -170,7 +170,7 @@ trait Helpers extends DateHandling {
   protected def okNsName(name: String): String = name match {
     case r"[a-zA-Z][a-zA-Z0-9_]+" => name
     case _                        => throw MoleculeException(
-      s"Invalid namespace name `$name`. Expecting attribute name in the format `[a-zA-Z][a-zA-Z0-9_]+`"
+      s"Invalid namespace name `$name`. Expecting namespace name in the format `[a-zA-Z][a-zA-Z0-9_]+`"
     )
   }
 }

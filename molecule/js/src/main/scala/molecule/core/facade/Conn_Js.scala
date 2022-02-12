@@ -92,6 +92,16 @@ case class Conn_Js(
     usingAdhocDbView(Sync(t))
 
 
+  // Schema change -------------------------------------------------------------
+
+  def changeAttrName(oldName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+  def changeNamespaceName(oldName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+
+  def retireAttr(name: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+  def retireNamespace(name: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+  def retirePartition(name: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+
+
   // Internal ------------------------------------------------------------------
 
   private[molecule] final val isJsPlatform: Boolean = true
@@ -105,13 +115,6 @@ case class Conn_Js(
     stmts <- scalaStmts
     txReport <- rpc.transact(connProxy, Stmts2Edn(stmts, this))
   } yield txReport
-
-
-  // Schema change
-
-  def changeAttrName(oldName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
-  def changeNamespaceName(oldName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
-  def retireAttr(name: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
 
 
   private def jsMoleculeQuery(
