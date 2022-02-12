@@ -2,6 +2,7 @@ package moleculeTests.setup
 
 import java.util.UUID.randomUUID
 import molecule.core.data.SchemaTransaction
+import molecule.core.util.EmptySchema
 import molecule.core.util.Executor._
 import molecule.datomic.api.out1._
 import molecule.datomic.base.facade.Conn
@@ -10,7 +11,6 @@ import molecule.datomic.client.facade.{Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.Datomic_Peer
 import moleculeBuildInfo.BuildInfo
 import moleculeBuildInfo.BuildInfo.datomicHome
-import moleculeTests.EmptySchema
 import moleculeTests.dataModels.core.base.schema.CoreTestSchema
 import moleculeTests.dataModels.core.bidirectionals.schema.BidirectionalSchema
 import moleculeTests.dataModels.core.ref.schema.{NestedSchema, SelfJoinSchema}

@@ -20,7 +20,6 @@ object AdhocJs extends AsyncTestSuite with Helpers
 
     "adhocJs" - core { implicit futConn =>
       for {
-        _ <- Future(1 ==> 1) // dummy to start monad chain if needed
         conn <- futConn
 
 

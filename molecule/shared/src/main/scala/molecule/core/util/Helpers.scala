@@ -160,11 +160,17 @@ trait Helpers extends DateHandling {
     time0 = System.currentTimeMillis()
   }
 
-  protected def checkIdent(name: String): String = name match {
+  protected def okIdent(name: String): String = name match {
     case r":-?[a-zA-Z][a-zA-Z0-9_]+/[a-z][a-zA-Z0-9]+" => name
-    case _                                           => throw MoleculeException(
+    case _                                             => throw MoleculeException(
       s"Invalid attribute name `$name`. " +
         "Expecting attribute name in the format `:<Ns>/<attr>` or `:<part_Ns>/<attr>`"
+    )
+  }
+  protected def okNsName(name: String): String = name match {
+    case r"[a-zA-Z][a-zA-Z0-9_]+" => name
+    case _                        => throw MoleculeException(
+      s"Invalid namespace name `$name`. Expecting attribute name in the format `[a-zA-Z][a-zA-Z0-9_]+`"
     )
   }
 }

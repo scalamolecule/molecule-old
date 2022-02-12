@@ -3,9 +3,12 @@ package moleculeTests.setup
 import molecule.core.data.SchemaTransaction
 import molecule.core.facade.Conn_Js
 import molecule.core.marshalling.{DatomicDevLocalProxy, DatomicPeerProxy, DatomicPeerServerProxy}
+import molecule.core.util.EmptySchema
+import molecule.core.util.Executor._
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}
-import moleculeBuildInfo.BuildInfo.{datomicHome, datomicProtocol}
+import moleculeBuildInfo.BuildInfo
+import moleculeBuildInfo.BuildInfo.datomicHome
 import moleculeTests.dataModels.core.base.schema.CoreTestSchema
 import moleculeTests.dataModels.core.bidirectionals.schema.BidirectionalSchema
 import moleculeTests.dataModels.core.ref.schema.{NestedSchema, SelfJoinSchema}
@@ -14,9 +17,6 @@ import moleculeTests.dataModels.examples.datomic.dayOfDatomic.schema._
 import moleculeTests.dataModels.examples.datomic.mbrainz.schema.MBrainzSchema
 import moleculeTests.dataModels.examples.datomic.seattle.schema.SeattleSchema
 import moleculeTests.dataModels.examples.gremlin.gettingStarted.schema.{ModernGraph1Schema, ModernGraph2Schema}
-import molecule.core.util.Executor._
-import moleculeBuildInfo.BuildInfo
-import moleculeTests.EmptySchema
 import scala.concurrent.Future
 
 
@@ -28,14 +28,15 @@ trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
 
   def inMem[T](
     test: Future[Conn] => T,
-    schemaTx: SchemaTransaction,
+    schema: SchemaTransaction,
     peerServerDb: String
   ): T = {
-    val (peerSchema, clientSchema, attrMap) = (schemaTx.datomicPeer, schemaTx.datomicClient, schemaTx.attrMap)
-    val proxy                               = system match {
-      case SystemPeer       => DatomicPeerProxy("mem", "", peerSchema, attrMap)
-      case SystemDevLocal   => DatomicDevLocalProxy("mem", "datomic-samples-temp", datomicHome, "", clientSchema, attrMap)
-      case SystemPeerServer => DatomicPeerServerProxy("k", "s", "localhost:8998", peerServerDb, clientSchema, attrMap)
+    val (peerSchema, clientSchema, nsMap, attrMap) = (schema.datomicPeer, schema.datomicClient, schema.nsMap, schema.attrMap)
+
+    val proxy = system match {
+      case SystemPeer       => DatomicPeerProxy("mem", "", peerSchema, nsMap, attrMap)
+      case SystemDevLocal   => DatomicDevLocalProxy("mem", "datomic-samples-temp", datomicHome, "", clientSchema, nsMap, attrMap)
+      case SystemPeerServer => DatomicPeerServerProxy("k", "s", "localhost:8998", peerServerDb, clientSchema, nsMap, attrMap)
     }
     test(Future(Conn_Js(proxy, "localhost", 8080)))
   }
@@ -63,7 +64,7 @@ trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
         DatomicPeerProxy(
           "dev",
           "localhost:4334/mbrainz-1968-1973",
-          MBrainzSchema.datomicPeer, MBrainzSchema.attrMap
+          MBrainzSchema.datomicPeer, MBrainzSchema.nsMap, MBrainzSchema.attrMap
         )
 
       case SystemDevLocal =>
@@ -72,14 +73,14 @@ trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
           "datomic-samples",
           datomicHome,
           "mbrainz-subset",
-          MBrainzSchema.datomicClient, MBrainzSchema.attrMap
+          MBrainzSchema.datomicClient, MBrainzSchema.nsMap, MBrainzSchema.attrMap
         )
 
       case SystemPeerServer =>
         DatomicPeerServerProxy(
           "k", "s", "localhost:8998",
           "mbrainz-1968-1973",
-          MBrainzSchema.datomicClient, MBrainzSchema.attrMap
+          MBrainzSchema.datomicClient, MBrainzSchema.nsMap, MBrainzSchema.attrMap
         )
     }
     test(Future(Conn_Js(proxy, "localhost", 8080)))

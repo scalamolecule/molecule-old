@@ -1,6 +1,6 @@
 package moleculeTests.tests.db.datomic.generic
 
-import molecule.core.data.model.{oneInt, oneString}
+import molecule.core.data.model._
 import molecule.core.exceptions.MoleculeException
 import molecule.core.macros.GetTransactSchema.schema
 import molecule.core.util.Executor._
@@ -8,7 +8,6 @@ import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out13._
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.db.datomic.generic.SchemaHistory.transact
 import utest._
 import scala.concurrent.Future
 
@@ -57,15 +56,15 @@ object SchemaChange extends AsyncTestSuite {
           })
 
           // Schema has 2 attributes
-          _ <- Schema.t.a.valueType.cardinality.get.map(_ ==> List(
-            (1000, ":Foo/int", "long", "one"),
-            (1001, ":Foo/str", "string", "one"),
+          _ <- Schema.t.a.valueType.get.map(_ ==> List(
+            (1000, ":Foo/int", "long"),
+            (1001, ":Foo/str", "string"),
           ))
 
           // Since we have just added to the schema, `getHistory` will show the same as `get`
-          _ <- Schema.t.a.valueType.cardinality.getHistory.map(_ ==> List(
-            (1000, ":Foo/int", "long", "one"),
-            (1001, ":Foo/str", "string", "one"),
+          _ <- Schema.t.a.valueType.getHistory.map(_ ==> List(
+            (1000, ":Foo/int", "long"),
+            (1001, ":Foo/str", "string"),
           ))
         } yield ()
       }
@@ -87,21 +86,17 @@ object SchemaChange extends AsyncTestSuite {
           // 1. Call changeAttrName to change the schema definition in the database
           _ <- conn.changeAttrName(":Foo/int", ":Foo/int2")
           // 2. Update name of attribute in the data model
+          //      trait Foo {
+          //        val int2 = oneInt
+          //      }
           // 3. Prepare for generating new boilerplate code by changing old uses of `int` to `int2` in your code
           //    (will not compile until you have re-generated the molecule boilerplate code)
           // 4. Run `sbt compile -Dmolecule=true` to re-generate boilerplate code.
           // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbNae)`
           //    to transact the updated schema (depending on which system you use).
 
-          // For testing purpose, we transact the schema of our updated data model here
-          _ <- transact(schema {
-            trait Foo {
-              val int2 = oneInt.noHistory
-            }
-          })
-
           // int has correctly been renamed to int2
-          // Note that `t` refers to the transaction where the attribute was originally added
+          // Note that `t` refers to the transaction where the attribute entity was originally added
           _ <- Schema.t.a.get.map(_ ==> List(
             (1000, ":Foo/int2"),
           ))
@@ -153,22 +148,23 @@ object SchemaChange extends AsyncTestSuite {
           // For testing purpose, we transact the schema of our updated data model here
           _ <- transact(schema {
             trait Foo {
-              val int  = oneInt.noHistory
-              val int2 = oneInt.noHistory
+              val int  = oneInt
+              val int2 = oneInt
             }
           })
 
           // Now both attributes exist
           _ <- Schema.t.a.get.map(_ ==> List(
-            (1000, ":Foo/int2"),
-            (1003, ":Foo/int"),
+            (1000, ":Foo/int2"), // originally `int`
+            (1002, ":Foo/int"), //  repurposed `int`
           ))
 
           // Check name changes with getHistory
           // Note that `a` refers to the current attribute name
           _ <- Schema.t.a.ident.getHistory.map(_ ==> List(
-            (1000, ":Foo/int2", ":Foo/int"),
-            (1001, ":Foo/int2", ":Foo/int2"),
+            (1000, ":Foo/int2", ":Foo/int"), //  int created
+            (1001, ":Foo/int2", ":Foo/int2"), // int -> int2
+            (1002, ":Foo/int", ":Foo/int"), //   repurposed new int
           ))
         } yield ()
       }
@@ -181,7 +177,7 @@ object SchemaChange extends AsyncTestSuite {
           // Initial data model
           _ <- transact(schema {
             trait Foo {
-              val int = oneInt.noHistory
+              val int = oneInt
             }
           })
 
@@ -202,8 +198,8 @@ object SchemaChange extends AsyncTestSuite {
 
           _ <- transact(schema {
             trait Foo {
-              val int  = oneInt.noHistory
-              val int2 = oneInt.noHistory
+              val int  = oneInt
+              val int2 = oneInt
             }
           })
 
@@ -211,6 +207,66 @@ object SchemaChange extends AsyncTestSuite {
           _ <- conn.query("[:find ?b :where [?a :Foo/int ?b]]").map(_ ==> Nil)
           _ <- conn.query("[:find ?b :where [?a :Foo/int2 ?b]]").map(_ ==> List(List(1)))
 
+        } yield ()
+      }
+
+
+      "Move attribute to other ns" - empty { implicit futConn =>
+        for {
+          conn <- futConn
+
+          // Initial data model
+          _ <- transact(schema {
+            trait Foo {
+              val int = oneInt
+              val str = oneString
+            }
+
+            trait Bar {
+              val long = oneLong
+            }
+          })
+
+          _ <- Schema.t.a.get.map(_ ==> List(
+            (1000, ":Foo/int"),
+            (1000, ":Foo/str"),
+            (1000, ":Bar/long"),
+          ))
+
+          // Move/Rename an attribute in 5 steps:
+
+          // 1. Call changeAttrName to change the schema definition in the database
+          _ <- conn.changeAttrName(":Foo/int", ":Bar/int")
+          // 2. Update name of attribute in the data model
+          //      trait Foo {
+          //        val str = oneString
+          //      }
+          //
+          //      trait Bar {
+          //        val int  = oneInt
+          //        val long = oneLong
+          //      }
+          // 3. Prepare for generating new boilerplate code by changing old uses of `int` to `int2` in your code
+          //    (will not compile until you have re-generated the molecule boilerplate code)
+          // 4. Run `sbt compile -Dmolecule=true` to re-generate boilerplate code.
+          // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbNae)`
+          //    to transact the updated schema (depending on which system you use).
+
+          // int has correctly been moved to the Bar namespace
+          _ <- Schema.a.get.map(_ ==> List(
+            ":Foo/str",
+            ":Bar/int",
+            ":Bar/long",
+          ))
+
+          // See name changes with getHistory
+          // Note that `a` refers to the current attribute name
+          _ <- Schema.t.a.ident.getHistory.map(_ ==> List(
+            (1000, ":Bar/int", ":Foo/int"),
+            (1000, ":Foo/str", ":Foo/str"),
+            (1000, ":Bar/long", ":Bar/long"),
+            (1001, ":Bar/int", ":Bar/int"),
+          ))
         } yield ()
       }
 
@@ -329,6 +385,99 @@ object SchemaChange extends AsyncTestSuite {
           // code since the retired attribute wouldn't be available in our code anyway.
         } yield ()
       }
+    }
+
+
+    "Namespace" - {
+
+      "New" - empty { implicit futConn =>
+        for {
+          // Initial data model
+          _ <- transact(schema {
+            trait Foo {
+              val int = oneInt
+            }
+          })
+
+          // Schema has 1 namespace
+          _ <- Schema.ns.a.get.map(_ ==> List(
+            ("Foo", ":Foo/int"),
+          ))
+
+          // Transact updated data model
+          _ <- transact(schema {
+            trait Foo {
+              val int = oneInt
+            }
+            trait Bar {
+              val str = oneString
+            }
+          })
+
+          // Schema has 2 namespaces
+          _ <- Schema.ns.a.get.map(_ ==> List(
+            ("Foo", ":Foo/int"),
+            ("Bar", ":Bar/str"),
+          ))
+        } yield ()
+      }
+
+
+      "Rename" - empty { implicit futConn =>
+        for {
+          conn <- futConn
+
+          // Initial data model
+          _ <- transact(schema {
+            trait Foo {
+              val int = oneInt
+              val str = oneString
+            }
+          })
+
+          _ <- Schema.a.get.map(_ ==> List(
+            ":Foo/int",
+            ":Foo/str",
+          ))
+
+          // Renaming a namespace means to change the namespace prefix of all of its attributes
+
+          // 1. Call changeAttrName to change the schema definition in the database
+          _ <- conn.changeNamespaceName("Foo", "Bar")
+          // 2. Update name of attribute in the data model
+          //      trait Foo {
+          //        val str = oneString
+          //      }
+          //
+          //      trait Bar {
+          //        val int  = oneInt
+          //        val long = oneLong
+          //      }
+          // 3. Prepare for generating new boilerplate code by changing old uses of `int` to `int2` in your code
+          //    (will not compile until you have re-generated the molecule boilerplate code)
+          // 4. Run `sbt compile -Dmolecule=true` to re-generate boilerplate code.
+          // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbNae)`
+          //    to transact the updated schema (depending on which system you use).
+
+          // int has correctly been moved to the Bar namespace
+          _ <- Schema.a.get.map(_ ==> List(
+            ":Foo/str",
+            ":Bar/int",
+            ":Bar/long",
+          ))
+
+          // See name changes with getHistory
+          // Note that `a` refers to the current attribute name
+          _ <- Schema.t.a.ident.getHistory.map(_ ==> List(
+            (1000, ":Bar/int", ":Foo/int"),
+            (1000, ":Foo/str", ":Foo/str"),
+            (1000, ":Bar/long", ":Bar/long"),
+            (1001, ":Bar/int", ":Bar/int"),
+          ))
+        } yield ()
+      }
+
+
     }
 
 

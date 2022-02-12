@@ -50,17 +50,15 @@ trait BooPicklers extends Helpers {
       s"Unexpected Datom anyPickler value `$v` of type " + v.getClass)
   }
 
-  implicit val connProxyPickler = compositePickler[ConnProxy].
-    addConcreteType[DatomicPeerProxy].
-    addConcreteType[DatomicDevLocalProxy].
-    addConcreteType[DatomicPeerServerProxy]
-
+  implicit val connProxyPickler = compositePickler[ConnProxy]
+    .addConcreteType[DatomicPeerProxy]
+    .addConcreteType[DatomicDevLocalProxy]
+    .addConcreteType[DatomicPeerServerProxy]
 
   implicit val exPickler = exceptionPickler
   exPickler
     .addConcreteType[MoleculeException]
     .addConcreteType[MoleculeCompileException]
-    //    .addConcreteType[QueryException] // Can't add this since we can't unpickle `Element`
     .addConcreteType[EntityException]
     .addConcreteType[DatomicFacadeException]
 

@@ -30,11 +30,13 @@ case class Datomic_DevLocal(system: String, storageDir: String = "")
   }
 
   def connect(
-    schemaTx: SchemaTransaction,
+    schema: SchemaTransaction,
     protocol: String,
     dbName: String,
   )(implicit ec: ExecutionContext): Future[Conn_Client] = Future {
-    val connProxy = DatomicDevLocalProxy(protocol, system, storageDir, dbName, schemaTx.datomicClient, schemaTx.attrMap)
+    val connProxy = DatomicDevLocalProxy(
+      protocol, system, storageDir, dbName, schema.datomicClient, schema.nsMap, schema.attrMap
+    )
     Conn_Client(client, connProxy, dbName, system)
   }
 
@@ -79,17 +81,19 @@ case class Datomic_DevLocal(system: String, storageDir: String = "")
    *     `implicit val conn = recreateDbFrom(YourDomainSchema)`
    *
    * @group database
-   * @param schemaTx Auto-generated YourDomainSchema Transaction object<br>
+   * @param schema Auto-generated YourDomainSchema Transaction object<br>
    *                 (in package yourdomain.schema of generated source jar)
    * @param dbName   Database name
    * @return [[molecule.datomic.base.facade.Conn Conn]]
    */
   def recreateDbFrom(
-    schemaTx: SchemaTransaction,
+    schema: SchemaTransaction,
     dbName: String = ""
   )(implicit ec: ExecutionContext): Future[Conn_Client] = {
-    val connProxy = DatomicDevLocalProxy("mem", system, storageDir, dbName, schemaTx.datomicClient, schemaTx.attrMap)
-    recreateDbFromEdn(schemaTx.datomicClient, connProxy, dbName)
+    val connProxy = DatomicDevLocalProxy(
+      "mem", system, storageDir, dbName, schema.datomicClient, schema.nsMap, schema.attrMap
+    )
+    recreateDbFromEdn(schema.datomicClient, connProxy, dbName)
   }
 
 

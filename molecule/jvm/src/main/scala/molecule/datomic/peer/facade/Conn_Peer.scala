@@ -9,6 +9,7 @@ import molecule.core.exceptions._
 import molecule.core.marshalling._
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
+import molecule.datomic.base.ast.metaSchema.MetaNs
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade._
@@ -522,7 +523,7 @@ object Conn_Peer {
 
   // Dummy constructor for transaction functions where db is supplied inside transaction by transactor
   def apply(txDb: AnyRef): Conn_Peer = new Conn_Peer(
-    null, DatomicPeerProxy("dummy", "", Nil, Map.empty[String, (Int, String)])
+    null, DatomicPeerProxy("dummy", "", Nil, Map.empty[String, MetaNs], Map.empty[String, (Int, String)])
   ) {
     testDb(DatomicDb_Peer(txDb.asInstanceOf[Database]))
   }

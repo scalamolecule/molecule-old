@@ -41,18 +41,18 @@ trait Datomic_Peer extends JavaConversions {
    * Host could also be remote. For more info on the db URI syntax:
    *
    * @see https://docs.datomic.com/on-prem/javadoc/datomic/Peer.html#connect-java.lang.Object-
-   * @param schemaTx     Schema transaction object in auto-generated molecule source jar
+   * @param schema       Schema transaction object in auto-generated molecule source jar
    * @param protocol     Datomic protocol. Defaults to "mem" for in-memory database.
    * @param dbIdentifier Optional String identifier to name database (default empty string creates a randomUUID)
    * @return Future[ [[molecule.datomic.base.facade.Conn Conn]] ]
    */
   def connect(
-    schemaTx: SchemaTransaction,
+    schema: SchemaTransaction,
     protocol: String = "mem",
     dbIdentifier: String = "",
   )(implicit ec: ExecutionContext): Future[Conn_Peer] = Future {
     val id        = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
-    val connProxy = DatomicPeerProxy(protocol, id, schemaTx.datomicPeer, schemaTx.attrMap)
+    val connProxy = DatomicPeerProxy(protocol, id, schema.datomicPeer, schema.nsMap, schema.attrMap)
     Conn_Peer(s"datomic:$protocol://$id", connProxy)
   }
 
@@ -180,19 +180,19 @@ trait Datomic_Peer extends JavaConversions {
    *     `implicit val conn: Future[Conn] = recreateDbFrom(YourDomainSchema)`
    *
    * @group database
-   * @param schemaTx     Schema transaction object in auto-generated molecule source jar
+   * @param schema       Schema transaction object in auto-generated molecule source jar
    * @param protocol     Datomic protocol. Defaults to "mem" for in-memory database.
    * @param dbIdentifier Optional String identifier to name database (default empty string creates a randomUUID)
    * @param ec           ExecutionContext
    * @return [[molecule.datomic.base.facade.Conn Conn]]
    */
   def recreateDbFrom(
-    schemaTx: SchemaTransaction,
+    schema: SchemaTransaction,
     protocol: String = "mem",
     dbIdentifier: String = "",
   )(implicit ec: ExecutionContext): Future[Conn_Peer] = {
-    val connProxy = DatomicPeerProxy(protocol, dbIdentifier, schemaTx.datomicPeer, schemaTx.attrMap)
-    recreateDbFromEdn(connProxy, schemaTx.datomicPeer, protocol, dbIdentifier)
+    val connProxy = DatomicPeerProxy(protocol, dbIdentifier, schema.datomicPeer, schema.nsMap, schema.attrMap)
+    recreateDbFromEdn(connProxy, schema.datomicPeer, protocol, dbIdentifier)
   }
 
 
@@ -273,7 +273,7 @@ trait Datomic_Peer extends JavaConversions {
     dbIdentifier: String = ""
   )(implicit ec: ExecutionContext): Future[Conn_Peer] = {
     val id        = if (dbIdentifier == "") randomUUID().toString else dbIdentifier
-    val connProxy = DatomicPeerProxy(protocol, id, schema.datomicPeer, schema.attrMap)
+    val connProxy = DatomicPeerProxy(protocol, id, schema.datomicPeer, schema.nsMap, schema.attrMap)
     for {
       conn <- connect(connProxy, protocol, id)
       _ <- Future.sequence(schema.datomicPeer.map(edn => conn.transact(edn)))

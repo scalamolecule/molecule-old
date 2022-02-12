@@ -56,14 +56,22 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers {
   }
 
   def changeAttrName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
-    val (curIdent, newIdent) = (checkIdent(curName), checkIdent(newName))
+    val (curIdent, newIdent) = (okIdent(curName), okIdent(newName))
     attrExists(curIdent).flatMap(_ => transact(s"[{:db/id $curIdent :db/ident $newIdent}]"))
   } catch {
     case NonFatal(exc) => Future.failed(exc)
   }
 
+  def changeNamespaceName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
+    val (curNs, newNs) = (okNsName(curName), okNsName(newName))
+    val x = connProxy.nsMap
+    attrExists(curNs).flatMap(_ => transact(s"[{:db/id $curNs :db/ident $newNs}]"))
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
+  }
+
   def retireAttr(name: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
-    val ident        = checkIdent(name)
+    val ident        = okIdent(name)
     val retiredIdent = ident.replace(":", ":-")
     for {
       _ <- attrExists(ident)

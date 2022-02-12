@@ -30,10 +30,12 @@ case class Datomic_PeerServer(
 
 
   def connect(
-    schemaTx: SchemaTransaction,
+    schema: SchemaTransaction,
     dbName: String
   )(implicit ec: ExecutionContext): Future[Conn_Client] = {
-    val connProxy = DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, schemaTx.datomicClient, schemaTx.attrMap)
+    val connProxy = DatomicPeerServerProxy(
+      accessKey, secret, endpoint, dbName, schema.datomicClient, schema.nsMap, schema.attrMap
+    )
     connect(connProxy, dbName)
   }
 

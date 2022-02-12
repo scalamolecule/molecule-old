@@ -780,7 +780,7 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
   }
 
   private def getFreshConn(connProxy: ConnProxy): Future[Conn] = connProxy match {
-    case proxy@DatomicPeerProxy(protocol, dbIdentifier, schema, _, _, _, _, _) =>
+    case proxy@DatomicPeerProxy(protocol, dbIdentifier, schema, _, _, _, _, _, _) =>
       protocol match {
         case "mem" =>
           Datomic_Peer.recreateDbFromEdn(proxy, schema)
@@ -796,7 +796,7 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
           ))
       }
 
-    case proxy@DatomicDevLocalProxy(protocol, system, storageDir, dbName, schema, _, _, _, _, _) =>
+    case proxy@DatomicDevLocalProxy(protocol, system, storageDir, dbName, schema, _, _, _, _, _, _) =>
       val devLocal = Datomic_DevLocal(system, storageDir)
       protocol match {
         case "mem" =>
@@ -813,7 +813,7 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
           ))
       }
 
-    case proxy@DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _, _, _, _, _, _) =>
+    case proxy@DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _, _, _, _, _, _, _) =>
       Datomic_PeerServer(accessKey, secret, endpoint).connect(proxy, dbName)
         .recoverWith { case exc => Future.failed[Conn](MoleculeException(exc.getMessage)) }
   }

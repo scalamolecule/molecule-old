@@ -29,6 +29,8 @@ object Adhoc extends AsyncTestSuite with Helpers {
       for {
         conn <- futConn
 
+        _ <- Ns.int(1).save
+        _ <- Ns.int.get.map(_ ==> List(1))
 
 
 

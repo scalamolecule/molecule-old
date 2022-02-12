@@ -109,8 +109,8 @@ case class Conn_Js(
 
   // Schema change
 
-  def changeAttrName(oldIdent0: String, newIdent0: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
-
+  def changeAttrName(oldName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+  def changeNamespaceName(oldName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
   def retireAttr(name: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
 
 

@@ -80,8 +80,14 @@ object Schema_Attr extends AsyncTestSuite {
       for {
         // Default `db.part/user` partition name returned when no custom partitions are defined
         _ <- Schema.part.get.map(_ ==> List("db.part/user"))
-
         _ <- Schema.part(count).get.map(_.head ==> 1)
+      } yield ()
+    }
+
+    "part" - partition { implicit conn =>
+      for {
+        _ <- Schema.part.get.map(_ ==> List("gen", "lit"))
+        _ <- Schema.part(count).get.map(_.head ==> 2)
       } yield ()
     }
 

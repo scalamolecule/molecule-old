@@ -2,6 +2,7 @@ package molecule.core.marshalling
 
 import java.util.UUID
 import molecule.datomic.base.ast.dbView.DbView
+import molecule.datomic.base.ast.metaSchema.MetaNs
 
 /** Proxy connection on the client side.
  *
@@ -19,6 +20,12 @@ import molecule.datomic.base.ast.dbView.DbView
 sealed trait ConnProxy {
   /** Seq of edn strings to transact schema. Supplied from generated boilerplate code. */
   val schema: Seq[String]
+
+  /** Map of attribute meta data per namespace. Supplied from generated boilerplate code.
+   *
+   * Ns -> MetaNs
+   * */
+  val nsMap: Map[String, MetaNs]
 
   /** Map of attribute meta data. Supplied from generated boilerplate code.
    *
@@ -60,6 +67,7 @@ case class DatomicPeerProxy(
   protocol: String,
   dbIdentifier: String,
   schema: Seq[String],
+  nsMap: Map[String, MetaNs],
   attrMap: Map[String, (Int, String)],
 
   // Internal settings, not intended to be set by user
@@ -89,6 +97,7 @@ case class DatomicDevLocalProxy(
   storageDir: String,
   dbName: String,
   schema: Seq[String],
+  nsMap: Map[String, MetaNs],
   attrMap: Map[String, (Int, String)],
 
   // Internal settings, not intended to be set by user
@@ -118,6 +127,7 @@ case class DatomicPeerServerProxy(
   endpoint: String,
   dbName: String,
   schema: Seq[String],
+  nsMap: Map[String, MetaNs],
   attrMap: Map[String, (Int, String)],
 
   // Internal settings, not intended to be set by user
