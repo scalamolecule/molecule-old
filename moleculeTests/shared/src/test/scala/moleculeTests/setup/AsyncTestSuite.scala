@@ -18,7 +18,7 @@ trait AsyncTestSuite extends TestSuite with CoreData
 
   val system: System = {
     SystemPeer
-//    SystemDevLocal
+    //    SystemDevLocal
 
     // Since we run asynchronous tests and can't recreate databases against the Peer Server,
     // we can only test reliably by restarting the Peer Server and test a single test at a time.
@@ -65,14 +65,15 @@ trait AsyncTestSuite extends TestSuite with CoreData
   def delay = (1 to 50000).sum
 
 
-  def transact(schema: SchemaTransaction)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[TxReport] = {
-    futConn.flatMap { conn =>
-      conn.updateConnProxy(schema)
-      system match {
-        case SystemPeer       => conn.transact(schema.datomicPeer.head)
-        case SystemDevLocal   => conn.transact(schema.datomicClient.head)
-        case SystemPeerServer => conn.transact(schema.datomicClient.head)
+  def transact(schema: SchemaTransaction)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[Seq[TxReport]] = {
+    for {
+      conn <- futConn
+      _ = conn.updateConnProxy(schema)
+      txrs <- system match {
+        case SystemPeer       => Future.sequence(schema.datomicPeer.map(edn => conn.transact(edn)))
+        case SystemDevLocal   => Future.sequence(schema.datomicClient.map(edn => conn.transact(edn)))
+        case SystemPeerServer => Future.sequence(schema.datomicClient.map(edn => conn.transact(edn)))
       }
-    }
+    } yield txrs
   }
 }

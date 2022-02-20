@@ -94,12 +94,14 @@ case class Conn_Js(
 
   // Schema change -------------------------------------------------------------
 
-  def changeAttrName(oldName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
-  def changeNamespaceName(oldName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+  def changeAttrName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+  def retireAttr(attrName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
 
-  def retireAttr(name: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
-  def retireNamespace(name: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
-  def retirePartition(name: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+  def changeNamespaceName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+  def retireNamespace(nsName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+
+  def changePartitionName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+  def retirePartition(partName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
 
 
   // Internal ------------------------------------------------------------------

@@ -11,9 +11,104 @@ import utest._
 /*
 Changing your schema ...
  */
-object SchemaChange_Options extends AsyncTestSuite {
+object SchemaChange_AttrOptions extends AsyncTestSuite {
 
   lazy val tests = Tests {
+
+    "doc" - empty { implicit futConn =>
+      for {
+        conn <- futConn
+
+        _ <- transact(schema {
+          trait Foo {
+            val int = oneInt
+          }
+        })
+
+        _ <- Schema.t.a.doc$.get.map(_ ==> List(
+          (1000, ":Foo/int", None),
+        ))
+
+        // Add
+        _ <- transact(schema {
+          trait Foo {
+            val int = oneInt.doc("blah")
+          }
+        })
+        _ <- Schema.t.a.doc$.get.map(_ ==> List(
+          (1000, ":Foo/int", Some("blah")),
+        ))
+        _ <- Schema.t.a.doc$.getHistory.map(_ ==> List(
+          (1000, ":Foo/int", None),
+          (1001, ":Foo/int", Some("blah")),
+        ))
+
+        // Update
+        _ <- transact(schema {
+          trait Foo {
+            val int = oneInt.doc("blah blah")
+          }
+        })
+        _ <- Schema.t.a.doc$.get.map(_ ==> List(
+          (1000, ":Foo/int", Some("blah blah")),
+        ))
+        _ <- Schema.t.a.doc$.getHistory.map(_ ==> List(
+          (1000, ":Foo/int", None),
+          (1001, ":Foo/int", Some("blah")),
+          (1002, ":Foo/int", Some("blah blah")),
+        ))
+
+        // Retract (need to use this method call)
+        _ <- conn.retractSchemaOption(":Foo/int", "doc")
+        _ <- transact(schema {
+          trait Foo {
+            val int = oneInt
+          }
+        })
+        _ <- Schema.t.a.doc$.get.map(_ ==> List(
+          (1000, ":Foo/int", None),
+        ))
+        _ <- Schema.t.a.doc$.getHistory.map(_ ==> List(
+          (1000, ":Foo/int", None),
+          (1001, ":Foo/int", Some("blah")),
+          (1002, ":Foo/int", Some("blah blah")),
+          (1003, ":Foo/int", None),
+        ))
+
+
+        // retractSchemaOption checks
+
+        // Invalid attribute name
+        _ <- conn.retractSchemaOption("Foo/int", "doc")
+          .map(_ ==> "Unexpected success")
+          .recover { case MoleculeException(msg, _) =>
+            msg ==> "Invalid attribute name `Foo/int`. " +
+              "Expecting attribute name in the format `:<Ns>/<attr>` or `:<part_Ns>/<attr>`"
+          }
+
+        // Invalid option name
+        _ <- conn.retractSchemaOption(":Foo/int", "docs")
+          .map(_ ==> "Unexpected success")
+          .recover { case MoleculeException(msg, _) =>
+            msg ==> "Can only retract the following options: doc, unique. Found: 'docs'"
+          }
+
+        // Non-existing attribute
+        _ <- conn.retractSchemaOption(":Foo/bar", "doc")
+          .map(_ ==> "Unexpected success")
+          .recover { case MoleculeException(msg, _) =>
+            msg ==> "Couldn't find attribute `:Foo/bar` in the database."
+          }
+
+        // Option has no value
+        _ <- conn.retractSchemaOption(":Foo/int", "doc")
+          .map(_ ==> "Unexpected success")
+          .recover { case MoleculeException(msg, _) =>
+            msg ==> "'doc' option of attribute :Foo/int has no value."
+          }
+      } yield ()
+    }
+
 
     "Cardinality" - {
 
@@ -45,6 +140,7 @@ object SchemaChange_Options extends AsyncTestSuite {
         } yield ()
       }
     }
+
 
     "breaking" - {
 

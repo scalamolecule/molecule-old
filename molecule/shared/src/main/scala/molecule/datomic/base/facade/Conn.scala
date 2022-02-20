@@ -247,14 +247,18 @@ trait Conn extends ColOps with BooPicklers {
 
   // Schema change -------------------------------------------------------------
 
-  def changeAttrName(oldName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport]
-  def changeNamespaceName(oldName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport]
+  def changeAttrName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport]
+  def retireAttr(attrName: String)(implicit ec: ExecutionContext): Future[TxReport]
 
-  def retireAttr(name: String)(implicit ec: ExecutionContext): Future[TxReport]
-  def retireNamespace(name: String)(implicit ec: ExecutionContext): Future[TxReport]
-  def retirePartition(name: String)(implicit ec: ExecutionContext): Future[TxReport]
+  def changeNamespaceName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport]
+  def retireNamespace(nsName: String)(implicit ec: ExecutionContext): Future[TxReport]
 
-  def updateConnProxy(schema: SchemaTransaction): Conn = {
+  def changePartitionName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport]
+  def retirePartition(partName: String)(implicit ec: ExecutionContext): Future[TxReport]
+
+  def retractSchemaOption(attr: String, option: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+
+  def updateConnProxy(schema: SchemaTransaction): Unit = {
     connProxy match {
       case proxy: DatomicPeerProxy =>
         connProxy = proxy.copy(
@@ -277,9 +281,7 @@ trait Conn extends ColOps with BooPicklers {
           attrMap = schema.attrMap,
         )
     }
-    this
   }
-
 
   // Internal ------------------------------------------------------------------
 

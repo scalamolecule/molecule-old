@@ -47,7 +47,11 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Peer =>
       | :where [:db.part/db :db.install/attribute ?attrId]
       |        [(datomic.api/ident $ ?attrId) ?attrIdent]
       |        [(str ?attrIdent) ?a]
-      |        [(namespace ?attrIdent) ?nsFull]
+      |
+      |     ;;   [(namespace ?attrIdent) ?nsFull]
+      |        [(namespace ?attrIdent) ?nsFull0]
+      |        [(if (= (subs ?nsFull0 0 1) "-") (subs ?nsFull0 1) ?nsFull0) ?nsFull]
+      |
       |        [(.contains ^String ?nsFull "_") ?isPart]
       |        [(.split ^String ?nsFull "_") ?nsParts]
       |        [(first ?nsParts) ?part0]
@@ -71,6 +75,9 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Peer =>
       result
     }
   }
+
+  private def opt(row: jList[AnyRef], someData: AnyRef): AnyRef =
+    if (row.get(op_).toString == "false") null else someData
 
   private def schemaElement(schemaAttr: String, mandatory: Boolean): jList[AnyRef] => AnyRef = if (mandatory) {
     // Mandatory values
@@ -110,35 +117,36 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Peer =>
     // Optional values in pull result format to be processed as non-history Schema molecules
     schemaAttr match {
       case "valueType"   => (row: jList[AnyRef]) =>
-        row.get(schemaValue_).toString.toInt match {
-          case 23 => javaMap("" -> javaMap("" -> ":db.type/string"))
-          case 22 => javaMap("" -> javaMap("" -> ":db.type/long"))
-          case 57 => javaMap("" -> javaMap("" -> ":db.type/double"))
-          case 24 => javaMap("" -> javaMap("" -> ":db.type/boolean"))
-          case 20 => javaMap("" -> javaMap("" -> ":db.type/ref"))
-          case 25 => javaMap("" -> javaMap("" -> ":db.type/instant"))
-          case 56 => javaMap("" -> javaMap("" -> ":db.type/uuid"))
-          case 59 => javaMap("" -> javaMap("" -> ":db.type/uri"))
-          case 60 => javaMap("" -> javaMap("" -> ":db.type/bigint"))
-          case 61 => javaMap("" -> javaMap("" -> ":db.type/bigdec"))
+        val tpe = row.get(schemaValue_).toString.toInt match {
+          case 23 => ":db.type/string"
+          case 22 => ":db.type/long"
+          case 57 => ":db.type/double"
+          case 24 => ":db.type/boolean"
+          case 20 => ":db.type/ref"
+          case 25 => ":db.type/instant"
+          case 56 => ":db.type/uuid"
+          case 59 => ":db.type/uri"
+          case 60 => ":db.type/bigint"
+          case 61 => ":db.type/bigdec"
         }
+        opt(row, javaMap("" -> javaMap("" -> tpe)))
       case "cardinality" => (row: jList[AnyRef]) =>
         row.get(schemaValue_).toString.toInt match {
-          case 35 => javaMap("" -> javaMap("" -> ":db.cardinality/one"))
-          case 36 => javaMap("" -> javaMap("" -> ":db.cardinality/many"))
+          case 35 => opt(row, javaMap("" -> javaMap("" -> ":db.cardinality/one")))
+          case 36 => opt(row, javaMap("" -> javaMap("" -> ":db.cardinality/many")))
         }
       case "unique"      => (row: jList[AnyRef]) =>
         row.get(schemaValue_).toString.toInt match {
-          case 37 => javaMap("" -> javaMap("" -> ":db.unique/value"))
-          case 38 => javaMap("" -> javaMap("" -> ":db.unique/identity"))
+          case 37 => opt(row, javaMap("" -> javaMap("" -> ":db.unique/value")))
+          case 38 => opt(row, javaMap("" -> javaMap("" -> ":db.unique/identity")))
         }
-      case "ident"       => (row: jList[AnyRef]) => javaMap("" -> row.get(schemaValue_))
-      case "doc"         => (row: jList[AnyRef]) => javaMap("" -> row.get(schemaValue_))
-      case "isComponent" => (row: jList[AnyRef]) => javaMap("" -> row.get(schemaValue_))
-      case "noHistory"   => (row: jList[AnyRef]) => javaMap("" -> row.get(schemaValue_))
-      case "index"       => (row: jList[AnyRef]) => javaMap("" -> row.get(schemaValue_))
-      case "fulltext"    => (row: jList[AnyRef]) => javaMap("" -> row.get(schemaValue_))
-      case "enumm"       => (row: jList[AnyRef]) => javaMap("" -> row.get(schemaValue_))
+      case "ident"       => (row: jList[AnyRef]) => opt(row, javaMap("" -> row.get(schemaValue_)))
+      case "doc"         => (row: jList[AnyRef]) => opt(row, javaMap("" -> row.get(schemaValue_)))
+      case "isComponent" => (row: jList[AnyRef]) => opt(row, javaMap("" -> row.get(schemaValue_)))
+      case "noHistory"   => (row: jList[AnyRef]) => opt(row, javaMap("" -> row.get(schemaValue_)))
+      case "index"       => (row: jList[AnyRef]) => opt(row, javaMap("" -> row.get(schemaValue_)))
+      case "fulltext"    => (row: jList[AnyRef]) => opt(row, javaMap("" -> row.get(schemaValue_)))
+      case "enumm"       => (row: jList[AnyRef]) => opt(row, javaMap("" -> row.get(schemaValue_)))
     }
   }
 
@@ -653,34 +661,38 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Peer =>
 //          println("")
 //        println(row)
 
-        if (add) {
-          attrId = row.get(attrId_)
-          schemaAttr = row.get(schemaAttr_).toString
+        attrId = row.get(attrId_)
+        schemaAttr = row.get(schemaAttr_).toString
 
-          // Init list
-          if (tx != prevTx || attrId != prevAttrId) {
-            if (processedMandatory == expectedMandatoryCount) {
-              // add prev collected row if all mandatory values have been collected
-              coll.add(list)
-              processedMandatory = 0
-            }
-            prevTx = tx
-            prevAttrId = attrId
-            list = new util.ArrayList[AnyRef](length)
-            initList(row)
-          }
-
-          // Add schema attribute value if requested
-          schemaAttrIndexes.get(schemaAttr).foreach { case (i, mandatory, resolver) =>
-            if (mandatory)
-              processedMandatory += 1
-            list.set(i, resolver(row))
-          }
-
-          if (i == last && processedMandatory == expectedMandatoryCount) {
-            // add last collected row if all mandatory values have been collected
+        // Init list
+        if (tx != prevTx || attrId != prevAttrId) {
+          if (processedMandatory >= expectedMandatoryCount) {
+            // add prev collected row if all mandatory values have been collected
             coll.add(list)
+            processedMandatory = 0
           }
+          prevTx = tx
+          prevAttrId = attrId
+          list = new util.ArrayList[AnyRef](length)
+          initList(row)
+        }
+
+        // Add schema attribute value if requested
+        schemaAttrIndexes.get(schemaAttr).foreach { case (i, mandatory, resolver) =>
+          if (mandatory)
+            processedMandatory += 1
+          list.set(i, resolver(row))
+//          val v = resolver(row)
+//          println(s"======= $i     $v")
+//          list.set(i, v)
+        }
+
+//        println(s"####### $i  $processedMandatory  $list")
+        if (i == last && processedMandatory >= expectedMandatoryCount) {
+          // add last collected row if all mandatory values have been collected
+//          println(s"@@@@@@@ $i  $processedMandatory  $list")
+          coll.add(list)
+          processedMandatory = 0
         }
       }
       coll

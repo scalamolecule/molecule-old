@@ -75,15 +75,30 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers {
     }
   }
 
-  def changeAttrName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
+  def changeAttrName(curName: String, newName: String)
+                    (implicit ec: ExecutionContext): Future[TxReport] = try {
     val (curIdent, newIdent) = (okIdent(curName), okIdent(newName))
     attrExists(curIdent).flatMap(_ => transact(s"[{:db/id $curIdent :db/ident $newIdent}]"))
   } catch {
     case NonFatal(exc) => Future.failed(exc)
   }
 
-  def changeNamespaceName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
-    val (curNs, newNs) = (okNsName(curName), okNsName(newName))
+  def retireAttr(attrName: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
+    val ident        = okIdent(attrName)
+    val retiredIdent = ident.replace(":", ":-")
+    for {
+      _ <- attrExists(ident)
+      _ <- attrHasNoData(ident)
+      txReport <- transact(s"[{:db/id $ident :db/ident $retiredIdent}]")
+    } yield txReport
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
+  }
+
+
+  def changeNamespaceName(curName: String, newName: String)
+                         (implicit ec: ExecutionContext): Future[TxReport] = try {
+    val (curNs, newNs) = (okNamespaceName(curName), okNamespaceName(newName))
     connProxy.nsMap.get(curNs).fold[Future[TxReport]](
       Future.failed(MoleculeException(s"Couldn't find namespace `$curNs`."))
     ) { nsMap =>
@@ -97,27 +112,15 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers {
     case NonFatal(exc) => Future.failed(exc)
   }
 
-  def retireAttr(name: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
-    val ident        = okIdent(name)
-    val retiredIdent = ident.replace(":", ":-")
-    for {
-      _ <- attrExists(ident)
-      _ <- attrHasNoData(ident)
-      txReport <- transact(s"[{:db/id $ident :db/ident $retiredIdent}]")
-    } yield txReport
-  } catch {
-    case NonFatal(exc) => Future.failed(exc)
-  }
-
-  def retireNamespace(name: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
-    val ns = okNsName(name)
+  def retireNamespace(nsName: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
+    val ns = okNamespaceName(nsName)
     connProxy.nsMap.get(ns).fold[Future[TxReport]](
       Future.failed(MoleculeException(s"Couldn't find namespace `$ns`."))
     ) { nsMap =>
       for {
         _ <- Future.sequence(nsMap.attrs.map(metaAttr => attrHasNoData(s":$ns/${metaAttr.name}")))
         txReport <- {
-          // Mark all attribute names in namespace with `-` prefix
+          // Prefix all attribute names in namespace with `-`
           val attrNameChanges = nsMap.attrs.map { metaAttr =>
             val attr = metaAttr.name
             s"{:db/id :$ns/$attr :db/ident :-$ns/$attr}"
@@ -130,7 +133,76 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers {
     case NonFatal(exc) => Future.failed(exc)
   }
 
-  def retirePartition(name: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+  def changePartitionName(curName: String, newName: String)
+                         (implicit ec: ExecutionContext): Future[TxReport] = try {
+    val (curPart, newPart) = (okPartitionName(curName), okPartitionName(newName))
+    val nss                = connProxy.nsMap.filter(_._1.startsWith(curPart)).toSeq
+    if (nss.isEmpty) {
+      throw MoleculeException(s"Couldn't find partition `$curPart`.")
+    }
+    val stmts = for {
+      (_, nsMap) <- nss
+      ns = nsMap.name
+      metaAttr <- nsMap.attrs
+      attr = metaAttr.name
+    } yield s"{:db/id :${curPart}_$ns/$attr :db/ident :${newPart}_$ns/$attr}"
+    transact(stmts.mkString("[", "", "]"))
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
+  }
+
+  def retirePartition(partName: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
+    val part = okPartitionName(partName)
+    val nss  = connProxy.nsMap.filter(_._1.startsWith(part)).toSeq
+    if (nss.isEmpty) {
+      throw MoleculeException(s"Couldn't find partition `$part`.")
+    }
+    val (nsAttr, stmts) = (for {
+      (_, nsMap) <- nss
+      ns = nsMap.name
+      metaAttr <- nsMap.attrs
+      attr = metaAttr.name
+    } yield {
+      // Prefix all attribute names in partition with `-`
+      ((ns, attr), s"{:db/id :${part}_$ns/$attr :db/ident :-${part}_$ns/$attr}")
+    }).unzip
+    for {
+      _ <- Future.sequence(nsAttr.map { case (ns, attr) => attrHasNoData(s":${part}_$ns/$attr") })
+      txReport <- transact(stmts.mkString("[", "", "]"))
+    } yield txReport
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
+  }
+
+  override def retractSchemaOption(attr: String, option: String)
+                                  (implicit ec: ExecutionContext): Future[TxReport] = try {
+    val ident   = okIdent(attr)
+    val options = List("doc", "unique")
+    if (!options.contains(option)) {
+      throw MoleculeException(
+        "Can only retract the following options: " + options.mkString(", ") + s". Found: '$option'"
+      )
+    }
+    for {
+      _ <- attrExists(ident)
+      res <- query(s"[:find ?v :where [$ident :db/$option ?v]]")
+      txReport <- {
+        if (res.isEmpty) {
+          Future.failed(MoleculeException(s"'$option' option of attribute $attr has no value."))
+        } else {
+          val rawValue = res.head.head
+          val curValue = option match {
+            case "doc" => s"\"$rawValue\""
+            case _     => rawValue
+          }
+          transact(s"[[:db/retract $attr :db/$option $curValue]]")
+            .recoverWith(e => Future.failed(e))
+        }
+      }
+    } yield txReport
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
+  }
 
 
   // Query ---------------------------------------------------------------------

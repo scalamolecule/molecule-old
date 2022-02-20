@@ -43,7 +43,7 @@ object SchemaChange_Attr extends AsyncTestSuite {
         //    (Previously transacted schema attributes are automatically ignored by Datomic. So we can safely transact the
         //     whole schema anytime we want).
         // 2. Run `sbt compile -Dmolecule=true` to re-generate boilerplate code.
-        // 3. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbNae)`
+        // 3. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbName)`
         //    to transact the updated schema (depending on which system you use).
 
         // For testing purpose, we transact the schema of our updated data model here
@@ -90,7 +90,7 @@ object SchemaChange_Attr extends AsyncTestSuite {
         //      }
         // 3. Change all uses of int to int2 in your code.
         // 4. Run `sbt compile -Dmolecule=true` to re-generate boilerplate code.
-        // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbNae)`
+        // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbName)`
         //    to transact the updated schema (depending on which system you use).
 
         // int has correctly been renamed to int2
@@ -140,7 +140,7 @@ object SchemaChange_Attr extends AsyncTestSuite {
 
         // 1. Add the attribute again to the data model.
         // 2. Run `sbt compile -Dmolecule=true` to re-generate boilerplate code.
-        // 3. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbNae)`
+        // 3. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbName)`
         //    to transact the updated schema (depending on which system you use).
 
         // For testing purpose, we transact the schema of our updated data model here
@@ -152,9 +152,9 @@ object SchemaChange_Attr extends AsyncTestSuite {
         })
 
         // Now both attributes exist
-        _ <- Schema.t.a.get.map(_ ==> List(
-          (1000, ":Foo/int2"), // originally `int`
-          (1002, ":Foo/int"), //  repurposed `int`
+        _ <- Schema.t.a1.a.attr.get.map(_ ==> List(
+          (1000, ":Foo/int2", "int2"), // originally `int`
+          (1002, ":Foo/int", "int"), //   repurposed `int`
         ))
 
         // Check name changes with getHistory
@@ -246,7 +246,7 @@ object SchemaChange_Attr extends AsyncTestSuite {
         //      }
         // 3. Change all uses of int to int2 in your code.
         // 4. Run `sbt compile -Dmolecule=true` to re-generate boilerplate code.
-        // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbNae)`
+        // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbName)`
         //    to transact the updated schema (depending on which system you use).
 
         // int has correctly been moved to the Bar namespace
@@ -322,7 +322,7 @@ object SchemaChange_Attr extends AsyncTestSuite {
         // 2. Remove attribute definition in the data model.
         // 3. Remove all uses of `int` in your code.
         // 4. Run `sbt compile -Dmolecule=true` to re-generate boilerplate code.
-        // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbNae)`
+        // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbName)`
         //    to transact the updated schema (depending on which system you use).
 
         // For testing purpose, we transact the schema of our new data model here
@@ -337,10 +337,9 @@ object SchemaChange_Attr extends AsyncTestSuite {
           (1000, ":Foo/str"),
         ))
 
-        // Retired attributes are simply marked with a `-` prefix to exclude them from
-        // current Schema queries as shown above.
+        // Retired attributes are simply marked with a `-` prefix to exclude them from current Schema queries.
         _ <- Schema.t.a.ident.getHistory.map(_ ==> List(
-          (1000, ":-Foo/int", ":Foo/int"),
+          (1000, ":-Foo/int", ":Foo/int"), // :Foo/int created (`a` shows current retired attribute ident `:-Foo/int`)
           (1000, ":Foo/str", ":Foo/str"),
           (1004, ":-Foo/int", ":-Foo/int"), // :Foo/int retired
         ))
@@ -352,7 +351,7 @@ object SchemaChange_Attr extends AsyncTestSuite {
         _ <- conn.changeAttrName(":-Foo/int", ":Foo/int")
         // 2. Add `int` definition again to the data model.
         // 3. Run `sbt compile -Dmolecule=true` to re-generate boilerplate code.
-        // 4. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbNae)`
+        // 4. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbName)`
         //    to transact the updated schema (depending on which system you use).
 
         // For testing purpose, we transact the schema of our new data model here

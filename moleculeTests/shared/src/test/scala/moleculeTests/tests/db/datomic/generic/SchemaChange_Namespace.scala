@@ -23,20 +23,22 @@ object SchemaChange_Namespace extends AsyncTestSuite {
           }
         })
 
-        // Transact updated data model
+        // Transact updated data model with added namespace having multiple attributes
         _ <- transact(schema {
           trait Foo {
             val int = oneInt
           }
           trait Bar {
-            val str = oneString
+            val str  = oneString
+            val long = oneLong
           }
         })
 
         // Schema has 2 namespaces
-        _ <- Schema.ns.a.get.map(_ ==> List(
-          ("Foo", ":Foo/int"),
-          ("Bar", ":Bar/str"),
+        _ <- Schema.ns.d1.a.d2.attr.get.map(_ ==> List(
+          ("Foo", ":Foo/int", "int"),
+          ("Bar", ":Bar/str", "str"),
+          ("Bar", ":Bar/long", "long"),
         ))
       } yield ()
     }
@@ -64,13 +66,13 @@ object SchemaChange_Namespace extends AsyncTestSuite {
         //      }
         // 3. Change all uses of the old namespace `Foo` to `Bar` in your code.
         // 4. Run `sbt compile -Dmolecule=true` to re-generate boilerplate code.
-        // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbNae)`
+        // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbName)`
         //    to transact the updated schema (depending on which system you use).
 
         // Foo attributes have been renamed to belong to Bar
-        _ <- Schema.a.get.map(_ ==> List(
-          ":Bar/str",
-          ":Bar/int",
+        _ <- Schema.a.attr.get.map(_ ==> List(
+          (":Bar/str", "str"),
+          (":Bar/int", "int"),
         ))
 
         // See name changes with getHistory
@@ -109,11 +111,18 @@ object SchemaChange_Namespace extends AsyncTestSuite {
 
         // Checks
 
-        // Invalid attribute name
+        // Invalid namespace name
         _ <- conn.retireNamespace(":Foo")
           .map(_ ==> "Unexpected success")
           .recover { case MoleculeException(msg, _) =>
             msg ==> "Invalid namespace name `:Foo`. Expecting namespace name in the format `[a-zA-Z][a-zA-Z0-9_]+`"
+          }
+
+        // Unknown namespace
+        _ <- conn.retireNamespace("Fooo")
+          .map(_ ==> "Unexpected success")
+          .recover { case MoleculeException(msg, _) =>
+            msg ==> "Couldn't find namespace `Fooo`."
           }
 
         // Attribute with data asserted can't be retired
@@ -129,48 +138,35 @@ object SchemaChange_Namespace extends AsyncTestSuite {
         _ <- conn.transact(s"[[:db/retract $e :Foo/int 1]]")
 
 
-        // Now we can retire the attribute - in 5 steps:
+        // Now we can retire the namespace - in 5 steps:
 
-        // 1. Call retireAttr to retire the attribute in the database.
+        // 1. Call retireAttr to retire all attributes of the namespace in the database.
         _ <- conn.retireNamespace("Foo")
         // 2. Remove namespace `Foo` from the data model.
         //      trait Bar {
         //        val long = oneLong
         //      }
-        // 3. Change all uses of the old namespace `Foo` to `Bar` in your code.
+        // 3. Remove all uses of attributes from the old namespace `Foo` in your code.
         // 4. Run `sbt compile -Dmolecule=true` to re-generate boilerplate code.
-        // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbNae)`
+        // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbName)`
         //    to transact the updated schema (depending on which system you use).
 
 
-        // Foo attributes are no longer available
+        // Attributes in `Foo` namespace are no longer available
         _ <- Schema.t.a.get.map(_ ==> List(
           (1000, ":Bar/long"),
         ))
 
-        // Retired attributes are simply marked with a `-` prefix to exclude them from
-        // current Schema queries as shown above.
-        _ <- Schema.t.a.ident.getHistory.map(_ ==> List(
-          (1000, ":-Foo/int", ":Foo/int"), // :Foo/int created (`a` shows current retired attribute ident `:-Foo/int`)
-          (1000, ":-Foo/str", ":Foo/str"), // :Foo/str created (`a` shows current retired attribute ident `:-Foo/str`)
-          (1000, ":Bar/long", ":Bar/long"),
-          (1004, ":-Foo/int", ":-Foo/int"), // :Foo/int retired
-          (1004, ":-Foo/str", ":-Foo/str"), // :Foo/str retired
+        // Retired attributes are simply marked with a `-` prefix to exclude them from current Schema queries.
+        _ <- Schema.t.ns.attr.a.ident.getHistory.map(_ ==> List(
+          (1000, "Foo", "int", ":-Foo/int", ":Foo/int"), // :Foo/int created (`a` shows current retired attribute ident `:-Foo/int`)
+          (1000, "Foo", "str", ":-Foo/str", ":Foo/str"), // :Foo/str created (`a` shows current retired attribute ident `:-Foo/str`)
+          (1000, "Bar", "long", ":Bar/long", ":Bar/long"),
+
+          // Namespace Foo retired
+          (1004, "Foo", "int", ":-Foo/int", ":-Foo/int"), // :Foo/int retired
+          (1004, "Foo", "str", ":-Foo/str", ":-Foo/str"), // :Foo/str retired
         ))
-
-
-        // Data model out of sync with database schema
-        outOfSyncSchema = schema {
-          trait Foo {
-            val int  = oneInt
-            val strX = oneString
-          }
-        }
-        _ <- conn.updateConnProxy(outOfSyncSchema).retireNamespace("Foo")
-          .map(_ ==> "Unexpected success")
-          .recover { case MoleculeException(msg, _) =>
-            msg ==> "Couldn't find attribute `:Foo/strX` in the database schema."
-          }
       } yield ()
     }
   }

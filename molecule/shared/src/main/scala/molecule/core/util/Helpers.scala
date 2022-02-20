@@ -167,10 +167,16 @@ trait Helpers extends DateHandling {
         "Expecting attribute name in the format `:<Ns>/<attr>` or `:<part_Ns>/<attr>`"
     )
   }
-  protected def okNsName(name: String): String = name match {
+  protected def okNamespaceName(name: String): String = name match {
     case r"[a-zA-Z][a-zA-Z0-9_]+" => name
     case _                        => throw MoleculeException(
       s"Invalid namespace name `$name`. Expecting namespace name in the format `[a-zA-Z][a-zA-Z0-9_]+`"
+    )
+  }
+  protected def okPartitionName(name: String): String = name match {
+    case r"[a-z][a-zA-Z0-9]+" => name
+    case _                        => throw MoleculeException(
+      s"Invalid partition name `$name`. Expecting partition name in the format `[a-z][a-zA-Z0-9]+`"
     )
   }
 }

@@ -18,25 +18,52 @@ object SchemaChange_Partition extends AsyncTestSuite {
     "New" - empty { implicit futConn =>
       for {
         _ <- transact(schema {
-          trait Foo {
-            val int = oneInt
+          object part1 {
+            trait Foo {
+              val int = oneInt
+            }
           }
         })
 
-        // Transact updated data model
+        // When partitions are used, the schema is transacted in two steps:
+        // t 1000: partition is installed
+        // t 1001: attributes are installed
+
+        // Schema has 1 partition
+        _ <- Schema.part.a.get.map(_ ==> List(
+          ("part1", ":part1_Foo/int")
+        ))
+        _ <- Schema.t.part.a.getHistory.map(_ ==> List(
+          (1001, "part1", ":part1_Foo/int"),
+        ))
+
+        // Transact data model with added partition having multiple namespaces
         _ <- transact(schema {
-          trait Foo {
-            val int = oneInt
+          object part1 {
+            trait Foo {
+              val int = oneInt
+            }
           }
-          trait Bar {
-            val str = oneString
+          object part2 {
+            trait Bar {
+              val str = oneString
+            }
+            trait Baz {
+              val long = oneLong
+            }
           }
         })
 
-        // Schema has 2 namespaces
-        _ <- Schema.ns.a.get.map(_ ==> List(
-          ("Foo", ":Foo/int"),
-          ("Bar", ":Bar/str"),
+        // Schema now has 2 partitions
+        _ <- Schema.part.a1.a.get.map(_ ==> List(
+          ("part1", ":part1_Foo/int"),
+          ("part2", ":part2_Bar/str"),
+          ("part2", ":part2_Baz/long"),
+        ))
+        _ <- Schema.t.part.a.getHistory.map(_ ==> List(
+          (1001, "part1", ":part1_Foo/int"),
+          (1003, "part2", ":part2_Bar/str"),
+          (1003, "part2", ":part2_Baz/long"),
         ))
       } yield ()
     }
@@ -47,39 +74,60 @@ object SchemaChange_Partition extends AsyncTestSuite {
         conn <- futConn
 
         _ <- transact(schema {
-          trait Foo {
-            val int = oneInt
-            val str = oneString
+          object part1 {
+            trait Foo {
+              val int = oneInt
+              val str = oneString
+            }
+            trait Bar {
+              val long = oneLong
+            }
           }
         })
 
-        // Renaming a namespace means changing the namespace prefix of all of its attributes
+        _ <- Schema.part.ns.d1.a.get.map(_ ==> List(
+          ("part1", "Foo", ":part1_Foo/int"),
+          ("part1", "Foo", ":part1_Foo/str"),
+          ("part1", "Bar", ":part1_Bar/long"),
+        ))
+
+        // Renaming a partition means changing the namespace prefix of all of its attributes in eachj namespace
 
         // 1. Call changeNamespaceName to change the schema definition in the database
-        _ <- conn.changeNamespaceName("Foo", "Bar")
-        // 2. Update namespace name in the data model
-        //      trait Bar {
-        //        val int  = oneInt
-        //        val str = oneString
+        _ <- conn.changePartitionName("part1", "part2")
+        // 2. Update partition name in the data model
+        //      object part2 {
+        //        trait Foo {
+        //          val int = oneInt
+        //          val str = oneString
+        //        }
+        //        trait Bar {
+        //          val str = oneString
+        //        }
         //      }
         // 3. Change all uses of the old namespace `Foo` to `Bar` in your code.
         // 4. Run `sbt compile -Dmolecule=true` to re-generate boilerplate code.
-        // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbNae)`
+        // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbName)`
         //    to transact the updated schema (depending on which system you use).
 
-        // Foo attributes have been renamed to belong to Bar
-        _ <- Schema.a.get.map(_ ==> List(
-          ":Bar/str",
-          ":Bar/int",
+        // Foo attributes have been renamed to belong to part2
+
+        _ <- Schema.part.ns.d1.a.get.map(_ ==> List(
+          ("part2", "Foo", ":part2_Foo/int"),
+          ("part2", "Foo", ":part2_Foo/str"),
+          ("part2", "Bar", ":part2_Bar/long"),
         ))
 
         // See name changes with getHistory
-        // Note that `a` refers to the current attribute name
-        _ <- Schema.t.a.ident.getHistory.map(_ ==> List(
-          (1000, ":Bar/int", ":Foo/int"),
-          (1000, ":Bar/str", ":Foo/str"),
-          (1001, ":Bar/int", ":Bar/int"),
-          (1001, ":Bar/str", ":Bar/str"),
+        // Note that t, part nad ns refer to the current values
+        _ <- Schema.t.part.ns.a.ident.getHistory.map(_ ==> List(
+          (1001, "part2", "Foo", ":part2_Foo/int", ":part1_Foo/int"),
+          (1001, "part2", "Foo", ":part2_Foo/str", ":part1_Foo/str"),
+          (1001, "part2", "Bar", ":part2_Bar/long", ":part1_Bar/long"),
+
+          (1002, "part2", "Foo", ":part2_Foo/int", ":part2_Foo/int"),
+          (1002, "part2", "Foo", ":part2_Foo/str", ":part2_Foo/str"),
+          (1002, "part2", "Bar", ":part2_Bar/long", ":part2_Bar/long"),
         ))
       } yield ()
     }
@@ -93,121 +141,90 @@ object SchemaChange_Partition extends AsyncTestSuite {
 
         // Initial data model
         _ <- transact(schema {
-          trait Foo {
-            val int = oneInt
-            val str = oneString
+          object part1 {
+            trait Foo {
+              val int = oneInt
+              val str = oneString
+            }
+            trait Bar {
+              val long = oneLong
+            }
+          }
+          object part2 {
+            trait Baz {
+              val bool = oneBoolean
+            }
           }
         })
-
-        // int data
-        e <- conn.transact("""[[:db/add "-1" :Foo/int 1]]""").map(_.eid)
-        _ <- conn.query("[:find  ?b :where [?a :Foo/int ?b]]").map(_ ==> List(List(1)))
+        _ <- Schema.t.a.a1.get.map(_ ==> List(
+          (1001, ":part1_Bar/long"),
+          (1001, ":part1_Foo/int"),
+          (1001, ":part1_Foo/str"),
+          (1001, ":part2_Baz/bool"),
+        ))
 
         // Checks
 
-        // Invalid attribute name
-        _ <- conn.retireNamespace(":Foo")
+        // Invalid partition name
+        _ <- conn.retirePartition("Part1")
           .map(_ ==> "Unexpected success")
           .recover { case MoleculeException(msg, _) =>
-            msg ==> "Invalid namespace name `:Foo`. Expecting namespace name in the format `[a-zA-Z][a-zA-Z0-9_]+`"
+            msg ==> "Invalid partition name `Part1`. Expecting partition name in the format `[a-z][a-zA-Z0-9]+`"
           }
 
-        // Data model out of sync with database schema
-        outOfSyncSchema = schema {
-          trait Foo {
-            val int  = oneInt
-            val strX = oneString
+        // Unknown partition
+        _ <- conn.retirePartition("part3")
+          .map(_ ==> "Unexpected success")
+          .recover { case MoleculeException(msg, _) =>
+            msg ==> "Couldn't find partition `part3`."
           }
-        }
-
-        conn2 = conn
-        _ <- {
-          //            val conn2 = conn.clone().asInstanceOf[Conn]
-          conn2.updateConnProxy(outOfSyncSchema).retireNamespace("Foo")
-            .map(_ ==> "Unexpected success")
-            .recover { case MoleculeException(msg, _) =>
-              msg ==> "Couldn't find attribute `:Foo/strX` in the database schema."
-              //              msg ==> ":db.error/not-an-entity Unable to resolve entity: :Foo/strX in datom [:Foo/strX :db/ident :-Foo/strX]"
-            }
-        }
 
         // Attribute with data asserted can't be retired
-        _ <- conn.retireNamespace("Foo")
+        e <- conn.transact("""[[:db/add "-1" :part1_Foo/int 1]]""").map(_.eid)
+        _ <- conn.retirePartition("part1")
           .map(_ ==> "Unexpected success")
           .recover { case MoleculeException(msg, _) =>
-            msg ==> "Can't retire attribute `:Foo/int` having 1 value asserted. " +
+            msg ==> "Can't retire attribute `:part1_Foo/int` having 1 value asserted. " +
               "Please retract value before retiring attribute."
           }
 
         // Retract data asserted with int attribute
-        _ <- conn.transact(s"[[:db/retract $e :Foo/int 1]]")
+        _ <- conn.transact(s"[[:db/retract $e :part1_Foo/int 1]]")
 
 
-        // Now we can retire the attribute - in 5 steps:
+        // Now we can retire the partition - in 5 steps:
 
-        // 1. Call retireAttr to retire the attribute in the database.
-        _ <- conn.retireAttr(":Foo/int")
-        // 2. Remove namespace attribute definition in the data model.
-        // 3. Change all uses of the old namespace `Foo` to `Bar` in your code.
+        // 1. Call retireAttr to retire all attributes of the partition in the database.
+        _ <- conn.retirePartition("part1")
+        // 2. Remove partition `part1` from the data model.
+        //        object part2 {
+        //          trait Baz {
+        //            val bool = oneBoolean
+        //          }
+        //        }
+        // 3. Remove all uses of attributes from the old partition `part1` in your code.
         // 4. Run `sbt compile -Dmolecule=true` to re-generate boilerplate code.
-        // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbNae)`
+        // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbName)`
         //    to transact the updated schema (depending on which system you use).
 
-        // For testing purpose, we transact the schema of our new data model here
-        _ <- transact(schema {
-          trait Foo {
-            val str = oneString
-          }
-        })
 
-        // int attribute is no longer available (current view filters out retired attributes)
-        _ <- Schema.t.a.get.map(_ ==> List(
-          (1000, ":Foo/str"),
+        // Attributes in `part2` partition are no longer available
+        _ <- Schema.t.part.ns.attr.a.get.map(_ ==> List(
+          (1001, "part2", "Baz", "bool", ":part2_Baz/bool"),
         ))
 
-        // Retired attributes are simply marked with a `-` prefix to exclude them from
-        // current Schema queries as shown above.
-        _ <- Schema.t.a.ident.getHistory.map(_ ==> List(
-          (1000, ":-Foo/int", ":Foo/int"),
-          (1000, ":Foo/str", ":Foo/str"),
-          (1004, ":-Foo/int", ":-Foo/int"), // :Foo/int retired
+        // Retired attributes are simply marked with a `-` prefix to exclude them from current Schema queries.
+        _ <- Schema.t.part.ns.attr.a.ident.getHistory.map(_ ==> List(
+          (1001, "part1", "Foo", "int", ":-part1_Foo/int", ":part1_Foo/int"),
+          (1001, "part1", "Foo", "str", ":-part1_Foo/str", ":part1_Foo/str"),
+          (1001, "part1", "Bar", "long", ":-part1_Bar/long", ":part1_Bar/long"),
+          (1001, "part2", "Baz", "bool", ":part2_Baz/bool", ":part2_Baz/bool"),
+
+          // Partition part1 retired
+          (1005, "part1", "Foo", "int", ":-part1_Foo/int", ":-part1_Foo/int"),
+          (1005, "part1", "Foo", "str", ":-part1_Foo/str", ":-part1_Foo/str"),
+          (1005, "part1", "Bar", "long", ":-part1_Bar/long", ":-part1_Bar/long"),
         ))
-
-
-        // Un-retire attribute in 5 steps:
-
-        // 1. Call changeAttrName to remove prefix used to mark it as retired
-        _ <- conn.changeAttrName(":-Foo/int", ":Foo/int")
-        // 2. Remove attribute definition in the data model.
-        // 3. Prepare for generating new boilerplate code by removing old uses of `int` in your code.
-        // 4. Run `sbt compile -Dmolecule=true` to re-generate boilerplate code.
-        // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbNae)`
-        //    to transact the updated schema (depending on which system you use).
-
-        // For testing purpose, we transact the schema of our new data model here
-        _ <- transact(schema {
-          trait Foo {
-            val int = oneInt
-            val str = oneString
-          }
-        })
-
-        _ <- Schema.t.a.get.map(_ ==> List(
-          (1000, ":Foo/int"),
-          (1000, ":Foo/str"),
-        ))
-
-        _ <- Schema.t.a.ident.getHistory.map(_ ==> List(
-          (1000, ":Foo/int", ":Foo/int"),
-          (1000, ":Foo/str", ":Foo/str"),
-          (1004, ":Foo/int", ":-Foo/int"), // :Foo/int retired
-          (1006, ":Foo/int", ":Foo/int"), //  :Foo/int un-retired
-        ))
-
-        // We could also simply have updated our data model as above without first calling
-        // changeAttrName. The only difference would then be that a new attribute named `:Foo/int`
-        // would be created and the old retired `:-Foo/int` would remain. This wouldn't affect our
-        // code since the retired attribute wouldn't be available in our code anyway.
       } yield ()
     }
   }
