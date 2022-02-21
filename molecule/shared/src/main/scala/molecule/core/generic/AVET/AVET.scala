@@ -14,13 +14,13 @@ import molecule.core.generic.GenericNs
 import scala.language.higherKinds
 
 trait AVET extends GenericNs {
-  final class e         [Stay, Next] extends OneLong   [Stay, Next] with Indexed
-  final class a         [Stay, Next] extends OneString [Stay, Next] with Indexed
-  final class v         [Stay, Next] extends OneAny    [Stay, Next] with Indexed
-  final class t         [Stay, Next] extends OneLong   [Stay, Next] with Indexed
-  final class tx        [Stay, Next] extends OneLong   [Stay, Next] with Indexed
-  final class txInstant [Stay, Next] extends OneDate   [Stay, Next] with Indexed
-  final class op        [Stay, Next] extends OneBoolean[Stay, Next] with Indexed
+  final class e         [Stay, Next] extends OneLong   [Stay, Next] with Index
+  final class a         [Stay, Next] extends OneString [Stay, Next] with Index
+  final class v         [Stay, Next] extends OneAny    [Stay, Next] with Index
+  final class t         [Stay, Next] extends OneLong   [Stay, Next] with Index
+  final class tx        [Stay, Next] extends OneLong   [Stay, Next] with Index
+  final class txInstant [Stay, Next] extends OneDate   [Stay, Next] with Index
+  final class op        [Stay, Next] extends OneBoolean[Stay, Next] with Index
 }
 
 trait AVET_[props] { def AVET: props = ??? }

@@ -12,7 +12,7 @@ object Settings extends SettingsDatomic {
     organization := "org.scalamolecule",
     organizationName := "ScalaMolecule",
     organizationHomepage := Some(url("http://www.scalamolecule.org")),
-    ThisBuild / version := "1.1.0",
+    ThisBuild / version := "1.2.0-SNAPSHOT",
     ThisBuild / scalaVersion := "2.13.8",
     crossScalaVersions := Seq("2.12.15", "2.13.8"),
     scalacOptions := List(
@@ -50,12 +50,13 @@ object Settings extends SettingsDatomic {
       // See https://github.com/cquiroz/scala-java-time/issues/69
       "io.github.cquiroz" %%% "scala-java-time-tzdb" % "2.3.0"
     ),
-    jsEnv := new JSDOMNodeJSEnv(
-      JSDOMNodeJSEnv.Config()
-        // for some reason still needed with Scala.js 1.8
-        // https://github.com/scala-js/scala-js-js-envs/issues/12
-        .withArgs(List("--dns-result-order=ipv4first"))
-    )
+    jsEnv := new JSDOMNodeJSEnv()
+//    jsEnv := new JSDOMNodeJSEnv(
+//      JSDOMNodeJSEnv.Config()
+//        // for some reason still needed with Scala.js 1.8
+//        // https://github.com/scala-js/scala-js-js-envs/issues/12
+//        .withArgs(List("--dns-result-order=ipv4first"))
+//    )
   )
 
 

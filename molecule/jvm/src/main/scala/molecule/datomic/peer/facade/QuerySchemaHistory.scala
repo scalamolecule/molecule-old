@@ -47,9 +47,9 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Peer =>
       | :where [:db.part/db :db.install/attribute ?attrId]
       |        [(datomic.api/ident $ ?attrId) ?attrIdent]
       |        [(str ?attrIdent) ?a]
-      |
-      |     ;;   [(namespace ?attrIdent) ?nsFull]
       |        [(namespace ?attrIdent) ?nsFull0]
+      |
+      |        ;; Remove '-' prefix if marked as retired
       |        [(if (= (subs ?nsFull0 0 1) "-") (subs ?nsFull0 1) ?nsFull0) ?nsFull]
       |
       |        [(.contains ^String ?nsFull "_") ?isPart]

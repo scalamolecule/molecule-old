@@ -23,7 +23,7 @@ object ProductsOrderDataModel {
   }
 
   trait Product {
-    val description = oneString.indexed
+    val description = oneString.index
   }
 
   // Some extra namespaces to explore insertion of multiple levels of nested data

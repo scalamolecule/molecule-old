@@ -88,7 +88,7 @@ case class NsBase(
   val pkg = if (isGeneric) genericPkg else model.pkg + ".dsl"
 
   val inputEids = if (model.maxIn == 0) "" else
-    s"\n  final override def apply(eids: qm)               : ${ns}_1_0_L0[$ns_, Init, Long] = ???"
+    s"\n  final override def apply(eids: qm)              : ${ns}_1_0_L0[$ns_, Init, Long] = ???"
 
   val (imports, body) = if (isDatom) {
     (

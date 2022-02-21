@@ -300,8 +300,13 @@ trait Conn extends ColOps with BooPicklers {
   private[molecule] lazy val rpc: MoleculeRpc = throw jsOnly("rpc")
 
 
-  private[molecule] def usingAdhocDbView(dbView: DbView): Conn = {
+  def usingAdhocDbView(dbView: DbView): Conn = {
     updateAdhocDbView(Some(dbView))
+    this
+  }
+
+  def skipAdhocDbView: Conn = {
+    updateAdhocDbView(None)
     this
   }
 

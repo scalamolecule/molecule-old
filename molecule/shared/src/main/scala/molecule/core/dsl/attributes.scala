@@ -163,7 +163,7 @@ object attributes {
   case class Doc(msg: String)
   trait UniqueValue
   trait UniqueIdentity
-  trait Indexed
+  trait Index
   trait Fulltext[Ns, In] extends FulltextExpr[Ns, In]
   trait IsComponent
   trait NoHistory

@@ -113,11 +113,8 @@ case class Conn_Peer(
   }
 
 
-  final def sync: Conn =
-    usingAdhocDbView(Sync(0))
-
-  final def sync(t: Long): Conn =
-    usingAdhocDbView(Sync(t))
+  final def sync: Conn = usingAdhocDbView(Sync(0))
+  final def sync(t: Long): Conn = usingAdhocDbView(Sync(t))
 
 
   // Peer only api -------------------------------------------------------------

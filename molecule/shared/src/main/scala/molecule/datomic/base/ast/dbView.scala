@@ -1,7 +1,7 @@
 package molecule.datomic.base.ast
 import java.util.{Date, List => jList}
 
-private[molecule] object dbView {
+object dbView {
 
   sealed trait PointInTime
   case class TxDate(d: Date) extends PointInTime

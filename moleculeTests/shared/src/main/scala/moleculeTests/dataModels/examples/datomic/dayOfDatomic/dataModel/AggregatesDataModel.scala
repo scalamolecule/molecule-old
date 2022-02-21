@@ -6,12 +6,12 @@ import molecule.core.data.model._
 object AggregatesDataModel {
 
   trait Obj {
-    val name       = oneString.indexed.doc("Name of a Solar System object.")
-    val meanRadius = oneDouble.indexed.doc("Mean radius of an object.")
+    val name       = oneString.index.doc("Name of a Solar System object.")
+    val meanRadius = oneDouble.index.doc("Mean radius of an object.")
   }
 
   trait Data {
-    val source = oneString.indexed.doc("Source of the data in a transaction.")
+    val source = oneString.index.doc("Source of the data in a transaction.")
   }
 
 

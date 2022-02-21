@@ -362,16 +362,16 @@ object SchemaChange_Attr extends AsyncTestSuite {
           }
         })
 
-        _ <- Schema.t.a.get.map(_ ==> List(
-          (1000, ":Foo/int"),
-          (1000, ":Foo/str"),
+        _ <- Schema.t.attr.a.get.map(_ ==> List(
+          (1000, "int", ":Foo/int"),
+          (1000, "str", ":Foo/str"),
         ))
 
-        _ <- Schema.t.a.ident.getHistory.map(_ ==> List(
-          (1000, ":Foo/int", ":Foo/int"),
-          (1000, ":Foo/str", ":Foo/str"),
-          (1004, ":Foo/int", ":-Foo/int"), // :Foo/int retired
-          (1006, ":Foo/int", ":Foo/int"), //  :Foo/int un-retired
+        _ <- Schema.t.attr.a.ident.getHistory.map(_ ==> List(
+          (1000, "int", ":Foo/int", ":Foo/int"),
+          (1000, "str", ":Foo/str", ":Foo/str"),
+          (1004, "int", ":Foo/int", ":-Foo/int"), // :Foo/int retired
+          (1006, "int", ":Foo/int", ":Foo/int"), //  :Foo/int un-retired
         ))
 
         // We could also simply have updated our data model as above without first calling

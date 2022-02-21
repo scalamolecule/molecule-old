@@ -14,39 +14,42 @@ import molecule.core.generic.GenericNs
 import scala.language.higherKinds
 
 trait Schema extends GenericNs {
-  final class attrId     [Stay, Next] extends OneLong   [Stay, Next] with Indexed
-  final class a          [Stay, Next] extends OneString [Stay, Next] with Indexed
-  final class part       [Stay, Next] extends OneString [Stay, Next] with Indexed
-  final class nsFull     [Stay, Next] extends OneString [Stay, Next] with Indexed
-  final class ns         [Stay, Next] extends OneString [Stay, Next] with Indexed
-  final class attr       [Stay, Next] extends OneString [Stay, Next] with Indexed
-  final class enumm      [Stay, Next] extends OneString [Stay, Next] with Indexed
-  final class ident      [Stay, Next] extends OneString [Stay, Next] with Indexed
-  final class valueType  [Stay, Next] extends OneString [Stay, Next] with Indexed
-  final class cardinality[Stay, Next] extends OneString [Stay, Next] with Indexed
-  final class doc        [Stay, Next] extends OneString [Stay, Next] with Indexed with Fulltext[Stay, Next]
-  final class unique     [Stay, Next] extends OneString [Stay, Next] with Indexed
-  final class isComponent[Stay, Next] extends OneBoolean[Stay, Next] with Indexed
-  final class noHistory  [Stay, Next] extends OneBoolean[Stay, Next] with Indexed
-  final class index      [Stay, Next] extends OneBoolean[Stay, Next] with Indexed
-  final class fulltext   [Stay, Next] extends OneBoolean[Stay, Next] with Indexed
-  final class t          [Stay, Next] extends OneLong   [Stay, Next] with Indexed
-  final class tx         [Stay, Next] extends OneLong   [Stay, Next] with Indexed
-  final class txInstant  [Stay, Next] extends OneDate   [Stay, Next] with Indexed
+  final class t          [Stay, Next] extends OneLong   [Stay, Next] with Index
+  final class tx         [Stay, Next] extends OneLong   [Stay, Next] with Index
+  final class txInstant  [Stay, Next] extends OneDate   [Stay, Next] with Index
+  final class attrId     [Stay, Next] extends OneLong   [Stay, Next] with Index
+  final class a          [Stay, Next] extends OneString [Stay, Next] with Index
+  final class part       [Stay, Next] extends OneString [Stay, Next] with Index
+  final class nsFull     [Stay, Next] extends OneString [Stay, Next] with Index
+  final class ns         [Stay, Next] extends OneString [Stay, Next] with Index
+  final class attr       [Stay, Next] extends OneString [Stay, Next] with Index
+  final class enumm      [Stay, Next] extends OneString [Stay, Next] with Index
+  final class ident      [Stay, Next] extends OneString [Stay, Next] with Index
+  final class valueType  [Stay, Next] extends OneString [Stay, Next] with Index
+  final class cardinality[Stay, Next] extends OneString [Stay, Next] with Index
+  final class doc        [Stay, Next] extends OneString [Stay, Next] with Index with Fulltext[Stay, Next]
+  final class unique     [Stay, Next] extends OneString [Stay, Next] with Index
+  final class isComponent[Stay, Next] extends OneBoolean[Stay, Next] with Index
+  final class noHistory  [Stay, Next] extends OneBoolean[Stay, Next] with Index
+  final class index      [Stay, Next] extends OneBoolean[Stay, Next] with Index
+  final class fulltext   [Stay, Next] extends OneBoolean[Stay, Next] with Index
 
-  final class ident$      [Stay, Next] extends OneString$ [Stay] with Indexed
-  final class valueType$  [Stay, Next] extends OneString$ [Stay] with Indexed
-  final class cardinality$[Stay, Next] extends OneString$ [Stay] with Indexed
-  final class doc$        [Stay, Next] extends OneString$ [Stay] with Indexed with Fulltext[Stay, Next]
-  final class unique$     [Stay, Next] extends OneString$ [Stay] with Indexed
-  final class isComponent$[Stay, Next] extends OneBoolean$[Stay] with Indexed
-  final class noHistory$  [Stay, Next] extends OneBoolean$[Stay] with Indexed
-  final class index$      [Stay, Next] extends OneBoolean$[Stay] with Indexed
-  final class fulltext$   [Stay, Next] extends OneBoolean$[Stay] with Indexed
+  final class ident$      [Stay, Next] extends OneString$ [Stay] with Index
+  final class valueType$  [Stay, Next] extends OneString$ [Stay] with Index
+  final class cardinality$[Stay, Next] extends OneString$ [Stay] with Index
+  final class doc$        [Stay, Next] extends OneString$ [Stay] with Index with Fulltext[Stay, Next]
+  final class unique$     [Stay, Next] extends OneString$ [Stay] with Index
+  final class isComponent$[Stay, Next] extends OneBoolean$[Stay] with Index
+  final class noHistory$  [Stay, Next] extends OneBoolean$[Stay] with Index
+  final class index$      [Stay, Next] extends OneBoolean$[Stay] with Index
+  final class fulltext$   [Stay, Next] extends OneBoolean$[Stay] with Index
 }
 
 trait Schema_[props] { def Schema: props = ??? }
 
+trait Schema_t           { lazy val t          : Long    = ??? }
+trait Schema_tx          { lazy val tx         : Long    = ??? }
+trait Schema_txInstant   { lazy val txInstant  : Date    = ??? }
 trait Schema_attrId      { lazy val attrId     : Long    = ??? }
 trait Schema_a           { lazy val a          : String  = ??? }
 trait Schema_part        { lazy val part       : String  = ??? }
@@ -63,9 +66,6 @@ trait Schema_isComponent { lazy val isComponent: Boolean = ??? }
 trait Schema_noHistory   { lazy val noHistory  : Boolean = ??? }
 trait Schema_index       { lazy val index      : Boolean = ??? }
 trait Schema_fulltext    { lazy val fulltext   : Boolean = ??? }
-trait Schema_t           { lazy val t          : Long    = ??? }
-trait Schema_tx          { lazy val tx         : Long    = ??? }
-trait Schema_txInstant   { lazy val txInstant  : Date    = ??? }
 
 // Please note that `$` has been subsituted with `_` to allow packaging to jars.
 // To be interpreted as optional and not tacit

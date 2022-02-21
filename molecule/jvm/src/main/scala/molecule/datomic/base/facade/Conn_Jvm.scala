@@ -177,10 +177,11 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers {
   override def retractSchemaOption(attr: String, option: String)
                                   (implicit ec: ExecutionContext): Future[TxReport] = try {
     val ident   = okIdent(attr)
-    val options = List("doc", "unique")
+    val options = List("doc", "unique", "isComponent", "noHistory", "index")
     if (!options.contains(option)) {
       throw MoleculeException(
-        "Can only retract the following options: " + options.mkString(", ") + s". Found: '$option'"
+        s"Can't retract option '$option' for attribute `$attr`. " +
+          s"Only the following options can be retracted: " + options.mkString(", ") + s"."
       )
     }
     for {
@@ -190,13 +191,12 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers {
         if (res.isEmpty) {
           Future.failed(MoleculeException(s"'$option' option of attribute $attr has no value."))
         } else {
-          val rawValue = res.head.head
+          val rawValue = res.head.head // Keyword (unique), String (doc) or Boolean (isComponent, noHistory, index)
           val curValue = option match {
-            case "doc" => s"\"$rawValue\""
+            case "doc" => s""""$rawValue""""
             case _     => rawValue
           }
           transact(s"[[:db/retract $attr :db/$option $curValue]]")
-            .recoverWith(e => Future.failed(e))
         }
       }
     } yield txReport

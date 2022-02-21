@@ -92,12 +92,12 @@ object model {
   sealed trait optionBuilder[Self] {
 
 
-    /** Indexed option (defaults to true).
+    /** Index option (defaults to true).
       * <br><br>
       * Generated index for this attribute. By default all attributes are set with
       * the indexed option automatically by Molecule, so you don't need to set this.
       * */
-    lazy val indexed: Self = ???
+    lazy val index: Self = ???
 
     /** No history option. */
     lazy val noHistory: Self = ???

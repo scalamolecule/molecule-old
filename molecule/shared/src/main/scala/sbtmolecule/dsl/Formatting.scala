@@ -110,9 +110,9 @@ class Formatting(
   def nsData(a: DefAttr) = (a.clazz + padClass(a.clazz), a.clazz + "$" + padClass(a.clazz))
 
   def getExtras(a: DefAttr, bi: Option[String]) = {
-    val classes            = a.options.filterNot(_.datomicKeyValue == "alias").filter(_.clazz.nonEmpty).map(_.clazz)
-    val indexed            = if (classes.contains("Indexed")) Seq("Indexed") else Nil
-    val optsWithoutIndexed = classes.filterNot(_ == "Indexed")
+    val classes          = a.options.filterNot(_.datomicKeyValue == "alias").filter(_.clazz.nonEmpty).map(_.clazz)
+    val index            = if (classes.contains("Index")) Seq("Index") else Nil
+    val optsWithoutIndex = classes.filterNot(_ == "Index")
     def render(opts: Seq[String]) = {
       val biOptions = a match {
         case Ref(_, _, _, _, _, refNs, _, bi, revRef, _) =>
@@ -125,22 +125,22 @@ class Formatting(
             case Some("BiTargetRef_")   => Seq(s"BiTargetRefAttr_[${refNs}_$revRef]")
             case _                      => Nil
           }
-        case _                                              => bi.toList
+        case _                                           => bi.toList
       }
 
-      if ((indexed ++ opts ++ biOptions).isEmpty) {
+      if ((index ++ opts ++ biOptions).isEmpty) {
         ""
       } else {
         val typedOpts = opts.map {
           case "Fulltext" => s"Fulltext[Stay, Next]"
           case other      => other
         }
-        (indexed ++ typedOpts ++ biOptions).mkString(" with ", " with ", "")
+        (index ++ typedOpts ++ biOptions).mkString(" with ", " with ", "")
       }
     }
     (
-      render(optsWithoutIndexed),
-      render("MapAttrK" +: optsWithoutIndexed)
+      render(optsWithoutIndex),
+      render("MapAttrK" +: optsWithoutIndex)
     )
   }
 

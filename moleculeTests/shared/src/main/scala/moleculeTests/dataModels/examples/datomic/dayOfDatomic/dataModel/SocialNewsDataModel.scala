@@ -9,7 +9,7 @@ import molecule.core.data.model._
 object SocialNewsDataModel {
 
   trait Story {
-    val title = oneString.fulltext.indexed
+    val title = oneString.fulltext.index
     val url   = oneString.uniqueIdentity
   }
 
@@ -23,15 +23,15 @@ object SocialNewsDataModel {
   }
 
   trait User {
-    val firstName    = oneString.indexed
-    val lastName     = oneString.indexed
+    val firstName    = oneString.index
+    val lastName     = oneString.index
     val email        = oneString.uniqueIdentity
     val passwordHash = oneString
     val upVotes      = many[Story]
   }
 
   trait Publish {
-    val at = oneDate.indexed
+    val at = oneDate.index
   }
 
   trait MetaData {

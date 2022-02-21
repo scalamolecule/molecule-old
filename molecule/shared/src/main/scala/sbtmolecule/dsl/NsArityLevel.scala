@@ -69,8 +69,8 @@ case class NsArityLevel(
 
   def indexedFirst(opts: Seq[Optional]): Seq[String] = {
     val classes = opts.filter(_.clazz.nonEmpty).map(_.clazz)
-    if (classes.contains("Indexed"))
-      "Indexed" +: classes.filterNot(_ == "Indexed")
+    if (classes.contains("Index"))
+      "Index" +: classes.filterNot(_ == "Index")
     else
       classes
   }

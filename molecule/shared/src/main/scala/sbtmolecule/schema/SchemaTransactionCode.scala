@@ -13,7 +13,7 @@ case class SchemaTransactionCode(d: Model) extends MetaSchemaData {
       }.getOrElse(false) => {
         val moleculeMetaNs = Namespace("molecule", None, "molecule_Meta", None, None, Seq(
           Ref("otherEdge", "OneRefAttr", "OneRef", "Long", "", "molecule_Meta", Seq(
-            Optional(":db/index         true", "Indexed"),
+            Optional(":db/index         true", "Index"),
             // Is component so that retracts automatically retracts the other edge
             Optional(":db/isComponent   true", "IsComponent")
           ))))

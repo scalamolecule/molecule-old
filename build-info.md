@@ -5,22 +5,23 @@
 
 Compile to 2.13 only:
 
-    sbt clean compile
-    # or
     sbt compile
+    sbt clean compile
 
 Compile to 2.12 only:
 
+    sbt ++2.12.15 compile
     sbt ++2.12.15 clean compile
 
 Compile to 2.12 and 2.13:
 
+    sbt +compile
     sbt clean +compile
 
 To have molecule jars generated, add `-Dmolecule=true`
 
-    sbt clean +compile -Dmolecule=true
     sbt +compile -Dmolecule=true
+    sbt clean +compile -Dmolecule=true
 
 ## Compile JS
 
