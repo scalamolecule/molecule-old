@@ -254,10 +254,10 @@ object Schema_Attr extends AsyncTestSuite {
         // All enums grouped by ident
         _ <- Schema.a.enumm.get.map(_.groupBy(_._1).map(g => g._1 -> g._2.map(_._2).sorted)
           .toList.sortBy(_._1) ==> List(
-          ":Ns/enumm" -> List("enum0", "enum1", "enum2", "enum3", "enum4",
-            "enum5", "enum6", "enum7", "enum8", "enum9"),
-          ":Ns/enums" -> List("enum0", "enum1", "enum2", "enum3", "enum4",
-            "enum5", "enum6", "enum7", "enum8", "enum9"),
+          ":Ns/enumm" -> List(
+            "enum0", "enum1", "enum2", "enum3", "enum4", "enum5", "enum6", "enum7", "enum8", "enum9"),
+          ":Ns/enums" -> List(
+            "enum0", "enum1", "enum2", "enum3", "enum4", "enum5", "enum6", "enum7", "enum8", "enum9"),
           ":Ref1/enum1" -> List("enum10", "enum11", "enum12"),
           ":Ref1/enums1" -> List("enum10", "enum11", "enum12"),
           ":Ref2/enum2" -> List("enum20", "enum21", "enum22")

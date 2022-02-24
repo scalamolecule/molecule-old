@@ -123,8 +123,7 @@ trait Helpers extends DateHandling {
       case Bond(nsFull, _, _, _, _)             => nsFull
       case Generic(nsFull, _, _, _, _)          => nsFull
       case Composite(elements)                  => getNs(elements.head)
-      case other                                =>
-        throw MoleculeException("Unexpected first model element: " + other)
+      case other                                => throw MoleculeException("Unexpected first model element: " + other)
     }
     getNs(model.elements.head)
   }
@@ -167,6 +166,13 @@ trait Helpers extends DateHandling {
         "Expecting attribute name in the format `:<Ns>/<attr>` or `:<part_Ns>/<attr>`"
     )
   }
+  protected def okEnumIdent(enumIdent: String): String = enumIdent match {
+    case r":[a-zA-Z][a-zA-Z0-9_]+\.[a-zA-Z0-9_]+/[a-zA-Z0-9]+" => enumIdent
+    case _                                                     => throw MoleculeException(
+      s"Invalid enum attribute name `$enumIdent`. " +
+        "Expecting enum attribute name in the format `:<Ns>.<attr>/<enum>` or `:<part_Ns>.<attr>/<enum>`"
+    )
+  }
   protected def okNamespaceName(name: String): String = name match {
     case r"[a-zA-Z][a-zA-Z0-9_]+" => name
     case _                        => throw MoleculeException(
@@ -175,7 +181,7 @@ trait Helpers extends DateHandling {
   }
   protected def okPartitionName(name: String): String = name match {
     case r"[a-z][a-zA-Z0-9]+" => name
-    case _                        => throw MoleculeException(
+    case _                    => throw MoleculeException(
       s"Invalid partition name `$name`. Expecting partition name in the format `[a-z][a-zA-Z0-9]+`"
     )
   }

@@ -2,13 +2,12 @@ package molecule.datomic.client.facade
 
 import java.util
 import java.util.{Date, Collection => jCollection, List => jList}
-import datomic.{Peer, Util}
+import datomic.Util
 import datomicScala.client.api.Datom
 import datomicScala.client.api.sync.{Client, Db, Connection => ClientConnection, Datomic => clientDatomic}
 import molecule.core.ast.elements._
-import molecule.core.data.SchemaTransaction
 import molecule.core.exceptions._
-import molecule.core.marshalling.{ConnProxy, DatomicDevLocalProxy, DatomicPeerProxy, DatomicPeerServerProxy}
+import molecule.core.marshalling.ConnProxy
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.query.Query
@@ -17,6 +16,7 @@ import molecule.datomic.base.facade.{Conn, Conn_Jvm, DatomicDb, TxReport}
 import molecule.datomic.base.marshalling.DatomicRpc
 import molecule.datomic.base.transform.Query2String
 import molecule.datomic.base.util.QueryOpsClojure
+import molecule.datomic.peer.facade.QuerySchemaHistory
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
@@ -28,7 +28,7 @@ case class Conn_Client(
   override val defaultConnProxy: ConnProxy,
   dbName: String,
   system: String = "",
-) extends Conn_Jvm with QueryIndex {
+) extends Conn_Jvm with QueryIndex with QuerySchemaHistory {
 
   // Molecule api --------------------------------------------------------------
 
@@ -79,7 +79,7 @@ case class Conn_Client(
   }
 
 
-  // Datomic facade ------------------------------------------------------------
+  // Datomic client facade -----------------------------------------------------
 
   def db(implicit ec: ExecutionContext): Future[DatomicDb] = {
     if (_adhocDbView.isDefined) {
@@ -139,6 +139,16 @@ case class Conn_Client(
 
   final def sync(t: Long): Conn =
     usingAdhocDbView(Sync(t))
+
+
+  // Schema --------------------------------------------------------------------
+
+  protected def historyQuery(query: String)
+                            (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
+    db.map { db =>
+      clientDatomic.q(query, db.asInstanceOf[DatomicDb_Client].clientDb.history)
+    }
+  }
 
 
   // Internal ------------------------------------------------------------------
@@ -319,15 +329,11 @@ case class Conn_Client(
     history: Boolean = false
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     model.elements.head match {
-      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _, _) =>
-        indexQuery(model)
-
-      case _ =>
-        datalogQuery(model, query)
+      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _, _) => indexQuery(model)
+      case Generic("Schema", _, _, _, _) if history                       => schemaHistoryQuery(model)
+      case _                                                              => datalogQuery(model, query)
     }
   }
-
-
 
 
   private[molecule] override def datalogQuery(

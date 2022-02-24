@@ -6,7 +6,7 @@ import java.util.{Collections, Date, Collection => jCollection, List => jList, M
 import clojure.lang.{PersistentArrayMap, PersistentVector}
 import com.cognitect.transit.impl.URIImpl
 import datomic.Util.{read, readAll}
-import datomic.{Peer, Util}
+import datomic.{Database, Peer, Util}
 import molecule.core.exceptions.MoleculeException
 import molecule.core.util.{Helpers, JavaConversions}
 import molecule.datomic.base.ast.transactionModel.{Cas, Enum, RetractEntity, Statement, TempId}
@@ -29,7 +29,7 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers {
   }
 
 
-  // Datomic facade ------------------------------------------------------------
+  // Datomic shared Peer/Client api --------------------------------------------
 
   final def transact(edn: String)
                     (implicit ec: ExecutionContext): Future[TxReport] =
@@ -44,8 +44,42 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers {
   final override def transact(javaStmts: jList[_])(implicit ec: ExecutionContext): Future[TxReport] =
     transactRaw(javaStmts, Future.successful(Seq.empty[Statement]))
 
+  final override def query(datalogQuery: String, inputs: Any*)
+                          (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = {
+    val javaInputs = inputs.toSeq.map {
+      case l: Iterable[_] => Util.list(
+        l.map {
+          case l2: Iterable[_] => Util.list(l2.map(_.asInstanceOf[AnyRef]).toSeq: _*)
+          case v               => v.asInstanceOf[AnyRef]
+        }.toSeq: _*
+      )
+      case v              => v.asInstanceOf[AnyRef]
+    }
+    rawQuery(datalogQuery, javaInputs).map { raw =>
+      if (
+        raw.isInstanceOf[PersistentVector]
+          && !raw.asInstanceOf[PersistentVector].isEmpty
+          && raw.asInstanceOf[PersistentVector].nth(0).isInstanceOf[PersistentArrayMap]
+      ) {
+        raw.asInstanceOf[jCollection[jMap[_, _]]].asScala.toList.map { rows =>
+          rows.asScala.toList.map { case (k, v) => k.toString -> v }
+        }
+      } else {
+        raw.asScala.toList
+          .map(_.asScala.toList
+            .map {
+              case set: clojure.lang.PersistentHashSet => set.asScala.toSet
+              case uriImpl: URIImpl                    => new URI(uriImpl.toString)
+              case bi: clojure.lang.BigInt             => BigInt(bi.toString)
+              case other                               => other
+            }
+          )
+      }
+    }
+  }
 
-  // Schema change -------------------------------------------------------------
+
+  // Schema --------------------------------------------------------------------
 
   private def attrExists(ident: String)(implicit ec: ExecutionContext): Future[Boolean] = query(
     s"[:find (count ?id) :where [?id :db/ident $ident]]"
@@ -174,7 +208,7 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers {
     case NonFatal(exc) => Future.failed(exc)
   }
 
-  override def retractSchemaOption(attr: String, option: String)
+  def retractSchemaOption(attr: String, option: String)
                                   (implicit ec: ExecutionContext): Future[TxReport] = try {
     val ident   = okIdent(attr)
     val options = List("doc", "unique", "isComponent", "noHistory", "index")
@@ -204,41 +238,57 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers {
     case NonFatal(exc) => Future.failed(exc)
   }
 
+  protected def historyQuery(query: String)(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]]
 
-  // Query ---------------------------------------------------------------------
+  def getEnumHistory(implicit ec: ExecutionContext)
+  : Future[List[(String, Int, Long, Date, String, Boolean)]] = {
+    val enumQuery =
+      s"""[:find  ?a
+         |        ?enumT
+         |        ?enumTx
+         |        ?enumTxInst
+         |        ?enum
+         |        ?op
+         | :where [:db.part/db :db.install/attribute ?attrId]
+         |        [?attrId :db/ident ?attrIdent]
+         |        [(name ?attrIdent) ?attr]
+         |        [(str ?attrIdent) ?a]
+         |        [(namespace ?attrIdent) ?nsFull0]
+         |        [(if (= (subs ?nsFull0 0 1) "-") (subs ?nsFull0 1) ?nsFull0) ?nsFull]
+         |        [(.matches ^String ?nsFull "^(db|db.alter|db.excise|db.install|db.part|db.sys|fressian|db.entity|db.attr|:-.*)") ?sys]
+         |        [(= ?sys false)]
+         |        [_ :db/ident ?enumIdent ?enumTx ?op]
+         |        [(namespace ?enumIdent) ?enumNs]
+         |        [(str ?nsFull "." ?attr) ?enumSubNs]
+         |        [(= ?enumSubNs ?enumNs)]
+         |        [(name ?enumIdent) ?enum]
+         |        [(datomic.api/tx->t ?enumTx) ?enumT]
+         |        [?enumTx :db/txInstant ?enumTxInst]
+         |]""".stripMargin
 
-  final override def query(datalogQuery: String, inputs: Any*)
-                          (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = {
-    val javaInputs = inputs.toSeq.map {
-      case l: Iterable[_] => Util.list(
-        l.map {
-          case l2: Iterable[_] => Util.list(l2.map(_.asInstanceOf[AnyRef]).toSeq: _*)
-          case v               => v.asInstanceOf[AnyRef]
-        }.toSeq: _*
-      )
-      case v              => v.asInstanceOf[AnyRef]
-    }
-    rawQuery(datalogQuery, javaInputs).map { raw =>
-      if (
-        raw.isInstanceOf[PersistentVector]
-          && !raw.asInstanceOf[PersistentVector].isEmpty
-          && raw.asInstanceOf[PersistentVector].nth(0).isInstanceOf[PersistentArrayMap]
-      ) {
-        raw.asInstanceOf[jCollection[jMap[_, _]]].asScala.toList.map { rows =>
-          rows.asScala.toList.map { case (k, v) => k.toString -> v }
-        }
-      } else {
-        raw.asScala.toList
-          .map(_.asScala.toList
-            .map {
-              case set: clojure.lang.PersistentHashSet => set.asScala.toSet
-              case uriImpl: URIImpl                    => new URI(uriImpl.toString)
-              case bi: clojure.lang.BigInt             => BigInt(bi.toString)
-              case other                               => other
-            }
+    historyQuery(enumQuery).map{enumRes =>
+      val rows = List.newBuilder[(String, Int, Long, Date, String, Boolean)]
+      enumRes.forEach { enumRow =>
+        rows.addOne(
+          (
+            enumRow.get(0).asInstanceOf[String],
+            enumRow.get(1).toString.toInt,
+            enumRow.get(2).toString.toLong,
+            enumRow.get(3).asInstanceOf[Date],
+            enumRow.get(4).asInstanceOf[String],
+            enumRow.get(5).asInstanceOf[Boolean],
           )
+        )
       }
+      rows.result().sortBy(r => (r._1, r._2, r._5, r._6))
     }
+  }
+
+  def retractEnum(enumString: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
+    val enumIdent = okEnumIdent(enumString)
+    transact(s"[[:db/retractEntity $enumIdent]]")
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
   }
 
 

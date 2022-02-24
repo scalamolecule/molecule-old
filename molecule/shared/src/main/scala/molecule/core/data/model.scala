@@ -459,8 +459,7 @@ object model {
   // Enum ---------------------------------------------------------
 
   private[molecule] trait enumm extends optionBuilder[enumm] {
-    // Require at least 2 enum values (any use case for only 1 enum??)
-    def apply(e1: String, e2: String, es: String*) = this
+    def apply(first: String, more: String*): enumm = this
   }
 
 

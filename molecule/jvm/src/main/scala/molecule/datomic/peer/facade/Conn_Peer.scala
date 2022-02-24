@@ -5,7 +5,6 @@ import java.{lang => jl, util => ju}
 import datomic.Connection.DB_AFTER
 import datomic._
 import molecule.core.ast.elements._
-import molecule.core.data.SchemaTransaction
 import molecule.core.exceptions._
 import molecule.core.marshalling._
 import molecule.datomic.base.api.DatomicEntity
@@ -65,7 +64,7 @@ case class Conn_Peer(
   }
 
 
-  // Datomic shared Peer/Client api --------------------------------------------
+  // Datomic Peer api ----------------------------------------------------------
 
   final def db(implicit ec: ExecutionContext): Future[DatomicDb] = {
     if (_adhocDbView.isDefined) {
@@ -112,12 +111,8 @@ case class Conn_Peer(
     }
   }
 
-
   final def sync: Conn = usingAdhocDbView(Sync(0))
   final def sync(t: Long): Conn = usingAdhocDbView(Sync(t))
-
-
-  // Peer only api -------------------------------------------------------------
 
   /**
    * Request that a background indexing job begin immediately.
@@ -246,6 +241,15 @@ case class Conn_Peer(
   final def release(): Unit =
     peerConn.release()
 
+  // Schema --------------------------------------------------------------------
+
+  protected def historyQuery(query: String)
+                            (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
+    db.map { db =>
+      Peer.q(query, db.getDatomicDb.asInstanceOf[Database].history())
+    }
+  }
+
 
   // Tx fn helpers -------------------------------------------------------------
 
@@ -262,8 +266,8 @@ case class Conn_Peer(
     ))
   }
 
-  // Internal ------------------------------------------------------------------
 
+  // Internal ------------------------------------------------------------------
 
   // In-memory fixed test db for integration testing
   // Takes precedence over live db (<molecule>.get etc).
@@ -368,6 +372,8 @@ case class Conn_Peer(
     case NonFatal(ex) => Future.failed(ex)
   }
 
+
+  // Query ---------------------------------------------------------------------
 
   private[molecule] final override def rawQuery(
     query: String,

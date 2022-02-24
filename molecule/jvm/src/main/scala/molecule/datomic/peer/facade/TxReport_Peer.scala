@@ -10,6 +10,7 @@ import molecule.datomic.base.ast.transactionModel._
 import molecule.datomic.base.facade.TxReport
 import molecule.datomic.base.util.Inspect
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 /** Datomic TxReport facade for peer api.
  *
@@ -32,7 +33,8 @@ case class TxReport_Peer(
   def eids: List[Long] = {
     // Fast lookups with mutable Buffers
     // https://www.lihaoyi.com/post/BenchmarkingScalaCollections.html#lookup-performance
-    var allIds           = mutable.Buffer.empty[Long]
+
+    val allIds           = ListBuffer.empty[Long]
     val datoms           = rawTxReport.get(TX_DATA).asInstanceOf[jList[PeerDatom]].iterator
     val tempIds          = rawTxReport.get(TEMPIDS).asInstanceOf[jMap[_, _]].values().asScala.toBuffer
     val tx               = datoms.next().e().asInstanceOf[Long] // Initial txInstant datom
@@ -51,7 +53,7 @@ case class TxReport_Peer(
           && !allIds.contains(e)
       ) {
         if (tempIds.contains(e)) {
-          allIds = allIds :+ e
+          allIds += e
         }
       }
     }

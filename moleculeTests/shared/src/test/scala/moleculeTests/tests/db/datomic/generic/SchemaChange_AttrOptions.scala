@@ -5,10 +5,9 @@ import molecule.core.exceptions.MoleculeException
 import molecule.core.macros.GetTransactSchema.schema
 import molecule.core.util.Executor.global
 import molecule.datomic.api.out13._
-import molecule.datomic.base.ast.dbView.History
+import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
 import utest._
-import scala.concurrent.Future
 
 /*
 Changing your schema ...
@@ -20,14 +19,14 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
     "valueType" - empty { implicit futConn =>
       for {
         // Initial Int attribute
-        _ <- transact(schema {
+        t <- transact(schema {
           trait Foo {
             val bar = oneString
           }
-        })
+        }).map(_.last.t)
 
         _ <- Schema.t.a.valueType.get.map(_ ==> List(
-          (1000, ":Foo/bar", "string"),
+          (t, ":Foo/bar", "string"),
         ))
 
         // Can't change value type
@@ -37,12 +36,19 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
           }
         }).map(_ ==> "Unexpected success")
           .recover { case MoleculeException(msg, _) =>
-            msg ==> ":db.error/invalid-alter-attribute Error: {" +
-              ":db/error :db.error/unsupported-alter-schema, " +
-              ":entity :Foo/bar, " +
-              ":attribute :db/valueType, " +
-              ":from :db.type/string, " +
-              ":to :db.type/boolean}"
+            if (system == SystemPeer)
+              msg ==> ":db.error/invalid-alter-attribute Error: {" +
+                ":db/error :db.error/unsupported-alter-schema, " +
+                ":entity :Foo/bar, " +
+                ":attribute :db/valueType, " +
+                ":from :db.type/string, " +
+                ":to :db.type/boolean}"
+            else
+              msg ==> "Error: {:db/error :db.error/unsupported-alter-schema, " +
+                ":entity :Foo/bar, " +
+                ":attribute :db/valueType, " +
+                ":from :db.type/string, " +
+                ":to :db.type/boolean}"
           }
       } yield ()
     }
@@ -55,35 +61,37 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
           conn <- futConn
 
           // Card-one attribute
-          _ <- transact(schema {
+          t <- transact(schema {
             trait Foo {
               val int = oneInt
             }
-          })
+          }).map(_.last.t)
+
           _ <- Schema.t.a.cardinality.get.map(_ ==> List(
-            (1000, ":Foo/int", "one"),
+            (t, ":Foo/int", "one"),
           ))
 
           // Add single value to card-one attribute
           _ <- conn.transact("""[[:db/add "-1" :Foo/int 1]]""")
+
           _ <- conn.query("[:find ?b :where [?a :Foo/int ?b]]")
             .map(_ ==> List(List(1)))
 
           // Change cardinality to many
-          _ <- transact(schema {
+          t3 <- transact(schema {
             trait Foo {
               val int = manyInt
             }
-          })
+          }).map(_.last.t)
 
           // Mandatory schema attributes
           _ <- Schema.t.a.cardinality.get.map(_ ==> List(
-            (1000, ":Foo/int", "many"),
+            (t, ":Foo/int", "many"),
           ))
 
           _ <- Schema.t.a.cardinality.getHistory.map(_ ==> List(
-            (1000, ":Foo/int", "one"),
-            (1003, ":Foo/int", "many"),
+            (t, ":Foo/int", "one"),
+            (t3, ":Foo/int", "many"),
           ))
         } yield ()
       }
@@ -93,42 +101,47 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
           conn <- futConn
 
           // Card-one attribute
-          _ <- transact(schema {
+          t <- transact(schema {
             trait Foo {
               val bar = manyInt
               val baz = manyInt
             }
-          })
-          _ <- Schema.t.a.cardinality.get.map(_ ==> List(
-            (1000, ":Foo/bar", "many"),
-            (1000, ":Foo/baz", "many"),
+          }).map(_.last.t)
+
+          _ <- Schema.t.a.a1.cardinality.get.map(_ ==> List(
+            (t, ":Foo/bar", "many"),
+            (t, ":Foo/baz", "many"),
           ))
 
           // Add 1 value for bar and 2 values for baz
-          List(e1, e2) <- conn.transact(
+          r <- conn.transact(
             """[
               |  [:db/add "-1" :Foo/bar 1]
               |  [:db/add "-2" :Foo/baz 2]
               |  [:db/add "-2" :Foo/baz 3]
-              |]""".stripMargin).map(_.eids)
+              |]""".stripMargin)
+          tx = r.tx
+          List(e1, e2) = r.eids
+
           _ <- conn.query("[:find (distinct ?b) :where [?a :Foo/bar ?b]]")
             .map(_ ==> List(List(Set(1))))
+
           _ <- conn.query("[:find (distinct ?b) :where [?a :Foo/baz ?b]]")
             .map(_ ==> List(List(Set(2, 3))))
 
           // Change cardinality to one for `bar` - ok if attribute has only
           // 1 value for any entity
-          _ <- transact(schema {
+          t4 <- transact(schema {
             trait Foo {
               val bar = oneInt
               val baz = manyInt
             }
-          })
+          }).map(_.last.t)
 
           // baz now has cardinality one
           _ <- Schema.t.a.a1.cardinality.get.map(_ ==> List(
-            (1000, ":Foo/bar", "one"),
-            (1000, ":Foo/baz", "many"),
+            (t, ":Foo/bar", "one"),
+            (t, ":Foo/baz", "many"),
           ))
 
           // Change cardinality to one for `baz` - rejected if attribute has multiple
@@ -140,39 +153,49 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
             }
           }).map(_ ==> "Unexpected success")
             .recover { case MoleculeException(msg, _) =>
-              msg.startsWith(
-                ":db.error/invalid-alter-attribute Error: " +
-                  "{:db/error :db.error/cardinality-violation"
-              ) ==> true
+              if (system == SystemPeer)
+                msg ==> ":db.error/invalid-alter-attribute Error: " +
+                  "{:db/error :db.error/cardinality-violation, " +
+                  ":datoms [" +
+                  s"#datom[$e2 73 2 $tx true] " +
+                  s"#datom[$e2 73 3 $tx true]]}"
+              else {
+                msg ==> "Error: {" +
+                  ":db/error :db.error/cardinality-violation, " +
+                  ":datoms [" +
+                  s"#datom[$e2 74 2 $tx true] " +
+                  s"#datom[$e2 74 3 $tx true]]}"
+              }
             }
 
           // Retract values so that `baz` has only one value per entity
           _ <- conn.transact(s"[[:db/retract $e2 :Foo/baz 3]]")
+
           _ <- conn.query("[:find (distinct ?b) :where [?a :Foo/baz ?b]]")
             .map(_ ==> List(List(Set(2))))
 
           // Now we can change baz to cardinality one
-          _ <- transact(schema {
+          t6 <- transact(schema {
             trait Foo {
               val bar = oneInt
               val baz = oneInt
             }
-          })
+          }).map(_.last.t)
 
           // Both attributes now has cardinality one
           _ <- Schema.t.a.a1.cardinality.get.map(_ ==> List(
-            (1000, ":Foo/bar", "one"),
-            (1000, ":Foo/baz", "one"),
+            (t, ":Foo/bar", "one"),
+            (t, ":Foo/baz", "one"),
           ))
 
           // History of changes
           _ <- Schema.t.a.cardinality.getHistory.map(_ ==> List(
-            (1000, ":Foo/bar", "many"),
-            (1000, ":Foo/baz", "many"),
+            (t, ":Foo/bar", "many"),
+            (t, ":Foo/baz", "many"),
 
-            (1004, ":Foo/bar", "one"),
+            (t4, ":Foo/bar", "one"),
 
-            (1006, ":Foo/baz", "one"),
+            (t6, ":Foo/baz", "one"),
           ))
         } yield ()
       }
@@ -186,62 +209,64 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
         conn <- futConn
 
         // Initial attribute without documentation string
-        _ <- transact(schema {
+        t <- transact(schema {
           trait Foo {
             val int = oneInt
           }
-        })
+        }).map(_.last.t)
 
         _ <- Schema.t.a.doc$.get.map(_ ==> List(
-          (1000, ":Foo/int", None),
+          (t, ":Foo/int", None),
         ))
 
         // Add documentation string
-        _ <- transact(schema {
+        t1 <- transact(schema {
           trait Foo {
             val int = oneInt.doc("blah")
           }
-        })
+        }).map(_.last.t)
+
         _ <- Schema.t.a.doc$.get.map(_ ==> List(
-          (1000, ":Foo/int", Some("blah")),
+          (t, ":Foo/int", Some("blah")),
         ))
         _ <- Schema.t.a.doc$.getHistory.map(_ ==> List(
-          (1000, ":Foo/int", None),
-          (1001, ":Foo/int", Some("blah")),
+          (t, ":Foo/int", None),
+          (t1, ":Foo/int", Some("blah")),
         ))
 
         // Update documentation string
-        _ <- transact(schema {
+        t2 <- transact(schema {
           trait Foo {
             val int = oneInt.doc("blah blah")
           }
-        })
+        }).map(_.last.t)
+
         _ <- Schema.t.a.doc$.get.map(_ ==> List(
-          (1000, ":Foo/int", Some("blah blah")),
+          (t, ":Foo/int", Some("blah blah")),
         ))
         _ <- Schema.t.a.doc$.getHistory.map(_ ==> List(
-          (1000, ":Foo/int", None),
-          (1001, ":Foo/int", Some("blah")),
-          (1002, ":Foo/int", Some("blah blah")),
+          (t, ":Foo/int", None),
+          (t1, ":Foo/int", Some("blah")),
+          (t2, ":Foo/int", Some("blah blah")),
         ))
 
         // Retract documentation string
-        _ <- conn.retractSchemaOption(":Foo/int", "doc")
+        t3 <- conn.retractSchemaOption(":Foo/int", "doc").map(_.t)
         _ <- transact(schema {
           trait Foo {
             val int = oneInt
           }
         })
+
         _ <- Schema.t.a.doc$.get.map(_ ==> List(
-          (1000, ":Foo/int", None),
+          (t, ":Foo/int", None),
         ))
         _ <- Schema.t.a.doc$.getHistory.map(_ ==> List(
-          (1000, ":Foo/int", None),
-          (1001, ":Foo/int", Some("blah")),
-          (1002, ":Foo/int", Some("blah blah")),
-          (1003, ":Foo/int", None),
+          (t, ":Foo/int", None),
+          (t1, ":Foo/int", Some("blah")),
+          (t2, ":Foo/int", Some("blah blah")),
+          (t3, ":Foo/int", None),
         ))
-
 
         // retractSchemaOption checks
 
@@ -308,17 +333,22 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
           conn <- futConn
 
           // Initial attribute
-          _ <- transact(schema {
+          //          t <- transact(schema {
+          //            trait Foo {
+          //              val bar = oneInt
+          //            }
+          //          }).map(_.last.t)
+          (t, tx0) <- transact(schema {
             trait Foo {
               val bar = oneInt
             }
-          })
+          }).map(res => (res.last.t, res.head.tx))
 
           _ <- Schema.t.a.unique$.get.map(_ ==> List(
-            (1000, ":Foo/bar", None),
+            (t, ":Foo/bar", None),
           ))
 
-          // Add non-unique data to bar and unique data to baz
+          // Add two entities with duplicate data for :Foo/bar
           txr <- conn.transact(
             """[
               |  [:db/add "-1" :Foo/bar 1]
@@ -327,12 +357,20 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
           tx = txr.tx
           List(e1, e2) = txr.eids
 
-          // `bar` has duplicate values
+          // :Foo/bar has duplicate values
           _ <- conn.query("[:find ?a ?b :where [?a :Foo/bar ?b]]")
-            .map(_ ==> List(
-              List(e2, 1),
-              List(e1, 1),
-            ))
+            .map(res =>
+              if (system == SystemPeer)
+                res ==> List(
+                  List(e2, 1),
+                  List(e1, 1),
+                )
+              else
+                res ==> List(
+                  List(e1, 1),
+                  List(e2, 1),
+                )
+            )
 
           // Enforcing unique values on bar having duplicate values will be rejected
           _ <- transact(schema {
@@ -341,14 +379,20 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
             }
           }).map(_ ==> "Unexpected success")
             .recover { case MoleculeException(msg, _) =>
-              msg ==> ":db.error/invalid-alter-attribute Error: {" +
-                ":db/error :db.error/unique-violation, " +
-                ":datoms [" +
-                s"#datom[$e1 72 1 $tx true] " +
-                s"#datom[$e2 72 1 $tx true]]}"
+              if (system == SystemPeer)
+                msg ==> ":db.error/invalid-alter-attribute Error: {" +
+                  ":db/error :db.error/unique-violation, " +
+                  ":datoms [" +
+                  s"#datom[$e1 72 1 $tx true] " +
+                  s"#datom[$e2 72 1 $tx true]]}"
+              else
+                msg ==> "Error: {:db/error :db.error/unique-violation, " +
+                  ":datoms [" +
+                  s"#datom[$e1 73 1 $tx true] " +
+                  s"#datom[$e2 73 1 $tx true]]}"
             }
 
-          // Remove duplicate values of `bar` attribute
+          // Remove duplicate values of :Foo/bar
           _ <- conn.transact(s"[[:db/retract $e2 :Foo/bar 1]]")
 
           // `bar` now has no duplicate values
@@ -357,30 +401,37 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
               List(e1, 1)
             ))
 
-          // Now we can add the unique value constraint on attribute `bar`
-          _ <- transact(schema {
+          // Now we can add the unique value constraint on :Foo/bar
+          t5 <- transact(schema {
             trait Foo {
               val bar = oneInt.uniqueValue
             }
-          })
+          }).map(_.last.t)
+
           _ <- Schema.t.a.unique$.get.map(_ ==> List(
-            (1000, ":Foo/bar", Some("value")),
+            (t, ":Foo/bar", Some("value")),
           ))
           _ <- Schema.t.a.unique$.getHistory.map(_ ==> List(
-            (1000, ":Foo/bar", None),
-            (1005, ":Foo/bar", Some("value")),
+            (t, ":Foo/bar", None),
+            (t5, ":Foo/bar", Some("value")),
           ))
 
-          // Now we are not allowed to add duplicate values
+          // Now we are not allowed to add duplicate values.
+          // This is where unique value/identity differ:
+          // uniqueIdentity would allow upserting the value
+          // (and no entity would be created since the value already exists)
           _ <- conn.transact("""[[:db/add "-3" :Foo/bar 1]]""")
             .map(_ ==> "Unexpected success")
             .recover { case MoleculeException(msg, _) =>
-              msg ==> ":db.error/unique-conflict Unique conflict: :Foo/bar, " +
-                s"value: 1 already held by: $e1 asserted for: 17592186045423"
+              if (system == SystemPeer)
+                msg.take(51) ==> ":db.error/unique-conflict Unique conflict: :Foo/bar"
+              else
+                msg.take(25) ==> "Unique conflict: :Foo/bar"
             }
 
           // If we remove the constraint we can add duplicate values again
-          _ <- conn.retractSchemaOption(":Foo/bar", "unique")
+          t6 <- conn.retractSchemaOption(":Foo/bar", "unique").map(_.t)
+
           // Note that simply removing `uniqueValue` from the attribute definition
           // will not retract the constraint
           _ <- transact(schema {
@@ -388,20 +439,32 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
               val bar = oneInt
             }
           })
+
           _ <- Schema.t.a.unique$.get.map(_ ==> List(
-            (1000, ":Foo/bar", None),
+            (t, ":Foo/bar", None),
           ))
           _ <- Schema.t.a.unique$.getHistory.map(_ ==> List(
-            (1000, ":Foo/bar", None),
-            (1005, ":Foo/bar", Some("value")),
-            (1006, ":Foo/bar", None),
+            (t, ":Foo/bar", None),
+            (t5, ":Foo/bar", Some("value")),
+            (t6, ":Foo/bar", None),
           ))
+
           e3 <- conn.transact("""[[:db/add "-3" :Foo/bar 1]]""").map(_.eid)
+
           _ <- conn.query("[:find ?a ?b :where [?a :Foo/bar ?b]]")
-            .map(_ ==> List(
-              List(e3, 1),
-              List(e1, 1),
-            ))
+            .map(res =>
+              if (system == SystemPeer)
+                res ==> List(
+                  List(e3, 1),
+                  List(e1, 1),
+                )
+              else
+                res ==> List(
+                  List(e1, 1),
+                  List(e3, 1),
+                )
+            )
+
         } yield ()
       }
 
@@ -411,17 +474,17 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
           conn <- futConn
 
           // Initial attribute
-          _ <- transact(schema {
+          t <- transact(schema {
             trait Foo {
               val bar = oneInt
             }
-          })
+          }).map(_.last.t)
 
           _ <- Schema.t.a.unique$.get.map(_ ==> List(
-            (1000, ":Foo/bar", None),
+            (t, ":Foo/bar", None),
           ))
 
-          // Add non-unique data to bar and unique data to baz
+          // Add two entities with duplicate data for :Foo/bar
           txr <- conn.transact(
             """[
               |  [:db/add "-1" :Foo/bar 1]
@@ -432,61 +495,110 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
 
           // `bar` has duplicate values
           _ <- conn.query("[:find ?a ?b :where [?a :Foo/bar ?b]]")
-            .map(_ ==> List(
-              List(e2, 1),
-              List(e1, 1),
-            ))
+            .map(res =>
+              if (system == SystemPeer)
+                res ==> List(
+                  List(e2, 1),
+                  List(e1, 1),
+                )
+              else
+                res ==> List(
+                  List(e1, 1),
+                  List(e2, 1),
+                )
+            )
 
-          // Enforcing unique values on bar having duplicate values will be rejected
+          // Enforcing unique values on :Foo/bar having duplicate values will be rejected
           _ <- transact(schema {
             trait Foo {
               val bar = oneInt.uniqueIdentity
             }
           }).map(_ ==> "Unexpected success")
             .recover { case MoleculeException(msg, _) =>
-              msg ==> ":db.error/invalid-alter-attribute Error: {" +
-                ":db/error :db.error/unique-violation, " +
-                ":datoms [" +
-                s"#datom[$e1 72 1 $tx true] " +
-                s"#datom[$e2 72 1 $tx true]]}"
+              if (system == SystemPeer)
+                msg ==> ":db.error/invalid-alter-attribute Error: {" +
+                  ":db/error :db.error/unique-violation, " +
+                  ":datoms [" +
+                  s"#datom[$e1 72 1 $tx true] " +
+                  s"#datom[$e2 72 1 $tx true]]}"
+              else
+                msg ==> "Error: {:db/error :db.error/unique-violation, " +
+                  ":datoms [" +
+                  s"#datom[$e1 73 1 $tx true] " +
+                  s"#datom[$e2 73 1 $tx true]]}"
             }
 
-          // Remove duplicate values of `bar` attribute
+          // Remove duplicate values of :Foo/bar
           _ <- conn.transact(s"[[:db/retract $e2 :Foo/bar 1]]")
 
-          // `bar` now has no duplicate values
+          // :Foo/bar now has no duplicate values
           _ <- conn.query("[:find ?a ?b :where [?a :Foo/bar ?b]]")
             .map(_ ==> List(
               List(e1, 1)
             ))
 
-          // Now we can add the unique identity constraint on attribute `bar`
-          _ <- transact(schema {
+          // Now we can add the unique identity constraint on :Foo/bar
+          t5 <- transact(schema {
             trait Foo {
               val bar = oneInt.uniqueIdentity
             }
-          })
+          }).map(_.last.t)
+
           _ <- Schema.t.a.unique$.get.map(_ ==> List(
-            (1000, ":Foo/bar", Some("identity")),
+            (t, ":Foo/bar", Some("identity")),
           ))
           _ <- Schema.t.a.unique$.getHistory.map(_ ==> List(
-            (1000, ":Foo/bar", None),
-            (1005, ":Foo/bar", Some("identity")),
+            (t, ":Foo/bar", None),
+            (t5, ":Foo/bar", Some("identity")),
           ))
 
-          // Contrary to the unique value constraint, we can still save non-unique
-          // values with the unique identity constraint, as long as we don't use them
-          // for entity lookups. The constraint applies for Datalog queries using a
-          // unique identifier for an entity and is therefore nor so relevant when
-          // using molecules. So, if only using molecules, use the unique value
-          // constraint instead to enforce unique values (like emails, user names,
-          // domain ids etc).
-          e3 <- conn.transact("""[[:db/add "-3" :Foo/bar 1]]""").map(_.eid)
+          // Since entity e1 already has `1` asserted and "upsert" behaviour is
+          // enabled with unique identity, no new entity is created when trying to assert
+          // `1` again.
+          // This is where unique value/identity differ:
+          // uniqueValue would reject transacting the duplicate value
+          _ <- conn.transact("""[[:db/add "-3" :Foo/bar 1]]""").map(_.eids ==> Nil)
+
           _ <- conn.query("[:find ?a ?b :where [?a :Foo/bar ?b]]")
             .map(_ ==> List(
-              List(e3, 1),
               List(e1, 1),
             ))
+
+          // If we remove the constraint we can add duplicate values again
+          t7 <- conn.retractSchemaOption(":Foo/bar", "unique").map(_.t)
+          // Note that simply removing `uniqueIdentity` from the attribute definition
+          // will not retract the constraint
+
+          _ <- transact(schema {
+            trait Foo {
+              val bar = oneInt
+            }
+          })
+
+          _ <- Schema.t.a.unique$.get.map(_ ==> List(
+            (t, ":Foo/bar", None),
+          ))
+          _ <- Schema.t.a.unique$.getHistory.map(_ ==> List(
+            (t, ":Foo/bar", None),
+            (t5, ":Foo/bar", Some("identity")),
+            (t7, ":Foo/bar", None),
+          ))
+
+          e3 <- conn.transact("""[[:db/add "-3" :Foo/bar 1]]""").map(_.eid)
+
+          _ <- conn.query("[:find ?a ?b :where [?a :Foo/bar ?b]]")
+            .map(res =>
+              if (system == SystemPeer)
+                res ==> List(
+                  List(e3, 1),
+                  List(e1, 1),
+                )
+              else
+                res ==> List(
+                  List(e1, 1),
+                  List(e3, 1),
+                )
+            )
         } yield ()
       }
     }
@@ -504,17 +616,18 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
         conn <- futConn
 
         // Non-component ref
-        _ <- transact(schema {
+        t <- transact(schema {
           trait Foo {
             val bar = one[Bar]
           }
           trait Bar {
             val int = oneInt
           }
-        })
+        }).map(_.last.t)
+
         _ <- Schema.t.a.isComponent$.get.map(_ ==> List(
-          (1000, ":Foo/bar", None),
-          (1000, ":Bar/int", None),
+          (t, ":Foo/bar", None),
+          (t, ":Bar/int", None),
         ))
 
         // Add ref data
@@ -531,17 +644,17 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
 
 
         // Now make the bar reference a component reference
-        _ <- transact(schema {
+        t5 <- transact(schema {
           trait Foo {
             val bar = one[Bar].isComponent
           }
           trait Bar {
             val int = oneInt
           }
-        })
+        }).map(_.last.t)
         _ <- Schema.t.a.isComponent$.get.map(_ ==> List(
-          (1000, ":Foo/bar", Some(true)),
-          (1000, ":Bar/int", None),
+          (t, ":Foo/bar", Some(true)),
+          (t, ":Bar/int", None),
         ))
 
         // Add component ref to :Bar/int again
@@ -553,10 +666,10 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
 
 
         // Make :Foo/bar a non-component ref again
-        _ <- conn.retractSchemaOption(":Foo/bar", "isComponent")
+        t9 <- conn.retractSchemaOption(":Foo/bar", "isComponent").map(_.t)
         _ <- Schema.t.a.isComponent$.get.map(_ ==> List(
-          (1000, ":Foo/bar", None),
-          (1000, ":Bar/int", None),
+          (t, ":Foo/bar", None),
+          (t, ":Bar/int", None),
         ))
 
         // Add non-component ref to :Bar/int again
@@ -573,10 +686,10 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
           .map(_ ==> List(List(3)))
 
         _ <- Schema.t.a.isComponent$.getHistory.map(_ ==> List(
-          (1000, ":Foo/bar", None),
-          (1000, ":Bar/int", None),
-          (1005, ":Foo/bar", Some(true)),
-          (1009, ":Foo/bar", None),
+          (t, ":Foo/bar", None),
+          (t, ":Bar/int", None),
+          (t5, ":Foo/bar", Some(true)),
+          (t9, ":Foo/bar", None),
         ))
       } yield ()
     }
@@ -597,90 +710,117 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
       for {
         conn <- futConn
 
-
         // Initial attribute with history recorded as default
-        _ <- transact(schema {
+        t <- transact(schema {
           trait Foo {
             val int = oneInt
           }
-        })
+        }).map(_.last.t)
+
         _ <- Schema.t.a.noHistory$.get.map(_ ==> List(
-          (1000, ":Foo/int", None),
+          (t, ":Foo/int", None),
         ))
 
         // Stop retaining values for Foo/int
-        _ <- transact(schema {
+        t1 <- transact(schema {
           trait Foo {
             val int = oneInt.noHistory
           }
-        })
+        }).map(_.last.t)
+
         _ <- Schema.t.a.noHistory$.get.map(_ ==> List(
-          (1000, ":Foo/int", Some(true)),
+          (t, ":Foo/int", Some(true)),
         ))
 
         // Re-retain values for Foo/int
-        _ <- conn.retractSchemaOption(":Foo/int", "noHistory")
+        t2 <- conn.retractSchemaOption(":Foo/int", "noHistory").map(_.t)
 
         _ <- Schema.t.a.noHistory$.get.map(_ ==> List(
-          (1000, ":Foo/int", None),
+          (t, ":Foo/int", None),
         ))
         _ <- Schema.t.a.noHistory$.getHistory.map(_ ==> List(
-          (1000, ":Foo/int", None),
-          (1001, ":Foo/int", Some(true)),
-          (1002, ":Foo/int", None),
+          (t, ":Foo/int", None),
+          (t1, ":Foo/int", Some(true)),
+          (t2, ":Foo/int", None),
         ))
       } yield ()
     }
 
 
-    "index" - empty { implicit futConn =>
-      /*
-      :db/index specifies a boolean value indicating that an index should be
-      generated for this attribute. Defaults to false.
+    "index, Peer" - empty { implicit futConn =>
+      if (system == SystemPeer) {
+        /*
+        :db/index specifies a boolean value indicating that an index should be
+        generated for this attribute. Defaults to false.
 
-      In Molecule the indexing is turned on by default.
-      Like with the noHistory option we simply show how to turn it on and off.
-       */
-      for {
-        conn <- futConn
+        In Molecule the indexing is turned on by default.
+        Like with the noHistory option we simply show how to turn it on and off.
+         */
+        for {
+          conn <- futConn
 
-        // In Molecule the indexing is turned on by default without having to
-        // add `index` to the attribute defintion
-        _ <- transact(schema {
-          trait Foo {
-            val int = oneInt
-          }
-        })
-        _ <- Schema.t.a.index$.get.map(_ ==> List(
-          (1000, ":Foo/int", Some(true)),
-        ))
+          // In Molecule indexing on the Peer is turned on by default without having to
+          // add `index` to the attribute definition
+          t <- transact(schema {
+            trait Foo {
+              val int = oneInt
+            }
+          }).map(_.last.t)
 
-        // Stop indexing values for Foo/int
-        _ <- conn.retractSchemaOption(":Foo/int", "index")
-        _ <- Schema.t.a.noHistory$.get.map(_ ==> List(
-          (1000, ":Foo/int", None),
-        ))
+          _ <- Schema.t.a.index$.get.map(_ ==> List(
+            (t, ":Foo/int", Some(true))
+          ))
 
-        // Index attribute values again
-        _ <- transact(schema {
-          trait Foo {
-            val int = oneInt.index
-          }
-        })
-        _ <- Schema.t.a.index$.get.map(_ ==> List(
-          (1000, ":Foo/int", Some(true)),
-        ))
-        _ <- Schema.t.a.index$.get.map(_ ==> List(
-          (1000, ":Foo/int", Some(true)),
-          (1001, ":Foo/int", None),
-          (1002, ":Foo/int", Some(true)),
-        ))
-      } yield ()
+          // Stop indexing values for Foo/int
+          t1 <- conn.retractSchemaOption(":Foo/int", "index").map(_.t)
+
+          _ <- Schema.t.a.noHistory$.get.map(_ ==> List(
+            (t, ":Foo/int", None),
+          ))
+
+          // Index attribute values again
+          t2 <- transact(schema {
+            trait Foo {
+              val int = oneInt.index
+            }
+          }).map(_.last.t)
+
+          _ <- Schema.t.a.index$.get.map(_ ==> List(
+            (t, ":Foo/int", Some(true)),
+          ))
+          _ <- Schema.t.a.index$.getHistory.map(_ ==> List(
+            (t, ":Foo/int", Some(true)),
+            (t1, ":Foo/int", None),
+            (t2, ":Foo/int", Some(true)),
+          ))
+        } yield ()
+      }
     }
 
 
-    "fulltext" - empty { implicit futConn =>
-      /*
+    "index, Client" - empty { implicit futConn =>
+      if (system != SystemPeer) {
+        /*
+        All attributes are indexed by default on the Client and there is no indexing choice.
+         */
+        for {
+          t <- transact(schema {
+            trait Foo {
+              val int = oneInt
+            }
+          }).map(_.last.t)
+
+          // Querying for the index option will return None since no index option is asserted
+          _ <- Schema.t.a.index$.get.map(res =>
+            res ==> List((t, ":Foo/int", None))
+          )
+        } yield ()
+      }
+    }
+
+    "fulltext (Peer only)" - empty { implicit futConn =>
+      if (system == SystemPeer) {
+        /*
       :db/fulltext specifies a boolean value indicating that an eventually
       consistent fulltext search index should be generated for the attribute.
       Defaults to false.
@@ -688,119 +828,156 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
       The fulltext option cannot be altered which means that an attribute has to
       be defined with the initial definition of the attribute to allow fulltext searches.
        */
+        for {
+          conn <- futConn
+
+          // Initial attribute definition with/without fulltext search indexing
+          t <- transact(schema {
+            trait Foo {
+              val str1 = oneString.fulltext
+              val str2 = oneString
+            }
+          }).map(_.last.t)
+
+          _ <- Schema.t.a.fulltext$.get.map(_ ==> List(
+            (t, ":Foo/str1", Some(true)),
+            (t, ":Foo/str2", None),
+          ))
+
+          _ <- conn.transact(
+            s"""[
+               |[:db/add "-1" :Foo/str1 "hello world"]
+               |[:db/add "-2" :Foo/str2 "hello world"]
+               |]""".stripMargin)
+
+          // Do fulltext search
+          _ <- conn.query(
+            """[:find ?b :where [(fulltext $ :Foo/str1 "hello") [[ ?a ?b ]]]]"""
+          ).map(_ ==> List(List("hello world")))
+
+          // Fulltext search on attribute without fulltext indexing returns empty result
+          _ <- conn.query(
+            """[:find ?b :where [(fulltext $ :Foo/str2 "hello") [[ ?a ?b ]]]]"""
+          ).map(_ ==> Nil)
+
+
+          // Attempts at retracting the fulltext option return a failed Future with an exception
+          _ <- conn.retractSchemaOption(":Foo/str1", "fulltext")
+            .map(_ ==> "Unexpected success")
+            .recover { case MoleculeException(msg, _) =>
+              msg ==> "Can't retract option 'fulltext' for attribute `:Foo/str1`. " +
+                "Only the following options can be retracted: " +
+                "doc, unique, isComponent, noHistory, index."
+            }
+
+          // Trying to add fulltext indexing to an existing attribute will return
+          // a failed Future with an exception
+          _ <- transact(schema {
+            trait Foo {
+              val str1 = oneString.fulltext
+              val str2 = oneString.fulltext
+            }
+          }).map(_ ==> "Unexpected success")
+            .recover { case MoleculeException(msg, _) =>
+              msg ==> ":db.error/invalid-alter-attribute Error: {" +
+                ":db/error :db.error/unsupported-alter-schema, " +
+                ":entity :Foo/str2, " +
+                ":attribute :db/fulltext, " +
+                ":from :disabled, " +
+                ":to true}"
+            }
+
+          // No change of fulltext options
+          _ <- Schema.t.a.fulltext$.get.map(_ ==> List(
+            (t, ":Foo/str1", Some(true)),
+            (t, ":Foo/str2", None),
+          ))
+        } yield ()
+      }
+    }
+
+    "enumm" - empty { implicit futConn =>
+      /*
+      Since `enum` is a reserved keyword in Scala 3, we use `Schema.enumm` to get
+      defined enum values.
+
+      An enum attribute definition expects at least 1 enum value.
+       */
       for {
         conn <- futConn
 
-        // Initial attribute definition with/without fulltext search indexing
-        _ <- transact(schema {
+        // Initial schema
+        (t, tx0, d0) <- transact(schema {
           trait Foo {
-            val str1 = oneString.fulltext
-            val str2 = oneString
+            val bar = oneEnum("bar1")
           }
-        })
-        _ <- Schema.t.a.fulltext$.get.map(_ ==> List(
-          (1000, ":Foo/str1", Some(true)),
-          (1000, ":Foo/str2", None),
+        }).map(res => (res.head.t, res.head.tx, res.head.txInstant))
+
+        _ <- Schema.t.a.enumm.get.map(_ ==> List(
+          (t, ":Foo/bar", "bar1"),
         ))
 
-        _ <- conn.transact(
-          s"""[
-             |[:db/add "-1" :Foo/str1 "hello world"]
-             |[:db/add "-2" :Foo/str2 "hello world"]
-             |]""".stripMargin)
+        // Add one more enum
+        (t2, tx2, d2) <- transact(schema {
+          trait Foo {
+            val bar = oneEnum("bar1", "bar2")
+          }
+        }).map(res => (res.head.t, res.head.tx, res.head.txInstant))
 
-        // Do fulltext search
-        _ <- conn.query(
-          """[:find ?b :where [(fulltext $ :Foo/str1 "hello") [[ ?a ?b ]]]]"""
-        ).map(_ ==> List(List("hello world")))
+        _ <- Schema.t.a.enumm.a1.get.map(_ ==> List(
+          (t, ":Foo/bar", "bar1"),
+          (t, ":Foo/bar", "bar2"), // Note that `t` points to the initial transaction
+        ))
 
-        // Fulltext search on attribute without fulltext indexing returns empty result
-        _ <- conn.query(
-          """[:find ?b :where [(fulltext $ :Foo/str2 "hello") [[ ?a ?b ]]]]"""
-        ).map(_ ==> Nil)
-
-
-        // Attempts at retracting the fulltext option return a failed Future with an exception
-        _ <- conn.retractSchemaOption(":Foo/str1", "fulltext")
+        // Schema.enumm.getHistory not supported
+        _ <- Schema.t.a.enumm.getHistory
           .map(_ ==> "Unexpected success")
           .recover { case MoleculeException(msg, _) =>
-            msg ==> "Can't retract option 'fulltext' for attribute `:Foo/str1`. " +
-              "Only the following options can be retracted: " +
-              "doc, unique, isComponent, noHistory, index."
+            msg ==> "Retrieving historical enum values with `Schema` is not supported since they " +
+              "are entities having their own timeline independently from schema attributes. " +
+              "Instead, please call `conn.getEnumHistory` to retrieve historical enum values."
           }
 
-        // Trying to add fulltext indexing to an existing attribute will return
-        // a failed Future with an exception
-        _ <- transact(schema {
-          trait Foo {
-            val str1 = oneString.fulltext
-            val str2 = oneString.fulltext
-          }
-        }).map(_ ==> "Unexpected success")
-          .recover { case MoleculeException(msg, _) =>
-            msg ==> ":db.error/invalid-alter-attribute Error: {" +
-              ":db/error :db.error/unsupported-alter-schema, " +
-              ":entity :Foo/str2, " +
-              ":attribute :db/fulltext, " +
-              ":from :disabled, " +
-              ":to true}"
-          }
-
-        // No change of fulltext options
-        _ <- Schema.t.a.fulltext$.get.map(_ ==> List(
-          (1000, ":Foo/str1", Some(true)),
-          (1000, ":Foo/str2", None),
+        // Instead, use getEnumHistory
+        _ <- conn.getEnumHistory.map(_ ==> List(
+          (":Foo/bar", t, tx0, d0, "bar1", true),
+          (":Foo/bar", t2, tx2, d2, "bar2", true),
         ))
 
+        // Just omitting an enum value in the data model doesn't retract it
+        _ <- transact(schema {
+          trait Foo {
+            val bar = oneEnum("bar2")
+          }
+        })
+        // bar1 still exists
+        _ <- Schema.t.a.enumm.a1.get.map(_ ==> List(
+          (t, ":Foo/bar", "bar1"),
+          (t, ":Foo/bar", "bar2"),
+        ))
+
+        // Instead, use conn.retractEnum to retract an enum value
+        // (each enum value is a referenced entity that we can retract)
+        (t5, tx5, d5) <- conn.retractEnum(":Foo.bar/bar1")
+          .map(res => (res.t, res.tx, res.txInstant))
+
+        // Now bar1 is not available and we can compile and transact our updated data model
+        _ <- Schema.t.a.enumm.get.map(_ ==> List(
+          (t, ":Foo/bar", "bar2"),
+        ))
+
+        _ <- transact(schema {
+          trait Foo {
+            val bar = oneEnum("bar2")
+          }
+        })
+
+        _ <- conn.getEnumHistory.map(_ ==> List(
+          (":Foo/bar", t, tx0, d0, "bar1", true),
+          (":Foo/bar", t2, tx2, d2, "bar2", true),
+          (":Foo/bar", t5, tx5, d5, "bar1", false), // bar1 retracted in tx5
+        ))
       } yield ()
     }
-
-
-
-
-//    "enum" - empty { implicit futConn =>
-//      /*
-//      :db/index specifies a boolean value indicating that an index should be
-//      generated for this attribute. Defaults to false.
-//
-//      In Molecule the indexing is turned on by default.
-//      Like with the noHistory option we simply show how to turn it on and off.
-//       */
-//      for {
-//        conn <- futConn
-//
-//        // In Molecule the indexing is turned on by default without having to
-//        // add `index` to the attribute defintion
-//        _ <- transact(schema {
-//          trait Foo {
-//            val bar = oneEnum("enum1", "enum2")
-//          }
-//        })
-//        _ <- Schema.t.a.enumm.get.map(_ ==> List(
-//          (1000, ":Foo/int", Some()),
-//        ))
-//
-//        // Stop indexing values for Foo/int
-//        _ <- conn.retractSchemaOption(":Foo/int", "index")
-//        _ <- Schema.t.a.noHistory$.get.map(_ ==> List(
-//          (1000, ":Foo/int", None),
-//        ))
-//
-//        // Index attribute values again
-//        _ <- transact(schema {
-//          trait Foo {
-//            val int = oneInt.index
-//          }
-//        })
-//        _ <- Schema.t.a.index$.get.map(_ ==> List(
-//          (1000, ":Foo/int", Some(true)),
-//        ))
-//        _ <- Schema.t.a.index$.get.map(_ ==> List(
-//          (1000, ":Foo/int", Some(true)),
-//          (1001, ":Foo/int", None),
-//          (1002, ":Foo/int", Some(true)),
-//        ))
-//      } yield ()
-//    }
   }
 }

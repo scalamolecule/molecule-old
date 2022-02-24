@@ -3,68 +3,69 @@ package molecule.datomic.peer.facade
 import java.lang.{Boolean => jBoolean, Long => jLong}
 import java.util
 import java.util.{Collections, Comparator, Collection => jCollection, List => jList}
-import datomic._
 import molecule.core.ast.elements._
+import molecule.core.exceptions.MoleculeException
 import molecule.core.util.JavaUtil
+import molecule.datomic.base.facade.Conn_Jvm
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 
-trait QuerySchemaHistory extends JavaUtil { self: Conn_Peer =>
+trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
 
   // Indexes of raw data
-  private val tx_          = 0
-  private val t_           = 1
+  private val t_           = 0
+  private val tx_          = 1
   private val txInst_      = 2
   private val op_          = 3
   private val attrId_      = 4
-  private val attrIdent_   = 5
-  private val a_           = 6
-  private val part_        = 7
-  private val nsFull_      = 8
-  private val ns_          = 9
-  private val attr_        = 10
-  private val schemaId_    = 11
-  private val schemaIdent_ = 12
-  private val schemaAttr_  = 13
-  private val schemaValue_ = 14
+  private val a_           = 5
+  private val part_        = 6
+  private val nsFull_      = 7
+  private val ns_          = 8
+  private val attr_        = 9
+  private val schemaId_    = 10
+  private val schemaAttr_  = 11
+  private val schemaValue_ = 12
 
   private val query =
-    """[:find  ?tx
-      |        ?t
-      |        ?txInst
-      |        ?op
-      |        ?attrId
-      |        ?attrIdent
-      |        ?a
-      |        ?part
-      |        ?nsFull
-      |        ?ns
-      |        ?attr
-      |        ?schemaId
-      |        ?schemaIdent
-      |        ?schemaAttr
-      |        ?schemaValue
-      | :where [:db.part/db :db.install/attribute ?attrId]
-      |        [(datomic.api/ident $ ?attrId) ?attrIdent]
-      |        [(str ?attrIdent) ?a]
-      |        [(namespace ?attrIdent) ?nsFull0]
-      |
-      |        ;; Remove '-' prefix if marked as retired
-      |        [(if (= (subs ?nsFull0 0 1) "-") (subs ?nsFull0 1) ?nsFull0) ?nsFull]
-      |
-      |        [(.contains ^String ?nsFull "_") ?isPart]
-      |        [(.split ^String ?nsFull "_") ?nsParts]
-      |        [(first ?nsParts) ?part0]
-      |        [(last ?nsParts) ?ns]
-      |        [(if ?isPart ?part0 "db.part/user") ?part]
-      |        [(name ?attrIdent) ?attr]
-      |        [?attrId ?schemaId ?schemaValue ?tx ?op]
-      |        [(datomic.api/ident $ ?schemaId) ?schemaIdent]
-      |        [(name ?schemaIdent) ?schemaAttr]
-      |        [(datomic.api/tx->t ?tx) ?t]
-      |        [(>= ?t 1000)]
-      |        [?tx :db/txInstant ?txInst]
-      |]""".stripMargin
+    s"""[:find  ?t
+       |        ?tx
+       |        ?txInst
+       |        ?op
+       |        ?attrId
+       |        ?a
+       |        ?part
+       |        ?nsFull
+       |        ?ns
+       |        ?attr
+       |        ?schemaId
+       |        ?schemaAttr
+       |        ?schemaValue
+       | :where [:db.part/db :db.install/attribute ?attrId]
+       |        [?attrId :db/ident ?attrIdent]
+       |        [(str ?attrIdent) ?a]
+       |        [(namespace ?attrIdent) ?nsFull0]
+       |
+       |        ;; Remove '-' prefix if attribute is marked as retired
+       |        [(if (= (subs ?nsFull0 0 1) "-") (subs ?nsFull0 1) ?nsFull0) ?nsFull]
+       |
+       |        ;; Exclude internal Datomic attributes
+       |        [(.matches ^String ?nsFull "^(db|db.alter|db.excise|db.install|db.part|db.sys|fressian|db.entity|db.attr|:-.*)") ?sys]
+       |        [(= ?sys false)]
+       |
+       |        [(.contains ^String ?nsFull "_") ?isPart]
+       |        [(.split ^String ?nsFull "_") ?nsParts]
+       |        [(first ?nsParts) ?part0]
+       |        [(last ?nsParts) ?ns]
+       |        [(if ?isPart ?part0 "db.part/user") ?part]
+       |        [(name ?attrIdent) ?attr]
+       |        [?attrId ?schemaId ?schemaValue ?tx ?op]
+       |        [?schemaId :db/ident ?schemaIdent]
+       |        [(name ?schemaIdent) ?schemaAttr]
+       |        [(datomic.api/tx->t ?tx) ?t]
+       |        [?tx :db/txInstant ?txInst]
+       |]""".stripMargin
 
   private class SchemaComparator extends Comparator[jList[AnyRef]] {
     def compare(l1: jList[AnyRef], l2: jList[AnyRef]): Int = {
@@ -111,7 +112,6 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Peer =>
       case "noHistory"   => (row: jList[AnyRef]) => row.get(schemaValue_).asInstanceOf[jBoolean]
       case "index"       => (row: jList[AnyRef]) => row.get(schemaValue_).asInstanceOf[jBoolean]
       case "fulltext"    => (row: jList[AnyRef]) => row.get(schemaValue_).asInstanceOf[jBoolean]
-      case "enumm"       => (row: jList[AnyRef]) => row.get(schemaValue_).toString
     }
   } else {
     // Optional values in pull result format to be processed as non-history Schema molecules
@@ -146,27 +146,31 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Peer =>
       case "noHistory"   => (row: jList[AnyRef]) => opt(row, javaMap("" -> row.get(schemaValue_)))
       case "index"       => (row: jList[AnyRef]) => opt(row, javaMap("" -> row.get(schemaValue_)))
       case "fulltext"    => (row: jList[AnyRef]) => opt(row, javaMap("" -> row.get(schemaValue_)))
-      case "enumm"       => (row: jList[AnyRef]) => opt(row, javaMap("" -> row.get(schemaValue_)))
     }
   }
 
 
-  private[molecule] def schemaHistoryQuery(model: Model)(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
-    //    println("-------------------------------")
-    //    println(model)
-    //    println("-------------------------------")
-
-    val elements               = model.elements
-    val generics               = elements.map(_.asInstanceOf[Generic])
+  private[molecule] def schemaHistoryQuery(
+    model: Model
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = try {
+    val elements = model.elements
+    val generics = elements.map(_.asInstanceOf[Generic])
+    if (generics.exists(_.attr == "enumm")) {
+      throw MoleculeException(
+        "Retrieving historical enum values with `Schema` is not supported since they " +
+          "are entities having their own timeline independently from schema attributes. " +
+          "Instead, please call `conn.getEnumHistory` to retrieve historical enum values."
+      )
+    }
     val length                 = elements.length
     var processedMandatory     = 0
     var expectedMandatoryCount = 0
     var add                    = true
-    var prevTx    : AnyRef     = 0L.asInstanceOf[AnyRef]
-    var tx        : AnyRef     = 0L.asInstanceOf[AnyRef]
-    var prevAttrId: AnyRef     = 0L.asInstanceOf[AnyRef]
-    var attrId    : AnyRef     = 0L.asInstanceOf[AnyRef]
-    var schemaAttr: String     = ""
+    var prevTx                 = 0L.asInstanceOf[AnyRef]
+    var tx                     = 0L.asInstanceOf[AnyRef]
+    var prevAttrId             = 0L.asInstanceOf[AnyRef]
+    var attrId                 = 0L.asInstanceOf[AnyRef]
+    var schemaAttr             = ""
     var list                   = new util.ArrayList[AnyRef](length)
     val coll                   = new util.ArrayList[jList[AnyRef]]()
 
@@ -176,7 +180,7 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Peer =>
         expectedMandatoryCount += 1
       }
       val schemaAttr        = if (mandatory) g.attr else g.attr.init
-      val sharedSchemaAttrs = List("attrId", "a", "part", "nsFull", "ns", "attr", "t", "tx", "txInstant")
+      val sharedSchemaAttrs = List("t", "tx", "txInstant", "attrId", "a", "part", "nsFull", "ns", "attr")
       val resolver          = if (sharedSchemaAttrs.contains(schemaAttr)) {
         // Resolver not needed for initiated schema attributes
         (_: jList[AnyRef]) => null
@@ -187,8 +191,8 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Peer =>
     }.toMap
 
     def initElement(schemaAttr: String): jList[AnyRef] => AnyRef = schemaAttr match {
-      case "tx"        => (row: jList[AnyRef]) => processedMandatory += 1; row.get(tx_)
       case "t"         => (row: jList[AnyRef]) => processedMandatory += 1; row.get(t_)
+      case "tx"        => (row: jList[AnyRef]) => processedMandatory += 1; row.get(tx_)
       case "txInstant" => (row: jList[AnyRef]) => processedMandatory += 1; row.get(txInst_)
       case "attrId"    => (row: jList[AnyRef]) => processedMandatory += 1; row.get(attrId_)
       case "a"         => (row: jList[AnyRef]) => processedMandatory += 1; row.get(a_)
@@ -196,8 +200,7 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Peer =>
       case "nsFull"    => (row: jList[AnyRef]) => processedMandatory += 1; row.get(nsFull_)
       case "ns"        => (row: jList[AnyRef]) => processedMandatory += 1; row.get(ns_)
       case "attr"      => (row: jList[AnyRef]) => processedMandatory += 1; row.get(attr_)
-      //      case "enumm"     => (row: jList[AnyRef]) => processedMandatory += 1; row.get(1)
-      case _ => (_: jList[AnyRef]) => null
+      case _           => (_: jList[AnyRef]) => null
     }
 
     // Initializer of row lists with arity of model elements length
@@ -643,9 +646,7 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Peer =>
       }
     }
 
-    db.map { db =>
-      val jColl = Peer.q(query, db.getDatomicDb.asInstanceOf[Database].history())
-
+    historyQuery(query).map { jColl =>
       // Sort by tx, attrId, schemaId, op
       val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
       Collections.sort(rows, new SchemaComparator())
@@ -656,13 +657,12 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Peer =>
         i += 1
         add = row.get(op_).asInstanceOf[jBoolean]
         tx = row.get(tx_)
-
-//        if (tx != prevTx)
-//          println("")
-//        println(row)
-
         attrId = row.get(attrId_)
         schemaAttr = row.get(schemaAttr_).toString
+
+        //        if (tx != prevTx)
+        //          println("")
+        //        println(row)
 
         // Init list
         if (tx != prevTx || attrId != prevAttrId) {
@@ -679,24 +679,23 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Peer =>
 
         // Add schema attribute value if requested
         schemaAttrIndexes.get(schemaAttr).foreach { case (i, mandatory, resolver) =>
-          if (mandatory)
+          if (mandatory) {
             processedMandatory += 1
+          }
+          //          println(schemaAttr + ": " + resolver(row))
           list.set(i, resolver(row))
-//          val v = resolver(row)
-//          println(s"======= $i     $v")
-//          list.set(i, v)
         }
 
-//        println(s"####### $i  $processedMandatory  $list")
         if (i == last && processedMandatory >= expectedMandatoryCount) {
           // add last collected row if all mandatory values have been collected
-//          println(s"@@@@@@@ $i  $processedMandatory  $list")
           coll.add(list)
           processedMandatory = 0
         }
       }
       coll
     }
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
   }
 }
 

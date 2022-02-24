@@ -5,8 +5,8 @@ import java.util.{Date, Collection => jCollection, List => jList}
 import molecule.core.ast.elements.Model
 import molecule.core.data.SchemaTransaction
 import molecule.core.exceptions.MoleculeException
-import molecule.core.marshalling.nodes.Obj
 import molecule.core.marshalling._
+import molecule.core.marshalling.nodes.Obj
 import molecule.core.ops.ColOps
 import molecule.core.transform.Model2Stmts
 import molecule.datomic.base.api.DatomicEntity
@@ -113,7 +113,7 @@ trait Conn extends ColOps with BooPicklers {
   /** Transact EDN data string
    *
    * @param edn EDN transaction data string
-   * @param ec ExecutionContext for Future
+   * @param ec  ExecutionContext for Future
    * @return Future with [[TxReport]]
    */
   def transact(edn: String)(implicit ec: ExecutionContext): Future[TxReport]
@@ -232,20 +232,7 @@ trait Conn extends ColOps with BooPicklers {
   def sync(t: Long): Conn
 
 
-  // Tx fn helpers -------------------------------------------------------------
-
-  // Needs to be public since tx functions use id
-  def stmts2java(stmts: Seq[Statement]): jList[jList[_]] =
-    throw jvmPeerOnly("stmts2java(stmts: Seq[Statement])")
-
-  private[molecule] def buildTxFnInvoker(txFn: String, args: Seq[Any]): jList[_] =
-    throw jvmPeerOnly("buildTxFnInstall(txFn: String, args: Seq[Any])")
-
-  private[molecule] def buildTxFnInvoker2(txFn: String, args: Seq[Any]): jList[_] =
-    throw jvmPeerOnly("buildTxFnInstall2(txFn: String, args: Seq[Any])")
-
-
-  // Schema change -------------------------------------------------------------
+  // Schema --------------------------------------------------------------------
 
   def changeAttrName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport]
   def retireAttr(attrName: String)(implicit ec: ExecutionContext): Future[TxReport]
@@ -256,7 +243,7 @@ trait Conn extends ColOps with BooPicklers {
   def changePartitionName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport]
   def retirePartition(partName: String)(implicit ec: ExecutionContext): Future[TxReport]
 
-  def retractSchemaOption(attr: String, option: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+  def retractSchemaOption(attr: String, option: String)(implicit ec: ExecutionContext): Future[TxReport]
 
   def updateConnProxy(schema: SchemaTransaction): Unit = {
     connProxy match {
@@ -282,6 +269,23 @@ trait Conn extends ColOps with BooPicklers {
         )
     }
   }
+
+  def getEnumHistory(implicit ec: ExecutionContext): Future[List[(String, Int, Long, Date, String, Boolean)]]
+  def retractEnum(enumString: String)(implicit ec: ExecutionContext): Future[TxReport]
+
+
+  // Tx fn helpers -------------------------------------------------------------
+
+  // Needs to be public since tx functions use id
+  def stmts2java(stmts: Seq[Statement]): jList[jList[_]] =
+    throw jvmPeerOnly("stmts2java(stmts: Seq[Statement])")
+
+  private[molecule] def buildTxFnInvoker(txFn: String, args: Seq[Any]): jList[_] =
+    throw jvmPeerOnly("buildTxFnInstall(txFn: String, args: Seq[Any])")
+
+  private[molecule] def buildTxFnInvoker2(txFn: String, args: Seq[Any]): jList[_] =
+    throw jvmPeerOnly("buildTxFnInstall2(txFn: String, args: Seq[Any])")
+
 
   // Internal ------------------------------------------------------------------
 
