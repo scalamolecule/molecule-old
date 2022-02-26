@@ -28,44 +28,46 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
   private val schemaAttr_  = 11
   private val schemaValue_ = 12
 
-  private val query =
-    s"""[:find  ?t
-       |        ?tx
-       |        ?txInst
-       |        ?op
-       |        ?attrId
-       |        ?a
-       |        ?part
-       |        ?nsFull
-       |        ?ns
-       |        ?attr
-       |        ?schemaId
-       |        ?schemaAttr
-       |        ?schemaValue
-       | :where [:db.part/db :db.install/attribute ?attrId]
-       |        [?attrId :db/ident ?attrIdent]
-       |        [(str ?attrIdent) ?a]
-       |        [(namespace ?attrIdent) ?nsFull0]
-       |
-       |        ;; Remove '-' prefix if attribute is marked as retired
-       |        [(if (= (subs ?nsFull0 0 1) "-") (subs ?nsFull0 1) ?nsFull0) ?nsFull]
-       |
-       |        ;; Exclude internal Datomic attributes
-       |        [(.matches ^String ?nsFull "^(db|db.alter|db.excise|db.install|db.part|db.sys|fressian|db.entity|db.attr|:-.*)") ?sys]
-       |        [(= ?sys false)]
-       |
-       |        [(.contains ^String ?nsFull "_") ?isPart]
-       |        [(.split ^String ?nsFull "_") ?nsParts]
-       |        [(first ?nsParts) ?part0]
-       |        [(last ?nsParts) ?ns]
-       |        [(if ?isPart ?part0 "db.part/user") ?part]
-       |        [(name ?attrIdent) ?attr]
-       |        [?attrId ?schemaId ?schemaValue ?tx ?op]
-       |        [?schemaId :db/ident ?schemaIdent]
-       |        [(name ?schemaIdent) ?schemaAttr]
-       |        [(datomic.api/tx->t ?tx) ?t]
-       |        [?tx :db/txInstant ?txInst]
-       |]""".stripMargin
+  private val schemaQuery =
+    """[:find  ?t
+      |        ?tx
+      |        ?txInst
+      |        ?op
+      |        ?attrId
+      |        ?a
+      |        ?part
+      |        ?nsFull
+      |        ?ns
+      |        ?attr
+      |        ?schemaId
+      |        ?schemaAttr
+      |        ?schemaValue
+      | :in $ $dbCurrent
+      | :where [:db.part/db :db.install/attribute ?attrId]
+      |        [$dbCurrent ?attrId :db/ident ?attrIdent]
+      |        [?attrId :db/ident ?attrIdent]
+      |        [(str ?attrIdent) ?a]
+      |        [(namespace ?attrIdent) ?nsFull0]
+      |
+      |        ;; Remove '-' prefix if attribute is marked as retired
+      |        [(if (= (subs ?nsFull0 0 1) "-") (subs ?nsFull0 1) ?nsFull0) ?nsFull]
+      |
+      |        ;; Exclude internal Datomic attributes
+      |        [(.matches ^String ?nsFull "^(db|db.alter|db.excise|db.install|db.part|db.sys|fressian|db.entity|db.attr)") ?sys]
+      |        [(= ?sys false)]
+      |
+      |        [(.contains ^String ?nsFull "_") ?isPart]
+      |        [(.split ^String ?nsFull "_") ?nsParts]
+      |        [(first ?nsParts) ?part0]
+      |        [(last ?nsParts) ?ns]
+      |        [(if ?isPart ?part0 "db.part/user") ?part]
+      |        [(name ?attrIdent) ?attr]
+      |        [?attrId ?schemaId ?schemaValue ?tx ?op]
+      |        [$dbCurrent ?schemaId :db/ident ?schemaIdent]
+      |        [(name ?schemaIdent) ?schemaAttr]
+      |        [(datomic.api/tx->t ?tx) ?t]
+      |        [?tx :db/txInstant ?txInst]
+      |]""".stripMargin
 
   private class SchemaComparator extends Comparator[jList[AnyRef]] {
     def compare(l1: jList[AnyRef], l2: jList[AnyRef]): Int = {
@@ -646,7 +648,7 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
       }
     }
 
-    historyQuery(query).map { jColl =>
+    historyQuery(schemaQuery).map { jColl =>
       // Sort by tx, attrId, schemaId, op
       val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
       Collections.sort(rows, new SchemaComparator())

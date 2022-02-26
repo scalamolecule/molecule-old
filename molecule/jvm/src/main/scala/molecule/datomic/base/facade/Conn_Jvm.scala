@@ -209,7 +209,7 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers {
   }
 
   def retractSchemaOption(attr: String, option: String)
-                                  (implicit ec: ExecutionContext): Future[TxReport] = try {
+                         (implicit ec: ExecutionContext): Future[TxReport] = try {
     val ident   = okIdent(attr)
     val options = List("doc", "unique", "isComponent", "noHistory", "index")
     if (!options.contains(option)) {
@@ -243,30 +243,31 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers {
   def getEnumHistory(implicit ec: ExecutionContext)
   : Future[List[(String, Int, Long, Date, String, Boolean)]] = {
     val enumQuery =
-      s"""[:find  ?a
-         |        ?enumT
-         |        ?enumTx
-         |        ?enumTxInst
-         |        ?enum
-         |        ?op
-         | :where [:db.part/db :db.install/attribute ?attrId]
-         |        [?attrId :db/ident ?attrIdent]
-         |        [(name ?attrIdent) ?attr]
-         |        [(str ?attrIdent) ?a]
-         |        [(namespace ?attrIdent) ?nsFull0]
-         |        [(if (= (subs ?nsFull0 0 1) "-") (subs ?nsFull0 1) ?nsFull0) ?nsFull]
-         |        [(.matches ^String ?nsFull "^(db|db.alter|db.excise|db.install|db.part|db.sys|fressian|db.entity|db.attr|:-.*)") ?sys]
-         |        [(= ?sys false)]
-         |        [_ :db/ident ?enumIdent ?enumTx ?op]
-         |        [(namespace ?enumIdent) ?enumNs]
-         |        [(str ?nsFull "." ?attr) ?enumSubNs]
-         |        [(= ?enumSubNs ?enumNs)]
-         |        [(name ?enumIdent) ?enum]
-         |        [(datomic.api/tx->t ?enumTx) ?enumT]
-         |        [?enumTx :db/txInstant ?enumTxInst]
-         |]""".stripMargin
+      """[:find  ?a
+        |        ?enumT
+        |        ?enumTx
+        |        ?enumTxInst
+        |        ?enum
+        |        ?op
+        | :in $ $dbCurrent
+        | :where [:db.part/db :db.install/attribute ?attrId]
+        |        [$dbCurrent ?attrId :db/ident ?attrIdent]
+        |        [(name ?attrIdent) ?attr]
+        |        [(str ?attrIdent) ?a]
+        |        [(namespace ?attrIdent) ?nsFull0]
+        |        [(if (= (subs ?nsFull0 0 1) "-") (subs ?nsFull0 1) ?nsFull0) ?nsFull]
+        |        [(.matches ^String ?nsFull "^(db|db.alter|db.excise|db.install|db.part|db.sys|fressian|db.entity|db.attr|-.*)") ?sys]
+        |        [(= ?sys false)]
+        |        [_ :db/ident ?enumIdent ?enumTx ?op]
+        |        [(namespace ?enumIdent) ?enumNs]
+        |        [(str ?nsFull "." ?attr) ?enumSubNs]
+        |        [(= ?enumSubNs ?enumNs)]
+        |        [(name ?enumIdent) ?enum]
+        |        [(datomic.api/tx->t ?enumTx) ?enumT]
+        |        [?enumTx :db/txInstant ?enumTxInst]
+        |]""".stripMargin
 
-    historyQuery(enumQuery).map{enumRes =>
+    historyQuery(enumQuery).map { enumRes =>
       val rows = List.newBuilder[(String, Int, Long, Date, String, Boolean)]
       enumRes.forEach { enumRow =>
         rows.addOne(

@@ -25,15 +25,15 @@ object SchemaChange_Attr extends AsyncTestSuite {
         _ <- Schema.t.a.valueType.cardinality.get.map(_ ==> Nil)
 
         // Initial data model
-        _ <- transact(schema {
+        t0 <- transact(schema {
           trait Foo {
             val int = oneInt
           }
-        })
+        }).map(_.last.t)
 
         // Schema now has 1 attribute
         _ <- Schema.t.a.get.map(_ ==> List(
-          (1000, ":Foo/int"),
+          (t0, ":Foo/int"),
         ))
 
 
@@ -47,23 +47,23 @@ object SchemaChange_Attr extends AsyncTestSuite {
         //    to transact the updated schema (depending on which system you use).
 
         // For testing purpose, we transact the schema of our updated data model here
-        _ <- transact(schema {
+        t1 <- transact(schema {
           trait Foo {
             val int = oneInt
             val str = oneString
           }
-        })
+        }).map(_.last.t)
 
         // Schema has 2 attributes
         _ <- Schema.t.a1.a.valueType.get.map(_ ==> List(
-          (1000, ":Foo/int", "long"),
-          (1001, ":Foo/str", "string"),
+          (t0, ":Foo/int", "long"),
+          (t1, ":Foo/str", "string"),
         ))
 
         // Since we have just added to the schema, `getHistory` will show the same as `get`
         _ <- Schema.t.a.valueType.getHistory.map(_ ==> List(
-          (1000, ":Foo/int", "long"),
-          (1001, ":Foo/str", "string"),
+          (t0, ":Foo/int", "long"),
+          (t1, ":Foo/str", "string"),
         ))
       } yield ()
     }
@@ -74,16 +74,16 @@ object SchemaChange_Attr extends AsyncTestSuite {
         conn <- futConn
 
         // Initial data model
-        _ <- transact(schema {
+        t0 <- transact(schema {
           trait Foo {
             val int = oneInt
           }
-        })
+        }).map(_.last.t)
 
         // Rename an attribute in 5 steps:
 
         // 1. Call changeAttrName to change the schema definition in the database.
-        _ <- conn.changeAttrName(":Foo/int", ":Foo/int2")
+        t1 <- conn.changeAttrName(":Foo/int", ":Foo/int2").map(_.t)
         // 2. Update name of attribute in the data model
         //      trait Foo {
         //        val int2 = oneInt
@@ -96,14 +96,14 @@ object SchemaChange_Attr extends AsyncTestSuite {
         // int has correctly been renamed to int2
         // Note that `t` refers to the transaction where the attribute entity was originally added
         _ <- Schema.t.a.get.map(_ ==> List(
-          (1000, ":Foo/int2"),
+          (t0, ":Foo/int2"),
         ))
 
         // See name changes with getHistory
         // Note that `a` refers to the current attribute name
         _ <- Schema.t.a.ident.getHistory.map(_ ==> List(
-          (1000, ":Foo/int2", ":Foo/int"),
-          (1001, ":Foo/int2", ":Foo/int2"),
+          (t0, ":Foo/int2", ":Foo/int"),
+          (t1, ":Foo/int2", ":Foo/int2"),
         ))
 
 
@@ -144,25 +144,25 @@ object SchemaChange_Attr extends AsyncTestSuite {
         //    to transact the updated schema (depending on which system you use).
 
         // For testing purpose, we transact the schema of our updated data model here
-        _ <- transact(schema {
+        t2 <- transact(schema {
           trait Foo {
             val int  = oneInt
             val int2 = oneInt
           }
-        })
+        }).map(_.last.t)
 
         // Now both attributes exist
         _ <- Schema.t.a1.a.attr.get.map(_ ==> List(
-          (1000, ":Foo/int2", "int2"), // originally `int`
-          (1002, ":Foo/int", "int"), //   repurposed `int`
+          (t0, ":Foo/int2", "int2"), // originally `int`
+          (t2, ":Foo/int", "int"), //   repurposed `int`
         ))
 
         // Check name changes with getHistory
         // Note that `a` refers to the current attribute name
         _ <- Schema.t.a.ident.getHistory.map(_ ==> List(
-          (1000, ":Foo/int2", ":Foo/int"), //  int created
-          (1001, ":Foo/int2", ":Foo/int2"), // int -> int2
-          (1002, ":Foo/int", ":Foo/int"), //   repurposed new int
+          (t0, ":Foo/int2", ":Foo/int"), //  int created
+          (t1, ":Foo/int2", ":Foo/int2"), // int -> int2
+          (t2, ":Foo/int", ":Foo/int"), //   repurposed new int
         ))
       } yield ()
     }
@@ -214,7 +214,7 @@ object SchemaChange_Attr extends AsyncTestSuite {
         conn <- futConn
 
         // Initial data model
-        _ <- transact(schema {
+        t0 <- transact(schema {
           trait Foo {
             val int = oneInt
             val str = oneString
@@ -223,18 +223,18 @@ object SchemaChange_Attr extends AsyncTestSuite {
           trait Bar {
             val long = oneLong
           }
-        })
+        }).map(_.last.t)
 
-        _ <- Schema.t.a.get.map(_ ==> List(
-          (1000, ":Foo/int"),
-          (1000, ":Foo/str"),
-          (1000, ":Bar/long"),
+        _ <- Schema.t.a.d1.get.map(_ ==> List(
+          (t0, ":Foo/str"),
+          (t0, ":Foo/int"),
+          (t0, ":Bar/long"),
         ))
 
         // Move/Rename an attribute in 5 steps:
 
         // 1. Call changeAttrName to change the schema definition in the database
-        _ <- conn.changeAttrName(":Foo/int", ":Bar/int")
+        t1 <- conn.changeAttrName(":Foo/int", ":Bar/int").map(_.t)
         // 2. Update name of attribute in the data model
         //      trait Foo {
         //        val str = oneString
@@ -259,10 +259,10 @@ object SchemaChange_Attr extends AsyncTestSuite {
         // See name changes with getHistory
         // Note that `a` refers to the current attribute name
         _ <- Schema.t.a.ident.getHistory.map(_ ==> List(
-          (1000, ":Bar/int", ":Foo/int"),
-          (1000, ":Foo/str", ":Foo/str"),
-          (1000, ":Bar/long", ":Bar/long"),
-          (1001, ":Bar/int", ":Bar/int"),
+          (t0, ":Bar/int", ":Foo/int"),
+          (t0, ":Foo/str", ":Foo/str"),
+          (t0, ":Bar/long", ":Bar/long"),
+          (t1, ":Bar/int", ":Bar/int"),
         ))
       } yield ()
     }
@@ -275,12 +275,12 @@ object SchemaChange_Attr extends AsyncTestSuite {
         conn <- futConn
 
         // Initial data model
-        _ <- transact(schema {
+        t0 <- transact(schema {
           trait Foo {
             val int = oneInt
             val str = oneString
           }
-        })
+        }).map(_.last.t)
 
         // int data
         e <- conn.transact("""[[:db/add "-1" :Foo/int 1]]""").map(_.eid)
@@ -318,7 +318,7 @@ object SchemaChange_Attr extends AsyncTestSuite {
         // Now we can retire the attribute - in 5 steps:
 
         // 1. Call retireAttr to retire the attribute in the database.
-        _ <- conn.retireAttr(":Foo/int")
+        t4 <- conn.retireAttr(":Foo/int").map(_.t)
         // 2. Remove attribute definition in the data model.
         // 3. Remove all uses of `int` in your code.
         // 4. Run `sbt compile -Dmolecule=true` to re-generate boilerplate code.
@@ -334,21 +334,21 @@ object SchemaChange_Attr extends AsyncTestSuite {
 
         // int attribute is no longer available (current view filters out retired attributes)
         _ <- Schema.t.a.get.map(_ ==> List(
-          (1000, ":Foo/str"),
+          (t0, ":Foo/str"),
         ))
 
         // Retired attributes are simply marked with a `-` prefix to exclude them from current Schema queries.
         _ <- Schema.t.a.ident.getHistory.map(_ ==> List(
-          (1000, ":-Foo/int", ":Foo/int"), // :Foo/int created (`a` shows current retired attribute ident `:-Foo/int`)
-          (1000, ":Foo/str", ":Foo/str"),
-          (1004, ":-Foo/int", ":-Foo/int"), // :Foo/int retired
+          (t0, ":-Foo/int", ":Foo/int"), // :Foo/int created (`a` shows current retired attribute ident `:-Foo/int`)
+          (t0, ":Foo/str", ":Foo/str"),
+          (t4, ":-Foo/int", ":-Foo/int"), // :Foo/int retired
         ))
 
 
         // Un-retire attribute in 5 steps:
 
         // 1. Call changeAttrName to remove prefix used to mark it as retired
-        _ <- conn.changeAttrName(":-Foo/int", ":Foo/int")
+        t6 <- conn.changeAttrName(":-Foo/int", ":Foo/int").map(_.t)
         // 2. Add `int` definition again to the data model.
         // 3. Run `sbt compile -Dmolecule=true` to re-generate boilerplate code.
         // 4. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbName)`
@@ -363,15 +363,15 @@ object SchemaChange_Attr extends AsyncTestSuite {
         })
 
         _ <- Schema.t.attr.a.get.map(_ ==> List(
-          (1000, "int", ":Foo/int"),
-          (1000, "str", ":Foo/str"),
+          (t0, "int", ":Foo/int"),
+          (t0, "str", ":Foo/str"),
         ))
 
         _ <- Schema.t.attr.a.ident.getHistory.map(_ ==> List(
-          (1000, "int", ":Foo/int", ":Foo/int"),
-          (1000, "str", ":Foo/str", ":Foo/str"),
-          (1004, "int", ":Foo/int", ":-Foo/int"), // :Foo/int retired
-          (1006, "int", ":Foo/int", ":Foo/int"), //  :Foo/int un-retired
+          (t0, "int", ":Foo/int", ":Foo/int"),
+          (t0, "str", ":Foo/str", ":Foo/str"),
+          (t4, "int", ":Foo/int", ":-Foo/int"), // :Foo/int retired
+          (t6, "int", ":Foo/int", ":Foo/int"), //  :Foo/int un-retired
         ))
 
         // We could also simply have updated our data model as above without first calling

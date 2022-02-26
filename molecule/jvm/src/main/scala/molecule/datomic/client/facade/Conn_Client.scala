@@ -2,7 +2,7 @@ package molecule.datomic.client.facade
 
 import java.util
 import java.util.{Date, Collection => jCollection, List => jList}
-import datomic.Util
+import datomic.{Database, Peer, Util}
 import datomicScala.client.api.Datom
 import datomicScala.client.api.sync.{Client, Db, Connection => ClientConnection, Datomic => clientDatomic}
 import molecule.core.ast.elements._
@@ -146,7 +146,11 @@ case class Conn_Client(
   protected def historyQuery(query: String)
                             (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     db.map { db =>
-      clientDatomic.q(query, db.asInstanceOf[DatomicDb_Client].clientDb.history)
+      clientDatomic.q(
+        query,
+        db.asInstanceOf[DatomicDb_Client].clientDb.history,
+        db.asInstanceOf[DatomicDb_Client].getDatomicDb
+      )
     }
   }
 

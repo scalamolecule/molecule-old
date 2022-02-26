@@ -48,17 +48,17 @@ object SchemaChange_Namespace extends AsyncTestSuite {
       for {
         conn <- futConn
 
-        _ <- transact(schema {
+        t0 <- transact(schema {
           trait Foo {
             val int = oneInt
             val str = oneString
           }
-        })
+        }).map(_.last.t)
 
         // Renaming a namespace means changing the namespace prefix of all of its attributes
 
         // 1. Call changeNamespaceName to change the schema definition in the database
-        _ <- conn.changeNamespaceName("Foo", "Bar")
+        t1 <- conn.changeNamespaceName("Foo", "Bar").map(_.t)
         // 2. Update namespace name in the data model
         //      trait Bar {
         //        val int  = oneInt
@@ -78,10 +78,10 @@ object SchemaChange_Namespace extends AsyncTestSuite {
         // See name changes with getHistory
         // Note that `a` refers to the current attribute name
         _ <- Schema.t.a.ident.getHistory.map(_ ==> List(
-          (1000, ":Bar/int", ":Foo/int"),
-          (1000, ":Bar/str", ":Foo/str"),
-          (1001, ":Bar/int", ":Bar/int"),
-          (1001, ":Bar/str", ":Bar/str"),
+          (t0, ":Bar/int", ":Foo/int"),
+          (t0, ":Bar/str", ":Foo/str"),
+          (t1, ":Bar/int", ":Bar/int"),
+          (t1, ":Bar/str", ":Bar/str"),
         ))
       } yield ()
     }
@@ -94,7 +94,7 @@ object SchemaChange_Namespace extends AsyncTestSuite {
         conn <- futConn
 
         // Initial data model
-        _ <- transact(schema {
+        t0 <- transact(schema {
           trait Foo {
             val int = oneInt
             val str = oneString
@@ -102,11 +102,12 @@ object SchemaChange_Namespace extends AsyncTestSuite {
           trait Bar {
             val long = oneLong
           }
-        })
-        _ <- Schema.t.a.get.map(_ ==> List(
-          (1000, ":Foo/int"),
-          (1000, ":Foo/str"),
-          (1000, ":Bar/long"),
+        }).map(_.last.t)
+
+        _ <- Schema.t.a.d1.get.map(_ ==> List(
+          (t0, ":Foo/str"),
+          (t0, ":Foo/int"),
+          (t0, ":Bar/long"),
         ))
 
         // Checks
@@ -141,7 +142,7 @@ object SchemaChange_Namespace extends AsyncTestSuite {
         // Now we can retire the namespace - in 5 steps:
 
         // 1. Call retireAttr to retire all attributes of the namespace in the database.
-        _ <- conn.retireNamespace("Foo")
+        t4 <- conn.retireNamespace("Foo").map(_.t)
         // 2. Remove namespace `Foo` from the data model.
         //      trait Bar {
         //        val long = oneLong
@@ -154,18 +155,18 @@ object SchemaChange_Namespace extends AsyncTestSuite {
 
         // Attributes in `Foo` namespace are no longer available
         _ <- Schema.t.a.get.map(_ ==> List(
-          (1000, ":Bar/long"),
+          (t0, ":Bar/long"),
         ))
 
         // Retired attributes are simply marked with a `-` prefix to exclude them from current Schema queries.
         _ <- Schema.t.ns.attr.a.ident.getHistory.map(_ ==> List(
-          (1000, "Foo", "int", ":-Foo/int", ":Foo/int"), // :Foo/int created (`a` shows current retired attribute ident `:-Foo/int`)
-          (1000, "Foo", "str", ":-Foo/str", ":Foo/str"), // :Foo/str created (`a` shows current retired attribute ident `:-Foo/str`)
-          (1000, "Bar", "long", ":Bar/long", ":Bar/long"),
+          (t0, "Foo", "int", ":-Foo/int", ":Foo/int"), // :Foo/int created (`a` shows current retired attribute ident `:-Foo/int`)
+          (t0, "Foo", "str", ":-Foo/str", ":Foo/str"), // :Foo/str created (`a` shows current retired attribute ident `:-Foo/str`)
+          (t0, "Bar", "long", ":Bar/long", ":Bar/long"),
 
           // Namespace Foo retired
-          (1004, "Foo", "int", ":-Foo/int", ":-Foo/int"), // :Foo/int retired
-          (1004, "Foo", "str", ":-Foo/str", ":-Foo/str"), // :Foo/str retired
+          (t4, "Foo", "int", ":-Foo/int", ":-Foo/int"), // :Foo/int retired
+          (t4, "Foo", "str", ":-Foo/str", ":-Foo/str"), // :Foo/str retired
         ))
       } yield ()
     }

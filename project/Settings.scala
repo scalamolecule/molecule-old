@@ -174,7 +174,7 @@ object Settings extends SettingsDatomic {
         //        sharedTests + "/core/json",
         //        sharedTests + "/core/nested",
         //        sharedTests + "/core/obj",
-        sharedTests + "/core/pagination",
+//        sharedTests + "/core/pagination",
         //        sharedTests + "/core/ref",
         //        sharedTests + "/db/datomic/composite",
         //        sharedTests + "/db/datomic/entity",

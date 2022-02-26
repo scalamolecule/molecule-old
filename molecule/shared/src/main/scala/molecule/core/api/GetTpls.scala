@@ -250,10 +250,10 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
     )(Future.failed) // Wrap exception from input failure in Future
   }
 
-  def getHistory(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
+  def getHistory(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
     _model.elements.head match {
       case Generic("Schema", _, _, _, _) =>
-        conn.map(_.usingAdhocDbView(History)).flatMap { conn =>
+        futConn.flatMap { conn =>
           if (conn.isJsPlatform) {
             conn.jsQueryTpl(
               _model, _query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
@@ -284,7 +284,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
           }
         }
 
-      case _ => get(conn.map(_.usingAdhocDbView(History)), ec)
+      case _ => get(futConn.map(_.usingAdhocDbView(History)), ec)
     }
   }
 

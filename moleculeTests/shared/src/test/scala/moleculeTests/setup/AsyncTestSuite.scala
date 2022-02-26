@@ -12,20 +12,20 @@ trait AsyncTestSuite extends TestSuite with CoreData
   // Platform-specific implementations (JS/JVM)
   with AsyncTestSuiteImpl {
 
-  val isJsPlatform: Boolean = isJsPlatform_
-  val protocol    : String  = protocol_
-  val useFree     : Boolean = useFree_
+  lazy val isJsPlatform: Boolean = isJsPlatform_
+  lazy val protocol    : String  = protocol_
+  lazy val useFree     : Boolean = useFree_
 
-  val system: System = {
-    SystemPeer
-//        SystemDevLocal
+  lazy val system: System = {
+//        SystemPeer
+    SystemDevLocal
 
     // Since we run asynchronous tests and can't recreate databases against the Peer Server,
     // we can only test reliably by restarting the Peer Server and test a single test at a time.
     //    SystemPeerServer
   }
 
-  val platformSystemProtocol = {
+  lazy val platformSystemProtocol = {
     val dbType = if (protocol == "mem") if (useFree) "(free)" else "(pro)" else ""
     (if (isJsPlatform) "JS" else "JVM") +
       (system match {

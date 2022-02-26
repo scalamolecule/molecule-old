@@ -23,9 +23,9 @@ import scala.concurrent.Future
 
 trait AsyncTestSuiteImpl { self: AsyncTestSuite =>
 
-  val isJsPlatform_ = false
-  val protocol_     = BuildInfo.datomicProtocol
-  val useFree_      = BuildInfo.datomicUseFree
+  lazy val isJsPlatform_ = false
+  lazy val protocol_     = BuildInfo.datomicProtocol
+  lazy val useFree_      = BuildInfo.datomicUseFree
 
   def inMem[T](
     test: Future[Conn] => T,
