@@ -12,9 +12,7 @@ import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.concurrent.Future
 
-/*
-Changing your schema ...
- */
+
 object SchemaChange_Attr extends AsyncTestSuite {
 
   lazy val tests = Tests {

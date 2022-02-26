@@ -8,9 +8,7 @@ import molecule.datomic.api.out13._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
 
-/*
-Changing your schema ...
- */
+
 object SchemaChange_Namespace extends AsyncTestSuite {
 
   lazy val tests = Tests {

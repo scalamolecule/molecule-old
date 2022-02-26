@@ -9,11 +9,8 @@ import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
 import utest._
 
-/*
-Changing your schema ...
- */
+
 object SchemaChange_AttrOptions extends AsyncTestSuite {
-  //object SchemaChange_AttrOptions extends TestSuite {
 
   lazy val tests = Tests {
 
