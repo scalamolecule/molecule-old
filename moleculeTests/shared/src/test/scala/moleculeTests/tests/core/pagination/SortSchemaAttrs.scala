@@ -2,7 +2,7 @@ package moleculeTests.tests.core.pagination
 
 import molecule.core.util.Executor._
 import molecule.datomic.api.in1_out7._
-import molecule.datomic.base.util.SystemPeerServer
+import molecule.datomic.base.util.{SystemPeer, SystemPeerServer}
 import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.concurrent.Future
@@ -18,21 +18,23 @@ object SortSchemaAttrs extends AsyncTestSuite {
   lazy val tests = Tests {
 
     "id" - core { implicit conn =>
+      // Client attribute ids are
+      val clientDelta = if(system == SystemPeer) 0 else 1
       for {
         // Ordering by id shows the order of attributes defined in the Data Model
         _ <- Schema.attrId.a1.a.get(5).map(_ ==> List(
-          (72, ":Ns/str"),
-          (73, ":Ns/int"),
-          (74, ":Ns/long"),
-          (75, ":Ns/double"),
-          (76, ":Ns/bool"),
+          (72 + clientDelta, ":Ns/str"),
+          (73 + clientDelta, ":Ns/int"),
+          (74 + clientDelta, ":Ns/long"),
+          (75 + clientDelta, ":Ns/double"),
+          (76 + clientDelta, ":Ns/bool"),
         ))
         _ <- Schema.attrId.d1.a.get(5).map(_ ==> List(
-          (134, ":Ref4/int4"),
-          (133, ":Ref4/str4"),
-          (132, ":Ref3/refs4"),
-          (131, ":Ref3/ref4"),
-          (130, ":Ref3/int3"),
+          (134 + clientDelta, ":Ref4/int4"),
+          (133 + clientDelta, ":Ref4/str4"),
+          (132 + clientDelta, ":Ref3/refs4"),
+          (131 + clientDelta, ":Ref3/ref4"),
+          (130 + clientDelta, ":Ref3/int3"),
         ))
 
         // Sort by count of attribute id's in each namespace
@@ -409,134 +411,139 @@ object SortSchemaAttrs extends AsyncTestSuite {
 
 
     "index" - core { implicit conn =>
-      for {
-        // Mandatory
-        _ <- Schema.a.a2.index.a1.get(3).map(_ ==> (
-          if (isJsPlatform) {
-            // No attributes indexed
-            Nil
-          } else {
-            // All attributes indexed (not much sense in sorting by one value)
-            List(
-              (":Ns/bigDec", true),
-              (":Ns/bigDecMap", true),
-              (":Ns/bigDecs", true),
-            )
-          })
-        )
+      // index option only available for Peer systems
+      if (system == SystemPeer) {
+        for {
+          // Mandatory
+          _ <- Schema.a.a2.index.a1.get(3).map(_ ==> (
+            if (isJsPlatform) {
+              // No attributes indexed
+              Nil
+            } else {
+              // All attributes indexed (not much sense in sorting by one value)
+              List(
+                (":Ns/bigDec", true),
+                (":Ns/bigDecMap", true),
+                (":Ns/bigDecs", true),
+              )
+            })
+          )
 
-        // Optional
-        _ <- Schema.a.index$.a1.get(3).map(_ ==> (
-          if (isJsPlatform) {
-            // No attributes indexed
-            List(
-              (":Ns/str", None),
-              (":Ns/int", None),
-              (":Ns/long", None),
-            )
-          } else {
-            // All attributes indexed
-            List(
-              (":Ns/str", Some(true)),
-              (":Ns/int", Some(true)),
-              (":Ns/long", Some(true)),
-            )
-          })
-        )
+          // Optional
+          _ <- Schema.a.index$.a1.get(3).map(_ ==> (
+            if (isJsPlatform) {
+              // No attributes indexed
+              List(
+                (":Ns/str", None),
+                (":Ns/int", None),
+                (":Ns/long", None),
+              )
+            } else {
+              // All attributes indexed
+              List(
+                (":Ns/str", Some(true)),
+                (":Ns/int", Some(true)),
+                (":Ns/long", Some(true)),
+              )
+            })
+          )
 
-        // Count of index options
-        _ <- Schema.ns.a2.index(count).a1.get.map(_ ==> (
-          if (isJsPlatform) {
-            // No attributes indexed
-            Nil
-          } else {
-            // All attributes indexed
-            List(
-              ("Ns", 1),
-              ("Ref1", 1),
-              ("Ref2", 1),
-              ("Ref3", 1),
-              ("Ref4", 1),
-            )
-          })
-        )
-        _ <- Schema.ns.d2.index(count).d1.get.map(_ ==> (
-          if (isJsPlatform) {
-            // No attributes indexed
-            Nil
-          } else {
-            // All attributes indexed
-            List(
-              ("Ref4", 1),
-              ("Ref3", 1),
-              ("Ref2", 1),
-              ("Ref1", 1),
-              ("Ns", 1),
-            )
-          })
-        )
+          // Count of index options
+          _ <- Schema.ns.a2.index(count).a1.get.map(_ ==> (
+            if (isJsPlatform) {
+              // No attributes indexed
+              Nil
+            } else {
+              // All attributes indexed
+              List(
+                ("Ns", 1),
+                ("Ref1", 1),
+                ("Ref2", 1),
+                ("Ref3", 1),
+                ("Ref4", 1),
+              )
+            })
+          )
+          _ <- Schema.ns.d2.index(count).d1.get.map(_ ==> (
+            if (isJsPlatform) {
+              // No attributes indexed
+              Nil
+            } else {
+              // All attributes indexed
+              List(
+                ("Ref4", 1),
+                ("Ref3", 1),
+                ("Ref2", 1),
+                ("Ref1", 1),
+                ("Ns", 1),
+              )
+            })
+          )
 
-        // Count of indexed attributes in each namespace
-        _ <- Schema.ns.a2.index_.a(count).d1.get.map(_ ==> (
-          if (isJsPlatform) {
-            // No attributes indexed
-            Nil
-          } else {
-            // All attributes indexed
-            List(
-              ("Ns", 38),
-              ("Ref1", 12),
-              ("Ref2", 7),
-              ("Ref3", 4),
-              ("Ref4", 2),
-            )
-          })
-        )
-      } yield ()
+          // Count of indexed attributes in each namespace
+          _ <- Schema.ns.a2.index_.a(count).d1.get.map(_ ==> (
+            if (isJsPlatform) {
+              // No attributes indexed
+              Nil
+            } else {
+              // All attributes indexed
+              List(
+                ("Ns", 38),
+                ("Ref1", 12),
+                ("Ref2", 7),
+                ("Ref3", 4),
+                ("Ref4", 2),
+              )
+            })
+          )
+        } yield ()
+      }
     }
 
 
     "fulltext" - core { implicit conn =>
-      for {
-        // Mandatory (not much sense in sorting by one possible value: true)
-        _ <- Schema.ns_("Ref2").cardinality_("one").a.a2.fulltext.a1.get.map(_ ==> List((":Ref2/str2", true)))
-        _ <- Schema.ns_("Ref2").cardinality_("one").a.a2.fulltext.d1.get.map(_ ==> List((":Ref2/str2", true)))
+      // Fulltext search only available for Peer system.
+      if (system == SystemPeer) {
+        for {
+          // Mandatory (not much sense in sorting by one possible value: true)
+          _ <- Schema.ns_("Ref2").cardinality_("one").a.a2.fulltext.a1.get.map(_ ==> List((":Ref2/str2", true)))
+          _ <- Schema.ns_("Ref2").cardinality_("one").a.a2.fulltext.d1.get.map(_ ==> List((":Ref2/str2", true)))
 
-        // Optional
-        _ <- Schema.ns_("Ref2").cardinality_("one").a.a2.fulltext$.a1.get.map(_ ==> List(
-          (":Ref2/enum2", None),
-          (":Ref2/int2", None),
-          (":Ref2/ref3", None),
-          (":Ref2/str2", Some(true)),
-        ))
-        _ <- Schema.ns_("Ref2").cardinality_("one").a.a2.fulltext$.d1.get.map(_ ==> List(
-          (":Ref2/str2", Some(true)),
-          (":Ref2/enum2", None),
-          (":Ref2/int2", None),
-          (":Ref2/ref3", None),
-        ))
+          // Optional
+          _ <- Schema.ns_("Ref2").cardinality_("one").a.a2.fulltext$.a1.get.map(_ ==> List(
+            (":Ref2/enum2", None),
+            (":Ref2/int2", None),
+            (":Ref2/ref3", None),
+            (":Ref2/str2", Some(true)),
+          ))
+          _ <- Schema.ns_("Ref2").cardinality_("one").a.a2.fulltext$.d1.get.map(_ ==> List(
+            (":Ref2/str2", Some(true)),
+            (":Ref2/enum2", None),
+            (":Ref2/int2", None),
+            (":Ref2/ref3", None),
+          ))
 
-        // Count of fulltext option
-        _ <- Schema.ns.a2.fulltext(count).a1.get.map(_ ==> List(
-          ("Ns", 1),
-          ("Ref1", 1),
-          ("Ref2", 1),
-        ))
-        _ <- Schema.ns.d2.fulltext(count).d1.get.map(_ ==> List(
-          ("Ref2", 1),
-          ("Ref1", 1),
-          ("Ns", 1),
-        ))
+          // Count of fulltext option
+          _ <- Schema.ns.a2.fulltext(count).a1.get.map(_ ==> List(
+            ("Ns", 1),
+            ("Ref1", 1),
+            ("Ref2", 1),
+          ))
+          _ <- Schema.ns.d2.fulltext(count).d1.get.map(_ ==> List(
+            ("Ref2", 1),
+            ("Ref1", 1),
+            ("Ns", 1),
+          ))
 
-        // Count of how many attributes in each namespace that has the fulltext option set
-        _ <- Schema.ns.a2.fulltext_.a(count).d1.get.map(_ ==> List(
-          ("Ns", 3),
-          ("Ref1", 1),
-          ("Ref2", 1),
-        ))
-      } yield ()
+          // Count of how many attributes in each namespace that has the fulltext option set
+          _ <- Schema.ns.a2.fulltext_.a(count).d1.get.map(_ ==> List(
+            ("Ns", 3),
+            ("Ref1", 1),
+            ("Ref2", 1),
+          ))
+        } yield ()
+      }
     }
-
 
     // Time coordinates of attribute installation -----------------------------------------------
 

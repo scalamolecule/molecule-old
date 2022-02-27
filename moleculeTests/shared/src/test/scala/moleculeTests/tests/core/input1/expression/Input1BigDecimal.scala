@@ -57,7 +57,7 @@ object Input1BigDecimal extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
+        "not" - core { implicit conn =>
           val inputMolecule = m(Ns.bigDec.not(?))
           for {
             _ <- oneData
@@ -136,7 +136,7 @@ object Input1BigDecimal extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
+        "not" - core { implicit conn =>
           val inputMolecule = m(Ns.str.bigDec_.not(?))
           for {
             _ <- oneData
@@ -266,8 +266,8 @@ object Input1BigDecimal extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.bigDec.bigDecs.not(?)) // or m(Ns.bigDec.bigDecs.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.bigDec.bigDecs.not(?))
           val all           = List(
             (bigDec1, Set(bigDec1, bigDec2, bigDec3)),
             (bigDec2, Set(bigDec2, bigDec3, bigDec4)),
@@ -472,8 +472,8 @@ object Input1BigDecimal extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.bigDecs.not(?)) // or m(Ns.bigDec.bigDecs.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.bigDecs.not(?))
           for {
             _ <- Ns.bigDec.bigDecs insert List(
               (bigDec1, Set(bigDec1, bigDec2, bigDec3)),
@@ -631,8 +631,8 @@ object Input1BigDecimal extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.bigDec.bigDecs_.not(?)) // or m(Ns.bigDec.bigDecs.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.bigDec.bigDecs_.not(?))
           for {
             _ <- Ns.bigDec.bigDecs insert List(
               (bigDec1, Set(bigDec1, bigDec2, bigDec3)),

@@ -58,7 +58,7 @@ object Input1UUID extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
+        "not" - core { implicit conn =>
           val inputMolecule = m(Ns.uuid.not(?))
           for {
             _ <- oneData
@@ -133,7 +133,7 @@ object Input1UUID extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
+        "not" - core { implicit conn =>
           val inputMolecule = m(Ns.str.uuid_.not(?))
           for {
             _ <- oneData
@@ -260,8 +260,8 @@ object Input1UUID extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid.uuids.not(?)) // or m(Ns.uuid.uuids.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.uuid.uuids.not(?))
           val all           = List(
             (uuid1, Set(uuid1, uuid2, uuid3)),
             (uuid2, Set(uuid2, uuid3, uuid4)),
@@ -463,8 +463,8 @@ object Input1UUID extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuids.not(?)) // or m(Ns.uuid.uuids.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.uuids.not(?))
           val all           = List(
             (uuid1, Set(uuid1, uuid2, uuid3)),
             (uuid2, Set(uuid2, uuid3, uuid4)),
@@ -624,8 +624,8 @@ object Input1UUID extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid.uuids_.not(?)) // or m(Ns.uuid.uuids.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.uuid.uuids_.not(?))
           for {
             _ <- Ns.uuid.uuids insert List(
               (uuid1, Set(uuid1, uuid2, uuid3)),

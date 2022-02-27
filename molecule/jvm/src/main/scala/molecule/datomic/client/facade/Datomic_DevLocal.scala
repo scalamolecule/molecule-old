@@ -82,8 +82,8 @@ case class Datomic_DevLocal(system: String, storageDir: String = "")
    *
    * @group database
    * @param schema Auto-generated YourDomainSchema Transaction object<br>
-   *                 (in package yourdomain.schema of generated source jar)
-   * @param dbName   Database name
+   *               (in package yourdomain.schema of generated source jar)
+   * @param dbName Database name
    * @return [[molecule.datomic.base.facade.Conn Conn]]
    */
   def recreateDbFrom(
@@ -107,7 +107,13 @@ case class Datomic_DevLocal(system: String, storageDir: String = "")
       _ <- deleteDatabase(dbName)
       _ <- createDatabase(dbName)
       conn <- connect(connProxy, dbName)
-      _ <- Future.sequence(edns.map(edn => conn.transact(edn)))
+      // Ensure each transaction finishes before the next
+      // partitions/attributes (or none for initial empty test dummy)
+      _ <- if (edns.nonEmpty) conn.transact(edns.head) else Future.unit
+      // attributes/aliases
+      _ <- if (edns.size > 1) conn.transact(edns(1)) else Future.unit
+      // aliases
+      _ <- if (edns.size > 2) conn.transact(edns(2)) else Future.unit
     } yield {
       conn
     }

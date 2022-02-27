@@ -57,7 +57,7 @@ object Input1Long extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
+        "not" - core { implicit conn =>
           val inputMolecule = m(Ns.long.not(?))
           for {
             _ <- oneData
@@ -136,7 +136,7 @@ object Input1Long extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
+        "not" - core { implicit conn =>
           val inputMolecule = m(Ns.str.long_.not(?))
           for {
             _ <- oneData
@@ -267,8 +267,8 @@ object Input1Long extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.long.longs.not(?)) // or m(Ns.long.longs.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.long.longs.not(?))
           val all           = List(
             (long1, Set(long1, long2, long3)),
             (long2, Set(long2, long3, long4)),
@@ -469,8 +469,8 @@ object Input1Long extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.longs.not(?)) // or m(Ns.long.longs.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.longs.not(?))
           for {
             _ <- Ns.long.longs insert List(
               (long1, Set(long1, long2, long3)),
@@ -629,8 +629,8 @@ object Input1Long extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.long.longs_.not(?)) // or m(Ns.long.longs.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.long.longs_.not(?))
           for {
             _ <- Ns.long.longs insert List(
               (long1, Set(long1, long2, long3)),

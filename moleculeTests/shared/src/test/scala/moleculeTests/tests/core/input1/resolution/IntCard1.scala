@@ -46,7 +46,7 @@ object IntCard1 extends AsyncTestSuite {
         } yield ()
       }
 
-      "!=" - core { implicit conn =>
+      "not" - core { implicit conn =>
         val inputMolecule = m(Ns.int.not(?))
         for {
           _ <- oneData
@@ -135,7 +135,7 @@ object IntCard1 extends AsyncTestSuite {
         } yield ()
       }
 
-      "!=" - core { implicit conn =>
+      "not" - core { implicit conn =>
         val inputMolecule = m(Ns.str.int_.not(?))
         for {
           _ <- oneData

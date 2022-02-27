@@ -52,7 +52,7 @@ object EnumCard1 extends AsyncTestSuite {
         } yield ()
       }
 
-      "!=" - core { implicit conn =>
+      "not" - core { implicit conn =>
         val inputMolecule = m(Ns.enumm.not(?))
         for {
           _ <- oneData
@@ -141,7 +141,7 @@ object EnumCard1 extends AsyncTestSuite {
         } yield ()
       }
 
-      "!=" - core { implicit conn =>
+      "not" - core { implicit conn =>
         val inputMolecule = m(Ns.str.enumm_.not(?))
         for {
           _ <- oneData

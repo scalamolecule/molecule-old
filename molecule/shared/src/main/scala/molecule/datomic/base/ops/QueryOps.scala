@@ -256,7 +256,7 @@ object QueryOps extends Helpers with JavaUtil {
       q.copy(f = Find(q.f.outputs :+ Pull(v + "_pull", "db", v)))
         .func("identity", Seq(Var("attrId")), ScalarBinding(Var(v + "_pull")))
 
-    def not(attr: String): Query =
+    def schemaNot(attr: String): Query =
       q.copy(wh = Where(q.wh.clauses :+ NotClause(Var("attrId"), KW("db", attr))))
 
 

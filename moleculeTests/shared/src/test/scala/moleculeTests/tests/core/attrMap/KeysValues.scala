@@ -229,14 +229,14 @@ object KeysValues extends Base {
 
         // Same as
 
-        _ <- Ns.int.strMap_.k("en").!=("Hello").get.map(_ ==> List(1, 2))
-        _ <- Ns.int.strMap.k("en").!=("Hello").get.map(_ ==> List(
+        _ <- Ns.int.strMap_.k("en").not("Hello").get.map(_ ==> List(1, 2))
+        _ <- Ns.int.strMap.k("en").not("Hello").get.map(_ ==> List(
           (1, Map("en" -> "Hi there")),
           (2, Map("en" -> "Oh, Hi"))
         ))
 
         // Multiple value filters (OR semantics)
-        _ <- Ns.int.strMap_.k("en").!=("Hello", "Hi there").get.map(_ ==> List(2))
+        _ <- Ns.int.strMap_.k("en").not("Hello", "Hi there").get.map(_ ==> List(2))
       } yield ()
     }
 

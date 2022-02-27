@@ -58,7 +58,7 @@ object Input1URI extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
+        "not" - core { implicit conn =>
           val inputMolecule = m(Ns.uri.not(?))
           for {
             _ <- oneData
@@ -134,7 +134,7 @@ object Input1URI extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
+        "not" - core { implicit conn =>
           val inputMolecule = m(Ns.str.uri_.not(?))
           for {
             _ <- oneData
@@ -259,8 +259,8 @@ object Input1URI extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.uri.uris.not(?)) // or m(Ns.uri.uris.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.uri.uris.not(?))
           val all           = List(
             (uri1, Set(uri1, uri2, uri3)),
             (uri2, Set(uri2, uri3, uri4)),
@@ -461,8 +461,8 @@ object Input1URI extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.uris.not(?)) // or m(Ns.uri.uris.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.uris.not(?))
           for {
             _ <- Ns.uri.uris insert List(
               (uri1, Set(uri1, uri2, uri3)),
@@ -620,8 +620,8 @@ object Input1URI extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.uri.uris_.not(?)) // or m(Ns.uri.uris.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.uri.uris_.not(?))
           for {
             _ <- Ns.uri.uris insert List(
               (uri1, Set(uri1, uri2, uri3)),

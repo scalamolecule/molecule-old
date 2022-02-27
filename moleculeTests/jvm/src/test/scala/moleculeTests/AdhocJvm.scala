@@ -36,6 +36,14 @@ object AdhocJvm extends AsyncTestSuite with Helpers with JavaConversions {
     case (SystemPeerServer, _) => List(71, 104, 106, 107, 31, 40)
   }
 
+  /*
+  moleculeTests.tests.core.pagination.SortDatomAttrs
+[error] 	moleculeTests.tests.db.datomic.generic.SchemaChange_Attr
+[error] 	moleculeTests.tests.sbtmolecule.getSchema.CheckSchemas
+[error] 	moleculeTests.tests.core.pagination.SortAttrs
+[error] 	moleculeTests.tests.examples.datomic.seattle.SeattleTests
+[error] 	moleculeTests.tests.core.pagination.SortSchemaAttrs
+   */
 
   lazy val tests = Tests {
 

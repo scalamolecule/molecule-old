@@ -58,7 +58,7 @@ object Input1Date extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
+        "not" - core { implicit conn =>
           val inputMolecule = m(Ns.date.not(?))
           for {
             _ <- oneData
@@ -133,7 +133,7 @@ object Input1Date extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
+        "not" - core { implicit conn =>
           val inputMolecule = m(Ns.str.date_.not(?))
           for {
             _ <- oneData
@@ -259,8 +259,8 @@ object Input1Date extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.date.dates.not(?)) // or m(Ns.date.dates.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.date.dates.not(?))
           val all           = List(
             (date1, Set(date1, date2, date3)),
             (date2, Set(date2, date3, date4)),
@@ -461,8 +461,8 @@ object Input1Date extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.dates.not(?)) // or m(Ns.date.dates.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.dates.not(?))
           for {
             _ <- Ns.date.dates insert List(
               (date1, Set(date1, date2, date3)),
@@ -621,8 +621,8 @@ object Input1Date extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.date.dates_.not(?)) // or m(Ns.date.dates.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.date.dates_.not(?))
           for {
             _ <- Ns.date.dates insert List(
               (date1, Set(date1, date2, date3)),

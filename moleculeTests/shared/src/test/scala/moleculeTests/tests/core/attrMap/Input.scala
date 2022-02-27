@@ -77,7 +77,7 @@ object Input extends Base {
       for {
         _ <- testData
 
-        _ <- m(Ns.int(2).strMap.!=(?))(Map(".*" -> "Bon giorno")).get.map(_ ==> List(
+        _ <- m(Ns.int(2).strMap.not(?))(Map(".*" -> "Bon giorno")).get.map(_ ==> List(
           (2, Map("en" -> "Oh, Hi", "da" -> "Hilser", "fr" -> "Bonjour"))
         ))
 
@@ -86,21 +86,21 @@ object Input extends Base {
         // that pair is not present. But now that we have two pairs, and each subresult
         // contains the other value, they will both be present in the final coalesced set!
         // So we were not expecting both values to be returned:
-        _ <- m(Ns.int(2).strMap.!=(?))(Map("fr" -> "Bonjour", "it" -> "Bon giorno")).get.map(_ ==> List(
+        _ <- m(Ns.int(2).strMap.not(?))(Map("fr" -> "Bonjour", "it" -> "Bon giorno")).get.map(_ ==> List(
           (2, Map("en" -> "Oh, Hi", "da" -> "Hilser", "fr" -> "Bonjour", "it" -> "Bon giorno"))
         ))
         // Although not negating pair-wise, in most cases this would probably work instead:
-        _ <- m(Ns.int(2).strMap.!=(?))(Map("fr|it" -> "Bonjour|Bon giorno")).get.map(_ ==> List(
+        _ <- m(Ns.int(2).strMap.not(?))(Map("fr|it" -> "Bonjour|Bon giorno")).get.map(_ ==> List(
           (2, Map("en" -> "Oh, Hi", "da" -> "Hilser"))
         ))
-        _ <- m(Ns.int(2).strMap_.!=(?))(Map("fr|it" -> "Bonjour|Bon giorno")).get.map(_ ==> List(2))
+        _ <- m(Ns.int(2).strMap_.not(?))(Map("fr|it" -> "Bonjour|Bon giorno")).get.map(_ ==> List(2))
 
 
-        _ <- m(Ns.int.intMap.!=(?))(Map(".*" -> 30)).get.map(_ ==> List(
+        _ <- m(Ns.int.intMap.not(?))(Map(".*" -> 30)).get.map(_ ==> List(
           (1, Map("en" -> 10)),
           (2, Map("en" -> 10, "da" -> 10, "fr" -> 20))
         ))
-        _ <- m(Ns.int.intMap_.!=(?))(Map(".*" -> 30)).get.map(_ ==> List(1, 2))
+        _ <- m(Ns.int.intMap_.not(?))(Map(".*" -> 30)).get.map(_ ==> List(1, 2))
 
         // We can't negate multiple non-string values on input molecules
         // since we can't use regexes on other types than String.

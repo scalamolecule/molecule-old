@@ -271,16 +271,14 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers with QuerySchemaHi
     historyQuery(enumQuery).map { enumRes =>
       val rows = List.newBuilder[(String, Int, Long, Date, String, Boolean)]
       enumRes.forEach { enumRow =>
-        rows.addOne(
-          (
-            enumRow.get(0).asInstanceOf[String],
-            enumRow.get(1).toString.toInt,
-            enumRow.get(2).toString.toLong,
-            enumRow.get(3).asInstanceOf[Date],
-            enumRow.get(4).asInstanceOf[String],
-            enumRow.get(5).asInstanceOf[Boolean],
-          )
-        )
+        rows.+=((
+          enumRow.get(0).asInstanceOf[String],
+          enumRow.get(1).toString.toInt,
+          enumRow.get(2).toString.toLong,
+          enumRow.get(3).asInstanceOf[Date],
+          enumRow.get(4).asInstanceOf[String],
+          enumRow.get(5).asInstanceOf[Boolean],
+        ))
       }
       rows.result().sortBy(r => (r._1, r._2, r._5, r._6))
     }

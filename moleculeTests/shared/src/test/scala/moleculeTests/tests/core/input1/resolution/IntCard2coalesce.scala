@@ -56,8 +56,8 @@ object IntCard2coalesce extends AsyncTestSuite {
       } yield ()
     }
 
-    "!=" - core { implicit conn =>
-      val inputMolecule = m(Ns.ints.not(?)) // or m(Ns.ints.!=(?))
+    "not" - core { implicit conn =>
+      val inputMolecule = m(Ns.ints.not(?))
       for {
         _ <- Ns.int.ints insert List(
           (int1, Set(int1, int2, int3)),

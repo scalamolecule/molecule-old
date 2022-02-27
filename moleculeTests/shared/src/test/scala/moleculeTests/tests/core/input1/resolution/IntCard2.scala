@@ -56,8 +56,8 @@ object IntCard2 extends AsyncTestSuite {
       } yield ()
     }
 
-    "!=" - core { implicit conn =>
-      val inputMolecule = m(Ns.int.ints.not(?)) // or m(Ns.int.ints.!=(?))
+    "not" - core { implicit conn =>
+      val inputMolecule = m(Ns.int.ints.not(?))
       val all           = List(
         (1, Set(int1, int2, int3)),
         (2, Set(int2, int3, int4)),

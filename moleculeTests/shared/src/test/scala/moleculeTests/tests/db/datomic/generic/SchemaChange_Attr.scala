@@ -23,11 +23,12 @@ object SchemaChange_Attr extends AsyncTestSuite {
         _ <- Schema.t.a.valueType.cardinality.get.map(_ ==> Nil)
 
         // Initial data model
-        t0 <- transact(schema {
+        r0 <- transact(schema {
           trait Foo {
             val int = oneInt
           }
-        }).map(_.last.t)
+        }).map(_.last)
+        (t0, tx0, d0) = (r0.t, r0.tx, r0.txInstant)
 
         // Schema now has 1 attribute
         _ <- Schema.t.a.get.map(_ ==> List(
@@ -45,27 +46,61 @@ object SchemaChange_Attr extends AsyncTestSuite {
         //    to transact the updated schema (depending on which system you use).
 
         // For testing purpose, we transact the schema of our updated data model here
-        t1 <- transact(schema {
+        r1 <- transact(schema {
           trait Foo {
             val int = oneInt
-            val str = oneString
+            val str = manyString
           }
-        }).map(_.last.t)
+        }).map(_.last)
+        (t1, tx1, d1) = (r1.t, r1.tx, r1.txInstant)
 
         // Schema has 2 attributes
-        _ <- Schema.t.a1.a.valueType.get.map(_ ==> List(
-          (t0, ":Foo/int", "long"),
-          (t1, ":Foo/str", "string"),
+        _ <- Schema.t.a1.a.valueType.cardinality.get.map(_ ==> List(
+          (t0, ":Foo/int", "long", "one"),
+          (t1, ":Foo/str", "string", "many"),
         ))
 
-        // Since we have just added to the schema, `getHistory` will show the same as `get`
-        _ <- Schema.t.a.valueType.getHistory.map(_ ==> List(
-          (t0, ":Foo/int", "long"),
-          (t1, ":Foo/str", "string"),
+        // Since we have only added to the schema in this case, `getHistory` will show the same as `get`
+        _ <- Schema.t.a.valueType.cardinality.getHistory.map(_ ==> List(
+          (t0, ":Foo/int", "long", "one"),
+          (t1, ":Foo/str", "string", "many"),
         ))
-        _ <- Schema.t.a.valueType("long").inspectGet
-        _ <- Schema.t.a.valueType("long").getHistory.map(_ ==> List(
-          (t0, ":Foo/int", "long"),
+
+        // getHistory with expressions
+        _ <- Schema.t(t1).a(":Foo/str").valueType("string").cardinality("many").inspectGet
+
+
+        // Testing applying expressions to schema attributes when getting the schema history
+
+        _ <- Schema.t(t1).a.getHistory.map(_ ==> List((t1, ":Foo/str")))
+        _ <- Schema.t(t0, t1).a.getHistory.map(_ ==> List((t0, ":Foo/int"), (t1, ":Foo/str")))
+        _ <- Schema.t(Seq(t0, t1)).a.getHistory.map(_ ==> List((t0, ":Foo/int"), (t1, ":Foo/str")))
+        _ <- Schema.t.>(t0).a.getHistory.map(_ ==> List((t0, ":Foo/int"), (t1, ":Foo/str")))
+        _ <- Schema.t.>=(t0).a.getHistory.map(_ ==> List((t1, ":Foo/str")))
+        _ <- Schema.t.<(t1).a.getHistory.map(_ ==> List((t0, ":Foo/int")))
+        _ <- Schema.t.<=(t1).a.getHistory.map(_ ==> List((t0, ":Foo/int"), (t1, ":Foo/str")))
+        _ <- Schema.t.not(t1).a.getHistory.map(_ ==> List((t1, ":Foo/str")))
+        _ <- Schema.t.not(t1, 42L).a.getHistory.map(_ ==> List((t1, ":Foo/str")))
+        _ <- Schema.t.not(Seq(t1, 42L)).a.getHistory.map(_ ==> List((t1, ":Foo/str")))
+
+
+        _ <- Schema.t.a(":Foo/str").getHistory.map(_ ==> List(
+          (t1, ":Foo/str", "string", "many"),
+        ))
+
+
+        _ <- Schema.t.a.valueType("string").cardinality.getHistory.map(_ ==> List(
+          (t1, ":Foo/str", "string", "many"),
+        ))
+
+
+        _ <- Schema.t.a.valueType.cardinality("many").getHistory.map(_ ==> List(
+          (t1, ":Foo/str", "string", "many"),
+        ))
+
+        // Testing applying expressions to multiple (all) schema attributes
+        _ <- Schema.t(t1).a(":Foo/str").valueType("string").cardinality("many").getHistory.map(_ ==> List(
+          (t1, ":Foo/str", "string", "many"),
         ))
       } yield ()
     }

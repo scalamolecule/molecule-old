@@ -11,7 +11,7 @@ import molecule.core.util.Executor._
 object MetaRetract extends AsyncTestSuite {
 
 
-  val basisTx = QueryOps.txBase
+//  val basisTx = QueryOps.txBase
 
   lazy val tests = Tests {
 
@@ -23,17 +23,22 @@ object MetaRetract extends AsyncTestSuite {
         tx2 <- eid.retract(Ref2.str2("meta")).map(_.tx)
 
         // What was retracted and with what tx meta data
-        _ <- if (system == SystemPeerServer) {
-          Ns.e.int.tx.op.Tx(Ref2.str2).getHistory.map(_.filter(_._3 >= basisTx) ==> List(
-            // 1 was retracted with tx meta data "meta"
-            (eid, 1, tx2, false, "meta")
-          ))
-        } else {
-          Ns.e.int.tx.op.Tx(Ref2.str2).getHistory.map(_ ==> List(
-            // 1 was retracted with tx meta data "meta"
-            (eid, 1, tx2, false, "meta")
-          ))
-        }
+        // todo
+//        _ <- if (system == SystemPeerServer) {
+//          Ns.e.int.tx.op.Tx(Ref2.str2).getHistory.map(_.filter(_._3 >= basisTx) ==> List(
+//            // 1 was retracted with tx meta data "meta"
+//            (eid, 1, tx2, false, "meta")
+//          ))
+//        } else {
+//          Ns.e.int.tx.op.Tx(Ref2.str2).getHistory.map(_ ==> List(
+//            // 1 was retracted with tx meta data "meta"
+//            (eid, 1, tx2, false, "meta")
+//          ))
+//        }
+        _ <- Ns.e.int.tx.op.Tx(Ref2.str2).getHistory.map(_ ==> List(
+          // 1 was retracted with tx meta data "meta"
+          (eid, 1, tx2, false, "meta")
+        ))
       } yield ()
     }
 
@@ -45,17 +50,21 @@ object MetaRetract extends AsyncTestSuite {
         tx2 <- eid.retract(Ref2.str2("meta2"), Ref1.str1("meta1")).map(_.tx)
 
         // What was retracted and with what tx meta data
-        _ <- if (system == SystemPeerServer) {
-          Ns.e.int.tx.op.Tx(Ref2.str2 + Ref1.str1).getHistory.map(_.filter(_._3 >= basisTx) ==> List(
-            // 1 was retracted with tx meta data "meta2" and "meta1"
-            (eid, 1, tx2, false, "meta2", "meta1")
-          ))
-        } else {
-          Ns.e.int.tx.op.Tx(Ref2.str2 + Ref1.str1).getHistory.map(_ ==> List(
-            // 1 was retracted with tx meta data "meta2" and "meta1"
-            (eid, 1, tx2, false, "meta2", "meta1")
-          ))
-        }
+//        _ <- if (system == SystemPeerServer) {
+//          Ns.e.int.tx.op.Tx(Ref2.str2 + Ref1.str1).getHistory.map(_.filter(_._3 >= basisTx) ==> List(
+//            // 1 was retracted with tx meta data "meta2" and "meta1"
+//            (eid, 1, tx2, false, "meta2", "meta1")
+//          ))
+//        } else {
+//          Ns.e.int.tx.op.Tx(Ref2.str2 + Ref1.str1).getHistory.map(_ ==> List(
+//            // 1 was retracted with tx meta data "meta2" and "meta1"
+//            (eid, 1, tx2, false, "meta2", "meta1")
+//          ))
+//        }
+        _ <- Ns.e.int.tx.op.Tx(Ref2.str2 + Ref1.str1).getHistory.map(_ ==> List(
+          // 1 was retracted with tx meta data "meta2" and "meta1"
+          (eid, 1, tx2, false, "meta2", "meta1")
+        ))
       } yield ()
     }
 
@@ -67,17 +76,21 @@ object MetaRetract extends AsyncTestSuite {
         tx2 <- eid.retract(Ref2.str2("meta2") + Ref1.str1("meta1")).map(_.tx)
 
         // What was retracted and with what tx meta data
-        _ <- if (system == SystemPeerServer) {
-          Ns.e.int.tx.op.Tx(Ref2.str2 + Ref1.str1).getHistory.map(_.filter(_._3 >= basisTx) ==> List(
+//        _ <- if (system == SystemPeerServer) {
+//          Ns.e.int.tx.op.Tx(Ref2.str2 + Ref1.str1).getHistory.map(_.filter(_._3 >= basisTx) ==> List(
+//            // 1 was retracted with tx meta data "meta2" and "meta1"
+//            (eid, 1, tx2, false, "meta2", "meta1")
+//          ))
+//        } else {
+//          Ns.e.int.tx.op.Tx(Ref2.str2 + Ref1.str1).getHistory.map(_ ==> List(
+//            // 1 was retracted with tx meta data "meta2" and "meta1"
+//            (eid, 1, tx2, false, "meta2", "meta1")
+//          ))
+//        }
+        _ <- Ns.e.int.tx.op.Tx(Ref2.str2 + Ref1.str1).getHistory.map(_ ==> List(
             // 1 was retracted with tx meta data "meta2" and "meta1"
             (eid, 1, tx2, false, "meta2", "meta1")
           ))
-        } else {
-          Ns.e.int.tx.op.Tx(Ref2.str2 + Ref1.str1).getHistory.map(_ ==> List(
-            // 1 was retracted with tx meta data "meta2" and "meta1"
-            (eid, 1, tx2, false, "meta2", "meta1")
-          ))
-        }
       } yield ()
     }
 
@@ -95,38 +108,38 @@ object MetaRetract extends AsyncTestSuite {
         tx2 = txR2.tx
         t2 = txR2.t
 
-        _ <- if (system == SystemPeerServer) {
-          for {
-            // History with transaction data
-            _ <- Ns.int.tx.t.op.Tx(Ref2.str2).getHistory.map(
-              _.filter(_._2 >= basisTx) // Allow accumulating peer-server tests too
-                .sortBy(r => (r._2, r._1, r._4)) ==> List(
-                (1, tx1, t1, true, "a"),
-                (2, tx1, t1, true, "a"),
-                (3, tx1, t1, true, "a"),
-
-                // 1 and 2 were retracted with tx meta data "b"
-                (1, tx2, t2, false, "b"),
-                (2, tx2, t2, false, "b")
-              ))
-
-            // Entities and int values that were retracted with tx meta data "b"
-            _ <- Ns.e.int.tx.op(false).Tx(Ref2.str2("b")).getHistory
-              .map(_.filter(_._3 >= basisTx).sortBy(_._2) ==> List(
-                (e1, 1, tx2, false, "b"),
-                (e2, 2, tx2, false, "b")
-              ))
-
-            // Or: What int values were retracted with tx meta data "b"?
-            res <- Ns.int.tx.op_(false).Tx(Ref2.str2_("b")).getHistory
-              .map(_.filter(_._2 >= basisTx).sortBy(_._1) ==> List(
-                (1, tx2),
-                (2, tx2)
-              ))
-          } yield res
-
-        } else {
-          for {
+//        _ <- if (system == SystemPeerServer) {
+//          for {
+//            // History with transaction data
+//            _ <- Ns.int.tx.t.op.Tx(Ref2.str2).getHistory.map(
+//              _.filter(_._2 >= basisTx) // Allow accumulating peer-server tests too
+//                .sortBy(r => (r._2, r._1, r._4)) ==> List(
+//                (1, tx1, t1, true, "a"),
+//                (2, tx1, t1, true, "a"),
+//                (3, tx1, t1, true, "a"),
+//
+//                // 1 and 2 were retracted with tx meta data "b"
+//                (1, tx2, t2, false, "b"),
+//                (2, tx2, t2, false, "b")
+//              ))
+//
+//            // Entities and int values that were retracted with tx meta data "b"
+//            _ <- Ns.e.int.tx.op(false).Tx(Ref2.str2("b")).getHistory
+//              .map(_.filter(_._3 >= basisTx).sortBy(_._2) ==> List(
+//                (e1, 1, tx2, false, "b"),
+//                (e2, 2, tx2, false, "b")
+//              ))
+//
+//            // Or: What int values were retracted with tx meta data "b"?
+//            res <- Ns.int.tx.op_(false).Tx(Ref2.str2_("b")).getHistory
+//              .map(_.filter(_._2 >= basisTx).sortBy(_._1) ==> List(
+//                (1, tx2),
+//                (2, tx2)
+//              ))
+//          } yield res
+//
+//        } else {
+//        _ <-  for {
             // History with transaction data
             _ <- Ns.int.tx.op.Tx(Ref2.str2).getHistory.map(_.sortBy(r => (r._2, r._1, r._3)) ==> List(
               (1, tx1, true, "a"),
@@ -145,9 +158,9 @@ object MetaRetract extends AsyncTestSuite {
             ))
 
             // Or: What int values were retracted with tx meta data "b"?
-            res <- Ns.int.op_(false).Tx(Ref2.str2_("b")).getHistory.map(_ ==> List(1, 2))
-          } yield res
-        }
+            _ <- Ns.int.op_(false).Tx(Ref2.str2_("b")).getHistory.map(_ ==> List(1, 2))
+//          } yield res
+//        }
       } yield ()
     }
 
@@ -162,46 +175,46 @@ object MetaRetract extends AsyncTestSuite {
         // Add tx meta data to retracting multiple entities
         tx2 <- retract(Seq(e1, e2), Ns.str("b").Ref1.int1(8)).map(_.tx)
 
-        _ <- if (system == SystemPeerServer) {
-          for {
-            // History with transaction data
-            _ <- Ns.int.tx.op.Tx(Ns.str.Ref1.int1).getHistory.map(
-              _.filter(_._2 >= basisTx).sortBy(r => (r._2, r._1, r._3)) ==> List(
-                (1, tx1, true, "a", 7),
-                (2, tx1, true, "a", 7),
-                (3, tx1, true, "a", 7),
-
-                // 1 and 2 were retracted with tx meta data "b"
-                (1, tx2, false, "b", 8),
-                (2, tx2, false, "b", 8)
-              ))
-
-            // Entities and int values that was retracted in tx "b"
-            _ <- Ns.e.int.tx.op(false).Tx(Ns.str("b").Ref1.int1(8)).getHistory
-              .map(_.filter(_._3 >= basisTx).sortBy(_._2) ==> List(
-                (e1, 1, tx2, false, "b", 8),
-                (e2, 2, tx2, false, "b", 8)
-              ))
-
-            // Or: What int values where retracted in tx "b"?
-            _ <- Ns.int.tx.op_(false).Tx(Ns.str_("b").Ref1.int1_(8)).getHistory
-              .map(_.filter(_._2 >= basisTx).sortBy(_._1) ==> List(
-                (1, tx2),
-                (2, tx2)
-              ))
-
-            // OBS: Note how referenced tx meta data is not asserted directly with the tx entity:
-            _ <- Ns.e.int.tx.op(false).Tx(Ref1.int1(8)).getHistory.map(_.filter(_._3 >= basisTx) ==> Nil)
-            // While Ns.str is:
-            res <- Ns.e.int.tx.op(false).Tx(Ns.str("b")).getHistory
-              .map(_.filter(_._3 >= basisTx).sortBy(_._2) ==> List(
-                (e1, 1, tx2, false, "b"),
-                (e2, 2, tx2, false, "b")
-              ))
-          } yield res
-
-        } else {
-          for {
+//        _ <- if (system == SystemPeerServer) {
+//          for {
+//            // History with transaction data
+//            _ <- Ns.int.tx.op.Tx(Ns.str.Ref1.int1).getHistory.map(
+//              _.filter(_._2 >= basisTx).sortBy(r => (r._2, r._1, r._3)) ==> List(
+//                (1, tx1, true, "a", 7),
+//                (2, tx1, true, "a", 7),
+//                (3, tx1, true, "a", 7),
+//
+//                // 1 and 2 were retracted with tx meta data "b"
+//                (1, tx2, false, "b", 8),
+//                (2, tx2, false, "b", 8)
+//              ))
+//
+//            // Entities and int values that was retracted in tx "b"
+//            _ <- Ns.e.int.tx.op(false).Tx(Ns.str("b").Ref1.int1(8)).getHistory
+//              .map(_.filter(_._3 >= basisTx).sortBy(_._2) ==> List(
+//                (e1, 1, tx2, false, "b", 8),
+//                (e2, 2, tx2, false, "b", 8)
+//              ))
+//
+//            // Or: What int values where retracted in tx "b"?
+//            _ <- Ns.int.tx.op_(false).Tx(Ns.str_("b").Ref1.int1_(8)).getHistory
+//              .map(_.filter(_._2 >= basisTx).sortBy(_._1) ==> List(
+//                (1, tx2),
+//                (2, tx2)
+//              ))
+//
+//            // OBS: Note how referenced tx meta data is not asserted directly with the tx entity:
+//            _ <- Ns.e.int.tx.op(false).Tx(Ref1.int1(8)).getHistory.map(_.filter(_._3 >= basisTx) ==> Nil)
+//            // While Ns.str is:
+//            res <- Ns.e.int.tx.op(false).Tx(Ns.str("b")).getHistory
+//              .map(_.filter(_._3 >= basisTx).sortBy(_._2) ==> List(
+//                (e1, 1, tx2, false, "b"),
+//                (e2, 2, tx2, false, "b")
+//              ))
+//          } yield res
+//
+//        } else {
+//          for {
             // History with transaction data
             _ <- Ns.int.tx.op.Tx(Ns.str.Ref1.int1).getHistory.map(_.sortBy(r => (r._2, r._1, r._3)) ==> List(
               (1, tx1, true, "a", 7),
@@ -226,12 +239,12 @@ object MetaRetract extends AsyncTestSuite {
             // OBS: Note how referenced tx meta data is not asserted directly with the tx entity:
             _ <- Ns.e.int.op(false).Tx(Ref1.int1(8)).getHistory.map(_ ==> Nil)
             // While Ns.str is:
-            res <- Ns.e.int.op(false).Tx(Ns.str("b")).getHistory.map(_.sortBy(_._2) ==> List(
+            _ <- Ns.e.int.op(false).Tx(Ns.str("b")).getHistory.map(_.sortBy(_._2) ==> List(
               (e1, 1, false, "b"),
               (e2, 2, false, "b")
             ))
-          } yield res
-        }
+//          } yield res
+//        }
       } yield ()
     }
 

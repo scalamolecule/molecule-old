@@ -68,8 +68,7 @@ object Input1StringIntro extends AsyncTestSuite {
         _ <- m(Ns.str.int_.>(?))(30).get.map(_ ==> List("John"))
         _ <- m(Ns.str.int_.<=(?))(28).get.map(_ ==> List("Ann", "Ben", "Lisa"))
         _ <- m(Ns.str.int_.>=(?))(28).get.map(_ ==> List("John", "Ben", "Lisa"))
-        _ <- m(Ns.str.int_.!=(?))(30).get.map(_ ==> List("Ann", "John", "Ben", "Lisa"))
-        _ <- m(Ns.str.int_.!=(?))(28).get.map(_ ==> List("Ann", "John"))
+        _ <- m(Ns.str.int_.not(?))(30).get.map(_ ==> List("Ann", "John", "Ben", "Lisa"))
         _ <- m(Ns.str.int_.not(?))(28).get.map(_ ==> List("Ann", "John"))
       } yield ()
     }
@@ -85,7 +84,6 @@ object Input1StringIntro extends AsyncTestSuite {
           _ <- m(Ns.int_.str.>(?))("b").get.map(_ ==> List("c"))
           _ <- m(Ns.int_.str.<=(?))("b").get.map(_ ==> List("a", "b"))
           _ <- m(Ns.int_.str.>=(?))("b").get.map(_ ==> List("b", "c"))
-          _ <- m(Ns.int_.str.!=(?))("b").get.map(_ ==> List("a", "c"))
           _ <- m(Ns.int_.str.not(?))("b").get.map(_ ==> List("a", "c"))
         } yield ()
       }
@@ -98,7 +96,6 @@ object Input1StringIntro extends AsyncTestSuite {
           _ <- m(Ns.int.str_.>(?))("b").get.map(_ ==> List(3))
           _ <- m(Ns.int.str_.<=(?))("b").get.map(_.sorted ==> List(1, 2))
           _ <- m(Ns.int.str_.>=(?))("b").get.map(_.sorted ==> List(2, 3))
-          _ <- m(Ns.int.str_.!=(?))("b").get.map(_.sorted ==> List(1, 3))
           _ <- m(Ns.int.str_.not(?))("b").get.map(_.sorted ==> List(1, 3))
         } yield ()
       }
@@ -184,7 +181,6 @@ object Input1StringIntro extends AsyncTestSuite {
           _ <- m(Ns.int.strs_.>(?))(Set("b")).get.map(_.sorted ==> List(2, 3))
           _ <- m(Ns.int.strs_.<=(?))(Set("b")).get.map(_.sorted ==> List(1, 2))
           _ <- m(Ns.int.strs_.>=(?))(Set("b")).get.map(_.sorted ==> List(1, 2, 3))
-          _ <- m(Ns.int.strs_.!=(?))(Set("b")).get.map(_.sorted ==> List(3))
           _ <- m(Ns.int.strs_.not(?))(Set("b")).get.map(_.sorted ==> List(3))
         } yield ()
       }

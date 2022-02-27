@@ -167,20 +167,14 @@ object Values extends Base {
     "Negation" - core { implicit conn =>
       for {
         _ <- testData
+
         // String
 
-        // Intellij wrongly indicates an error when using `!=`
-        // As an alternative, `not` can be used instead
-        _ <- Ns.int(2).strMap.!=("Bon giorno").get.map(_ ==> List(
-          (2, Map("en" -> "Oh, Hi", "da" -> "Hilser", "fr" -> "Bonjour"))
-        ))
-        // Same as
         _ <- Ns.int(2).strMap.not("Bon giorno").get.map(_ ==> List(
           (2, Map("en" -> "Oh, Hi", "da" -> "Hilser", "fr" -> "Bonjour"))
         ))
         // Omit multiple values
-        // (here Intellij doesn't show an error when using `!=`
-        _ <- Ns.int(2).strMap.!=("Bonjour", "Bon giorno").get.map(_ ==> List(
+        _ <- Ns.int(2).strMap.not("Bonjour", "Bon giorno").get.map(_ ==> List(
           (2, Map("en" -> "Oh, Hi", "da" -> "Hilser"))
         ))
         _ <- Ns.int(2).strMap_.not("Bonjour", "Bon giorno").get.map(_ ==> List(2))
@@ -198,7 +192,7 @@ object Values extends Base {
           (2, Map("fr" -> 20))
         ))
         // Tacit omitted attribute map values
-        _ <- Ns.int.intMap_.!=(10, 30).get.map(_ ==> List(2))
+        _ <- Ns.int.intMap_.not(10, 30).get.map(_ ==> List(2))
 
 
         // Boolean
@@ -232,7 +226,7 @@ object Values extends Base {
         _ <- Ns.int.boolMap_(true).get.map(_ ==> List(1, 2))
 
         // Well...
-        _ <- Ns.int.boolMap_.!=(true, false).get.map(_ ==> List())
+        _ <- Ns.int.boolMap_.not(true, false).get.map(_ ==> List())
         _ <- Ns.int.boolMap_(true, false).get.map(_ ==> List(1, 2, 3, 4))
 
 
@@ -248,7 +242,7 @@ object Values extends Base {
           (2, Map("fr" -> date2))
         ))
         // Tacit omitted attribute map values
-        _ <- Ns.int.dateMap_.!=(date1, date3).get.map(_ ==> List(2))
+        _ <- Ns.int.dateMap_.not(date1, date3).get.map(_ ==> List(2))
 
 
         // UUID
@@ -278,7 +272,7 @@ object Values extends Base {
           (2, Map("fr" -> uri2))
         ))
         // Tacit omitted attribute map values
-        _ <- Ns.int.uriMap_.!=(uri1, uri3).get.map(_ ==> List(2))
+        _ <- Ns.int.uriMap_.not(uri1, uri3).get.map(_ ==> List(2))
       } yield ()
     }
 

@@ -6,7 +6,7 @@ package molecule.core
   * {{{
   * Person.age(42)                           // equality
   * Person.name.contains("John")             // fulltext search
-  * Person.age.!=(42)                        // negation (or `not`)
+  * Person.age.not(42)                       // negation
   * Person.age.<(42)                         // comparison (< > <= >=)
   * Person.name("John" or "Jonas")           // OR-logic
   * Person.age()                             // apply empty value to retract value(s) in updates

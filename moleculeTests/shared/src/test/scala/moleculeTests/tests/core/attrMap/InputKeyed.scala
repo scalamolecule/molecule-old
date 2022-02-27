@@ -75,7 +75,7 @@ object InputKeyed extends Base {
       for {
         _ <- testData
 
-        _ <- m(Ns.int(2).strMapK(".*").!=(?))("Bon giorno").get.map(_ ==> List(
+        _ <- m(Ns.int(2).strMapK(".*").not(?))("Bon giorno").get.map(_ ==> List(
           (2, "Oh, Hi"),
           (2, "Hilser"),
           (2, "Bonjour")
@@ -83,19 +83,19 @@ object InputKeyed extends Base {
 
         // Negate multiple values
         // Although not negating pair-wise, in most cases this would probably work instead:
-        _ <- m(Ns.int(2).strMapK("fr|it").!=(?))("Bonjour|Bon giorno").get.map(_ ==> List(
+        _ <- m(Ns.int(2).strMapK("fr|it").not(?))("Bonjour|Bon giorno").get.map(_ ==> List(
           (2, "Oh, Hi"),
           (2, "Hilser")
         ))
-        _ <- m(Ns.int(2).strMapK_("fr|it").!=(?))("Bonjour|Bon giorno").get.map(_ ==> List(2))
+        _ <- m(Ns.int(2).strMapK_("fr|it").not(?))("Bonjour|Bon giorno").get.map(_ ==> List(2))
 
 
-        _ <- m(Ns.int.intMapK(".*").!=(?))(30).get.map(_ ==> List(
+        _ <- m(Ns.int.intMapK(".*").not(?))(30).get.map(_ ==> List(
           (2, 20),
           (2, 10),
           (1, 10)
         ))
-        _ <- m(Ns.int.intMapK_(".*").!=(?))(30).get.map(_ ==> List(1, 2))
+        _ <- m(Ns.int.intMapK_(".*").not(?))(30).get.map(_ ==> List(1, 2))
 
         // We can't negate multiple non-string values on input molecules
         // since we can't use regexes on other types than String.

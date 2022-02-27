@@ -9,7 +9,7 @@ import molecule.core.dsl.attributes.{Attr, SortMarkers}
  * {{{
  * Person.age(42)                           // equality
  * Person.name.contains("John")             // fulltext search
- * Person.age.!=(42)                        // negation (or `not`)
+ * Person.age.not(42)                       // negation
  * Person.age.<(42)                         // comparison (< > <= >=)
  * Person.age().get                         // match non-asserted datoms (null) in query
  * Person(benId).age().update               // apply empty value to retract value(s) in updates
@@ -164,9 +164,6 @@ trait AttrExpressions {
      *
      *   // Negate multiple values
      *   _ <- Person.name.not("Ben", "Liz").get.map(_ ==> List("Joe"))
-     *
-     *   // same as
-     *   _ <- Person.name.!=("Ben", "Liz").get.map(_ ==> List("Joe"))
      * } yield ()
      * }}}
      *
@@ -184,9 +181,6 @@ trait AttrExpressions {
      *
      *   // Negate Iterable of values
      *   _ <- Person.name.not(List("Ben", "Joe")).get.map(_ ==> List("Liz"))
-     *
-     *   // same as
-     *   _ <- Person.name.!=(List("Ben", "Joe")).get.map(_ ==> List("Liz"))
      * } yield ()
      * }}}
      *
@@ -194,48 +188,6 @@ trait AttrExpressions {
      * @return Filtered molecule
      */
     def not(values: Iterable[T]): Ns with Attr with SortMarkers[Ns] = ???
-
-
-    /** Match attribute values different from one or more applied values.
-     * {{{
-     * for {
-     *   _ <- Person.name.get.map(_ ==> List("Ben", "Liz", "Joe"))
-     *
-     *   // Negate one value
-     *   _ <- Person.name.!=("Ben").get.map(_ ==> List("Liz", "Joe"))
-     *
-     *   // Negate multiple values
-     *   _ <- Person.name.!=("Ben", "Liz").get.map(_ ==> List("Joe"))
-     *
-     *   // same as
-     *   _ <- Person.name.not("Ben", "Liz").get.map(_ ==> List("Joe"))
-     * } yield ()
-     * }}}
-     *
-     * @param value      Negated attribute value
-     * @param moreValues Optional additional negated attribute values
-     * @return Filtered molecule
-     */
-    def !=(value: T, moreValues: T*): Ns with Attr with SortMarkers[Ns] = ???
-
-
-    /** Match attribute values different from applied Iterable of values.
-     * {{{
-     * for {
-     *   _ <- Person.name.get.map(_ ==> List("Ben", "Liz", "Joe"))
-     *
-     *   // Negate Iterable of values
-     *   _ <- Person.name.!=(List("Ben", "Joe")).get.map(_ ==> List("Liz"))
-     *
-     *   // same as
-     *   _ <- Person.name.not(List("Ben", "Joe")).get.map(_ ==> List("Liz"))
-     * } yield ()
-     * }}}
-     *
-     * @param values Iterable of negated attribute values
-     * @return Filtered molecule
-     */
-    def !=(values: Seq[T]): Ns with Attr with SortMarkers[Ns] = ???
   }
 
 
@@ -465,25 +417,6 @@ trait AttrExpressions {
     def not(value: qm): In with Attr with SortMarkers[In] = ???
 
 
-    /** Mark molecule as input molecule awaiting attribute negation value(s).
-     * {{{
-     * for {
-     *   _ <- Person.name.age.get.map(_ ==> List(("Ben", 42), ("Liz", 37)))
-     *
-     *   // Create input molecule at compile time by applying `?` marker to attribute
-     *   ageOfPersonsOtherThan = m(Person.name_.!=(?).age)
-     *
-     *   // Apply `name` attribute value at runtime to get ages of all other than Ben
-     *   _ <- ageOfPersonsOtherThan("Ben").get.map(_ ==> List(37)) // Liz' age
-     * } yield ()
-     * }}}
-     *
-     * @param value Input marker `?` for negation value
-     * @return Input molecule
-     */
-    def !=(value: qm): In with Attr with SortMarkers[In] = ???
-
-
     /** Mark molecule as input molecule awaiting attribute upper value.
      * {{{
      * for {
@@ -650,10 +583,6 @@ trait AttrExpressions {
     def not(set: Set[T]): Ns with Attr = ???
     def not(set: Set[T], set2: Set[T], moreSets: Set[T]*): Ns with Attr = ???
     def not(sets: Seq[Set[T]]): Ns with Attr = ???
-
-    def !=(set: Set[T]): Ns with Attr = ???
-    def !=(set: Set[T], set2: Set[T], moreSets: Set[T]*): Ns with Attr = ???
-    def !=(sets: Seq[Set[T]]): Ns with Attr = ???
   }
 
 
@@ -959,9 +888,6 @@ trait AttrExpressions {
        *
        *   // Apply multiple negation value filters (OR semantics)
        *   _ <- Greeting.id.strMap_.k("en").not("Hello", "Hi there").get.map(_ ==> List(2))
-       *
-       *   // Same as
-       *   _ <- Greeting.id.strMap_.k("en").!=("Hello", "Hi there").get.map(_ ==> List(2))
        * } yield ()
        * }}}
        *
@@ -970,41 +896,6 @@ trait AttrExpressions {
        * @return Filtered molecule
        */
       def not(value: T, moreValues: T*): Ns with Attr = ???
-
-
-      /** Match negated value(s) of filtered map attribute.
-       * {{{
-       * for {
-       *   _ <- Greeting.id.strMap insert List(
-       *     (1, Map("en" -> "Hi there", "da" -> "Hejsa")),
-       *     (2, Map("en" -> "Oh, Hi", "da" -> "Hilser", "fr" -> "Bonjour", "it" -> "Bon giorno")),
-       *     (3, Map("en" -> "Hello", "da" -> "Hej")),
-       *     (4, Map("da" -> "Hej"))
-       *   )
-       *
-       *   // Apply key filter only
-       *   _ <- Greeting.id.strMap_.k("en").get.map(_ ==> List(1, 2, 3))
-       *
-       *   // Apply additional negation value filter
-       *   _ <- Greeting.id.strMap_.k("en").!=("Hello").get.map(_ ==> List(1, 2))
-       *   _ <- Greeting.id.strMap.k("en").!=("Hello").get.map(_ ==> List(
-       *     (1, Map("en" -> "Hi there")),
-       *     (2, Map("en" -> "Oh, Hi"))
-       *   ))
-       *
-       *   // Apply multiple negation value filters (OR semantics)
-       *   _ <- Greeting.id.strMap_.k("en").!=("Hello", "Hi there").get.map(_ ==> List(2))
-       *
-       *   // Same as
-       *   _ <- Greeting.id.strMap_.k("en").not("Hello", "Hi there").get.map(_ ==> List(2))
-       * } yield ()
-       * }}}
-       *
-       * @param value      Filter value
-       * @param moreValues Optional additional filter values
-       * @return Filtered molecule
-       */
-      def !=(value: T, moreValues: T*): Ns with Attr = ???
 
 
       /** Match values of filtered map attribute less than upper value.

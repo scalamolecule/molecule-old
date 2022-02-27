@@ -15,22 +15,28 @@ object SortDatomAttrs extends AsyncTestSuite {
     "Generic datom attributes" - core { implicit conn =>
       for {
         r1 <- Ns.int(3).save
-        e1 = r1.eid
-        t1 = r1.t
-        tx1 = r1.tx
-        d1 = r1.txInstant
+        e1_ = r1.eid
+        t1_ = r1.t
+        tx1_ = r1.tx
+        d1_ = r1.txInstant
 
         r2 <- Ns.int(1).save
-        e2 = r2.eid
-        t2 = r2.t
-        tx2 = r2.tx
-        d2 = r2.txInstant
+        e2_ = r2.eid
+        t2_ = r2.t
+        tx2_ = r2.tx
+        d2_ = r2.txInstant
 
         r3 <- Ns.int(2).save
-        e3 = r3.eid
-        t3 = r3.t
-        tx3 = r3.tx
-        d3 = r3.txInstant
+        e3_ = r3.eid
+        t3_ = r3.t
+        tx3_ = r3.tx
+        d3_ = r3.txInstant
+
+        // ids on client side are not deterministic
+        List(e1, e2, e3) = List(e1_, e2_, e3_).sorted
+        List(t1, t2, t3) = List(t1_, t2_, t3_).sorted
+        List(tx1, tx2, tx3) = List(tx1_, tx2_, tx3_).sorted
+        List(d1, d2, d3) = List(d1_, d2_, d3_).sorted
 
         // e, t, tx, txInstant
         _ <- Ns.e.a1.int_.get.map(_ ==> List(e1, e2, e3))

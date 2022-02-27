@@ -103,6 +103,10 @@ case class Conn_Js(
   def changePartitionName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
   def retirePartition(partName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
 
+  def retractSchemaOption(attr: String, option: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+
+  def getEnumHistory(implicit ec: ExecutionContext): Future[List[(String, Int, Long, Date, String, Boolean)]] = ???
+  def retractEnum(enumString: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
 
   // Internal ------------------------------------------------------------------
 

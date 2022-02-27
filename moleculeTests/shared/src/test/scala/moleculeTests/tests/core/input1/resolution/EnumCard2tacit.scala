@@ -72,8 +72,8 @@ object EnumCard2tacit extends AsyncTestSuite {
       } yield ()
     }
 
-    "!=" - core { implicit conn =>
-      val inputMolecule = m(Ns.enumm.enums_.not(?)) // or m(Ns.enumm.enums_.!=(?))
+    "not" - core { implicit conn =>
+      val inputMolecule = m(Ns.enumm.enums_.not(?))
       for {
         _ <- Ns.enumm.enums insert List(
           (enum1, Set(enum1, enum2, enum3)),

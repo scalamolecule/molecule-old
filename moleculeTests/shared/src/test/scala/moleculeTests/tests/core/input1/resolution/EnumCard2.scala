@@ -83,8 +83,8 @@ object EnumCard2 extends AsyncTestSuite {
       } yield ()
     }
 
-    "!=" - core { implicit conn =>
-      val inputMolecule = m(Ns.int.enums.not(?)) // or m(Ns.int.enums.!=(?))
+    "not" - core { implicit conn =>
+      val inputMolecule = m(Ns.int.enums.not(?))
       val all           = List(
         (1, Set(enum1, enum2, enum3)),
         (2, Set(enum2, enum3, enum4)),

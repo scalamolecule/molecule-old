@@ -18,20 +18,22 @@ import scala.annotation.tailrec
  * */
 object Model2Query extends Helpers {
 
-  var nestedEntityClauses: List[Funct] = List.empty[Funct]
-  var nestedEntityVars   : List[Var]   = List.empty[Var]
-  var nestedLevel        : Int         = 1
-  var _model             : Model       = _
-  var txMeta             : Boolean     = false
-  var txMetaComposite    : Boolean     = false
-  val datomGeneric                     = Seq(
+  private var nestedEntityClauses: List[Funct] = List.empty[Funct]
+  private var nestedEntityVars   : List[Var]   = List.empty[Var]
+  private var nestedLevel        : Int         = 1
+  private var _model             : Model       = _
+  private var txMeta             : Boolean     = false
+  private var txMetaComposite    : Boolean     = false
+  private var schemaHistory      : Boolean     = false
+  private val datomGeneric                     = Seq(
     "e", "e_", "tx", "t", "txInstant", "op", "tx_", "t_", "txInstant_", "op_", "a", "a_", "v", "v_"
   )
 
   def abort(msg: String): Nothing = throw Model2QueryException(msg)
 
 
-  def apply(model: Model): (Query, String, Option[Throwable]) = {
+  def apply(model: Model, schemaHistory0: Boolean = false): (Query, String, Option[Throwable]) = {
+    schemaHistory = schemaHistory0
 
     // reset on each apply
     nestedEntityClauses = Nil
@@ -346,13 +348,18 @@ object Model2Query extends Helpers {
 
 
   def resolveGeneric(q: Query, e: String, g: Generic, v: String, v1: String): Query = g.tpe match {
-    case "schema" => resolveSchema(q, g)
-    case "datom"  => resolveDatom(q, e, g, v, v1)
-    case _        => q // Indexes are handled in Conn directly from Model elements
+    case "schema" if schemaHistory => resolveSchemaHistory(q, g)
+    case "schema"                  => resolveSchema(q, g)
+    case "datom"                   => resolveDatom(q, e, g, v, v1)
+    case _                         => q // Indexes are handled in Conn directly from Model elements
   }
 
 
   // Schema ....................................................................................
+
+  def resolveSchemaHistory(q: Query, g: Generic): Query = {
+    q
+  }
 
   def resolveSchema(q: Query, g: Generic): Query = g.attr match {
     case "attrId"      => resolveSchemaMandatory(g, q.schema, "Long")
@@ -442,7 +449,7 @@ object Model2Query extends Helpers {
           .ident(v, v + 1)
           .kw(v + 1, v + 2)
           .func("=", Seq(Var(v + 2), Val(arg)))
-      case Fn("not", _)   => q.schemaPull(v).not(v) // None
+      case Fn("not", _)   => q.schemaPull(v).schemaNot(v) // None
       case other          => abort(s"Unexpected value for optional schema enum value `${g.attr}`: " + other)
     }
   }
@@ -455,7 +462,7 @@ object Model2Query extends Helpers {
         q.find(v)
           .where(Var("attrId"), KW("db", v), v)
           .where("attrId", "db", v, Val(arg), "", "")
-      case Fn("not", _)   => q.schemaPull(v).not(v) // None
+      case Fn("not", _)   => q.schemaPull(v).schemaNot(v) // None
       case other          => abort(s"Unexpected value for optional schema attribute `${g.attr}`: " + other)
     }
   }

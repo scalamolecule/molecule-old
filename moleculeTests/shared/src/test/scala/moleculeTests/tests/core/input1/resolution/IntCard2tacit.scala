@@ -54,8 +54,8 @@ object IntCard2tacit extends AsyncTestSuite {
       } yield ()
     }
 
-    "!=" - core { implicit conn =>
-      val inputMolecule = m(Ns.int.ints_.not(?)) // or m(Ns.int.ints_.!=(?))
+    "not" - core { implicit conn =>
+      val inputMolecule = m(Ns.int.ints_.not(?))
       for {
         _ <- Ns.int.ints insert List(
           (int1, Set(int1, int2, int3)),

@@ -27,22 +27,7 @@ object Negation extends Base {
         _ <- Ns.str.not("C").get.map(_.sorted ==> List("", " ", ",", ".", "?", "A", "B", "a", "b"))
         _ <- Ns.str.not("c").get.map(_.sorted ==> List("", " ", ",", ".", "?", "A", "B", "a", "b"))
 
-        // Same as
-        // Intellij shows error although it is fine
-        _ <- Ns.str.!=("").get.map(_.sorted ==> List(" ", ",", ".", "?", "A", "B", "a", "b"))
-        _ <- Ns.str.!=(" ").get.map(_.sorted ==> List("", ",", ".", "?", "A", "B", "a", "b"))
-        _ <- Ns.str.!=(",").get.map(_.sorted ==> List("", " ", ".", "?", "A", "B", "a", "b"))
-        _ <- Ns.str.!=(".").get.map(_.sorted ==> List("", " ", ",", "?", "A", "B", "a", "b"))
-        _ <- Ns.str.!=("?").get.map(_.sorted ==> List("", " ", ",", ".", "A", "B", "a", "b"))
-        _ <- Ns.str.!=("A").get.map(_.sorted ==> List("", " ", ",", ".", "?", "B", "a", "b"))
-        _ <- Ns.str.!=("B").get.map(_.sorted ==> List("", " ", ",", ".", "?", "A", "a", "b"))
-        _ <- Ns.str.!=("a").get.map(_.sorted ==> List("", " ", ",", ".", "?", "A", "B", "b"))
-        _ <- Ns.str.!=("b").get.map(_.sorted ==> List("", " ", ",", ".", "?", "A", "B", "a"))
-        _ <- Ns.str.!=("C").get.map(_.sorted ==> List("", " ", ",", ".", "?", "A", "B", "a", "b"))
-        _ <- Ns.str.!=("c").get.map(_.sorted ==> List("", " ", ",", ".", "?", "A", "B", "a", "b"))
-
         _ <- Ns.str.not(str1).get.map(_.sorted ==> List("", " ", ",", ".", "?", "A", "B", "b"))
-        _ <- Ns.str.!=(str1).get.map(_.sorted ==> List("", " ", ",", ".", "?", "A", "B", "b"))
 
         // Negate multiple values ("NOR"-logic: not 'a NOR 'b NOR 'c...)
         _ <- Ns.str.not("", " ").get.map(_.sorted ==> List(",", ".", "?", "A", "B", "a", "b"))
@@ -60,18 +45,6 @@ object Negation extends Base {
         _ <- Ns.int.not(Seq(int1, int2)).get.map(_.sorted ==> List(-2, -1, 0))
         ints = Seq(int1, int2)
         _ <- Ns.int.not(ints).get.map(_.sorted ==> List(-2, -1, 0))
-
-        // Same as
-        // Intellij shows error although it is fine
-        _ <- Ns.int.!=(7).get.map(_.sorted ==> List(-2, -1, 0, 1, 2))
-        _ <- Ns.int.!=(1).get.map(_.sorted ==> List(-2, -1, 0, 2))
-        _ <- Ns.int.!=(-1, 0, 1).get.map(_.sorted ==> List(-2, 2))
-        _ <- Ns.int.!=(Seq(-1, 0, 1)).get.map(_.sorted ==> List(-2, 2))
-        _ <- Ns.int.!=(int1).get.map(_.sorted ==> List(-2, -1, 0, 2))
-        _ <- Ns.int.!=(int1, int2).get.map(_.sorted ==> List(-2, -1, 0))
-        _ <- Ns.int.!=(Seq(int1, int2)).get.map(_.sorted ==> List(-2, -1, 0))
-        _ <- Ns.int.!=(ints).get.map(_.sorted ==> List(-2, -1, 0))
-
 
         _ <- Ns.long.not(7L).get.map(_.sorted ==> List(-2L, -1L, 0L, 1L, 2L))
         _ <- Ns.long.not(1L).get.map(_.sorted ==> List(-2L, -1L, 0L, 2L))

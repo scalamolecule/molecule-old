@@ -42,7 +42,7 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
       |        ?schemaAttr
       |        ?schemaValue
       | :in $ $dbCurrent
-      | :where [:db.part/db :db.install/attribute ?attrId]
+      | :where [_ :db.install/attribute ?attrId]
       |        [$dbCurrent ?attrId :db/ident ?attrIdent]
       |        [?attrId :db/ident ?attrIdent]
       |        [(str ?attrIdent) ?a]

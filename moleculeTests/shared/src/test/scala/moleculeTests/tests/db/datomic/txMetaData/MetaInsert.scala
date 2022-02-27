@@ -10,8 +10,6 @@ import molecule.core.util.Executor._
 
 object MetaInsert extends AsyncTestSuite {
 
-  val basisTx = QueryOps.txBase
-
   lazy val tests = Tests {
 
     "Insert 1 or more" - core { implicit conn =>

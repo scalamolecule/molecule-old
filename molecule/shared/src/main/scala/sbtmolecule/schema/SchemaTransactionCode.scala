@@ -46,7 +46,7 @@ case class SchemaTransactionCode(d: Model) extends MetaSchemaData {
     aliasIdents.mkString("\n     [\n       ", "\n\n       ", "\n     ]\n    ")
   )
   lazy val aliases: Seq[String] = if (aliasIdents.isEmpty) Nil else Seq(
-    "// Aliases\n    \"\"\"" + aliases0 + "\"\"\""
+    "// Aliases\n    \"\"\"" + aliases0.head + "\"\"\""
   )
 
   def attrStmts(ns: String, a: DefAttr, isClient: Boolean): String = {

@@ -387,41 +387,6 @@ object SortAttrs extends AsyncTestSuite {
           (true, "a", uri1, 2, 3),
         )
 
-        // No sorting
-        _ <- Ns.bool.str.uri.int.long.get.map(_ ==> List(
-          (false, "b", uri3, 6, 11),
-          (false, "b", uri3, 6, 12),
-          (false, "a", uri2, 3, 6),
-          (false, "a", uri2, 3, 5),
-          (false, "a", uri1, 1, 1),
-          (false, "a", uri1, 1, 2),
-          (true, "a", uri1, 1, 2),
-          (true, "a", uri1, 1, 1),
-          (true, "a", uri2, 3, 5),
-          (false, "b", uri4, 7, 13),
-          (true, "a", uri2, 3, 6),
-          (false, "b", uri4, 7, 14),
-          (true, "b", uri4, 8, 15),
-          (true, "b", uri3, 6, 11),
-          (true, "b", uri3, 6, 12),
-          (true, "b", uri4, 8, 16),
-          (false, "b", uri3, 5, 10),
-          (false, "a", uri2, 4, 7),
-          (false, "a", uri2, 4, 8),
-          (false, "b", uri3, 5, 9),
-          (false, "a", uri1, 2, 4),
-          (false, "a", uri1, 2, 3),
-          (true, "a", uri1, 2, 3),
-          (false, "b", uri4, 8, 16),
-          (true, "a", uri1, 2, 4),
-          (true, "b", uri3, 5, 9),
-          (true, "a", uri2, 4, 8),
-          (true, "a", uri2, 4, 7),
-          (false, "b", uri4, 8, 15),
-          (true, "b", uri4, 7, 13),
-          (true, "b", uri4, 7, 14),
-          (true, "b", uri3, 5, 10),
-        ))
 
         // Ascending
         _ <- Ns.bool.a1.str.a2.uri.a3.int.a4.long.a5.get.map(_ ==> List(

@@ -57,7 +57,7 @@ object Input1Enum extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
+        "not" - core { implicit conn =>
           val inputMolecule = m(Ns.enumm.not(?))
           for {
             _ <- oneData
@@ -131,7 +131,7 @@ object Input1Enum extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
+        "not" - core { implicit conn =>
           val inputMolecule = m(Ns.str.enumm_.not(?))
           for {
             _ <- oneData
@@ -257,8 +257,8 @@ object Input1Enum extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.enumm.enums.not(?)) // or m(Ns.enumm.enums.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.enumm.enums.not(?))
           val all           = List(
             (enum1, Set(enum1, enum2, enum3)),
             (enum2, Set(enum2, enum3, enum4)),
@@ -459,8 +459,8 @@ object Input1Enum extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.enums.not(?)) // or m(Ns.enumm.enums.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.enums.not(?))
           for {
             _ <- Ns.enumm.enums insert List(
               (enum1, Set(enum1, enum2, enum3)),
@@ -619,8 +619,8 @@ object Input1Enum extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.enumm.enums_.not(?)) // or m(Ns.enumm.enums.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.enumm.enums_.not(?))
           for {
             _ <- Ns.enumm.enums insert List(
               (enum1, Set(enum1, enum2, enum3)),

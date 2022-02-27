@@ -55,7 +55,7 @@ object Input1Boolean extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
+        "not" - core { implicit conn =>
           val inputMolecule = m(Ns.bool.not(?))
           for {
             _ <- oneData
@@ -81,7 +81,7 @@ object Input1Boolean extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
+        "not" - core { implicit conn =>
           val inputMolecule = m(Ns.int.bool_.not(?))
           for {
             _ <- oneData
@@ -112,8 +112,8 @@ object Input1Boolean extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.bools.not(?)) // or m(Ns.int.bools.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.int.bools.not(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List((1, Set(true)), (2, Set(false)), (3, Set(true, false))))
@@ -143,8 +143,8 @@ object Input1Boolean extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.bools.not(?)) // or m(Ns.bools.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.bools.not(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List(Set(true, false)))
@@ -173,8 +173,8 @@ object Input1Boolean extends AsyncTestSuite {
           } yield ()
         }
 
-        "!=" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.bools_.not(?)) // or m(Ns.int.bools_.!=(?))
+        "not" - core { implicit conn =>
+          val inputMolecule = m(Ns.int.bools_.not(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_.sorted ==> List(1, 2, 3))
