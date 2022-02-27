@@ -12,11 +12,10 @@ import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel._
-import molecule.datomic.base.facade.{Conn, Conn_Jvm, DatomicDb, TxReport}
+import molecule.datomic.base.facade.{Conn, Conn_Jvm, DatomicDb, QuerySchemaHistory, TxReport}
 import molecule.datomic.base.marshalling.DatomicRpc
 import molecule.datomic.base.transform.Query2String
 import molecule.datomic.base.util.QueryOpsClojure
-import molecule.datomic.peer.facade.QuerySchemaHistory
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
@@ -329,12 +328,10 @@ case class Conn_Client(
 
   private[molecule] final override def jvmQuery(
     model: Model,
-    query: Query,
-    history: Boolean = false
+    query: Query
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     model.elements.head match {
       case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _, _) => indexQuery(model)
-      case Generic("Schema", _, _, _, _) if history                       => schemaHistoryQuery(model)
       case _                                                              => datalogQuery(model, query)
     }
   }

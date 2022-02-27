@@ -119,7 +119,7 @@ case class Conn_Js(
   } yield txReport
 
 
-  private def jsMoleculeQuery(
+  private final def jsMoleculeQuery(
     model: Model,
     query: Query,
     datalog: String,
@@ -138,6 +138,11 @@ case class Conn_Js(
     }
   }
 
+
+  private final def schemaHistoryQuery(model: Model): Future[String] = {
+    schemaHistoryQuery(model)
+    null
+  }
 
   private final def indexQuery(model: Model): Future[String] = {
     def p(v: Any): (String, String) = v match {
@@ -339,7 +344,7 @@ case class Conn_Js(
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
-    packed2T: Iterator[String] => T,
+    packed2T: Iterator[String] => T
   )(implicit ec: ExecutionContext): Future[List[T]] = withDbView(
     jsMoleculeQuery(
       model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
@@ -368,7 +373,7 @@ case class Conn_Js(
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
-    packed2tpl: Iterator[String] => Tpl,
+    packed2tpl: Iterator[String] => Tpl
   )(implicit ec: ExecutionContext): Future[List[Tpl]] = queryJs(
     model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
   )
@@ -383,7 +388,7 @@ case class Conn_Js(
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
-    packed2obj: Iterator[String] => Obj,
+    packed2obj: Iterator[String] => Obj
   )(implicit ec: ExecutionContext): Future[List[Obj]] = queryJs(
     model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj
   )

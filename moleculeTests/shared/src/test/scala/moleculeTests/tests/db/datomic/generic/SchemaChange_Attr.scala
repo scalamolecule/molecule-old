@@ -63,6 +63,10 @@ object SchemaChange_Attr extends AsyncTestSuite {
           (t0, ":Foo/int", "long"),
           (t1, ":Foo/str", "string"),
         ))
+        _ <- Schema.t.a.valueType("long").inspectGet
+        _ <- Schema.t.a.valueType("long").getHistory.map(_ ==> List(
+          (t0, ":Foo/int", "long"),
+        ))
       } yield ()
     }
 

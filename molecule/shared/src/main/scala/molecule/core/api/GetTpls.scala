@@ -256,10 +256,11 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
         futConn.flatMap { conn =>
           if (conn.isJsPlatform) {
             conn.jsQueryTpl(
-              _model, _query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
+              _model, _query, _datalog, -1, obj, nestedLevels, isOptNested,
+              refIndexes, tacitIndexes, packed2tpl
             )
           } else {
-            conn.jvmQuery(_model, _query, history = true).map { jColl =>
+            conn.jsSchemaHistoryQueryTpl(_model).map { jColl =>
               val last = jColl.size
               last match {
                 case 0 => List.empty[Tpl]

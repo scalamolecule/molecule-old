@@ -7,6 +7,7 @@ import clojure.lang.{PersistentArrayMap, PersistentVector}
 import com.cognitect.transit.impl.URIImpl
 import datomic.Util.{read, readAll}
 import datomic.{Database, Peer, Util}
+import molecule.core.ast.elements.Model
 import molecule.core.exceptions.MoleculeException
 import molecule.core.util.{Helpers, JavaConversions}
 import molecule.datomic.base.ast.transactionModel.{Cas, Enum, RetractEntity, Statement, TempId}
@@ -14,7 +15,7 @@ import molecule.datomic.base.util.Inspect
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-trait Conn_Jvm extends Conn with JavaConversions with Helpers {
+trait Conn_Jvm extends Conn with JavaConversions with Helpers with QuerySchemaHistory {
 
   // Molecule api --------------------------------------------------------------
 
@@ -297,21 +298,30 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers {
 
   private[molecule] val isJsPlatform: Boolean = false
 
-  private[molecule] final override def transact(edn: String, scalaStmts: Future[Seq[Statement]])
-                                               (implicit ec: ExecutionContext): Future[TxReport] =
+  private[molecule] final override def transact(
+    edn: String,
+    scalaStmts: Future[Seq[Statement]]
+  )(implicit ec: ExecutionContext): Future[TxReport] =
     transactRaw(readAll(new StringReader(edn)).get(0).asInstanceOf[jList[_]], scalaStmts)
 
 
-  private[molecule] final override def transact(stmtsReader: Reader, scalaStmts: Future[Seq[Statement]])
-                                               (implicit ec: ExecutionContext): Future[TxReport] =
+  private[molecule] final override def transact(
+    stmtsReader: Reader,
+    scalaStmts: Future[Seq[Statement]]
+  )(implicit ec: ExecutionContext): Future[TxReport] =
     transactRaw(readAll(stmtsReader).get(0).asInstanceOf[jList[_]], scalaStmts)
 
 
-  private[molecule] final def transact(scalaStmts: Future[Seq[Statement]])
-                                      (implicit ec: ExecutionContext): Future[TxReport] = scalaStmts.flatMap { stmts =>
+  private[molecule] final def transact(
+    scalaStmts: Future[Seq[Statement]]
+  )(implicit ec: ExecutionContext): Future[TxReport] = scalaStmts.flatMap { stmts =>
     transactRaw(stmts2java(stmts), scalaStmts)
   }
 
+  private[molecule] final override def jsSchemaHistoryQueryTpl(
+    model: Model
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] =
+    fetchSchemaHistory(model)
 
   private[molecule] final override def inspect(
     header: String,

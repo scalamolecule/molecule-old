@@ -1,4 +1,4 @@
-package molecule.datomic.peer.facade
+package molecule.datomic.base.facade
 
 import java.lang.{Boolean => jBoolean, Long => jLong}
 import java.util
@@ -6,7 +6,6 @@ import java.util.{Collections, Comparator, Collection => jCollection, List => jL
 import molecule.core.ast.elements._
 import molecule.core.exceptions.MoleculeException
 import molecule.core.util.JavaUtil
-import molecule.datomic.base.facade.Conn_Jvm
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
@@ -152,7 +151,7 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
   }
 
 
-  private[molecule] def schemaHistoryQuery(
+  private[molecule] def fetchSchemaHistory(
     model: Model
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = try {
     val elements = model.elements

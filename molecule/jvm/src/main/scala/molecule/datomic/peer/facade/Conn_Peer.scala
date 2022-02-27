@@ -403,12 +403,10 @@ case class Conn_Peer(
 
   private[molecule] final override def jvmQuery(
     model: Model,
-    query: Query,
-    history: Boolean = false
+    query: Query
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     model.elements.head match {
       case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _, _) => indexQuery(model)
-      case Generic("Schema", _, _, _, _) if history                       => schemaHistoryQuery(model)
       case _                                                              => datalogQuery(model, query)
     }
   }
