@@ -34,28 +34,28 @@ private[molecule] trait Liftables extends MacroHelpers {
   def mkURI(uri: URI): c.universe.Tree = q"new java.net.URI(${uri.getScheme}, ${uri.getUserInfo}, ${uri.getHost}, ${uri.getPort}, ${uri.getPath}, ${uri.getQuery}, ${uri.getFragment})"
 
   implicit val liftAny: c.universe.Liftable[Any] = Liftable[Any] {
-    case Literal(Constant(s: String))   => q"$s"
-    case Literal(Constant(i: Int))      => q"$i"
-    case Literal(Constant(l: Long))     => q"$l"
-    case Literal(Constant(f: Float))    => q"$f"
-    case Literal(Constant(d: Double))   => q"$d"
-    case Literal(Constant(b: Boolean))  => q"$b"
-    case s: String                      => q"$s"
-    case i: Int                         => q"$i"
-    case l: Long                        => q"$l"
-    case f: Float                       => q"$f"
-    case d: Double                      => q"$d"
-    case b: Boolean                     => q"$b"
-    case date: Date                     => mkDate(date)
-    case bigInt: BigInt                 => mkBigInt(bigInt)
-    case bigDec: BigDecimal             => mkBigDecimal(bigDec)
-    case uuid: UUID                     => mkUUID(uuid)
-    case uri: URI                       => mkURI(uri)
-    case _: Qm.type                     => q"Qm"
-    case _: Distinct.type               => q"Distinct"
-    case _: EntValue.type               => q"EntValue"
-    case _: VarValue.type               => q"VarValue"
-    case set: Set[_]                    => set match {
+    case Literal(Constant(s: String))  => q"$s"
+    case Literal(Constant(i: Int))     => q"$i"
+    case Literal(Constant(l: Long))    => q"$l"
+    case Literal(Constant(f: Float))   => q"$f"
+    case Literal(Constant(d: Double))  => q"$d"
+    case Literal(Constant(b: Boolean)) => q"$b"
+    case s: String                     => q"$s"
+    case i: Int                        => q"$i"
+    case l: Long                       => q"$l"
+    case f: Float                      => q"$f"
+    case d: Double                     => q"$d"
+    case b: Boolean                    => q"$b"
+    case date: Date                    => mkDate(date)
+    case bigInt: BigInt                => mkBigInt(bigInt)
+    case bigDec: BigDecimal            => mkBigDecimal(bigDec)
+    case uuid: UUID                    => mkUUID(uuid)
+    case uri: URI                      => mkURI(uri)
+    case _: Qm.type                    => q"Qm"
+    case _: Distinct.type              => q"Distinct"
+    case _: EntValue.type              => q"EntValue"
+    case _: VarValue.type              => q"VarValue"
+    case set: Set[_]                   => set match {
       case s1: Set1[_]   => q"Set(${any(s1.head)})"
       case s2: Set2[_]   => q"Set(..${s2 map any})"
       case s3: Set3[_]   => q"Set(..${s3 map any})"
@@ -63,9 +63,9 @@ private[molecule] trait Liftables extends MacroHelpers {
       case s: HashSet[_] => q"Set(..${s map any})"
       case emptySet      => q"Set()"
     }
-    case q"scala.None"                  => q"None"
-    case null                           => q"null"
-    case other                          =>
+    case q"scala.None"                 => q"None"
+    case null                          => q"null"
+    case other                         =>
       abort("Can't lift unexpected code:" +
         "\ncode : " + other +
         "\nclass: " + other.getClass +
@@ -182,12 +182,16 @@ private[molecule] trait Liftables extends MacroHelpers {
   implicit val liftQueryTerm: c.universe.Liftable[QueryTerm] = Liftable[QueryTerm] {
     case KW(nsFull, attr, refNs) => q"KW($nsFull, $attr, $refNs)"
     case Empty                   => q"Empty"
-    case NoBinding               => q"NoBinding"
     case Var(sym)                => q"Var($sym)"
     case Val(v)                  => q"Val($v)"
     case DS(name)                => q"DS($name)"
     case DS                      => q"DS"
     case ImplDS                  => q"ImplDS"
+    case NoBinding               => q"NoBinding"
+    case ScalarBinding(name)     => q"ScalarBinding($name)"
+    case CollectionBinding(name) => q"CollectionBinding($name)"
+    case TupleBinding(names)     => q"TupleBinding(Seq(..$names))"
+    case RelationBinding(names)  => q"RelationBinding(Seq(..$names))"
     case t                       => abort("Can't lift query term: " + t)
   }
 
@@ -220,6 +224,7 @@ private[molecule] trait Liftables extends MacroHelpers {
   implicit val liftDataClause    : c.universe.Liftable[DataClause]     = Liftable[DataClause] { dc => q"DataClause(${dc.ds}, ${dc.e}, ${dc.a}, ${dc.v}, ${dc.tx}, ${dc.op})" }
   implicit val liftNotClause     : c.universe.Liftable[NotClause]      = Liftable[NotClause] { nc => q"NotClause(${nc.e}, ${nc.a})" }
   implicit val liftRuleInvocation: c.universe.Liftable[RuleInvocation] = Liftable[RuleInvocation] { ri => q"RuleInvocation(${ri.name}, Seq(..${ri.args}))" }
+  implicit val liftFunctClause   : c.universe.Liftable[FunctClause]    = Liftable[FunctClause] { f => q"FunctClause(${f.name}, Seq(..${f.ins}), ${f.outs})" }
   implicit val liftFunct         : c.universe.Liftable[Funct]          = Liftable[Funct] { f => q"Funct(${f.name}, Seq(..${f.ins}), ${f.outs})" }
 
   implicit val liftNotClauses: c.universe.Liftable[NotClauses] = Liftable[NotClauses] { notClauses =>
@@ -227,6 +232,7 @@ private[molecule] trait Liftables extends MacroHelpers {
       case cl: DataClause     => q"$cl"
       case cl: NotClause      => q"$cl"
       case cl: RuleInvocation => q"$cl"
+      case cl: FunctClause    => q"$cl"
       case cl: Funct          => q"$cl"
       case q"$e "             => e
     }
@@ -238,6 +244,7 @@ private[molecule] trait Liftables extends MacroHelpers {
       case cl: DataClause     => q"$cl"
       case cl: NotClause      => q"$cl"
       case cl: RuleInvocation => q"$cl"
+      case cl: FunctClause    => q"$cl"
       case cl: Funct          => q"$cl"
       case q"$e "             => e
     }
@@ -252,6 +259,7 @@ private[molecule] trait Liftables extends MacroHelpers {
       case cl: NotClauses     => q"$cl"
       case cl: NotJoinClauses => q"$cl"
       case cl: RuleInvocation => q"$cl"
+      case cl: FunctClause    => q"$cl"
       case cl: Funct          => q"$cl"
     }
     q"Seq(..$cls)"
@@ -263,6 +271,7 @@ private[molecule] trait Liftables extends MacroHelpers {
     case NotClauses(clauses)             => q"NotClauses($clauses)"
     case NotJoinClauses(vars, clauses)   => q"NotJoinClauses(Seq(..$vars), $clauses)"
     case RuleInvocation(name, args)      => q"RuleInvocation($name, Seq(..$args))"
+    case FunctClause(name, ins, outs)    => q"FunctClause($name, Seq(..$ins), $outs)"
     case Funct(name, ins, outs)          => q"Funct($name, Seq(..$ins), $outs)"
   }
 
@@ -503,10 +512,10 @@ private[molecule] trait Liftables extends MacroHelpers {
 
   // Liftables for MetaSchema --------------------------------------------------------------
 
-  implicit val liftTopValue: c.universe.Liftable[TopValue] = Liftable[TopValue] { tv =>
+  implicit val liftTopValue  : c.universe.Liftable[TopValue]   = Liftable[TopValue] { tv =>
     q"TopValue(${tv.entityCount}, ${tv.value}, ${tv.label$})"
   }
-  implicit val liftMetaAttr: c.universe.Liftable[MetaAttr] = Liftable[MetaAttr] { a =>
+  implicit val liftMetaAttr  : c.universe.Liftable[MetaAttr]   = Liftable[MetaAttr] { a =>
     q"""MetaAttr(
       ${a.pos},
       ${a.name},
@@ -521,11 +530,12 @@ private[molecule] trait Liftables extends MacroHelpers {
       ${a.distinctValueCount$},
       ${a.descrAttr$},
       Seq(..${a.topValues})
-    )""" }
-  implicit val liftMetaNs: c.universe.Liftable[MetaNs] = Liftable[MetaNs] { ns =>
+    )"""
+  }
+  implicit val liftMetaNs    : c.universe.Liftable[MetaNs]     = Liftable[MetaNs] { ns =>
     q"MetaNs(${ns.pos}, ${ns.name}, ${ns.nameFull}, ${ns.descr$}, ${ns.entityCount$}, Seq(..${ns.attrs}))"
   }
-  implicit val liftMetaPart: c.universe.Liftable[MetaPart] = Liftable[MetaPart] { p =>
+  implicit val liftMetaPart  : c.universe.Liftable[MetaPart]   = Liftable[MetaPart] { p =>
     q"MetaPart(${p.pos}, ${p.name}, ${p.descr$}, ${p.entityCount$}, Seq(..${p.nss}))"
   }
   implicit val liftMetaSchema: c.universe.Liftable[MetaSchema] = Liftable[MetaSchema] { metaSchema =>

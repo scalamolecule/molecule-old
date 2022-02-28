@@ -9,12 +9,12 @@ import scala.language.implicitConversions
 
 
 /** Query to Datomic query string transformation.
-  * <br><br>
-  * Third transformation in Molecules series of transformations from
-  * custom boilerplate DSL constructs to Datomic queries:
-  * <br><br>
-  * Custom DSL molecule --> Model --> Query --> Datomic query string
-  * */
+ * <br><br>
+ * Third transformation in Molecules series of transformations from
+ * custom boilerplate DSL constructs to Datomic queries:
+ * <br><br>
+ * Custom DSL molecule --> Model --> Query --> Datomic query string
+ * */
 case class Query2String(q: Query) extends Helpers {
 
   // Switch BigInt representation
@@ -88,7 +88,8 @@ case class Query2String(q: Query) extends Helpers {
     case NotClause(e, a)                                 => s"(not [" + p(e) + " " + p(a) + "])"
     case NotClauses(cls)                                 => s"(not " + cls.map(p).mkString(" ") + ")"
     case NotJoinClauses(vars, cls)                       => s"(not-join [" + vars.map(p).mkString(" ") + "]\n          " + cls.map(p).mkString("\n          ") + ")"
-    case Funct(fn, ins, outs)                            => ((s"[($fn " + ins.map(p).mkString(" ")).trim + ") " + p(outs)).trim + "]"
+    case FunctClause(fn, ins, outs)                      => ((s"[($fn " + ins.map(p).mkString(" ")).trim + ") " + p(outs)).trim + "]"
+    case Funct(fn, ins, outs)                            => ((s"($fn " + ins.map(p).mkString(" ")).trim + ") " + p(outs)).trim
     case RuleInvocation(rule, args)                      => s"($rule " + args.map(p).mkString(" ") + ")"
     case Rule(rule, args, clauses) if clauses.size > 1   =>
       asN = true

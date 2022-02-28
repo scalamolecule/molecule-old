@@ -244,12 +244,14 @@ case class Conn_Peer(
 
   // Schema --------------------------------------------------------------------
 
-  protected def historyQuery(query: String)
+  protected def historyQuery(query: String, inputs: Seq[jList[AnyRef]] = Nil)
                             (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     db.map(db => Peer.q(
       query,
-      db.getDatomicDb.asInstanceOf[Database].history(),
-      db.getDatomicDb,
+      Seq(
+        db.getDatomicDb.asInstanceOf[Database].history(),
+        db.getDatomicDb
+      ) ++ inputs: _*
     ))
   }
 

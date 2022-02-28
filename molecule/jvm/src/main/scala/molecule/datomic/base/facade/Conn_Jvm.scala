@@ -7,7 +7,9 @@ import clojure.lang.{PersistentArrayMap, PersistentVector}
 import com.cognitect.transit.impl.URIImpl
 import datomic.Util.{read, readAll}
 import datomic.{Database, Peer, Util}
-import molecule.core.ast.elements.Model
+import molecule.core.ast.elements._
+import molecule.core.dto
+import molecule.core.dto.SchemaAttr
 import molecule.core.exceptions.MoleculeException
 import molecule.core.util.{Helpers, JavaConversions}
 import molecule.datomic.base.ast.transactionModel.{Cas, Enum, RetractEntity, Statement, TempId}
@@ -239,7 +241,8 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers with QuerySchemaHi
     case NonFatal(exc) => Future.failed(exc)
   }
 
-  protected def historyQuery(query: String)(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]]
+  protected def historyQuery(query: String, inputs: Seq[jList[AnyRef]] = Nil)
+                            (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]]
 
   def getEnumHistory(implicit ec: ExecutionContext)
   : Future[List[(String, Int, Long, Date, String, Boolean)]] = {
@@ -316,10 +319,27 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers with QuerySchemaHi
     transactRaw(stmts2java(stmts), scalaStmts)
   }
 
-  private[molecule] final override def jsSchemaHistoryQueryTpl(
-    model: Model
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] =
-    fetchSchemaHistory(model)
+  private[molecule] final override def jvmSchemaHistoryQueryTpl(
+    model: Model,
+    queryString: String
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = try {
+    val attrs = model.elements.map {
+      case Generic(_, attr, _, NoValue, _)        => SchemaAttr(attr, "", Nil)
+      case Generic(_, attr, _, Eq(args), _)       => SchemaAttr(attr, "=", args.map(_.toString))
+      case Generic(_, attr, _, Neq(args), _)      => SchemaAttr(attr, "!=", args.map(_.toString))
+      case Generic(_, attr, _, Gt(arg), _)        => SchemaAttr(attr, ">", Seq(arg.toString))
+      case Generic(_, attr, _, Ge(arg), _)        => SchemaAttr(attr, ">=", Seq(arg.toString))
+      case Generic(_, attr, _, Lt(arg), _)        => SchemaAttr(attr, "<", Seq(arg.toString))
+      case Generic(_, attr, _, Le(arg), _)        => SchemaAttr(attr, "<=", Seq(arg.toString))
+      case Generic(_, attr, _, Fn("count", _), _) => SchemaAttr(attr, "count", Nil)
+      case Generic(_, attr, _, Fulltext(arg), _)  => SchemaAttr(attr, "fulltext", Seq(arg.toString))
+      case other                                  =>
+        throw MoleculeException("Unexpected generic schema history attribute: " + other)
+    }
+    fetchSchemaHistory(attrs, queryString)
+  } catch {
+    case NonFatal(exc) => Future.failed(exc)
+  }
 
   private[molecule] final override def inspect(
     header: String,

@@ -3,7 +3,7 @@ package molecule.datomic.base.ops
 import java.net.URI
 import java.util.{Date, UUID}
 import molecule.core.ast.elements._
-import molecule.datomic.base.ast.query.{Funct, _}
+import molecule.datomic.base.ast.query._
 import molecule.core.util.{Helpers, JavaUtil}
 import molecule.datomic.base.ops.exception.QueryOpsException
 
@@ -51,6 +51,9 @@ object QueryOps extends Helpers with JavaUtil {
     def find(v: String): Query =
       find(Var(v))
 
+    def finds(vs: String*): Query =
+      q.copy(f = Find(q.f.outputs ++ vs.map(Var)))
+
     def find(o: Output): Query =
       q.copy(f = Find(q.f.outputs :+ o))
 
@@ -81,6 +84,9 @@ object QueryOps extends Helpers with JavaUtil {
     def in(tpe: String, vs: Seq[Any], v: String): Query =
       q.copy(i = q.i.copy(inputs = q.i.inputs :+ InVar(CollectionBinding(Var(v)), tpe, Seq(vs))))
 
+    def historydb(db: String): Query =
+      q.copy(i = q.i.copy(inputs = q.i.inputs ++ Seq(InVar(ImplDS, "", Nil), InVar(DS(db), "", Nil))))
+
 
     // With ...........................................
 
@@ -108,6 +114,12 @@ object QueryOps extends Helpers with JavaUtil {
       }
       q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e), KW(nsFull, attr, refNs), qv1, Empty, NoBinding)))
     }
+
+    def where(e: String, a: String, v: String, tx: String, op: String): Query =
+      q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e), Var(a), Var(v), Var(tx), Var(op))))
+
+    def where(ds: DataSource, e: QueryValue, a: KW, v: String): Query =
+      q.copy(wh = Where(q.wh.clauses :+ DataClause(ds, e, a, Var(v), NoBinding)))
 
     def where(e: QueryValue, a: KW, v: String, txV: String = ""): Query = if (txV.nonEmpty)
       q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, e, a, Var(v), Var(txV))))
@@ -147,7 +159,7 @@ object QueryOps extends Helpers with JavaUtil {
             val x = Var(v + "_" + (j + 1))
             Seq(
               DataClause(ImplDS, Var(e), KW(a.nsFull, a.attr), x, Empty),
-              Funct(s"""ground (java.net.URI. "${doubleEsc(uri)}")""", Nil, ScalarBinding(x))
+              FunctClause(s"""ground (java.net.URI. "${doubleEsc(uri)}")""", Nil, ScalarBinding(x))
             )
           }
           q1.copy(wh = Where(q1.wh.clauses :+ NotJoinClauses(Seq(Var(e)), notClauses)))
@@ -162,14 +174,138 @@ object QueryOps extends Helpers with JavaUtil {
     }
 
 
+    // Schema history attribute/values ..........................................
+
+    def schemaHistory: Query = q.wh.clauses.collectFirst {
+      case DataClause(_, _, KW("db.install", "attribute", _), _, _, _) => q
+    }.getOrElse(
+      q.finds("t", "tx", "txInstant", "op", "attrId", "a", "part", "nsFull",
+        "ns", "attr", "schemaId", "schemaAttr", "schemaValue")
+        .historydb("dbCurrent")
+        .where(Var("_"), KW("db.install", "attribute"), "attrId")
+        .where(DS("dbCurrent"), Var("attrId"), KW("db", "ident"), "attrIdent")
+        .func("str", Seq(Var("attrIdent")), ScalarBinding(Var("a")))
+        .func("namespace", Seq(Var("attrIdent")), ScalarBinding(Var("nsFull0")))
+        .func("if",
+          Seq(
+            Funct(
+              "=",
+              Seq(Funct("subs", Seq(Var("nsFull0"), Val(0), Val(1)), Val("-"))),
+              NoBinding
+            ),
+            Funct("subs", Seq(Var("nsFull0"), Val(1)), NoBinding),
+            ScalarBinding(Var("nsFull0"))
+          ),
+          ScalarBinding(Var("nsFull"))
+        )
+        .func(".matches ^String",
+          Seq(Var("nsFull"), Val(
+            "^(db|db.alter|db.excise|db.install|db.part|db.sys|fressian" + // peer/client
+              "|db.entity|db.attr)" // client
+          )),
+          ScalarBinding(Var("sys")))
+        .func("=", Seq(Var("sys"), Val(false)))
+        .func(".contains ^String", Seq(Var("nsFull"), Val("_")), ScalarBinding(Var("isPart")))
+        .func(".split ^String", Seq(Var("nsFull"), Val("_")), ScalarBinding(Var("nsParts")))
+        .func("first", Seq(Var("nsParts")), ScalarBinding(Var("part0")))
+        .func("last", Seq(Var("nsParts")), ScalarBinding(Var("ns")))
+        .func("if", Seq(Var("isPart"), Var("part0"), Val("db.part/user")), ScalarBinding(Var("part")))
+        .func("name", Seq(Var("attrIdent")), ScalarBinding(Var("attr")))
+        .where("attrId", "schemaId", "schemaValue", "tx", "op")
+        .where(DS("dbCurrent"), Var("schemaId"), KW("db", "ident"), "schemaIdent")
+        .func("name", Seq(Var("schemaIdent")), ScalarBinding(Var("schemaAttr")))
+        .func("datomic.api/tx->t", Seq(Var("tx")), ScalarBinding(Var("t")))
+        .where(Var("tx"), KW("db", "txInstant"), "txInstant")
+    )
+
+    def schemaHistoryResolved: Query = q.wh.clauses.collectFirst {
+      case FunctClause("first", _, _) => q
+    }.getOrElse(
+      q.schemaHistory
+        .func(".contains ^String", Seq(Var("nsFull"), Val("_")), ScalarBinding(Var("isPart")))
+        .func(".split ^String", Seq(Var("nsFull"), Val("_")), ScalarBinding(Var("nsParts")))
+        .func("first", Seq(Var("nsParts")), ScalarBinding(Var("part0")))
+        .func("last", Seq(Var("nsParts")), ScalarBinding(Var("ns")))
+        .func("if", Seq(Var("isPart"), Var("part0"), Val("db.part/user")), ScalarBinding(Var("part")))
+    )
+
+    def schemaHistoryA: Query = q.schemaHistory
+      .func("str", Seq(Var("attrIdent")), ScalarBinding(Var("a")))
+
+    def schemaHistoryAttr: Query = q.schemaHistory
+      .func("name", Seq(Var("attrIdent")), ScalarBinding(Var("attr")))
+
+    def schemaHistoryIdent: Query = q.schemaHistory
+      .func("str", Seq(Var("attrIdent")), ScalarBinding(Var("ident")))
+
+    def schemaHistoryTpe: Query = q.schemaHistory
+      .where(Var("attrId"), KW("db", "valueType"), "tpeId")
+      .where(Var("tpeId"), KW("db", "ident"), "tpeIdent")
+      .func("name", Seq(Var("tpeIdent")), ScalarBinding(Var("valueType")))
+
+    def schemaHistoryCard: Query = q.schemaHistory
+      .where(Var("attrId"), KW("db", "cardinality"), "cardId")
+      .where(Var("cardId"), KW("db", "ident"), "cardIdent")
+      .func("name", Seq(Var("cardIdent")), ScalarBinding(Var("cardinality")))
+
+    def schemaHistoryDoc: Query = q.schemaHistory
+      .where(Var("attrId"), KW("db", "doc"), "doc")
+
+    def schemaHistoryDocFulltext(arg: String): Query =
+      q.func("fulltext", Seq(DS, KW("db", "doc"), Val(arg)), RelationBinding(Seq(Var("attrId"), Var("docValue"))))
+
+    def schemaHistoryIndex: Query = q.schemaHistory
+      .where(Var("attrId"), KW("db", "index"), "index")
+
+    def schemaHistoryUnique: Query = q.schemaHistory
+      .where(Var("attrId"), KW("db", "unique"), "uniqueId")
+      .where(Var("uniqueId"), KW("db", "ident"), "uniqueIdent")
+      .func("name", Seq(Var("uniqueIdent")), ScalarBinding(Var("unique")))
+
+    def schemaHistoryFulltext: Query = q.schemaHistory
+      .where(Var("attrId"), KW("db", "fulltext"), "fulltext")
+
+    def schemaHistoryIsComponent: Query = q.schemaHistory
+      .where(Var("attrId"), KW("db", "isComponent"), "isComponent")
+
+    def schemaHistoryNoHistory: Query = q.schemaHistory
+      .where(Var("attrId"), KW("db", "noHistory"), "noHistory")
+
+    def schemaHistoryEnum: Query = {
+      q.schemaHistoryResolved.schemaAttr
+        .where(Var("_"), KW("db", "ident"), "enumIdent")
+        .func("namespace", Seq(Var("enumIdent")), ScalarBinding(Var("enumNs")))
+        .func("str", Seq(Var("nsFull"), Val("."), Var("attr")), ScalarBinding(Var("enumSubNs")))
+        .func("=", Seq(Var("enumSubNs"), Var("enumNs")))
+        .func("name", Seq(Var("enumIdent")), ScalarBinding(Var("enumm")))
+    }
+
+    def schemaHistoryT: Query = q.schemaHistory
+      .func("datomic.api/tx->t", Seq(Var("tx")), ScalarBinding(Var("t")))
+
+    def schemaHistoryTxInstant: Query = q.schemaHistory
+      .where("tx", "db", "txInstant", Var("txInstant"), "", "")
+
+    def schemaHistoryPullEnumValue(v: String): Query =
+      q.copy(f = Find(q.f.outputs :+ Pull(v + "_pull", "db", v, Some(""))))
+        .func("identity", Seq(Var("attrId")), ScalarBinding(Var(v + "_pull")))
+
+    def schemaHistoryPull(v: String): Query =
+      q.copy(f = Find(q.f.outputs :+ Pull(v + "_pull", "db", v)))
+        .func("identity", Seq(Var("attrId")), ScalarBinding(Var(v + "_pull")))
+
+    def schemaHistoryNot(attr: String): Query =
+      q.copy(wh = Where(q.wh.clauses :+ NotClause(Var("attrId"), KW("db", attr))))
+
+
     // Schema attribute/values ..........................................
 
     def schema: Query = q.wh.clauses.collectFirst {
       case DataClause(_, _, KW("db.install", "attribute", _), _, _, _) => q
     }.getOrElse(
       q.where(Var("_"), KW("db.install", "attribute"), "attrId", "tx")
-        .where(Var("attrId"), KW("db", "ident"), "idIdent")
-        .func("namespace", Seq(Var("idIdent")), ScalarBinding(Var("nsFull")))
+        .where(Var("attrId"), KW("db", "ident"), "attrIdent")
+        .func("namespace", Seq(Var("attrIdent")), ScalarBinding(Var("nsFull")))
         .func(".matches ^String",
           Seq(Var("nsFull"), Val(
             "(db|db.alter|db.excise|db.install|db.part|db.sys|fressian" + // peer/client
@@ -181,7 +317,7 @@ object QueryOps extends Helpers with JavaUtil {
     )
 
     def schemaResolved: Query = q.wh.clauses.collectFirst {
-      case Funct("first", _, _) => q
+      case FunctClause("first", _, _) => q
     }.getOrElse(
       q.schema
         .func(".contains ^String", Seq(Var("nsFull"), Val("_")), ScalarBinding(Var("isPart")))
@@ -192,13 +328,13 @@ object QueryOps extends Helpers with JavaUtil {
     )
 
     def schemaA: Query = q.schema
-      .func("str", Seq(Var("idIdent")), ScalarBinding(Var("a")))
+      .func("str", Seq(Var("attrIdent")), ScalarBinding(Var("a")))
 
     def schemaAttr: Query = q.schema
-      .func("name", Seq(Var("idIdent")), ScalarBinding(Var("attr")))
+      .func("name", Seq(Var("attrIdent")), ScalarBinding(Var("attr")))
 
     def schemaIdent: Query = q.schema
-      .func("str", Seq(Var("idIdent")), ScalarBinding(Var("ident")))
+      .func("str", Seq(Var("attrIdent")), ScalarBinding(Var("ident")))
 
     def schemaTpe: Query = q.schema
       .where(Var("attrId"), KW("db", "valueType"), "tpeId")
@@ -274,8 +410,8 @@ object QueryOps extends Helpers with JavaUtil {
         q
       } else {
         q.wh.clauses.reverse.collectFirst {
-          case Funct("namespace", _, _)                                                   => q
-          case Funct("identity", _, _) /* Optional attributes */                          => q
+          case FunctClause("namespace", _, _)                                             => q
+          case FunctClause("identity", _, _) /* Optional attributes */                    => q
           case DataClause(_, Var(e0), KW("db", "ident", _), _, _, _) if e0 == e + "_attr" => q
           case DataClause(_, _, KW("?", attr, _), _, _, _) if attr == e + "_attr"         => q.ident(e + "_attr", v1)
           case DataClause(_, Var(`e`), _, _, _, _)                                        => q
@@ -292,7 +428,7 @@ object QueryOps extends Helpers with JavaUtil {
 
     def datomA(e: String, v: String, v1: String): Query = {
       q.wh.clauses.reverse.collectFirst {
-        case Funct("str", Seq(Var(`v1`)), _)                                            =>
+        case FunctClause("str", Seq(Var(`v1`)), _)                                      =>
           q
         case DataClause(_, Var(e0), KW("db", "ident", _), _, _, _) if e0 == e + "_attr" =>
           q.func("str", Seq(Var(v1)), ScalarBinding(Var(v + "_a")))
@@ -532,7 +668,7 @@ object QueryOps extends Helpers with JavaUtil {
     def mappings(e: String, args0: Seq[(String, Any)]): Query = {
       val ruleName = "rule" + (q.i.rules.map(_.name).distinct.size + 1)
       val newRules = args0.foldLeft(q.i.rules) { case (rules, (key, value)) =>
-        val dataClauses = Seq(Funct(".matches ^String", Seq(Var(e), Val("^(" + key + ")@(" + value + ")$")), NoBinding))
+        val dataClauses = Seq(FunctClause(".matches ^String", Seq(Var(e), Val("^(" + key + ")@(" + value + ")$")), NoBinding))
         val rule        = Rule(ruleName, Seq(Var(e)), dataClauses)
         rules :+ rule
       }
@@ -638,7 +774,7 @@ object QueryOps extends Helpers with JavaUtil {
       val orRules  = if (flag && a.card == 2) {
         // Fulltext search for card-many attribute
         val ruleClauses = args.zipWithIndex.map { case (arg, i) =>
-          Funct("fulltext", Seq(DS(), KW(a.nsFull, a.attr), Val(arg)),
+          FunctClause("fulltext", Seq(DS(), KW(a.nsFull, a.attr), Val(arg)),
             RelationBinding(List(Var(e), Var(e + "_" + (i + 1)))))
         }
         Seq(Rule(ruleName, Seq(Var(e)), ruleClauses))
@@ -651,7 +787,7 @@ object QueryOps extends Helpers with JavaUtil {
                   val x = Var(specialV + "_" + (j + 1))
                   Seq(
                     DataClause(ImplDS, Var(e), KW(a.nsFull, a.attr), x, Empty),
-                    Funct(s"""ground (java.net.URI. "${doubleEsc(uri)}")""", Nil, ScalarBinding(x))
+                    FunctClause(s"""ground (java.net.URI. "${doubleEsc(uri)}")""", Nil, ScalarBinding(x))
                   )
                 }
               } else {
@@ -668,17 +804,17 @@ object QueryOps extends Helpers with JavaUtil {
               }
 
             case mapArg if a.card == 3 => Seq(
-              Funct(".matches ^String", Seq(Var(e), Val(".+@" + doubleEsc(mapArg))), NoBinding))
+              FunctClause(".matches ^String", Seq(Var(e), Val(".+@" + doubleEsc(mapArg))), NoBinding))
 
             case _ if specialV.nonEmpty && flag => Seq(
-              Funct("=", Seq(Var(specialV), Val(arg)), NoBinding))
+              FunctClause("=", Seq(Var(specialV), Val(arg)), NoBinding))
 
             case uri if specialV.nonEmpty => Seq(
               DataClause(ImplDS, Var(e), KW(a.nsFull, a.attr), Var(specialV), Empty),
-              Funct(s"""ground (java.net.URI. "${doubleEsc(uri)}")""", Nil, ScalarBinding(Var(specialV)))
+              FunctClause(s"""ground (java.net.URI. "${doubleEsc(uri)}")""", Nil, ScalarBinding(Var(specialV)))
             )
             case _ if flag                => Seq(
-              Funct("fulltext", Seq(DS(), KW(a.nsFull, a.attr), Val(arg)),
+              FunctClause("fulltext", Seq(DS(), KW(a.nsFull, a.attr), Val(arg)),
                 RelationBinding(List(Var(e), Var(e + "_" + (i + 1))))))
 
             case _ if a.tpe == "Double" => Seq(
@@ -699,10 +835,10 @@ object QueryOps extends Helpers with JavaUtil {
     }
 
     def func(name: String, qt: QueryTerm, v: String): Query =
-      q.copy(wh = Where(q.wh.clauses :+ Funct(name, Seq(qt), ScalarBinding(Var(v)))))
+      q.copy(wh = Where(q.wh.clauses :+ FunctClause(name, Seq(qt), ScalarBinding(Var(v)))))
 
     def func(name: String, ins: Seq[QueryTerm], outs: Binding = NoBinding): Query =
-      q.copy(wh = Where(q.wh.clauses :+ Funct(name, ins, outs)))
+      q.copy(wh = Where(q.wh.clauses :+ FunctClause(name, ins, outs)))
 
     def ref(e: String, nsFull: String, refAttr: String, v: String, refNs: String): Query =
       q.copy(wh = Where(q.wh.clauses :+ DataClause(ImplDS, Var(e), KW(nsFull, refAttr, refNs), Var(v), Empty)))

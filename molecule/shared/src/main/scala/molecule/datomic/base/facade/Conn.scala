@@ -383,10 +383,11 @@ trait Conn extends ColOps with BooPicklers {
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] =
     Future.failed(jvmOnly("datalogQuery(model: Model, query: Query, _db: Option[DatomicDb] = None)"))
 
-  private[molecule] def jsSchemaHistoryQueryTpl(
-    model: Model
+  private[molecule] def jvmSchemaHistoryQueryTpl(
+    model: Model,
+    queryString: String
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] =
-    Future.failed(jvmOnly("schemaHistoryQuery(model: Model)"))
+    Future.failed(jvmOnly("jvmSchemaHistoryQueryTpl(model: Model)"))
 
   private[molecule] def jsQueryTpl[Tpl](
     model: Model,

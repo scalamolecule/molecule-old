@@ -22,19 +22,19 @@ object QueryOptimizer {
     }
 
     q.wh.clauses.foreach {
-      case cl@Funct("identity", Seq(Var(_)), ScalarBinding(Var(v))) =>
+      case cl@FunctClause("identity", Seq(Var(_)), ScalarBinding(Var(v))) =>
         grounds += v -> Some(cl)
 
-      case cl@Funct(fn, _, ScalarBinding(Var(v))) if fn.startsWith("ground") =>
+      case cl@FunctClause(fn, _, ScalarBinding(Var(v))) if fn.startsWith("ground") =>
         grounds += v -> Some(cl)
 
-      case cl@Funct(fn, Seq(Var(v), _), _) if fn.startsWith(".compareTo") =>
+      case cl@FunctClause(fn, Seq(Var(v), _), _) if fn.startsWith(".compareTo") =>
         comparisons += v -> Some(cl)
 
-      case cl@Funct(_, _, NoBinding) =>
+      case cl@FunctClause(_, _, NoBinding) =>
         comparisons += "" -> Some(cl)
 
-      case cl@Funct("fulltext", _, RelationBinding(Seq(Var(v), _))) =>
+      case cl@FunctClause("fulltext", _, RelationBinding(Seq(Var(v), _))) =>
         fulltextSearches += v -> Some(cl)
 
       case cl@NotClause(Var(v), _) =>

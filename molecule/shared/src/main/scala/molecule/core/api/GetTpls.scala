@@ -9,6 +9,7 @@ import molecule.core.ops.ColOps
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
+import molecule.datomic.base.transform.Model2Query
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -260,7 +261,10 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
               refIndexes, tacitIndexes, packed2tpl
             )
           } else {
-            conn.jsSchemaHistoryQueryTpl(_model).map { jColl =>
+            val schemaHistoryQuery = Model2Query(_model, schemaHistory0 = true, optimize = false)._2
+            println(schemaHistoryQuery)
+
+            conn.jvmSchemaHistoryQueryTpl(_model, schemaHistoryQuery).map { jColl =>
               val last = jColl.size
               last match {
                 case 0 => List.empty[Tpl]

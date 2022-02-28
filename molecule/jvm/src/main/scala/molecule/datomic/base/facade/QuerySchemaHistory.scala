@@ -4,6 +4,7 @@ import java.lang.{Boolean => jBoolean, Long => jLong}
 import java.util
 import java.util.{Collections, Comparator, Collection => jCollection, List => jList}
 import molecule.core.ast.elements._
+import molecule.core.dto.SchemaAttr
 import molecule.core.exceptions.MoleculeException
 import molecule.core.util.JavaUtil
 import scala.concurrent.{ExecutionContext, Future}
@@ -15,7 +16,7 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
   // Indexes of raw data
   private val t_           = 0
   private val tx_          = 1
-  private val txInst_      = 2
+  private val txInstant_   = 2
   private val op_          = 3
   private val attrId_      = 4
   private val a_           = 5
@@ -27,46 +28,28 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
   private val schemaAttr_  = 11
   private val schemaValue_ = 12
 
-  private val schemaQuery =
-    """[:find  ?t
-      |        ?tx
-      |        ?txInst
-      |        ?op
-      |        ?attrId
-      |        ?a
-      |        ?part
-      |        ?nsFull
-      |        ?ns
-      |        ?attr
-      |        ?schemaId
-      |        ?schemaAttr
-      |        ?schemaValue
-      | :in $ $dbCurrent
-      | :where [_ :db.install/attribute ?attrId]
-      |        [$dbCurrent ?attrId :db/ident ?attrIdent]
-      |        [?attrId :db/ident ?attrIdent]
-      |        [(str ?attrIdent) ?a]
-      |        [(namespace ?attrIdent) ?nsFull0]
-      |
-      |        ;; Remove '-' prefix if attribute is marked as retired
-      |        [(if (= (subs ?nsFull0 0 1) "-") (subs ?nsFull0 1) ?nsFull0) ?nsFull]
-      |
-      |        ;; Exclude internal Datomic attributes
-      |        [(.matches ^String ?nsFull "^(db|db.alter|db.excise|db.install|db.part|db.sys|fressian|db.entity|db.attr)") ?sys]
-      |        [(= ?sys false)]
-      |
-      |        [(.contains ^String ?nsFull "_") ?isPart]
-      |        [(.split ^String ?nsFull "_") ?nsParts]
-      |        [(first ?nsParts) ?part0]
-      |        [(last ?nsParts) ?ns]
-      |        [(if ?isPart ?part0 "db.part/user") ?part]
-      |        [(name ?attrIdent) ?attr]
-      |        [?attrId ?schemaId ?schemaValue ?tx ?op]
-      |        [$dbCurrent ?schemaId :db/ident ?schemaIdent]
-      |        [(name ?schemaIdent) ?schemaAttr]
-      |        [(datomic.api/tx->t ?tx) ?t]
-      |        [?tx :db/txInstant ?txInst]
-      |]""".stripMargin
+  //  private val schemaQuery =
+  //    """[:find  ?t ?tx ?txInstant ?op ?attrId ?a ?part ?nsFull ?ns ?attr ?schemaId ?schemaAttr ?schemaValue
+  //      | :in    $  $dbCurrent
+  //      | :where [_ :db.install/attribute ?attrId]
+  //      |        [$dbCurrent ?attrId :db/ident ?attrIdent]
+  //      |        [(str ?attrIdent) ?a]
+  //      |        [(namespace ?attrIdent) ?nsFull0]
+  //      |        [(if (= (subs ?nsFull0 0 1) "-") (subs ?nsFull0 1) ?nsFull0) ?nsFull]
+  //      |        [(.matches ^String ?nsFull "^(db|db.alter|db.excise|db.install|db.part|db.sys|fressian|db.entity|db.attr)") ?sys]
+  //      |        [(= ?sys false)]
+  //      |        [(.contains ^String ?nsFull "_") ?isPart]
+  //      |        [(.split ^String ?nsFull "_") ?nsParts]
+  //      |        [(first ?nsParts) ?part0]
+  //      |        [(last ?nsParts) ?ns]
+  //      |        [(if ?isPart ?part0 "db.part/user") ?part]
+  //      |        [(name ?attrIdent) ?attr]
+  //      |        [?attrId ?schemaId ?schemaValue ?tx ?op]
+  //      |        [$dbCurrent ?schemaId :db/ident ?schemaIdent]
+  //      |        [(name ?schemaIdent) ?schemaAttr]
+  //      |        [(datomic.api/tx->t ?tx) ?t]
+  //      |        [?tx :db/txInstant ?txInstant]
+  //      |]""".stripMargin
 
   private class SchemaComparator extends Comparator[jList[AnyRef]] {
     def compare(l1: jList[AnyRef], l2: jList[AnyRef]): Int = {
@@ -152,18 +135,33 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
 
 
   private[molecule] def fetchSchemaHistory(
-    model: Model
+    attrs: Seq[SchemaAttr],
+    queryString: String
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = try {
-    val elements = model.elements
-    val generics = elements.map(_.asInstanceOf[Generic])
-    if (generics.exists(_.attr == "enumm")) {
+    if (attrs.exists(_.attr == "enumm")) {
       throw MoleculeException(
         "Retrieving historical enum values with `Schema` is not supported since they " +
           "are entities having their own timeline independently from schema attributes. " +
           "Instead, please call `conn.getEnumHistory` to retrieve historical enum values."
       )
     }
-    val length                 = elements.length
+
+    val inputs = attrs.collect {
+      case SchemaAttr(attr, "=", args) => attr match {
+        case "t" | "tx" | "attrId" =>
+          javaList(args.map(_.toLong.asInstanceOf[AnyRef]): _*)
+
+        case "txInstant" =>
+          javaList(args.map(d => str2date(d).asInstanceOf[AnyRef]): _*)
+
+        case "isComponent" | "noHistory" | "index" | "fulltext" =>
+          javaList(args.map(_.toBoolean.asInstanceOf[AnyRef]): _*)
+
+        case _ => javaList(args.map(_.asInstanceOf[AnyRef]): _*)
+      }
+    }
+
+    val length                 = attrs.length
     var processedMandatory     = 0
     var expectedMandatoryCount = 0
     var add                    = true
@@ -175,26 +173,26 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
     var list                   = new util.ArrayList[AnyRef](length)
     val coll                   = new util.ArrayList[jList[AnyRef]]()
 
-    val schemaAttrIndexes = generics.zipWithIndex.map { case (g, i) =>
-      val mandatory = g.attr.last != '$'
+    val schemaAttrIndexes = attrs.zipWithIndex.map { case (schemaAttr, i) =>
+      val mandatory = schemaAttr.attr.last != '$'
       if (mandatory) {
         expectedMandatoryCount += 1
       }
-      val schemaAttr        = if (mandatory) g.attr else g.attr.init
+      val attr              = if (mandatory) schemaAttr.attr else schemaAttr.attr.init
       val sharedSchemaAttrs = List("t", "tx", "txInstant", "attrId", "a", "part", "nsFull", "ns", "attr")
-      val resolver          = if (sharedSchemaAttrs.contains(schemaAttr)) {
+      val resolver          = if (sharedSchemaAttrs.contains(attr)) {
         // Resolver not needed for initiated schema attributes
         (_: jList[AnyRef]) => null
       } else {
-        schemaElement(schemaAttr, mandatory)
+        schemaElement(attr, mandatory)
       }
-      schemaAttr -> (i, mandatory, resolver)
+      attr -> (i, mandatory, resolver)
     }.toMap
 
     def initElement(schemaAttr: String): jList[AnyRef] => AnyRef = schemaAttr match {
       case "t"         => (row: jList[AnyRef]) => processedMandatory += 1; row.get(t_)
       case "tx"        => (row: jList[AnyRef]) => processedMandatory += 1; row.get(tx_)
-      case "txInstant" => (row: jList[AnyRef]) => processedMandatory += 1; row.get(txInst_)
+      case "txInstant" => (row: jList[AnyRef]) => processedMandatory += 1; row.get(txInstant_)
       case "attrId"    => (row: jList[AnyRef]) => processedMandatory += 1; row.get(attrId_)
       case "a"         => (row: jList[AnyRef]) => processedMandatory += 1; row.get(a_)
       case "part"      => (row: jList[AnyRef]) => processedMandatory += 1; row.get(part_)
@@ -208,31 +206,31 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
     val initList: jList[AnyRef] => Unit = {
       length match {
         case 1  =>
-          val resolve1 = initElement(generics(0).attr)
+          val resolve1 = initElement(attrs(0).attr)
           (row: jList[AnyRef]) => {
             list.add(resolve1(row))
           }
         case 2  =>
-          val resolve1 = initElement(generics(0).attr)
-          val resolve2 = initElement(generics(1).attr)
+          val resolve1 = initElement(attrs(0).attr)
+          val resolve2 = initElement(attrs(1).attr)
           (row: jList[AnyRef]) => {
             list.add(resolve1(row))
             list.add(resolve2(row))
           }
         case 3  =>
-          val resolve1 = initElement(generics(0).attr)
-          val resolve2 = initElement(generics(1).attr)
-          val resolve3 = initElement(generics(2).attr)
+          val resolve1 = initElement(attrs(0).attr)
+          val resolve2 = initElement(attrs(1).attr)
+          val resolve3 = initElement(attrs(2).attr)
           (row: jList[AnyRef]) => {
             list.add(resolve1(row))
             list.add(resolve2(row))
             list.add(resolve3(row))
           }
         case 4  =>
-          val resolve1 = initElement(generics(0).attr)
-          val resolve2 = initElement(generics(1).attr)
-          val resolve3 = initElement(generics(2).attr)
-          val resolve4 = initElement(generics(3).attr)
+          val resolve1 = initElement(attrs(0).attr)
+          val resolve2 = initElement(attrs(1).attr)
+          val resolve3 = initElement(attrs(2).attr)
+          val resolve4 = initElement(attrs(3).attr)
           (row: jList[AnyRef]) => {
             list.add(resolve1(row))
             list.add(resolve2(row))
@@ -240,11 +238,11 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
             list.add(resolve4(row))
           }
         case 5  =>
-          val resolve1 = initElement(generics(0).attr)
-          val resolve2 = initElement(generics(1).attr)
-          val resolve3 = initElement(generics(2).attr)
-          val resolve4 = initElement(generics(3).attr)
-          val resolve5 = initElement(generics(4).attr)
+          val resolve1 = initElement(attrs(0).attr)
+          val resolve2 = initElement(attrs(1).attr)
+          val resolve3 = initElement(attrs(2).attr)
+          val resolve4 = initElement(attrs(3).attr)
+          val resolve5 = initElement(attrs(4).attr)
           (row: jList[AnyRef]) => {
             list.add(resolve1(row))
             list.add(resolve2(row))
@@ -253,12 +251,12 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
             list.add(resolve5(row))
           }
         case 6  =>
-          val resolve1 = initElement(generics(0).attr)
-          val resolve2 = initElement(generics(1).attr)
-          val resolve3 = initElement(generics(2).attr)
-          val resolve4 = initElement(generics(3).attr)
-          val resolve5 = initElement(generics(4).attr)
-          val resolve6 = initElement(generics(5).attr)
+          val resolve1 = initElement(attrs(0).attr)
+          val resolve2 = initElement(attrs(1).attr)
+          val resolve3 = initElement(attrs(2).attr)
+          val resolve4 = initElement(attrs(3).attr)
+          val resolve5 = initElement(attrs(4).attr)
+          val resolve6 = initElement(attrs(5).attr)
           (row: jList[AnyRef]) => {
             list.add(resolve1(row))
             list.add(resolve2(row))
@@ -268,13 +266,13 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
             list.add(resolve6(row))
           }
         case 7  =>
-          val resolve1 = initElement(generics(0).attr)
-          val resolve2 = initElement(generics(1).attr)
-          val resolve3 = initElement(generics(2).attr)
-          val resolve4 = initElement(generics(3).attr)
-          val resolve5 = initElement(generics(4).attr)
-          val resolve6 = initElement(generics(5).attr)
-          val resolve7 = initElement(generics(6).attr)
+          val resolve1 = initElement(attrs(0).attr)
+          val resolve2 = initElement(attrs(1).attr)
+          val resolve3 = initElement(attrs(2).attr)
+          val resolve4 = initElement(attrs(3).attr)
+          val resolve5 = initElement(attrs(4).attr)
+          val resolve6 = initElement(attrs(5).attr)
+          val resolve7 = initElement(attrs(6).attr)
           (row: jList[AnyRef]) => {
             list.add(resolve1(row))
             list.add(resolve2(row))
@@ -285,14 +283,14 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
             list.add(resolve7(row))
           }
         case 8  =>
-          val resolve1 = initElement(generics(0).attr)
-          val resolve2 = initElement(generics(1).attr)
-          val resolve3 = initElement(generics(2).attr)
-          val resolve4 = initElement(generics(3).attr)
-          val resolve5 = initElement(generics(4).attr)
-          val resolve6 = initElement(generics(5).attr)
-          val resolve7 = initElement(generics(6).attr)
-          val resolve8 = initElement(generics(7).attr)
+          val resolve1 = initElement(attrs(0).attr)
+          val resolve2 = initElement(attrs(1).attr)
+          val resolve3 = initElement(attrs(2).attr)
+          val resolve4 = initElement(attrs(3).attr)
+          val resolve5 = initElement(attrs(4).attr)
+          val resolve6 = initElement(attrs(5).attr)
+          val resolve7 = initElement(attrs(6).attr)
+          val resolve8 = initElement(attrs(7).attr)
           (row: jList[AnyRef]) => {
             list.add(resolve1(row))
             list.add(resolve2(row))
@@ -304,15 +302,15 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
             list.add(resolve8(row))
           }
         case 9  =>
-          val resolve1 = initElement(generics(0).attr)
-          val resolve2 = initElement(generics(1).attr)
-          val resolve3 = initElement(generics(2).attr)
-          val resolve4 = initElement(generics(3).attr)
-          val resolve5 = initElement(generics(4).attr)
-          val resolve6 = initElement(generics(5).attr)
-          val resolve7 = initElement(generics(6).attr)
-          val resolve8 = initElement(generics(7).attr)
-          val resolve9 = initElement(generics(8).attr)
+          val resolve1 = initElement(attrs(0).attr)
+          val resolve2 = initElement(attrs(1).attr)
+          val resolve3 = initElement(attrs(2).attr)
+          val resolve4 = initElement(attrs(3).attr)
+          val resolve5 = initElement(attrs(4).attr)
+          val resolve6 = initElement(attrs(5).attr)
+          val resolve7 = initElement(attrs(6).attr)
+          val resolve8 = initElement(attrs(7).attr)
+          val resolve9 = initElement(attrs(8).attr)
           (row: jList[AnyRef]) => {
             list.add(resolve1(row))
             list.add(resolve2(row))
@@ -325,16 +323,16 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
             list.add(resolve9(row))
           }
         case 10 =>
-          val resolve1  = initElement(generics(0).attr)
-          val resolve2  = initElement(generics(1).attr)
-          val resolve3  = initElement(generics(2).attr)
-          val resolve4  = initElement(generics(3).attr)
-          val resolve5  = initElement(generics(4).attr)
-          val resolve6  = initElement(generics(5).attr)
-          val resolve7  = initElement(generics(6).attr)
-          val resolve8  = initElement(generics(7).attr)
-          val resolve9  = initElement(generics(8).attr)
-          val resolve10 = initElement(generics(9).attr)
+          val resolve1  = initElement(attrs(0).attr)
+          val resolve2  = initElement(attrs(1).attr)
+          val resolve3  = initElement(attrs(2).attr)
+          val resolve4  = initElement(attrs(3).attr)
+          val resolve5  = initElement(attrs(4).attr)
+          val resolve6  = initElement(attrs(5).attr)
+          val resolve7  = initElement(attrs(6).attr)
+          val resolve8  = initElement(attrs(7).attr)
+          val resolve9  = initElement(attrs(8).attr)
+          val resolve10 = initElement(attrs(9).attr)
           (row: jList[AnyRef]) => {
             list.add(resolve1(row))
             list.add(resolve2(row))
@@ -348,17 +346,17 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
             list.add(resolve10(row))
           }
         case 11 =>
-          val resolve1  = initElement(generics(0).attr)
-          val resolve2  = initElement(generics(1).attr)
-          val resolve3  = initElement(generics(2).attr)
-          val resolve4  = initElement(generics(3).attr)
-          val resolve5  = initElement(generics(4).attr)
-          val resolve6  = initElement(generics(5).attr)
-          val resolve7  = initElement(generics(6).attr)
-          val resolve8  = initElement(generics(7).attr)
-          val resolve9  = initElement(generics(8).attr)
-          val resolve10 = initElement(generics(9).attr)
-          val resolve11 = initElement(generics(10).attr)
+          val resolve1  = initElement(attrs(0).attr)
+          val resolve2  = initElement(attrs(1).attr)
+          val resolve3  = initElement(attrs(2).attr)
+          val resolve4  = initElement(attrs(3).attr)
+          val resolve5  = initElement(attrs(4).attr)
+          val resolve6  = initElement(attrs(5).attr)
+          val resolve7  = initElement(attrs(6).attr)
+          val resolve8  = initElement(attrs(7).attr)
+          val resolve9  = initElement(attrs(8).attr)
+          val resolve10 = initElement(attrs(9).attr)
+          val resolve11 = initElement(attrs(10).attr)
           (row: jList[AnyRef]) => {
             list.add(resolve1(row))
             list.add(resolve2(row))
@@ -373,18 +371,18 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
             list.add(resolve11(row))
           }
         case 12 =>
-          val resolve1  = initElement(generics(0).attr)
-          val resolve2  = initElement(generics(1).attr)
-          val resolve3  = initElement(generics(2).attr)
-          val resolve4  = initElement(generics(3).attr)
-          val resolve5  = initElement(generics(4).attr)
-          val resolve6  = initElement(generics(5).attr)
-          val resolve7  = initElement(generics(6).attr)
-          val resolve8  = initElement(generics(7).attr)
-          val resolve9  = initElement(generics(8).attr)
-          val resolve10 = initElement(generics(9).attr)
-          val resolve11 = initElement(generics(10).attr)
-          val resolve12 = initElement(generics(11).attr)
+          val resolve1  = initElement(attrs(0).attr)
+          val resolve2  = initElement(attrs(1).attr)
+          val resolve3  = initElement(attrs(2).attr)
+          val resolve4  = initElement(attrs(3).attr)
+          val resolve5  = initElement(attrs(4).attr)
+          val resolve6  = initElement(attrs(5).attr)
+          val resolve7  = initElement(attrs(6).attr)
+          val resolve8  = initElement(attrs(7).attr)
+          val resolve9  = initElement(attrs(8).attr)
+          val resolve10 = initElement(attrs(9).attr)
+          val resolve11 = initElement(attrs(10).attr)
+          val resolve12 = initElement(attrs(11).attr)
           (row: jList[AnyRef]) => {
             list.add(resolve1(row))
             list.add(resolve2(row))
@@ -400,19 +398,19 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
             list.add(resolve12(row))
           }
         case 13 =>
-          val resolve1  = initElement(generics(0).attr)
-          val resolve2  = initElement(generics(1).attr)
-          val resolve3  = initElement(generics(2).attr)
-          val resolve4  = initElement(generics(3).attr)
-          val resolve5  = initElement(generics(4).attr)
-          val resolve6  = initElement(generics(5).attr)
-          val resolve7  = initElement(generics(6).attr)
-          val resolve8  = initElement(generics(7).attr)
-          val resolve9  = initElement(generics(8).attr)
-          val resolve10 = initElement(generics(9).attr)
-          val resolve11 = initElement(generics(10).attr)
-          val resolve12 = initElement(generics(11).attr)
-          val resolve13 = initElement(generics(12).attr)
+          val resolve1  = initElement(attrs(0).attr)
+          val resolve2  = initElement(attrs(1).attr)
+          val resolve3  = initElement(attrs(2).attr)
+          val resolve4  = initElement(attrs(3).attr)
+          val resolve5  = initElement(attrs(4).attr)
+          val resolve6  = initElement(attrs(5).attr)
+          val resolve7  = initElement(attrs(6).attr)
+          val resolve8  = initElement(attrs(7).attr)
+          val resolve9  = initElement(attrs(8).attr)
+          val resolve10 = initElement(attrs(9).attr)
+          val resolve11 = initElement(attrs(10).attr)
+          val resolve12 = initElement(attrs(11).attr)
+          val resolve13 = initElement(attrs(12).attr)
           (row: jList[AnyRef]) => {
             list.add(resolve1(row))
             list.add(resolve2(row))
@@ -429,20 +427,20 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
             list.add(resolve13(row))
           }
         case 14 =>
-          val resolve1  = initElement(generics(0).attr)
-          val resolve2  = initElement(generics(1).attr)
-          val resolve3  = initElement(generics(2).attr)
-          val resolve4  = initElement(generics(3).attr)
-          val resolve5  = initElement(generics(4).attr)
-          val resolve6  = initElement(generics(5).attr)
-          val resolve7  = initElement(generics(6).attr)
-          val resolve8  = initElement(generics(7).attr)
-          val resolve9  = initElement(generics(8).attr)
-          val resolve10 = initElement(generics(9).attr)
-          val resolve11 = initElement(generics(10).attr)
-          val resolve12 = initElement(generics(11).attr)
-          val resolve13 = initElement(generics(12).attr)
-          val resolve14 = initElement(generics(13).attr)
+          val resolve1  = initElement(attrs(0).attr)
+          val resolve2  = initElement(attrs(1).attr)
+          val resolve3  = initElement(attrs(2).attr)
+          val resolve4  = initElement(attrs(3).attr)
+          val resolve5  = initElement(attrs(4).attr)
+          val resolve6  = initElement(attrs(5).attr)
+          val resolve7  = initElement(attrs(6).attr)
+          val resolve8  = initElement(attrs(7).attr)
+          val resolve9  = initElement(attrs(8).attr)
+          val resolve10 = initElement(attrs(9).attr)
+          val resolve11 = initElement(attrs(10).attr)
+          val resolve12 = initElement(attrs(11).attr)
+          val resolve13 = initElement(attrs(12).attr)
+          val resolve14 = initElement(attrs(13).attr)
           (row: jList[AnyRef]) => {
             list.add(resolve1(row))
             list.add(resolve2(row))
@@ -460,21 +458,21 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
             list.add(resolve14(row))
           }
         case 15 =>
-          val resolve1  = initElement(generics(0).attr)
-          val resolve2  = initElement(generics(1).attr)
-          val resolve3  = initElement(generics(2).attr)
-          val resolve4  = initElement(generics(3).attr)
-          val resolve5  = initElement(generics(4).attr)
-          val resolve6  = initElement(generics(5).attr)
-          val resolve7  = initElement(generics(6).attr)
-          val resolve8  = initElement(generics(7).attr)
-          val resolve9  = initElement(generics(8).attr)
-          val resolve10 = initElement(generics(9).attr)
-          val resolve11 = initElement(generics(10).attr)
-          val resolve12 = initElement(generics(11).attr)
-          val resolve13 = initElement(generics(12).attr)
-          val resolve14 = initElement(generics(13).attr)
-          val resolve15 = initElement(generics(14).attr)
+          val resolve1  = initElement(attrs(0).attr)
+          val resolve2  = initElement(attrs(1).attr)
+          val resolve3  = initElement(attrs(2).attr)
+          val resolve4  = initElement(attrs(3).attr)
+          val resolve5  = initElement(attrs(4).attr)
+          val resolve6  = initElement(attrs(5).attr)
+          val resolve7  = initElement(attrs(6).attr)
+          val resolve8  = initElement(attrs(7).attr)
+          val resolve9  = initElement(attrs(8).attr)
+          val resolve10 = initElement(attrs(9).attr)
+          val resolve11 = initElement(attrs(10).attr)
+          val resolve12 = initElement(attrs(11).attr)
+          val resolve13 = initElement(attrs(12).attr)
+          val resolve14 = initElement(attrs(13).attr)
+          val resolve15 = initElement(attrs(14).attr)
           (row: jList[AnyRef]) => {
             list.add(resolve1(row))
             list.add(resolve2(row))
@@ -493,22 +491,22 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
             list.add(resolve15(row))
           }
         case 16 =>
-          val resolve1  = initElement(generics(0).attr)
-          val resolve2  = initElement(generics(1).attr)
-          val resolve3  = initElement(generics(2).attr)
-          val resolve4  = initElement(generics(3).attr)
-          val resolve5  = initElement(generics(4).attr)
-          val resolve6  = initElement(generics(5).attr)
-          val resolve7  = initElement(generics(6).attr)
-          val resolve8  = initElement(generics(7).attr)
-          val resolve9  = initElement(generics(8).attr)
-          val resolve10 = initElement(generics(9).attr)
-          val resolve11 = initElement(generics(10).attr)
-          val resolve12 = initElement(generics(11).attr)
-          val resolve13 = initElement(generics(12).attr)
-          val resolve14 = initElement(generics(13).attr)
-          val resolve15 = initElement(generics(14).attr)
-          val resolve16 = initElement(generics(15).attr)
+          val resolve1  = initElement(attrs(0).attr)
+          val resolve2  = initElement(attrs(1).attr)
+          val resolve3  = initElement(attrs(2).attr)
+          val resolve4  = initElement(attrs(3).attr)
+          val resolve5  = initElement(attrs(4).attr)
+          val resolve6  = initElement(attrs(5).attr)
+          val resolve7  = initElement(attrs(6).attr)
+          val resolve8  = initElement(attrs(7).attr)
+          val resolve9  = initElement(attrs(8).attr)
+          val resolve10 = initElement(attrs(9).attr)
+          val resolve11 = initElement(attrs(10).attr)
+          val resolve12 = initElement(attrs(11).attr)
+          val resolve13 = initElement(attrs(12).attr)
+          val resolve14 = initElement(attrs(13).attr)
+          val resolve15 = initElement(attrs(14).attr)
+          val resolve16 = initElement(attrs(15).attr)
           (row: jList[AnyRef]) => {
             list.add(resolve1(row))
             list.add(resolve2(row))
@@ -528,23 +526,23 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
             list.add(resolve16(row))
           }
         case 17 =>
-          val resolve1  = initElement(generics(0).attr)
-          val resolve2  = initElement(generics(1).attr)
-          val resolve3  = initElement(generics(2).attr)
-          val resolve4  = initElement(generics(3).attr)
-          val resolve5  = initElement(generics(4).attr)
-          val resolve6  = initElement(generics(5).attr)
-          val resolve7  = initElement(generics(6).attr)
-          val resolve8  = initElement(generics(7).attr)
-          val resolve9  = initElement(generics(8).attr)
-          val resolve10 = initElement(generics(9).attr)
-          val resolve11 = initElement(generics(10).attr)
-          val resolve12 = initElement(generics(11).attr)
-          val resolve13 = initElement(generics(12).attr)
-          val resolve14 = initElement(generics(13).attr)
-          val resolve15 = initElement(generics(14).attr)
-          val resolve16 = initElement(generics(15).attr)
-          val resolve17 = initElement(generics(16).attr)
+          val resolve1  = initElement(attrs(0).attr)
+          val resolve2  = initElement(attrs(1).attr)
+          val resolve3  = initElement(attrs(2).attr)
+          val resolve4  = initElement(attrs(3).attr)
+          val resolve5  = initElement(attrs(4).attr)
+          val resolve6  = initElement(attrs(5).attr)
+          val resolve7  = initElement(attrs(6).attr)
+          val resolve8  = initElement(attrs(7).attr)
+          val resolve9  = initElement(attrs(8).attr)
+          val resolve10 = initElement(attrs(9).attr)
+          val resolve11 = initElement(attrs(10).attr)
+          val resolve12 = initElement(attrs(11).attr)
+          val resolve13 = initElement(attrs(12).attr)
+          val resolve14 = initElement(attrs(13).attr)
+          val resolve15 = initElement(attrs(14).attr)
+          val resolve16 = initElement(attrs(15).attr)
+          val resolve17 = initElement(attrs(16).attr)
           (row: jList[AnyRef]) => {
             list.add(resolve1(row))
             list.add(resolve2(row))
@@ -565,24 +563,24 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
             list.add(resolve17(row))
           }
         case 18 =>
-          val resolve1  = initElement(generics(0).attr)
-          val resolve2  = initElement(generics(1).attr)
-          val resolve3  = initElement(generics(2).attr)
-          val resolve4  = initElement(generics(3).attr)
-          val resolve5  = initElement(generics(4).attr)
-          val resolve6  = initElement(generics(5).attr)
-          val resolve7  = initElement(generics(6).attr)
-          val resolve8  = initElement(generics(7).attr)
-          val resolve9  = initElement(generics(8).attr)
-          val resolve10 = initElement(generics(9).attr)
-          val resolve11 = initElement(generics(10).attr)
-          val resolve12 = initElement(generics(11).attr)
-          val resolve13 = initElement(generics(12).attr)
-          val resolve14 = initElement(generics(13).attr)
-          val resolve15 = initElement(generics(14).attr)
-          val resolve16 = initElement(generics(15).attr)
-          val resolve17 = initElement(generics(16).attr)
-          val resolve18 = initElement(generics(17).attr)
+          val resolve1  = initElement(attrs(0).attr)
+          val resolve2  = initElement(attrs(1).attr)
+          val resolve3  = initElement(attrs(2).attr)
+          val resolve4  = initElement(attrs(3).attr)
+          val resolve5  = initElement(attrs(4).attr)
+          val resolve6  = initElement(attrs(5).attr)
+          val resolve7  = initElement(attrs(6).attr)
+          val resolve8  = initElement(attrs(7).attr)
+          val resolve9  = initElement(attrs(8).attr)
+          val resolve10 = initElement(attrs(9).attr)
+          val resolve11 = initElement(attrs(10).attr)
+          val resolve12 = initElement(attrs(11).attr)
+          val resolve13 = initElement(attrs(12).attr)
+          val resolve14 = initElement(attrs(13).attr)
+          val resolve15 = initElement(attrs(14).attr)
+          val resolve16 = initElement(attrs(15).attr)
+          val resolve17 = initElement(attrs(16).attr)
+          val resolve18 = initElement(attrs(17).attr)
           (row: jList[AnyRef]) => {
             list.add(resolve1(row))
             list.add(resolve2(row))
@@ -604,25 +602,25 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
             list.add(resolve18(row))
           }
         case 19 =>
-          val resolve1  = initElement(generics(0).attr)
-          val resolve2  = initElement(generics(1).attr)
-          val resolve3  = initElement(generics(2).attr)
-          val resolve4  = initElement(generics(3).attr)
-          val resolve5  = initElement(generics(4).attr)
-          val resolve6  = initElement(generics(5).attr)
-          val resolve7  = initElement(generics(6).attr)
-          val resolve8  = initElement(generics(7).attr)
-          val resolve9  = initElement(generics(8).attr)
-          val resolve10 = initElement(generics(9).attr)
-          val resolve11 = initElement(generics(10).attr)
-          val resolve12 = initElement(generics(11).attr)
-          val resolve13 = initElement(generics(12).attr)
-          val resolve14 = initElement(generics(13).attr)
-          val resolve15 = initElement(generics(14).attr)
-          val resolve16 = initElement(generics(15).attr)
-          val resolve17 = initElement(generics(16).attr)
-          val resolve18 = initElement(generics(17).attr)
-          val resolve19 = initElement(generics(18).attr)
+          val resolve1  = initElement(attrs(0).attr)
+          val resolve2  = initElement(attrs(1).attr)
+          val resolve3  = initElement(attrs(2).attr)
+          val resolve4  = initElement(attrs(3).attr)
+          val resolve5  = initElement(attrs(4).attr)
+          val resolve6  = initElement(attrs(5).attr)
+          val resolve7  = initElement(attrs(6).attr)
+          val resolve8  = initElement(attrs(7).attr)
+          val resolve9  = initElement(attrs(8).attr)
+          val resolve10 = initElement(attrs(9).attr)
+          val resolve11 = initElement(attrs(10).attr)
+          val resolve12 = initElement(attrs(11).attr)
+          val resolve13 = initElement(attrs(12).attr)
+          val resolve14 = initElement(attrs(13).attr)
+          val resolve15 = initElement(attrs(14).attr)
+          val resolve16 = initElement(attrs(15).attr)
+          val resolve17 = initElement(attrs(16).attr)
+          val resolve18 = initElement(attrs(17).attr)
+          val resolve19 = initElement(attrs(18).attr)
           (row: jList[AnyRef]) => {
             list.add(resolve1(row))
             list.add(resolve2(row))
@@ -647,7 +645,7 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
       }
     }
 
-    historyQuery(schemaQuery).map { jColl =>
+    historyQuery(queryString, inputs).map { jColl =>
       // Sort by tx, attrId, schemaId, op
       val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
       Collections.sort(rows, new SchemaComparator())
@@ -661,9 +659,9 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
         attrId = row.get(attrId_)
         schemaAttr = row.get(schemaAttr_).toString
 
-        //        if (tx != prevTx)
-        //          println("")
-        //        println(row)
+        if (tx != prevTx)
+          println("")
+        println(row)
 
         // Init list
         if (tx != prevTx || attrId != prevAttrId) {

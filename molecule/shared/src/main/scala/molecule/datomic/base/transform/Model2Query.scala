@@ -18,21 +18,25 @@ import scala.annotation.tailrec
  * */
 object Model2Query extends Helpers {
 
-  private var nestedEntityClauses: List[Funct] = List.empty[Funct]
-  private var nestedEntityVars   : List[Var]   = List.empty[Var]
-  private var nestedLevel        : Int         = 1
-  private var _model             : Model       = _
-  private var txMeta             : Boolean     = false
-  private var txMetaComposite    : Boolean     = false
-  private var schemaHistory      : Boolean     = false
-  private val datomGeneric                     = Seq(
+  private var nestedEntityClauses: List[FunctClause] = List.empty[FunctClause]
+  private var nestedEntityVars   : List[Var]         = List.empty[Var]
+  private var nestedLevel        : Int               = 1
+  private var _model             : Model             = _
+  private var txMeta             : Boolean           = false
+  private var txMetaComposite    : Boolean           = false
+  private var schemaHistory      : Boolean           = false
+  private val datomGeneric       : Seq[String]       = Seq(
     "e", "e_", "tx", "t", "txInstant", "op", "tx_", "t_", "txInstant_", "op_", "a", "a_", "v", "v_"
   )
 
   def abort(msg: String): Nothing = throw Model2QueryException(msg)
 
 
-  def apply(model: Model, schemaHistory0: Boolean = false): (Query, String, Option[Throwable]) = {
+  def apply(
+    model: Model,
+    schemaHistory0: Boolean = false,
+    optimize: Boolean = true
+  ): (Query, String, Option[Throwable]) = {
     schemaHistory = schemaHistory0
 
     // reset on each apply
@@ -67,9 +71,10 @@ object Model2Query extends Helpers {
       )
     } else query3
 
-    val datalog = Query2String(QueryOptimizer(query4)).multiLine(60)
+    val query5  = if (optimize) QueryOptimizer(query4) else query4
+    val datalog = Query2String(query5).multiLine(60)
 
-    (query4, datalog, None) // todo: handle exceptions!?
+    (query5, datalog, None) // todo: handle exceptions!?
   }
 
 
@@ -89,7 +94,7 @@ object Model2Query extends Helpers {
           if (nestedEntityClauses.isEmpty) {
             // Initial level
             nestedEntityVars = List(Var("sort0"))
-            nestedEntityClauses = List(Funct("identity", Seq(Var(e)), ScalarBinding(Var("sort0"))))
+            nestedEntityClauses = List(FunctClause("identity", Seq(Var(e)), ScalarBinding(Var("sort0"))))
           }
           // Next level
           nestedEntityVars = nestedEntityVars :+ Var("sort" + nestedEntityClauses.size)
@@ -100,7 +105,7 @@ object Model2Query extends Helpers {
               && !nested.elements.last.isInstanceOf[Nested]
           ) v else w
           nestedEntityClauses = nestedEntityClauses :+
-            Funct("identity", Seq(Var(refV)), ScalarBinding(Var("sort" + nestedEntityClauses.size)))
+            FunctClause("identity", Seq(Var(refV)), ScalarBinding(Var("sort" + nestedEntityClauses.size)))
         }
         makeNested(model, query, nested, e, v, prevNs, prevAttr, prevRefNs)
       case composite: Composite   => makeComposite(model, query, composite, e, v, prevNs, prevAttr, prevRefNs)
@@ -163,7 +168,7 @@ object Model2Query extends Helpers {
   : (Query, String, String, String, String, String) = {
     val backRef  = rb.backRef
     val backRefE = query.wh.clauses.reverse.collectFirst {
-      case DataClause(_, Var(backE), a, Var(_), _, _) if a.nsFull == backRef => backE
+      case DataClause(_, Var(backE), KW(nsFull, _, _), Var(_), _, _) if nsFull == backRef => backE
     } getOrElse {
       abort(s"Can't find back reference namespace `$backRef` in query so far:\n$model\n---------\n$query\n---------\n$rb")
     }
@@ -267,7 +272,7 @@ object Model2Query extends Helpers {
     @tailrec
     def getFirstEid(clauses: Seq[Clause]): String = clauses.head match {
       case DataClause(_, Var(compositeEid), KW(nsFull, _, _), _, _, _) if nsFull != "db" => compositeEid
-      case _: Funct                                                                      => getFirstEid(clauses.tail)
+      case _: FunctClause                                                                => getFirstEid(clauses.tail)
       case other                                                                         =>
         abort(s"Unexpected first clause of composite query: " + other + "\n" + query.wh.clauses.mkString("\n"))
     }
@@ -348,22 +353,149 @@ object Model2Query extends Helpers {
 
 
   def resolveGeneric(q: Query, e: String, g: Generic, v: String, v1: String): Query = g.tpe match {
-    case "schema" if schemaHistory => resolveSchemaHistory(q, g)
-    case "schema"                  => resolveSchema(q, g)
+    case "schema" if schemaHistory =>
+      resolveSchemaHistory(q, g)
+    case "schema"                  =>
+      resolveSchema(q, g)
     case "datom"                   => resolveDatom(q, e, g, v, v1)
     case _                         => q // Indexes are handled in Conn directly from Model elements
   }
 
+  // Schema history ....................................................................................
+
+  def resolveSchemaHistory(q: Query, g: Generic): Query = {
+    g.attr match {
+      case "t"           => resolveSchemaHistoryExpression(g, q.schemaHistory, "Long", tacit = false)
+      case "tx"          => resolveSchemaHistoryExpression(g, q.schemaHistory, "Long", tacit = false)
+      case "txInstant"   => resolveSchemaHistoryExpression(g, q.schemaHistory, "Date", tacit = false)
+      case "a"           => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
+      case "attrId"      => resolveSchemaHistoryExpression(g, q.schemaHistory, "Long", tacit = false)
+      case "part"        => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
+      case "nsFull"      => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
+      case "ns"          => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
+      case "attr"        => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
+      case "enumm"       => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
+      case "ident"       => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
+      case "valueType"   => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
+      case "cardinality" => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
+      case "doc"         => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
+      case "unique"      => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
+      case "isComponent" => resolveSchemaHistoryExpression(g, q.schemaHistory, "Boolean", tacit = false)
+      case "noHistory"   => resolveSchemaHistoryExpression(g, q.schemaHistory, "Boolean", tacit = false)
+      case "index"       => resolveSchemaHistoryExpression(g, q.schemaHistory, "Boolean", tacit = false)
+      case "fulltext"    => resolveSchemaHistoryExpression(g, q.schemaHistory, "Boolean", tacit = false)
+
+      case "t_"           => resolveSchemaHistoryExpression(g, q.schemaHistory, "Long", tacit = true)
+      case "tx_"          => resolveSchemaHistoryExpression(g, q.schemaHistory, "Long", tacit = true)
+      case "txInstant_"   => resolveSchemaHistoryExpression(g, q.schemaHistory, "Date", tacit = true)
+      case "attrId_"      => resolveSchemaHistoryExpression(g, q.schemaHistory, "Long", tacit = true)
+      case "a_"           => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
+      case "part_"        => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
+      case "nsFull_"      => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
+      case "ns_"          => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
+      case "attr_"        => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
+      case "enumm_"       => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
+      case "ident_"       => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
+      case "valueType_"   => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
+      case "cardinality_" => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
+      case "doc_"         => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
+      case "unique_"      => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
+      case "isComponent_" => resolveSchemaHistoryExpression(g, q.schemaHistory, "Boolean", tacit = true)
+      case "noHistory_"   => resolveSchemaHistoryExpression(g, q.schemaHistory, "Boolean", tacit = true)
+      case "index_"       => resolveSchemaHistoryExpression(g, q.schemaHistory, "Boolean", tacit = true)
+      case "fulltext_"    => resolveSchemaHistoryExpression(g, q.schemaHistory, "Boolean", tacit = true)
+
+      case "valueType$" | "cardinality$" | "unique$" => resolveSchemaHistoryOptionalEnumValue(g, q)
+      case _                                         => resolveSchemaHistoryOptional(g, q)
+    }
+  }
+
+//  def resolveSchemaHistoryGiven(g: Generic, q: Query, tpe: String): Query = {
+//    val v = g.attr
+//    g.value match {
+//      case NoValue                        => q.find(v)
+//      case Eq(args)                       => q.find(v).in(tpe, args, v)
+//      case Neq(args)                      => q.find(v).compareToMany2("!=", v, args)
+//      case Gt(arg)                        => q.find(v).compareTo2(">", tpe, v, Val(arg), q.wh.clauses.length)
+//      case Ge(arg)                        => q.find(v).compareTo2(">=", tpe, v, Val(arg), q.wh.clauses.length)
+//      case Lt(arg)                        => q.find(v).compareTo2("<", tpe, v, Val(arg), q.wh.clauses.length)
+//      case Le(arg)                        => q.find(v).compareTo2("<=", tpe, v, Val(arg), q.wh.clauses.length)
+//      case Fn("count", _)                 => q.find("count", Nil, v)
+//      case Fulltext((arg: String) :: Nil) => q.find(v + "Value").schemaDocFulltext(arg)
+//      case Fulltext(_)                    => abort("Fulltext search can only be performed with 1 search phrase.")
+//      case other                          => abort(s"Unexpected value for mandatory schema attribute `$v`: $other")
+//    }
+//  }
+//
+//  def resolveSchemaHistoryMandatory(g: Generic, q: Query, tpe: String): Query = {
+//    val v = g.attr
+//    g.value match {
+//      case NoValue                        => q.find(v)
+//      case Eq(args)                       => q.find(v).in(tpe, args, v)
+//      case Neq(args)                      => q.find(v).compareToMany2("!=", v, args)
+//      case Gt(arg)                        => q.find(v).compareTo2(">", tpe, v, Val(arg), q.wh.clauses.length)
+//      case Ge(arg)                        => q.find(v).compareTo2(">=", tpe, v, Val(arg), q.wh.clauses.length)
+//      case Lt(arg)                        => q.find(v).compareTo2("<", tpe, v, Val(arg), q.wh.clauses.length)
+//      case Le(arg)                        => q.find(v).compareTo2("<=", tpe, v, Val(arg), q.wh.clauses.length)
+//      case Fn("count", _)                 => q.find("count", Nil, v)
+//      case Fulltext((arg: String) :: Nil) => q.find(v + "Value").schemaDocFulltext(arg)
+//      case Fulltext(_)                    => abort("Fulltext search can only be performed with 1 search phrase.")
+//      case other                          => abort(s"Unexpected value for mandatory schema attribute `$v`: $other")
+//    }
+//  }
+
+  def resolveSchemaHistoryExpression(g: Generic, q: Query, tpe: String, tacit: Boolean): Query = {
+    val v = if(tacit) g.attr.init else g.attr
+    g.value match {
+      case NoValue                        => q
+      case Eq(args)                       => q.in(tpe, args, v)
+      case Neq(args)                      => q.compareToMany2("!=", v, args)
+      case Gt(arg)                        => q.compareTo2(">", tpe, v, Val(arg), q.wh.clauses.length)
+      case Ge(arg)                        => q.compareTo2(">=", tpe, v, Val(arg), q.wh.clauses.length)
+      case Lt(arg)                        => q.compareTo2("<", tpe, v, Val(arg), q.wh.clauses.length)
+      case Le(arg)                        => q.compareTo2("<=", tpe, v, Val(arg), q.wh.clauses.length)
+      case Fulltext((arg: String) :: Nil) => q.schemaDocFulltext(arg)
+      case Fulltext(_)                    => abort("Fulltext search can only be performed with 1 search phrase.")
+      case other                          => abort(s"Unexpected value for tacit schema attribute `${g.attr}`: $other")
+    }
+  }
+
+  def resolveSchemaHistoryOptionalEnumValue(g: Generic, q: Query): Query = {
+    val v = g.attr.init
+    g.value match {
+      case NoValue        => q.schemaPullEnumValue(v)
+      case Eq(arg :: Nil) =>
+        q.find(v + 2)
+          .where(Var("attrId"), KW("db", v), v)
+          .ident(v, v + 1)
+          .kw(v + 1, v + 2)
+          .func("=", Seq(Var(v + 2), Val(arg)))
+      case Fn("not", _)   => q.schemaPull(v).schemaNot(v) // None
+      case other          => abort(s"Unexpected value for optional schema enum value `${g.attr}`: " + other)
+    }
+  }
+
+  def resolveSchemaHistoryOptional(g: Generic, q: Query): Query = {
+    val v = g.attr.init
+    g.value match {
+      case NoValue        => q.schemaPull(v)
+      case Eq(arg :: Nil) =>
+        q.find(v)
+          .where(Var("attrId"), KW("db", v), v)
+          .where("attrId", "db", v, Val(arg), "", "")
+      case Fn("not", _)   => q.schemaPull(v).schemaNot(v) // None
+      case other          => abort(s"Unexpected value for optional schema attribute `${g.attr}`: " + other)
+    }
+  }
 
   // Schema ....................................................................................
 
-  def resolveSchemaHistory(q: Query, g: Generic): Query = {
-    q
-  }
-
   def resolveSchema(q: Query, g: Generic): Query = g.attr match {
-    case "attrId"      => resolveSchemaMandatory(g, q.schema, "Long")
+    case "t"           => resolveSchemaMandatory(g, q.schemaT, "Long")
+    case "tx"          => resolveSchemaMandatory(g, q.schema, "Long")
+    case "txInstant"   => resolveSchemaMandatory(g, q.schemaTxInstant, "Date")
     case "a"           => resolveSchemaMandatory(g, q.schemaA, "String")
+    case "attrId"      => resolveSchemaMandatory(g, q.schema, "Long")
     case "part"        => resolveSchemaMandatory(g, q.schemaResolved, "String")
     case "nsFull"      => resolveSchemaMandatory(g, q.schemaResolved, "String")
     case "ns"          => resolveSchemaMandatory(g, q.schemaResolved, "String")
@@ -378,10 +510,10 @@ object Model2Query extends Helpers {
     case "noHistory"   => resolveSchemaMandatory(g, q.schemaNoHistory, "Boolean")
     case "index"       => resolveSchemaMandatory(g, q.schemaIndex, "Boolean")
     case "fulltext"    => resolveSchemaMandatory(g, q.schemaFulltext, "Boolean")
-    case "t"           => resolveSchemaMandatory(g, q.schemaT, "Long")
-    case "tx"          => resolveSchemaMandatory(g, q.schema, "Long")
-    case "txInstant"   => resolveSchemaMandatory(g, q.schemaTxInstant, "Date")
 
+    case "t_"           => resolveSchemaTacit(g, q.schemaT, "Long")
+    case "tx_"          => resolveSchemaTacit(g, q.schema, "Long")
+    case "txInstant_"   => resolveSchemaTacit(g, q.schemaTxInstant, "Date")
     case "attrId_"      => resolveSchemaTacit(g, q.schema, "Long")
     case "a_"           => resolveSchemaTacit(g, q.schemaA, "String")
     case "part_"        => resolveSchemaTacit(g, q.schemaResolved, "String")
@@ -398,9 +530,6 @@ object Model2Query extends Helpers {
     case "noHistory_"   => resolveSchemaTacit(g, q.schemaNoHistory, "Boolean")
     case "index_"       => resolveSchemaTacit(g, q.schemaIndex, "Boolean")
     case "fulltext_"    => resolveSchemaTacit(g, q.schemaFulltext, "Boolean")
-    case "t_"           => resolveSchemaTacit(g, q.schemaT, "Long")
-    case "tx_"          => resolveSchemaTacit(g, q.schema, "Long")
-    case "txInstant_"   => resolveSchemaTacit(g, q.schemaTxInstant, "Date")
 
     case "valueType$" | "cardinality$" | "unique$" => resolveSchemaOptionalEnumValue(g, q)
     case _                                         => resolveSchemaOptional(g, q)
@@ -1055,10 +1184,10 @@ object Model2Query extends Helpers {
           case _      => qv
         }
         def queryTerm(qt: QueryTerm): QueryTerm = qt match {
-          case Rule(name, args, cls) => Rule(name, args map queryValue, cls flatMap clause)
-          case InVar(b, tpe, argss)  => InVar(binding(b), tpe, argss)
-          case qv: QueryValue        => queryValue(qv)
-          case _                     => qt
+          case Rule(name, args, cls)         => Rule(name, args map queryValue, cls flatMap clause)
+          case InVar(b: Binding, tpe, argss) => InVar(binding(b), tpe, argss)
+          case qv: QueryValue                => queryValue(qv)
+          case _                             => qt
         }
         def binding(b: Binding): Binding = b match {
           case ScalarBinding(v)     => ScalarBinding(vi(v))
@@ -1076,7 +1205,7 @@ object Model2Query extends Helpers {
             // Add next And-value
             Seq(
               DataClause(ds, vi(e), a, Var(v + "_" + i), queryTerm(tx), queryTerm(op)),
-              Funct(".matches ^String", List(Var(v + "_" + i), Val(".+@(" + andValue + ")$")), NoBinding)
+              FunctClause(".matches ^String", List(Var(v + "_" + i), Val(".+@(" + andValue + ")$")), NoBinding)
             )
 
           case DataClause(ds, e@Var(_), a@KW(ns2, attr2, _), _, tx, op) if (nsFull, attr) == (ns2, attr2) =>
@@ -1094,13 +1223,13 @@ object Model2Query extends Helpers {
           case dc => abort("Unexpected DataClause: " + dc)
         }
         def makeSelfJoinClauses(expr: QueryExpr): Seq[Clause] = expr match {
-          case dc: DataClause                                      => dataClauses(dc)
-          case RuleInvocation(name, args)                          => Seq(RuleInvocation(name, args map queryTerm))
-          case Funct(".startsWith ^String", List(_, _), NoBinding) => Nil
-          case Funct(".matches ^String", List(_, _), NoBinding)    => Nil
-          case Funct("second", ins, outSame)                       => Seq(Funct("second", ins map queryTerm, outSame))
-          case Funct(name, ins, outs)                              => Seq(Funct(name, ins map queryTerm, binding(outs)))
-          case _                                                   => Nil
+          case dc: DataClause                                            => dataClauses(dc)
+          case RuleInvocation(name, args)                                => Seq(RuleInvocation(name, args map queryTerm))
+          case FunctClause(".startsWith ^String", List(_, _), NoBinding) => Nil
+          case FunctClause(".matches ^String", List(_, _), NoBinding)    => Nil
+          case FunctClause("second", ins, outSame)                       => Seq(FunctClause("second", ins map queryTerm, outSame))
+          case FunctClause(name, ins, outs)                              => Seq(FunctClause(name, ins map queryTerm, binding(outs)))
+          case _                                                         => Nil
         }
         clauses flatMap makeSelfJoinClauses
       }

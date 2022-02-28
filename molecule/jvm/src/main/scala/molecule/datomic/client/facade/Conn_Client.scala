@@ -142,13 +142,13 @@ case class Conn_Client(
 
   // Schema --------------------------------------------------------------------
 
-  protected def historyQuery(query: String)
+  protected def historyQuery(query: String, inputs: Seq[jList[AnyRef]] = Nil)
                             (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     db.map { db =>
       clientDatomic.q(
         query,
         db.asInstanceOf[DatomicDb_Client].clientDb.history,
-        db.asInstanceOf[DatomicDb_Client].getDatomicDb
+        db.asInstanceOf[DatomicDb_Client].getDatomicDb +: inputs: _*
       )
     }
   }

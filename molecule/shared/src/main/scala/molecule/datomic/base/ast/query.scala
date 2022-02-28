@@ -133,7 +133,7 @@ object query {
   }
 
   sealed trait Input extends QueryTerm
-  case class InVar(binding: Binding, tpe: String, argss: Seq[Seq[Any]]) extends Input {
+  case class InVar(binding: QueryTerm, tpe: String, argss: Seq[Seq[Any]]) extends Input {
     override def toString: String = s"""InVar($binding, "$tpe", ${sq(argss)})"""
   }
   case class Placeholder(e: Var, kw: KW, v: Var, tpe: String, enumPrefix: Option[String] = None) extends Input {
@@ -150,7 +150,7 @@ object query {
 
   sealed trait Clause extends QueryExpr
 
-  case class DataClause(ds: DataSource, e: QueryValue, a: KW, v: QueryValue, tx: QueryTerm, op: QueryTerm = NoBinding) extends Clause {
+  case class DataClause(ds: DataSource, e: QueryValue, a: QueryValue, v: QueryValue, tx: QueryTerm, op: QueryTerm = NoBinding) extends Clause {
     override def toString: String = s"""DataClause($ds, $e, $a, $v, $tx, $op)"""
   }
   case class NotClause(e: Var, a: KW) extends Clause {
@@ -167,7 +167,14 @@ object query {
   }
 
   sealed trait ExpressionClause extends Clause
-  case class Funct(name: String, ins: Seq[QueryTerm], outs: Binding) extends ExpressionClause {
+  case class FunctClause(name: String, ins: Seq[QueryTerm], outs: Binding) extends ExpressionClause with QueryTerm {
+    override def toString: String =
+      if (name.contains("\""))
+        s"""FunctClause(\"\"\"$name\"\"\", ${sq(ins)}, $outs)"""
+      else
+        s"""FunctClause("$name", ${sq(ins)}, $outs)"""
+  }
+  case class Funct(name: String, ins: Seq[QueryTerm], outs: QueryTerm) extends ExpressionClause with QueryTerm {
     override def toString: String =
       if (name.contains("\""))
         s"""Funct(\"\"\"$name\"\"\", ${sq(ins)}, $outs)"""
