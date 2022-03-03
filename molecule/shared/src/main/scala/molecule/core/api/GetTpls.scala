@@ -262,7 +262,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
             )
           } else {
             val schemaHistoryQuery = Model2Query(_model, schemaHistory0 = true, optimize = false)._2
-            println(schemaHistoryQuery)
+//            println(schemaHistoryQuery)
 
             conn.jvmSchemaHistoryQueryTpl(_model, schemaHistoryQuery).map { jColl =>
               val last = jColl.size
