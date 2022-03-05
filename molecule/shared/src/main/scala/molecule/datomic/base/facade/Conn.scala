@@ -387,7 +387,7 @@ trait Conn extends ColOps with BooPicklers {
     model: Model,
     queryString: String
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] =
-    Future.failed(jvmOnly("jvmSchemaHistoryQueryTpl(model: Model)"))
+    Future.failed(jvmOnly("jvmSchemaHistoryQueryTpl(model: Model, queryString: String)"))
 
   private[molecule] def jsQueryTpl[Tpl](
     model: Model,

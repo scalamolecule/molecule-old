@@ -363,18 +363,19 @@ object Model2Query extends Helpers {
 
   def resolveSchemaHistory(q: Query, g: Generic): Query = {
     g.attr match {
-      case "t"           => resolveSchemaHistoryExpression(g, q.schemaHistory, "Long", tacit = false)
-      case "tx"          => resolveSchemaHistoryExpression(g, q.schemaHistory, "Long", tacit = false)
-      case "txInstant"   => resolveSchemaHistoryExpression(g, q.schemaHistory, "Date", tacit = false)
-      case "a"           => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
-      case "attrId"      => resolveSchemaHistoryExpression(g, q.schemaHistory, "Long", tacit = false)
-      case "part"        => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
-      case "nsFull"      => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
-      case "ns"          => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
-      case "attr"        => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
+      case "t"         => resolveSchemaHistoryExpression(g, q.schemaHistory, "Long", tacit = false)
+      case "tx"        => resolveSchemaHistoryExpression(g, q.schemaHistory, "Long", tacit = false)
+      case "txInstant" => resolveSchemaHistoryExpression(g, q.schemaHistory, "Date", tacit = false)
+      case "a"         => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
+      case "attrId"    => resolveSchemaHistoryExpression(g, q.schemaHistory, "Long", tacit = false)
+      case "part"      => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
+      case "nsFull"    => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
+      case "ns"        => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
+      case "attr"      => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
+
       case "enumm"       => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
       case "ident"       => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
-      case "valueType"   => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
+      case "valueType"   => resolveSchemaHistoryExpression2(g, q.schemaHistory, "String", tacit = false)
       case "cardinality" => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
       case "doc"         => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
       case "unique"      => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
@@ -392,9 +393,10 @@ object Model2Query extends Helpers {
       case "nsFull_"      => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
       case "ns_"          => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
       case "attr_"        => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
+
       case "enumm_"       => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
       case "ident_"       => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
-      case "valueType_"   => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
+      case "valueType_"   => resolveSchemaHistoryExpression2(g, q.schemaHistory, "String", tacit = true)
       case "cardinality_" => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
       case "doc_"         => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
       case "unique_"      => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
@@ -408,44 +410,11 @@ object Model2Query extends Helpers {
     }
   }
 
-  //  def resolveSchemaHistoryGiven(g: Generic, q: Query, tpe: String): Query = {
-  //    val v = g.attr
-  //    g.value match {
-  //      case NoValue                        => q.find(v)
-  //      case Eq(args)                       => q.find(v).in(tpe, args, v)
-  //      case Neq(args)                      => q.find(v).compareToMany2("!=", v, args)
-  //      case Gt(arg)                        => q.find(v).compareTo2(">", tpe, v, Val(arg), q.wh.clauses.length)
-  //      case Ge(arg)                        => q.find(v).compareTo2(">=", tpe, v, Val(arg), q.wh.clauses.length)
-  //      case Lt(arg)                        => q.find(v).compareTo2("<", tpe, v, Val(arg), q.wh.clauses.length)
-  //      case Le(arg)                        => q.find(v).compareTo2("<=", tpe, v, Val(arg), q.wh.clauses.length)
-  //      case Fn("count", _)                 => q.find("count", Nil, v)
-  //      case Fulltext((arg: String) :: Nil) => q.find(v + "Value").schemaDocFulltext(arg)
-  //      case Fulltext(_)                    => abort("Fulltext search can only be performed with 1 search phrase.")
-  //      case other                          => abort(s"Unexpected value for mandatory schema attribute `$v`: $other")
-  //    }
-  //  }
-  //
-  //  def resolveSchemaHistoryMandatory(g: Generic, q: Query, tpe: String): Query = {
-  //    val v = g.attr
-  //    g.value match {
-  //      case NoValue                        => q.find(v)
-  //      case Eq(args)                       => q.find(v).in(tpe, args, v)
-  //      case Neq(args)                      => q.find(v).compareToMany2("!=", v, args)
-  //      case Gt(arg)                        => q.find(v).compareTo2(">", tpe, v, Val(arg), q.wh.clauses.length)
-  //      case Ge(arg)                        => q.find(v).compareTo2(">=", tpe, v, Val(arg), q.wh.clauses.length)
-  //      case Lt(arg)                        => q.find(v).compareTo2("<", tpe, v, Val(arg), q.wh.clauses.length)
-  //      case Le(arg)                        => q.find(v).compareTo2("<=", tpe, v, Val(arg), q.wh.clauses.length)
-  //      case Fn("count", _)                 => q.find("count", Nil, v)
-  //      case Fulltext((arg: String) :: Nil) => q.find(v + "Value").schemaDocFulltext(arg)
-  //      case Fulltext(_)                    => abort("Fulltext search can only be performed with 1 search phrase.")
-  //      case other                          => abort(s"Unexpected value for mandatory schema attribute `$v`: $other")
-  //    }
-  //  }
-
   def resolveSchemaHistoryExpression(g: Generic, q: Query, tpe: String, tacit: Boolean): Query = {
     val v = if (tacit) g.attr.init else g.attr
     g.value match {
       case NoValue                        => q
+      case Eq(Seq(None))                  => q
       case Eq(args)                       => q.in(tpe, args, v)
       case Neq(args)                      => q.compareToMany2("!=", v, args)
       case Gt(arg)                        => q.compareTo2(">", tpe, v, Val(arg), q.wh.clauses.length)
@@ -453,38 +422,65 @@ object Model2Query extends Helpers {
       case Lt(arg)                        => q.compareTo2("<", tpe, v, Val(arg), q.wh.clauses.length)
       case Le(arg)                        => q.compareTo2("<=", tpe, v, Val(arg), q.wh.clauses.length)
       case Fulltext((arg: String) :: Nil) => q.schemaDocFulltext(arg)
-      case Fulltext(_)                    => abort("Fulltext search can only be performed with 1 search phrase.")
-      case other                          => abort(s"Unexpected value for tacit schema attribute `${g.attr}`: $other")
+      case Fulltext(_)                    =>
+        abort("Fulltext search can only be performed with 1 search phrase.")
+      case other                          =>
+        abort(s"Unsupported expression for schema history attribute `${g.attr}`: $other")
+    }
+  }
+
+  def resolveSchemaHistoryExpression2(g: Generic, q: Query, tpe: String, tacit: Boolean): Query = {
+    val v = if (tacit) g.attr.init else g.attr
+    g.value match {
+      case NoValue                        => q
+      case Eq(Seq(None))                  => q
+      case Eq(args)                       => q.in(tpe, args, v)
+      case Neq(args)                      => q //.compareToMany2("!=", v, args)
+      case Gt(arg)                        => q.compareTo2(">", tpe, v, Val(arg), q.wh.clauses.length)
+      case Ge(arg)                        => q.compareTo2(">=", tpe, v, Val(arg), q.wh.clauses.length)
+      case Lt(arg)                        => q.compareTo2("<", tpe, v, Val(arg), q.wh.clauses.length)
+      case Le(arg)                        => q.compareTo2("<=", tpe, v, Val(arg), q.wh.clauses.length)
+      case Fulltext((arg: String) :: Nil) => q.schemaDocFulltext(arg)
+      case Fulltext(_)                    =>
+        abort("Fulltext search can only be performed with 1 search phrase.")
+      case other                          =>
+        abort(s"Unsupported expression for schema history attribute `${g.attr}`: $other")
     }
   }
 
   def resolveSchemaHistoryOptionalEnumValue(g: Generic, q: Query): Query = {
     val v = g.attr.init
     g.value match {
-      case NoValue        => q
-//      case NoValue        => q.schemaPullEnumValue(v)
-      case Eq(arg :: Nil) =>
-        q.find(v + 2)
-          .where(Var("attrId"), KW("db", v), v)
-          .ident(v, v + 1)
-          .kw(v + 1, v + 2)
-          .func("=", Seq(Var(v + 2), Val(arg)))
-      case Fn("not", _)   => q.schemaPull(v).schemaNot(v) // None
-      case other          => abort(s"Unexpected value for optional schema enum value `${g.attr}`: " + other)
+      case NoValue => q
+      //      case NoValue        => q.schemaPullEnumValue(v)
+      case Eq(Seq(None)) => q
+      case Eq(args)      => q.in(g.tpe, args, v)
+      //      case Eq(arg :: Nil) =>
+      //        //        q.find(v + 2)
+      ////        q.where(Var("attrId"), KW("db", v), v)
+      //          q.ident(v, v + 1)
+      //          .kw(v + 1, v + 2)
+      //          .func("=", Seq(Var(v + 2), Val(arg)))
+      case Fn("not", _) => q
+      //      case Fn("not", _) => q.schemaPull(v).schemaNot(v) // None
+      case other =>
+        abort(s"Unsupported expression for optional schema enum value `${g.attr}`: " + other)
     }
   }
 
   def resolveSchemaHistoryOptional(g: Generic, q: Query): Query = {
     val v = g.attr.init
     g.value match {
-      case NoValue        => q
-//      case NoValue        => q.schemaPull(v)
+      case NoValue => q
+      //      case NoValue        => q.schemaPull(v)
       case Eq(arg :: Nil) =>
         q.find(v)
           .where(Var("attrId"), KW("db", v), v)
           .where("attrId", "db", v, Val(arg), "", "")
-      case Fn("not", _)   => q.schemaPull(v).schemaNot(v) // None
-      case other          => abort(s"Unexpected value for optional schema attribute `${g.attr}`: " + other)
+      case Fn("not", _)   => q // None
+      //      case Fn("not", _)   => q.schemaPull(v).schemaNot(v) // None
+      case other =>
+        abort(s"Unexpected expression for optional schema history attribute `${g.attr}`: " + other)
     }
   }
 
@@ -548,7 +544,7 @@ object Model2Query extends Helpers {
       case Fn("count", _)                 => q.find("count", Nil, v)
       case Fulltext((arg: String) :: Nil) => q.find(v + "Value").schemaDocFulltext(arg)
       case Fulltext(_)                    => abort("Fulltext search can only be performed with 1 search phrase.")
-      case other                          => abort(s"Unexpected value for mandatory schema attribute `$v`: $other")
+      case other                          => abort(s"Unsupported expression for mandatory schema attribute `$v`: $other")
     }
   }
 
@@ -564,7 +560,7 @@ object Model2Query extends Helpers {
       case Le(arg)                        => q.compareTo2("<=", tpe, v, Val(arg), q.wh.clauses.length)
       case Fulltext((arg: String) :: Nil) => q.schemaDocFulltext(arg)
       case Fulltext(_)                    => abort("Fulltext search can only be performed with 1 search phrase.")
-      case other                          => abort(s"Unexpected value for tacit schema attribute `${g.attr}`: $other")
+      case other                          => abort(s"Unsupported expression for tacit schema attribute `${g.attr}`: $other")
     }
   }
 
@@ -579,7 +575,7 @@ object Model2Query extends Helpers {
           .kw(v + 1, v + 2)
           .func("=", Seq(Var(v + 2), Val(arg)))
       case Fn("not", _)   => q.schemaPull(v).schemaNot(v) // None
-      case other          => abort(s"Unexpected value for optional schema enum value `${g.attr}`: " + other)
+      case other          => abort(s"Unsupported expression for optional schema enum value `${g.attr}`: " + other)
     }
   }
 
@@ -592,7 +588,7 @@ object Model2Query extends Helpers {
           .where(Var("attrId"), KW("db", v), v)
           .where("attrId", "db", v, Val(arg), "", "")
       case Fn("not", _)   => q.schemaPull(v).schemaNot(v) // None
-      case other          => abort(s"Unexpected value for optional schema attribute `${g.attr}`: " + other)
+      case other          => abort(s"Unsupported expression for optional schema attribute `${g.attr}`: " + other)
     }
   }
 

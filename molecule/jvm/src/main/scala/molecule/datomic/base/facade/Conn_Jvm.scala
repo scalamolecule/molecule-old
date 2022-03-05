@@ -323,13 +323,14 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers with QuerySchemaHi
     model: Model,
     queryString: String
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = try {
-    val attrs = model.elements.collect { case g: Generic =>
+    val schemaAttrs = model.elements.collect { case g: Generic =>
       val attr           = g.attr
       val last           = attr.last
       val attrClean      = if (last == '_' || last == '$') attr.init else attr
       val (expr, inputs) = g match {
         case Generic(_, "txInstant" | "txInstant_", _, v, _) => v match {
           case NoValue        => ("", Nil)
+          case Eq(Seq(None))  => ("none", Nil)
           case Eq(args)       => ("=", args.map(arg => date2str(arg.asInstanceOf[Date])))
           case Neq(args)      => ("!=", args.map(arg => date2str(arg.asInstanceOf[Date])))
           case Gt(arg)        => (">", Seq(date2str(arg.asInstanceOf[Date])))
@@ -337,24 +338,28 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers with QuerySchemaHi
           case Lt(arg)        => ("<", Seq(date2str(arg.asInstanceOf[Date])))
           case Le(arg)        => ("<=", Seq(date2str(arg.asInstanceOf[Date])))
           case Fn("count", _) => ("count", Nil)
+          case Fn("not", _)   => ("none", Nil)
           case Fulltext(arg)  => ("fulltext", Seq(date2str(arg.asInstanceOf[Date])))
           case other          => throw MoleculeException("Unexpected txInstant attribute value: " + other)
         }
-        case Generic(_, _, _, NoValue, _)                    => ("", Nil)
-        case Generic(_, _, _, Eq(args), _)                   => ("=", args.map(_.toString))
-        case Generic(_, _, _, Neq(args), _)                  => ("!=", args.map(_.toString))
-        case Generic(_, _, _, Gt(arg), _)                    => (">", Seq(arg.toString))
-        case Generic(_, _, _, Ge(arg), _)                    => (">=", Seq(arg.toString))
-        case Generic(_, _, _, Lt(arg), _)                    => ("<", Seq(arg.toString))
-        case Generic(_, _, _, Le(arg), _)                    => ("<=", Seq(arg.toString))
-        case Generic(_, _, _, Fn("count", _), _)             => ("count", Nil)
-        case Generic(_, _, _, Fulltext(arg), _)              => ("fulltext", Seq(arg.toString))
-        case other                                           =>
+
+        case Generic(_, _, _, NoValue, _)        => ("", Nil)
+        case Generic(_, _, _, Eq(Seq(None)), _)  => ("none", Nil)
+        case Generic(_, _, _, Eq(args), _)       => ("=", args.map(_.toString))
+        case Generic(_, _, _, Neq(args), _)      => ("!=", args.map(_.toString))
+        case Generic(_, _, _, Gt(arg), _)        => (">", Seq(arg.toString))
+        case Generic(_, _, _, Ge(arg), _)        => (">=", Seq(arg.toString))
+        case Generic(_, _, _, Lt(arg), _)        => ("<", Seq(arg.toString))
+        case Generic(_, _, _, Le(arg), _)        => ("<=", Seq(arg.toString))
+        case Generic(_, _, _, Fn("count", _), _) => ("count", Nil)
+        case Generic(_, _, _, Fn("not", _), _)   => ("none", Nil)
+        case Generic(_, _, _, Fulltext(arg), _)  => ("fulltext", Seq(arg.toString))
+        case other                               =>
           throw MoleculeException("Unexpected generic schema history value: " + other)
       }
       SchemaAttr(attrClean, attr, expr, inputs)
     }
-    fetchSchemaHistory(attrs, queryString)
+    fetchSchemaHistory(schemaAttrs, queryString)
   } catch {
     case NonFatal(exc) => Future.failed(exc)
   }

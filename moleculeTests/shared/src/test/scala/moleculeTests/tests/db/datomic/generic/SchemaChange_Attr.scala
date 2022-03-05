@@ -538,16 +538,16 @@ object SchemaChange_Attr extends AsyncTestSuite {
           }
         })
 
-        _ <- Schema.t.attr.a.get.map(_ ==> List(
-          (t0, "int", ":Foo/int"),
-          (t0, "str", ":Foo/str"),
+        _ <- Schema.t.a.get.map(_ ==> List(
+          (t0, ":Foo/int"),
+          (t0, ":Foo/str"),
         ))
 
-        _ <- Schema.t.attr.a.ident.getHistory.map(_ ==> List(
-          (t0, "int", ":Foo/int", ":Foo/int"),
-          (t0, "str", ":Foo/str", ":Foo/str"),
-          (t4, "int", ":Foo/int", ":-Foo/int"), // :Foo/int retired
-          (t6, "int", ":Foo/int", ":Foo/int"), //  :Foo/int un-retired
+        _ <- Schema.t.a.ident.getHistory.map(_ ==> List(
+          (t0, ":Foo/int", ":Foo/int"),
+          (t0, ":Foo/str", ":Foo/str"),
+          (t4, ":Foo/int", ":-Foo/int"), // :Foo/int retired
+          (t6, ":Foo/int", ":Foo/int"), //  :Foo/int un-retired
         ))
 
         // When was :Foo/int retired? At t4
