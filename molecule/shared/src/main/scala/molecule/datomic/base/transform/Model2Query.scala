@@ -363,124 +363,82 @@ object Model2Query extends Helpers {
 
   def resolveSchemaHistory(q: Query, g: Generic): Query = {
     g.attr match {
-      case "t"         => resolveSchemaHistoryExpression(g, q.schemaHistory, "Long", tacit = false)
-      case "tx"        => resolveSchemaHistoryExpression(g, q.schemaHistory, "Long", tacit = false)
-      case "txInstant" => resolveSchemaHistoryExpression(g, q.schemaHistory, "Date", tacit = false)
-      case "a"         => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
-      case "attrId"    => resolveSchemaHistoryExpression(g, q.schemaHistory, "Long", tacit = false)
-      case "part"      => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
-      case "nsFull"    => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
-      case "ns"        => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
-      case "attr"      => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
+      // Shared schema history attributes allowing range expressions
+      case "t" | "t_"                 => resolveSchemaHistoryExpr(q, g, "Long", range = true)
+      case "tx" | "tx_"               => resolveSchemaHistoryExpr(q, g, "Long", range = true)
+      case "txInstant" | "txInstant_" => resolveSchemaHistoryExpr(q, g, "Date", range = true)
+      case "attrId" | "attrId_"       => resolveSchemaHistoryExpr(q, g, "Long", range = true)
 
-      case "enumm"       => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
-      case "ident"       => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
-      case "valueType"   => resolveSchemaHistoryExpression2(g, q.schemaHistory, "String", tacit = false)
-      case "cardinality" => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
-      case "doc"         => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
-      case "unique"      => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = false)
-      case "isComponent" => resolveSchemaHistoryExpression(g, q.schemaHistory, "Boolean", tacit = false)
-      case "noHistory"   => resolveSchemaHistoryExpression(g, q.schemaHistory, "Boolean", tacit = false)
-      case "index"       => resolveSchemaHistoryExpression(g, q.schemaHistory, "Boolean", tacit = false)
-      case "fulltext"    => resolveSchemaHistoryExpression(g, q.schemaHistory, "Boolean", tacit = false)
+      // Shared schema history attributes with/without value
+      case "a" | "a_"           => resolveSchemaHistoryExpr(q, g, "String")
+      case "part" | "part_"     => resolveSchemaHistoryExpr(q, g, "String")
+      case "nsFull" | "nsFull_" => resolveSchemaHistoryExpr(q, g, "String")
+      case "ns" | "ns_"         => resolveSchemaHistoryExpr(q, g, "String")
+      case "attr" | "attr_"     => resolveSchemaHistoryExpr(q, g, "String")
 
-      case "t_"           => resolveSchemaHistoryExpression(g, q.schemaHistory, "Long", tacit = true)
-      case "tx_"          => resolveSchemaHistoryExpression(g, q.schemaHistory, "Long", tacit = true)
-      case "txInstant_"   => resolveSchemaHistoryExpression(g, q.schemaHistory, "Date", tacit = true)
-      case "a_"           => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
-      case "attrId_"      => resolveSchemaHistoryExpression(g, q.schemaHistory, "Long", tacit = true)
-      case "part_"        => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
-      case "nsFull_"      => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
-      case "ns_"          => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
-      case "attr_"        => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
+      // Additional schema history attributes with/without value
+      case "doc" | "doc_"                 => resolveSchemaHistoryBinary(q, g)
+      case "ident" | "ident_"             => resolveSchemaHistoryBinary(q, g)
+      case "valueType" | "valueType_"     => resolveSchemaHistoryBinary(q, g)
+      case "cardinality" | "cardinality_" => resolveSchemaHistoryBinary(q, g)
+      case "unique" | "unique_"           => resolveSchemaHistoryBinary(q, g)
+      case "isComponent" | "isComponent_" => resolveSchemaHistoryBinary(q, g)
+      case "noHistory" | "noHistory_"     => resolveSchemaHistoryBinary(q, g)
+      case "index" | "index_"             => resolveSchemaHistoryBinary(q, g)
+      case "fulltext" | "fulltext_"       => resolveSchemaHistoryBinary(q, g)
 
-      case "enumm_"       => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
-      case "ident_"       => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
-      case "valueType_"   => resolveSchemaHistoryExpression2(g, q.schemaHistory, "String", tacit = true)
-      case "cardinality_" => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
-      case "doc_"         => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
-      case "unique_"      => resolveSchemaHistoryExpression(g, q.schemaHistory, "String", tacit = true)
-      case "isComponent_" => resolveSchemaHistoryExpression(g, q.schemaHistory, "Boolean", tacit = true)
-      case "noHistory_"   => resolveSchemaHistoryExpression(g, q.schemaHistory, "Boolean", tacit = true)
-      case "index_"       => resolveSchemaHistoryExpression(g, q.schemaHistory, "Boolean", tacit = true)
-      case "fulltext_"    => resolveSchemaHistoryExpression(g, q.schemaHistory, "Boolean", tacit = true)
+      case "enumm" | "enumm_" =>
+        abort("Retrieving historical enum values with `Schema` is not supported since they " +
+          "are entities having their own timeline independently from schema attributes. " +
+          "Instead, please call `conn.getEnumHistory` to retrieve historical enum values.")
 
-      case "valueType$" | "cardinality$" | "unique$" => resolveSchemaHistoryOptionalEnumValue(g, q)
-      case _                                         => resolveSchemaHistoryOptional(g, q)
+      case "valueType$" | "cardinality$" | "unique$" => resolveSchemaHistoryBinary(q, g)
+      case _ /* other optionals */                   => resolveSchemaHistoryOptional(q, g)
     }
   }
 
-  def resolveSchemaHistoryExpression(g: Generic, q: Query, tpe: String, tacit: Boolean): Query = {
-    val v = if (tacit) g.attr.init else g.attr
+  def resolveSchemaHistoryExpr(q0: Query, g: Generic, tpe: String, range: Boolean = false): Query = {
+    val q = q0.schemaHistory
+    val v = clean(g.attr)
     g.value match {
-      case NoValue                        => q
-      case Eq(Seq(None))                  => q
-      case Eq(args)                       => q.in(tpe, args, v)
-      case Neq(args)                      => q.compareToMany2("!=", v, args)
-      case Gt(arg)                        => q.compareTo2(">", tpe, v, Val(arg), q.wh.clauses.length)
-      case Ge(arg)                        => q.compareTo2(">=", tpe, v, Val(arg), q.wh.clauses.length)
-      case Lt(arg)                        => q.compareTo2("<", tpe, v, Val(arg), q.wh.clauses.length)
-      case Le(arg)                        => q.compareTo2("<=", tpe, v, Val(arg), q.wh.clauses.length)
-      case Fulltext((arg: String) :: Nil) => q.schemaDocFulltext(arg)
-      case Fulltext(_)                    =>
-        abort("Fulltext search can only be performed with 1 search phrase.")
-      case other                          =>
-        abort(s"Unsupported expression for schema history attribute `${g.attr}`: $other")
+      case NoValue          => q
+      case Eq(Seq(None))    => q
+      case Eq(args)         => q.in(tpe, args, v)
+      case Neq(args)        => q.compareToMany2("!=", v, args)
+      case Gt(arg) if range => q.compareTo2(">", tpe, v, Val(arg), q.wh.clauses.length)
+      case Ge(arg) if range => q.compareTo2(">=", tpe, v, Val(arg), q.wh.clauses.length)
+      case Lt(arg) if range => q.compareTo2("<", tpe, v, Val(arg), q.wh.clauses.length)
+      case Le(arg) if range => q.compareTo2("<=", tpe, v, Val(arg), q.wh.clauses.length)
+      case other            => abort(
+        s"Unsupported expression for basic schema history attribute `${g.attr}`: $other")
     }
   }
 
-  def resolveSchemaHistoryExpression2(g: Generic, q: Query, tpe: String, tacit: Boolean): Query = {
-    val v = if (tacit) g.attr.init else g.attr
+  def resolveSchemaHistoryBinary(q0: Query, g: Generic): Query = {
+    val q = q0.schemaHistory
     g.value match {
-      case NoValue                        => q
-      case Eq(Seq(None))                  => q
-      case Eq(args)                       => q.in(tpe, args, v)
-      case Neq(args)                      => q //.compareToMany2("!=", v, args)
-      case Gt(arg)                        => q.compareTo2(">", tpe, v, Val(arg), q.wh.clauses.length)
-      case Ge(arg)                        => q.compareTo2(">=", tpe, v, Val(arg), q.wh.clauses.length)
-      case Lt(arg)                        => q.compareTo2("<", tpe, v, Val(arg), q.wh.clauses.length)
-      case Le(arg)                        => q.compareTo2("<=", tpe, v, Val(arg), q.wh.clauses.length)
-      case Fulltext((arg: String) :: Nil) => q.schemaDocFulltext(arg)
-      case Fulltext(_)                    =>
-        abort("Fulltext search can only be performed with 1 search phrase.")
-      case other                          =>
-        abort(s"Unsupported expression for schema history attribute `${g.attr}`: $other")
-    }
-  }
-
-  def resolveSchemaHistoryOptionalEnumValue(g: Generic, q: Query): Query = {
-    val v = g.attr.init
-    g.value match {
-      case NoValue => q
-      //      case NoValue        => q.schemaPullEnumValue(v)
+      case NoValue       => q
       case Eq(Seq(None)) => q
-      case Eq(args)      => q.in(g.tpe, args, v)
-      //      case Eq(arg :: Nil) =>
-      //        //        q.find(v + 2)
-      ////        q.where(Var("attrId"), KW("db", v), v)
-      //          q.ident(v, v + 1)
-      //          .kw(v + 1, v + 2)
-      //          .func("=", Seq(Var(v + 2), Val(arg)))
-      case Fn("not", _) => q
-      //      case Fn("not", _) => q.schemaPull(v).schemaNot(v) // None
-      case other =>
-        abort(s"Unsupported expression for optional schema enum value `${g.attr}`: " + other)
+      case Eq(args)      => q.in(g.tpe, args, clean(g.attr))
+      case Neq(_)        => q
+      case Fn("not", _)  => q
+      case other         => abort(
+        s"Unsupported expression for schema history attribute `${g.attr}`: $other")
     }
   }
 
-  def resolveSchemaHistoryOptional(g: Generic, q: Query): Query = {
+  def resolveSchemaHistoryOptional(q0: Query, g: Generic): Query = {
+    val q = q0.schemaHistory
     val v = g.attr.init
     g.value match {
-      case NoValue => q
-      //      case NoValue        => q.schemaPull(v)
+      case NoValue        => q
       case Eq(arg :: Nil) =>
         q.find(v)
           .where(Var("attrId"), KW("db", v), v)
           .where("attrId", "db", v, Val(arg), "", "")
       case Fn("not", _)   => q // None
-      //      case Fn("not", _)   => q.schemaPull(v).schemaNot(v) // None
-      case other =>
-        abort(s"Unexpected expression for optional schema history attribute `${g.attr}`: " + other)
+      case other          => abort(
+        s"Unexpected expression for optional schema history attribute `${g.attr}`: " + other)
     }
   }
 

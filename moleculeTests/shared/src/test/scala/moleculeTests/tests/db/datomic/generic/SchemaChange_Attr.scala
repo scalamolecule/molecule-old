@@ -7,6 +7,7 @@ import molecule.core.util.Executor._
 import molecule.core.util.testing.expectCompileError
 import molecule.datomic.api.out13._
 import molecule.datomic.base.facade.Conn
+import molecule.datomic.base.transform.exception.Model2QueryException
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}
 import moleculeTests.setup.AsyncTestSuite
 import utest._
@@ -134,10 +135,31 @@ object SchemaChange_Attr extends AsyncTestSuite {
         _ <- Schema.a.attr.not("int", "str").getHistory.map(_ ==> Nil)
         _ <- Schema.a.attr.not(Seq("int")).getHistory.map(_ ==> List((":Foo/str", "str")))
         _ <- Schema.a.attr.not(Seq("int", "str")).getHistory.map(_ ==> Nil)
-        _ <- Schema.a.attr.>("int").getHistory.map(_ ==> List((":Foo/str", "str")))
-        _ <- Schema.a.attr.>=("int").getHistory.map(_ ==> List((":Foo/int", "int"), (":Foo/str", "str")))
-        _ <- Schema.a.attr.<("str").getHistory.map(_ ==> List((":Foo/int", "int")))
-        _ <- Schema.a.attr.<=("str").getHistory.map(_ ==> List((":Foo/int", "int"), (":Foo/str", "str")))
+
+        // Schema history attributes with text values are not allowed to use range expressions
+        _ <- Schema.a.attr.>("int").getHistory
+          .map(_ ==> "Unexpected success")
+          .recover { case Model2QueryException(msg) =>
+            msg ==> """Unsupported expression for basic schema history attribute `attr`: Gt("int")"""
+          }
+
+        _ <- Schema.a.attr.>=("int").getHistory
+          .map(_ ==> "Unexpected success")
+          .recover { case Model2QueryException(msg) =>
+            msg ==> """Unsupported expression for basic schema history attribute `attr`: Ge("int")"""
+          }
+
+        _ <- Schema.a.attr.<("int").getHistory
+          .map(_ ==> "Unexpected success")
+          .recover { case Model2QueryException(msg) =>
+            msg ==> """Unsupported expression for basic schema history attribute `attr`: Lt("int")"""
+          }
+
+        _ <- Schema.a.attr.<=("int").getHistory
+          .map(_ ==> "Unexpected success")
+          .recover { case Model2QueryException(msg) =>
+            msg ==> """Unsupported expression for basic schema history attribute `attr`: Le("int")"""
+          }
 
         _ <- Schema.attr.a(":Foo/int").getHistory.map(_ ==> List(("int", ":Foo/int")))
         _ <- Schema.attr.a(":Foo/int", ":Foo/str").getHistory.map(_ ==> List(("int", ":Foo/int"), ("str", ":Foo/str")))
@@ -147,11 +169,31 @@ object SchemaChange_Attr extends AsyncTestSuite {
         _ <- Schema.attr.a.not(":Foo/int", ":Foo/str").getHistory.map(_ ==> Nil)
         _ <- Schema.attr.a.not(Seq(":Foo/int")).getHistory.map(_ ==> List(("str", ":Foo/str")))
         _ <- Schema.attr.a.not(Seq(":Foo/int", ":Foo/str")).getHistory.map(_ ==> Nil)
-        _ <- Schema.attr.a.>(":Foo/int").getHistory.map(_ ==> List(("str", ":Foo/str")))
-        _ <- Schema.attr.a.>=(":Foo/int").getHistory.map(_ ==> List(("int", ":Foo/int"), ("str", ":Foo/str")))
-        _ <- Schema.attr.a.<(":Foo/str").getHistory.map(_ ==> List(("int", ":Foo/int")))
-        _ <- Schema.attr.a.<=(":Foo/str").getHistory.map(_ ==> List(("int", ":Foo/int"), ("str", ":Foo/str")))
 
+        // Schema history attributes with text values are not allowed to use range expressions
+        _ <- Schema.attr.a.>("int").getHistory
+          .map(_ ==> "Unexpected success")
+          .recover { case Model2QueryException(msg) =>
+            msg ==> """Unsupported expression for basic schema history attribute `a`: Gt("int")"""
+          }
+
+        _ <- Schema.attr.a.>=("int").getHistory
+          .map(_ ==> "Unexpected success")
+          .recover { case Model2QueryException(msg) =>
+            msg ==> """Unsupported expression for basic schema history attribute `a`: Ge("int")"""
+          }
+
+        _ <- Schema.attr.a.<("int").getHistory
+          .map(_ ==> "Unexpected success")
+          .recover { case Model2QueryException(msg) =>
+            msg ==> """Unsupported expression for basic schema history attribute `a`: Lt("int")"""
+          }
+
+        _ <- Schema.attr.a.<=("int").getHistory
+          .map(_ ==> "Unexpected success")
+          .recover { case Model2QueryException(msg) =>
+            msg ==> """Unsupported expression for basic schema history attribute `a`: Le("int")"""
+          }
 
         // Since all attribute definitions have a t/tx/txInstant/attrId/attr value,
         // it doesn't make much sense to ask for the tacit presence (but we can)
@@ -224,10 +266,31 @@ object SchemaChange_Attr extends AsyncTestSuite {
         _ <- Schema.a.attr_.not("int", "str").getHistory.map(_ ==> Nil)
         _ <- Schema.a.attr_.not(Seq("int")).getHistory.map(_ ==> List(":Foo/str"))
         _ <- Schema.a.attr_.not(Seq("int", "str")).getHistory.map(_ ==> Nil)
-        _ <- Schema.a.attr_.>("int").getHistory.map(_ ==> List(":Foo/str"))
-        _ <- Schema.a.attr_.>=("int").getHistory.map(_ ==> List(":Foo/int", ":Foo/str"))
-        _ <- Schema.a.attr_.<("str").getHistory.map(_ ==> List(":Foo/int"))
-        _ <- Schema.a.attr_.<=("str").getHistory.map(_ ==> List(":Foo/int", ":Foo/str"))
+
+        // Schema history attributes with text values are not allowed to use range expressions
+        _ <- Schema.a.attr_.>("int").getHistory
+          .map(_ ==> "Unexpected success")
+          .recover { case Model2QueryException(msg) =>
+            msg ==> """Unsupported expression for basic schema history attribute `attr_`: Gt("int")"""
+          }
+
+        _ <- Schema.a.attr_.>=("int").getHistory
+          .map(_ ==> "Unexpected success")
+          .recover { case Model2QueryException(msg) =>
+            msg ==> """Unsupported expression for basic schema history attribute `attr_`: Ge("int")"""
+          }
+
+        _ <- Schema.a.attr_.<("int").getHistory
+          .map(_ ==> "Unexpected success")
+          .recover { case Model2QueryException(msg) =>
+            msg ==> """Unsupported expression for basic schema history attribute `attr_`: Lt("int")"""
+          }
+
+        _ <- Schema.a.attr_.<=("int").getHistory
+          .map(_ ==> "Unexpected success")
+          .recover { case Model2QueryException(msg) =>
+            msg ==> """Unsupported expression for basic schema history attribute `attr_`: Le("int")"""
+          }
 
         _ <- Schema.attr.a_(":Foo/int").getHistory.map(_ ==> List("int"))
         _ <- Schema.attr.a_(":Foo/int", ":Foo/str").getHistory.map(_ ==> List("int", "str"))
@@ -237,10 +300,31 @@ object SchemaChange_Attr extends AsyncTestSuite {
         _ <- Schema.attr.a_.not(":Foo/int", ":Foo/str").getHistory.map(_ ==> Nil)
         _ <- Schema.attr.a_.not(Seq(":Foo/int")).getHistory.map(_ ==> List("str"))
         _ <- Schema.attr.a_.not(Seq(":Foo/int", ":Foo/str")).getHistory.map(_ ==> Nil)
-        _ <- Schema.attr.a_.>(":Foo/int").getHistory.map(_ ==> List("str"))
-        _ <- Schema.attr.a_.>=(":Foo/int").getHistory.map(_ ==> List("int", "str"))
-        _ <- Schema.attr.a_.<(":Foo/str").getHistory.map(_ ==> List("int"))
-        _ <- Schema.attr.a_.<=(":Foo/str").getHistory.map(_ ==> List("int", "str"))
+
+        // Schema history attributes with text values are not allowed to use range expressions
+        _ <- Schema.attr.a_.>("int").getHistory
+          .map(_ ==> "Unexpected success")
+          .recover { case Model2QueryException(msg) =>
+            msg ==> """Unsupported expression for basic schema history attribute `a_`: Gt("int")"""
+          }
+
+        _ <- Schema.attr.a_.>=("int").getHistory
+          .map(_ ==> "Unexpected success")
+          .recover { case Model2QueryException(msg) =>
+            msg ==> """Unsupported expression for basic schema history attribute `a_`: Ge("int")"""
+          }
+
+        _ <- Schema.attr.a_.<("int").getHistory
+          .map(_ ==> "Unexpected success")
+          .recover { case Model2QueryException(msg) =>
+            msg ==> """Unsupported expression for basic schema history attribute `a_`: Lt("int")"""
+          }
+
+        _ <- Schema.attr.a_.<=("int").getHistory
+          .map(_ ==> "Unexpected success")
+          .recover { case Model2QueryException(msg) =>
+            msg ==> """Unsupported expression for basic schema history attribute `a_`: Le("int")"""
+          }
       } yield ()
     }
 

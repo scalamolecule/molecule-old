@@ -174,7 +174,7 @@ object QueryOps extends Helpers with JavaUtil {
     }
 
 
-    // Schema history attribute/values ..........................................
+    // Schema history attributes ..........................................
 
     def schemaHistory: Query = q.wh.clauses.collectFirst {
       case DataClause(_, _, KW("db.install", "attribute", _), _, _, _) => q
@@ -219,7 +219,7 @@ object QueryOps extends Helpers with JavaUtil {
     )
 
 
-    // Schema attribute/values ..........................................
+    // Schema attributes ..........................................
 
     def schema: Query = q.wh.clauses.collectFirst {
       case DataClause(_, _, KW("db.install", "attribute", _), _, _, _) => q

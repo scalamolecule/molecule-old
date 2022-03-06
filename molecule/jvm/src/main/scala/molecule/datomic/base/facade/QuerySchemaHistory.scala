@@ -14,6 +14,8 @@ import scala.util.control.NonFatal
 
 trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
 
+  private val sharedAttrs = List("t", "tx", "txInstant", "attrId", "a", "part", "nsFull", "ns", "attr")
+
   // Indexes of raw data
   private val t_           = 0
   private val tx_          = 1
@@ -39,7 +41,8 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
     }
   }
 
-  private def getValueTypeStr(tpeId: AnyRef) = tpeId.toString.toInt match {
+  private def id2str(tpeId: AnyRef) = tpeId.toString.toInt match {
+    // value type
     case 23 => "string"
     case 22 => "long"
     case 57 => "double"
@@ -50,108 +53,46 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
     case 59 => "uri"
     case 60 => "bigint"
     case 61 => "bigdec"
-  }
 
-  private def opt(row: jList[AnyRef], someData: AnyRef): AnyRef =
-    if (row.get(op_).toString == "false") null else someData
+    // cardinality
+    case 35 => "one"
+    case 36 => "many"
+
+    // unique
+    case 37 => "value"
+    case 38 => "identity"
+  }
 
   private def row2schemaValue(schemaAttr: SchemaAttr): jList[AnyRef] => AnyRef = {
     val mandatory = schemaAttr.attrClean == schemaAttr.attr
     if (mandatory) {
-      // Mandatory values
       schemaAttr.attrClean match {
-        case "valueType"   => (row: jList[AnyRef]) => getValueTypeStr(row.get(schemaValue_))
-        case "cardinality" => (row: jList[AnyRef]) =>
-          row.get(schemaValue_).toString.toInt match {
-            case 35 => "one"
-            case 36 => "many"
-          }
-        case "unique"      => (row: jList[AnyRef]) =>
-          row.get(schemaValue_).toString.toInt match {
-            case 37 => "value"
-            case 38 => "identity"
-          }
-        case "ident"       => (row: jList[AnyRef]) => row.get(schemaValue_).toString
-        case "doc"         => (row: jList[AnyRef]) => row.get(schemaValue_).toString
-        case "isComponent" => (row: jList[AnyRef]) => row.get(schemaValue_).asInstanceOf[jBoolean]
-        case "noHistory"   => (row: jList[AnyRef]) => row.get(schemaValue_).asInstanceOf[jBoolean]
-        case "index"       => (row: jList[AnyRef]) => row.get(schemaValue_).asInstanceOf[jBoolean]
-        case "fulltext"    => (row: jList[AnyRef]) => row.get(schemaValue_).asInstanceOf[jBoolean]
+        case "valueType" | "cardinality" | "unique" => (row: jList[AnyRef]) => id2str(row.get(schemaValue_))
+        case "ident" | "doc"                        => (row: jList[AnyRef]) => row.get(schemaValue_).toString
+        case _                                      => (row: jList[AnyRef]) => row.get(schemaValue_).asInstanceOf[jBoolean]
       }
     } else if (schemaAttr.args.isEmpty) {
-      // Optional values in pull result format to be processed as non-history Schema java results
-      schemaAttr.attrClean match {
-        case "valueType" => (row: jList[AnyRef]) =>
-          val tpe = row.get(schemaValue_).toString.toInt match {
-            case 23 => ":db.type/string"
-            case 22 => ":db.type/long"
-            case 57 => ":db.type/double"
-            case 24 => ":db.type/boolean"
-            case 20 => ":db.type/ref"
-            case 25 => ":db.type/instant"
-            case 56 => ":db.type/uuid"
-            case 59 => ":db.type/uri"
-            case 60 => ":db.type/bigint"
-            case 61 => ":db.type/bigdec"
-          }
-          opt(row, javaMap("" -> javaMap("" -> tpe)))
-
-        case "cardinality" => (row: jList[AnyRef]) =>
-          row.get(schemaValue_).toString.toInt match {
-            case 35 => opt(row, javaMap("" -> javaMap("" -> ":db.cardinality/one")))
-            case 36 => opt(row, javaMap("" -> javaMap("" -> ":db.cardinality/many")))
-          }
-        case "unique"      => (row: jList[AnyRef]) =>
-          row.get(schemaValue_).toString.toInt match {
-            case 37 => opt(row, javaMap("" -> javaMap("" -> ":db.unique/value")))
-            case 38 => opt(row, javaMap("" -> javaMap("" -> ":db.unique/identity")))
-          }
-        case "ident"       => (row: jList[AnyRef]) => opt(row, javaMap("" -> row.get(schemaValue_)))
-        case "doc"         => (row: jList[AnyRef]) => opt(row, javaMap("" -> row.get(schemaValue_)))
-        case "isComponent" => (row: jList[AnyRef]) => opt(row, javaMap("" -> row.get(schemaValue_)))
-        case "noHistory"   => (row: jList[AnyRef]) => opt(row, javaMap("" -> row.get(schemaValue_)))
-        case "index"       => (row: jList[AnyRef]) => opt(row, javaMap("" -> row.get(schemaValue_)))
-        case "fulltext"    => (row: jList[AnyRef]) => opt(row, javaMap("" -> row.get(schemaValue_)))
+      // Optional values in pull result format (to be processed as non-history Schema java results)
+      val value = schemaAttr.attrClean match {
+        case "valueType" | "cardinality" | "unique" =>
+          (row: jList[AnyRef]) => javaMap("" -> (":db.type/" + id2str(row.get(schemaValue_))))
+        case _                                      =>
+          (row: jList[AnyRef]) => row.get(schemaValue_)
       }
+      (row: jList[AnyRef]) => if (row.get(op_).toString == "false") null else javaMap("" -> value(row))
     } else {
-      // Applied optional values in pull result format to be processed as non-history Schema java results
+      // Applied optional values in pull result format (to be processed as non-history Schema java results)
       schemaAttr.attrClean match {
-        case "valueType"   => (row: jList[AnyRef]) => getValueTypeStr(row.get(schemaValue_))
-        case "cardinality" => (row: jList[AnyRef]) =>
-          row.get(schemaValue_).toString.toInt match {
-            case 35 => "one"
-            case 36 => "many"
-          }
-        case "unique"      => (row: jList[AnyRef]) =>
-          row.get(schemaValue_).toString.toInt match {
-            case 37 => "value"
-            case 38 => "identity"
-          }
-        case "ident"       => (row: jList[AnyRef]) => row.get(schemaValue_)
-        case "doc"         => (row: jList[AnyRef]) => row.get(schemaValue_)
-        case "isComponent" => (row: jList[AnyRef]) => row.get(schemaValue_)
-        case "noHistory"   => (row: jList[AnyRef]) => row.get(schemaValue_)
-        case "index"       => (row: jList[AnyRef]) => row.get(schemaValue_)
-        case "fulltext"    => (row: jList[AnyRef]) => row.get(schemaValue_)
+        case "valueType" | "cardinality" | "unique" => (row: jList[AnyRef]) => id2str(row.get(schemaValue_))
+        case _                                      => (row: jList[AnyRef]) => row.get(schemaValue_)
       }
     }
   }
-
 
   private[molecule] def fetchSchemaHistory(
     schemaAttrs: Seq[SchemaAttr],
     queryString: String
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = try {
-    if (schemaAttrs.exists(_.attr == "enumm")) {
-      throw MoleculeException(
-        "Retrieving historical enum values with `Schema` is not supported since they " +
-          "are entities having their own timeline independently from schema attributes. " +
-          "Instead, please call `conn.getEnumHistory` to retrieve historical enum values."
-      )
-    }
-
-    schemaAttrs.foreach(println)
-
     val attrs          = mutable.ListBuffer[String]()
     val requireAttrs   = mutable.ListBuffer[String]()
     val validateAttrs  = mutable.ListBuffer[String]()
@@ -173,39 +114,30 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
         case _ => javaList(args.map(_.asInstanceOf[AnyRef]): _*)
       }
     }
-    println("INPUTS: " + javaInputs)
 
-    val validate = schemaAttrs.map {
-      case SchemaAttr(attrClean, _, "", _)        => attrClean -> ((_: AnyRef) => true)
-      case SchemaAttr("valueType", _, expr, args) =>
+    val validate: Map[String, (Boolean, AnyRef) => Boolean] = schemaAttrs.map {
+      case SchemaAttr(attrClean, _, "", _)     => attrClean -> ((add: Boolean, _: AnyRef) => add)
+      case SchemaAttr(attrClean, _, "none", _) => attrClean -> ((add: Boolean, _: AnyRef) => !add)
+
+      case SchemaAttr(attrClean@("valueType" | "cardinality" | "unique"), _, expr, args) =>
         val test = expr match {
-          case "="        => (v: AnyRef) => args.contains(getValueTypeStr(v))
-          case "!="       => (v: AnyRef) => !args.contains(getValueTypeStr(v))
-          case ">"        => (v: AnyRef) => getValueTypeStr(v) > args.head
-          case ">="       => (v: AnyRef) => getValueTypeStr(v) >= args.head
-          case "<"        => (v: AnyRef) => getValueTypeStr(v) < args.head
-          case "<="       => (v: AnyRef) => getValueTypeStr(v) <= args.head
-          case "count"    => (v: AnyRef) => v.toString.toInt == args.head.toInt
-          case "none"     => (_: AnyRef) => false // If there's a value it's invalid
-          case "fulltext" => (v: AnyRef) => args.contains(getValueTypeStr(v))
+          case "="        => (add: Boolean, v: AnyRef) => add && args.contains(id2str(v))
+          case "!="       => (add: Boolean, v: AnyRef) => add && !args.contains(id2str(v))
         }
-        "valueType" -> test
-      case SchemaAttr(attrClean, _, expr, args)   =>
+        attrClean -> test
+
+      case SchemaAttr(attrClean, _, expr, args) =>
         val test = expr match {
-          case "="        => (v: AnyRef) => args.contains(v.toString)
-          case "!="       => (v: AnyRef) => !args.contains(v.toString)
-          case ">"        => (v: AnyRef) => v.toString > args.head
-          case ">="       => (v: AnyRef) => v.toString >= args.head
-          case "<"        => (v: AnyRef) => v.toString < args.head
-          case "<="       => (v: AnyRef) => v.toString <= args.head
-          case "count"    => (v: AnyRef) => v.toString.toInt == args.head.toInt
-          case "none"     => (_: AnyRef) => false // If there's a value it's invalid
-          case "fulltext" => (v: AnyRef) => args.contains(v.toString)
+          case "="        => (add: Boolean, v: AnyRef) => add && args.contains(v.toString)
+          case "!="       => (add: Boolean, v: AnyRef) => add && !args.contains(v.toString)
+          case ">"        => (add: Boolean, v: AnyRef) => add && v.toString > args.head
+          case ">="       => (add: Boolean, v: AnyRef) => add && v.toString >= args.head
+          case "<"        => (add: Boolean, v: AnyRef) => add && v.toString < args.head
+          case "<="       => (add: Boolean, v: AnyRef) => add && v.toString <= args.head
         }
         attrClean -> test
     }.toMap
 
-    val sharedAttrs = List("t", "tx", "txInstant", "attrId", "a", "part", "nsFull", "ns", "attr")
     val attrChecks  = {
       schemaAttrs.foldLeft(0, Map.empty[String, (Int, jList[AnyRef] => AnyRef)]) {
         // Initial attributes filtered by query
@@ -254,6 +186,8 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
       }._2
     }
 
+    schemaAttrs.foreach(println)
+    println("INPUTS: " + javaInputs)
     println("attrs        : " + attrs)
     println("attrChecks   :\n  " + attrChecks.mkString("\n  "))
     println("requireAttrs : " + requireAttrs)
@@ -272,7 +206,6 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
     var attrClean  = ""
     var list       = new util.ArrayList[AnyRef](length)
     val coll       = new util.ArrayList[jList[AnyRef]]()
-
 
     def initElement(attrClean: String): jList[AnyRef] => AnyRef = attrClean match {
       case "t"         => (row: jList[AnyRef]) => row.get(t_)
@@ -748,6 +681,7 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
 
       val last       = rows.size()
       var rowCounter = 0
+      var first      = true
       rows.forEach { row =>
         rowCounter += 1
         add = row.get(op_).asInstanceOf[jBoolean]
@@ -772,26 +706,30 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
           validatedAttrs.clear()
           prevTx = tx
           prevAttrId = attrId
+          first = true
           list = new util.ArrayList[AnyRef](length)
           initList(row)
         }
 
         // Validate
         attrChecks.get(attrClean).foreach { case (attrIndex, resolver) =>
-          val value = row.get(schemaValue_)
-          valid = validate(attrClean)(value)
-          //          if (add && validate(attrClean)(row.get(schemaValue_))) {
-          if (add && valid) {
-            val value = resolver(row)
-            //            println(attrClean + ": " + value)
-            if (attrs.contains(attrClean)) {
-              // Set value of output row at attrIndex if attrClean is not tacit
-              list.set(attrIndex, value)
-            }
+          val rawValue = row.get(schemaValue_)
+          valid = validate(attrClean)(add, rawValue)
+          if (valid) {
             validatedAttrs += attrClean
+          } else {
+            validatedAttrs -= attrClean
+          }
+          val value = resolver(row)
+          if (attrs.contains(attrClean)) {
+            // Set value of output row at attrIndex if attrClean is not tacit
+            list.set(attrIndex, value)
           }
         }
-        processedAttrs += attrClean
+        if (add) {
+          processedAttrs += attrClean
+        }
+        first = false
 
         if (rowCounter == last) {
           val hasRequired  = requireAttrs.intersect(processedAttrs) == requireAttrs
@@ -803,7 +741,7 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
           }
         }
       }
-      println("--- coll: ---")
+      println("--- coll: ---------------------------")
       coll.forEach(row => println(row))
       println("#####################################")
       coll
