@@ -4,21 +4,18 @@ import molecule.core.data.model._
 import molecule.core.exceptions.MoleculeException
 import molecule.core.macros.GetTransactSchema.schema
 import molecule.core.util.Executor._
-import molecule.core.util.testing.expectCompileError
-import molecule.datomic.api.out13._
-import molecule.datomic.base.facade.Conn
+import molecule.datomic.api.out7._
 import molecule.datomic.base.transform.exception.Model2QueryException
-import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}
+import molecule.datomic.base.util.SystemPeer
 import moleculeTests.setup.AsyncTestSuite
 import utest._
-import scala.concurrent.Future
 
 
 object SchemaChange_Attr extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
-    "New" - empty { implicit futConn =>
+    "Add" - empty { implicit futConn =>
       for {
         // Schema has no attributes yet
         _ <- Schema.t.a.valueType.cardinality.get.map(_ ==> Nil)
@@ -66,7 +63,7 @@ object SchemaChange_Attr extends AsyncTestSuite {
         }
 
         // Since we have only added to the schema in this case, `getHistory` will show the same as `get`
-        _ <- Schema.t.a1.attrId.a.ns.attr.valueType.cardinality.getHistory.map(_ ==> List(
+        _ <- Schema.t.attrId.a.ns.attr.valueType.cardinality.getHistory.map(_ ==> List(
           (t0, attrId0, ":Foo/int", "Foo", "int", "long", "one"),
           (t1, attrId1, ":Foo/str", "Foo", "str", "string", "many"),
         ))
@@ -88,6 +85,7 @@ object SchemaChange_Attr extends AsyncTestSuite {
         _ <- Schema.a.t.<(t1).getHistory.map(_ ==> List((":Foo/int", t0)))
         _ <- Schema.a.t.<=(t1).getHistory.map(_ ==> List((":Foo/int", t0), (":Foo/str", t1)))
 
+        _ <- Schema.a.tx.getHistory.map(_ ==> List((":Foo/int", tx0), (":Foo/str", tx1)))
         _ <- Schema.a.tx(tx0).getHistory.map(_ ==> List((":Foo/int", tx0)))
         _ <- Schema.a.tx(tx0, tx1).getHistory.map(_ ==> List((":Foo/int", tx0), (":Foo/str", tx1)))
         _ <- Schema.a.tx(Seq(tx0)).getHistory.map(_ ==> List((":Foo/int", tx0)))
@@ -101,6 +99,7 @@ object SchemaChange_Attr extends AsyncTestSuite {
         _ <- Schema.a.tx.<(tx1).getHistory.map(_ ==> List((":Foo/int", tx0)))
         _ <- Schema.a.tx.<=(tx1).getHistory.map(_ ==> List((":Foo/int", tx0), (":Foo/str", tx1)))
 
+        _ <- Schema.a.txInstant.getHistory.map(_ ==> List((":Foo/int", d0), (":Foo/str", d1)))
         _ <- Schema.a.txInstant(d0).getHistory.map(_ ==> List((":Foo/int", d0)))
         _ <- Schema.a.txInstant(d0, d1).getHistory.map(_ ==> List((":Foo/int", d0), (":Foo/str", d1)))
         _ <- Schema.a.txInstant(Seq(d0)).getHistory.map(_ ==> List((":Foo/int", d0)))
@@ -114,6 +113,7 @@ object SchemaChange_Attr extends AsyncTestSuite {
         _ <- Schema.a.txInstant.<(d1).getHistory.map(_ ==> List((":Foo/int", d0)))
         _ <- Schema.a.txInstant.<=(d1).getHistory.map(_ ==> List((":Foo/int", d0), (":Foo/str", d1)))
 
+        _ <- Schema.a.attrId.getHistory.map(_ ==> List((":Foo/int", attrId0), (":Foo/str", attrId1)))
         _ <- Schema.a.attrId(attrId0).getHistory.map(_ ==> List((":Foo/int", attrId0)))
         _ <- Schema.a.attrId(attrId0, attrId1).getHistory.map(_ ==> List((":Foo/int", attrId0), (":Foo/str", attrId1)))
         _ <- Schema.a.attrId(Seq(attrId0)).getHistory.map(_ ==> List((":Foo/int", attrId0)))
@@ -127,6 +127,7 @@ object SchemaChange_Attr extends AsyncTestSuite {
         _ <- Schema.a.attrId.<(attrId1).getHistory.map(_ ==> List((":Foo/int", attrId0)))
         _ <- Schema.a.attrId.<=(attrId1).getHistory.map(_ ==> List((":Foo/int", attrId0), (":Foo/str", attrId1)))
 
+        _ <- Schema.a.attr.getHistory.map(_ ==> List((":Foo/int", "int"), (":Foo/str", "str")))
         _ <- Schema.a.attr("int").getHistory.map(_ ==> List((":Foo/int", "int")))
         _ <- Schema.a.attr("int", "str").getHistory.map(_ ==> List((":Foo/int", "int"), (":Foo/str", "str")))
         _ <- Schema.a.attr(Seq("int")).getHistory.map(_ ==> List((":Foo/int", "int")))
@@ -161,6 +162,7 @@ object SchemaChange_Attr extends AsyncTestSuite {
             msg ==> """Unsupported expression for basic schema history attribute `attr`: Le("int")"""
           }
 
+        _ <- Schema.attr.a.getHistory.map(_ ==> List(("int", ":Foo/int"), ("str", ":Foo/str")))
         _ <- Schema.attr.a(":Foo/int").getHistory.map(_ ==> List(("int", ":Foo/int")))
         _ <- Schema.attr.a(":Foo/int", ":Foo/str").getHistory.map(_ ==> List(("int", ":Foo/int"), ("str", ":Foo/str")))
         _ <- Schema.attr.a(Seq(":Foo/int")).getHistory.map(_ ==> List(("int", ":Foo/int")))
@@ -195,7 +197,7 @@ object SchemaChange_Attr extends AsyncTestSuite {
             msg ==> """Unsupported expression for basic schema history attribute `a`: Le("int")"""
           }
 
-        // Since all attribute definitions have a t/tx/txInstant/attrId/attr value,
+        // Since all attribute definitions have a t/tx/txInstant/attrId/attr/a value,
         // it doesn't make much sense to ask for the tacit presence (but we can)
         _ <- Schema.a.t_.getHistory.map(_ ==> List(":Foo/int", ":Foo/str"))
         _ <- Schema.a.tx_.getHistory.map(_ ==> List(":Foo/int", ":Foo/str"))

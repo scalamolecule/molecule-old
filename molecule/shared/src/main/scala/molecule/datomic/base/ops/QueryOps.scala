@@ -31,6 +31,11 @@ object QueryOps extends Helpers with JavaUtil {
     if (s.contains(".")) s else s + ".0"
   }
 
+  // Hack when we can't access Peer on client side
+  // datomic.Peer.toTx(0) == 13194139533312L
+  // datomic.Peer.toTx(1) == 13194139533313L
+  // etc.
+  val txBase = 13194139533312L
 
   implicit class QueryOps(q: Query) {
 
@@ -214,7 +219,12 @@ object QueryOps extends Helpers with JavaUtil {
         .where("attrId", "schemaId", "schemaValue", "tx", "op")
         .where(DS("dbCurrent"), Var("schemaId"), KW("db", "ident"), "schemaIdent")
         .func("name", Seq(Var("schemaIdent")), ScalarBinding(Var("schemaAttr")))
-        .func("datomic.api/tx->t", Seq(Var("tx")), ScalarBinding(Var("t")))
+
+        // Hack to get t
+        .func("-", Seq(Var("tx"), Val(txBase)), ScalarBinding(Var("t")))
+        // Can't use datomic.api with Datomic Client systems
+        //        .func("datomic.api/tx->t", Seq(Var("tx")), ScalarBinding(Var("t")))
+
         .where(Var("tx"), KW("db", "txInstant"), "txInstant")
     )
 
@@ -300,7 +310,8 @@ object QueryOps extends Helpers with JavaUtil {
     }
 
     def schemaT: Query = q.schema
-      .func("datomic.api/tx->t", Seq(Var("tx")), ScalarBinding(Var("t")))
+      .func("-", Seq(Var("tx"), Val(txBase)), ScalarBinding(Var("t")))
+    //      .func("datomic.api/tx->t", Seq(Var("tx")), ScalarBinding(Var("t")))
 
     def schemaTxInstant: Query = q.schema
       .where("tx", "db", "txInstant", Var("txInstant"), "", "")
@@ -450,11 +461,13 @@ object QueryOps extends Helpers with JavaUtil {
     def datomT(e: String, v: String, v1: String): Query = {
       q.wh.clauses.reverse.collectFirst {
         case DataClause(_, _, _, _, Var(tx), _) if tx == v + "_tx" =>
-          q.func("datomic.api/tx->t", Seq(Var(v + "_tx")), ScalarBinding(Var(v + "_t")))
+          q.func("-", Seq(Var(v + "_tx"), Val(txBase)), ScalarBinding(Var(v + "_t")))
+        //          q.func("datomic.api/tx->t", Seq(Var(v + "_tx")), ScalarBinding(Var(v + "_t")))
 
       } getOrElse
         q.datomTx(e, v, v1)
-          .func("datomic.api/tx->t", Seq(Var(v + "_tx")), ScalarBinding(Var(v + "_t")))
+          .func("-", Seq(Var(v + "_tx"), Val(txBase)), ScalarBinding(Var(v + "_t")))
+      //          .func("datomic.api/tx->t", Seq(Var(v + "_tx")), ScalarBinding(Var(v + "_t")))
     }
 
     def datomTxInstant(e: String, v: String, v1: String): Query = {

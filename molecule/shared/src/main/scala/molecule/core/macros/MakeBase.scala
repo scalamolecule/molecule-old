@@ -207,12 +207,16 @@ private[molecule] trait MakeBase extends Dsl2Model {
             }
 
             case "schema" => attr match {
+              case "t"           => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
+              case "tx"          => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
+              case "txInstant"   => (q"a.get($i).asInstanceOf[Date]", q"b.get($i).asInstanceOf[Date]")
+              case "a"           => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
               case "attrId"      => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
               case "part"        => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
               case "nsFull"      => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
               case "ns"          => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
-              case "a"           => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
               case "attr"        => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+              case "enumm"       => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
               case "ident"       => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
               case "valueType"   => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
               case "cardinality" => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
@@ -222,10 +226,6 @@ private[molecule] trait MakeBase extends Dsl2Model {
               case "noHistory"   => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
               case "index"       => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
               case "fulltext"    => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
-              case "enumm"       => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
-              case "t"           => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
-              case "tx"          => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
-              case "txInstant"   => (q"a.get($i).asInstanceOf[Date]", q"b.get($i).asInstanceOf[Date]")
             }
             case other    => abort(s"Unexpected type '$other' for sort attribute `$attr`")
           }

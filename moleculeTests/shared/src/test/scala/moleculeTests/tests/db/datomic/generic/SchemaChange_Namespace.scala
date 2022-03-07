@@ -4,7 +4,7 @@ import molecule.core.data.model._
 import molecule.core.exceptions.MoleculeException
 import molecule.core.macros.GetTransactSchema.schema
 import molecule.core.util.Executor._
-import molecule.datomic.api.out13._
+import molecule.datomic.api.out7._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
 
@@ -13,31 +13,92 @@ object SchemaChange_Namespace extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
-    "New" - empty { implicit futConn =>
+    "Add" - empty { implicit futConn =>
       for {
-        _ <- transact(schema {
+        t1 <- transact(schema {
           trait Foo {
             val int = oneInt
           }
-        })
+        }).map(_.last.t)
 
         // Transact updated data model with added namespace having multiple attributes
-        _ <- transact(schema {
+        t2 <- transact(schema {
           trait Foo {
-            val int = oneInt
+            val int  = oneInt
+            val bool = oneBoolean
           }
           trait Bar {
             val str  = oneString
             val long = oneLong
           }
-        })
+        }).map(_.last.t)
 
-        // Schema has 2 namespaces
-        _ <- Schema.ns.d1.a.d2.attr.get.map(_ ==> List(
-          ("Foo", ":Foo/int", "int"),
-          ("Bar", ":Bar/str", "str"),
-          ("Bar", ":Bar/long", "long"),
+        // Current namespace definitions
+        _ <- Schema.t.ns.a.d1.get.map(_ ==> List(
+          (t1, "Foo", ":Foo/int"),
+          (t2, "Foo", ":Foo/bool"),
+          (t2, "Bar", ":Bar/str"),
+          (t2, "Bar", ":Bar/long"),
         ))
+
+        // Namespace definition history
+        // Since we have only added to the schema in this case, `getHistory` will show the same as `get`
+        _ <- Schema.t.ns.a.getHistory.map(_ ==> List(
+          (t1, "Foo", ":Foo/int"),
+          (t2, "Foo", ":Foo/bool"),
+          (t2, "Bar", ":Bar/str"),
+          (t2, "Bar", ":Bar/long"),
+        ))
+
+        // Specific namespace(s)
+        _ <- Schema.t.ns("Foo", "Bar").a.getHistory.map(_ ==> List(
+          (t1, "Foo", ":Foo/int"),
+          (t2, "Foo", ":Foo/bool"),
+          (t2, "Bar", ":Bar/str"),
+          (t2, "Bar", ":Bar/long"),
+        ))
+        _ <- Schema.t.ns(Seq("Foo", "Bar")).a.getHistory.map(_ ==> List(
+          (t1, "Foo", ":Foo/int"),
+          (t2, "Foo", ":Foo/bool"),
+          (t2, "Bar", ":Bar/str"),
+          (t2, "Bar", ":Bar/long"),
+        ))
+        _ <- Schema.t.ns("Foo").a.getHistory.map(_ ==> List(
+          (t1, "Foo", ":Foo/int"),
+          (t2, "Foo", ":Foo/bool"),
+        ))
+        _ <- Schema.t.ns(Seq("Bar")).a.getHistory.map(_ ==> List(
+          (t2, "Bar", ":Bar/str"),
+          (t2, "Bar", ":Bar/long"),
+        ))
+        _ <- Schema.t.ns_("Foo").a.getHistory.map(_ ==> List(
+          (t1, ":Foo/int"),
+          (t2, ":Foo/bool"),
+        ))
+        _ <- Schema.t.ns_(Seq("Bar")).a.getHistory.map(_ ==> List(
+          (t2, ":Bar/str"),
+          (t2, ":Bar/long"),
+        ))
+
+        // Excluding namespace(s)
+        _ <- Schema.t.ns.not("Bar").a.getHistory.map(_ ==> List(
+          (t1, "Foo", ":Foo/int"),
+          (t2, "Foo", ":Foo/bool"),
+        ))
+        _ <- Schema.t.ns.not(Seq("Foo")).a.getHistory.map(_ ==> List(
+          (t2, "Bar", ":Bar/str"),
+          (t2, "Bar", ":Bar/long"),
+        ))
+        _ <- Schema.t.ns_.not("Bar").a.getHistory.map(_ ==> List(
+          (t1, ":Foo/int"),
+          (t2, ":Foo/bool"),
+        ))
+        _ <- Schema.t.ns_.not(Seq("Foo")).a.getHistory.map(_ ==> List(
+          (t2, ":Bar/str"),
+          (t2, ":Bar/long"),
+        ))
+        _ <- Schema.t.ns.not("Bar", "Foo").a.getHistory.map(_ ==> Nil)
+        _ <- Schema.t.ns.not(Seq("Bar", "Foo")).a.getHistory.map(_ ==> Nil)
       } yield ()
     }
 
@@ -46,20 +107,23 @@ object SchemaChange_Namespace extends AsyncTestSuite {
       for {
         conn <- futConn
 
-        t0 <- transact(schema {
+        t1 <- transact(schema {
           trait Foo {
             val int = oneInt
             val str = oneString
+          }
+          trait Baz {
+            val boo = oneBoolean
           }
         }).map(_.last.t)
 
         // Renaming a namespace means changing the namespace prefix of all of its attributes
 
         // 1. Call changeNamespaceName to change the schema definition in the database
-        t1 <- conn.changeNamespaceName("Foo", "Bar").map(_.t)
+        t2 <- conn.changeNamespaceName("Foo", "Bar").map(_.t)
         // 2. Update namespace name in the data model
         //      trait Bar {
-        //        val int  = oneInt
+        //        val int = oneInt
         //        val str = oneString
         //      }
         // 3. Change all uses of the old namespace `Foo` to `Bar` in your code.
@@ -68,19 +132,60 @@ object SchemaChange_Namespace extends AsyncTestSuite {
         //    to transact the updated schema (depending on which system you use).
 
         // Foo attributes have been renamed to belong to Bar
-        _ <- Schema.a.attr.get.map(_ ==> List(
-          (":Bar/str", "str"),
-          (":Bar/int", "int"),
+        // Note that `t` refers to the transaction where the attribute entity was originally added
+        _ <- Schema.t.a1.ns.a.a2.ident.get.map(_ ==> List(
+          (t1, "Bar", ":Bar/int", ":Bar/int"),
+          (t1, "Bar", ":Bar/str", ":Bar/str"),
+          (t1, "Baz", ":Baz/boo", ":Baz/boo"),
         ))
 
         // See name changes with getHistory
-        // Note that `a` refers to the current attribute name
-        _ <- Schema.t.a.ident.getHistory.map(_ ==> List(
-          (t0, ":Bar/int", ":Foo/int"),
-          (t0, ":Bar/str", ":Foo/str"),
-          (t1, ":Bar/int", ":Bar/int"),
-          (t1, ":Bar/str", ":Bar/str"),
+        // Note that ns/a refers to the current namespace/attribute name
+        _ <- Schema.t.ns.a.ident.getHistory.map(_ ==> List(
+          (t1, "Bar", ":Bar/int", ":Foo/int"),
+          (t1, "Bar", ":Bar/str", ":Foo/str"),
+          (t1, "Baz", ":Baz/boo", ":Baz/boo"),
+          (t2, "Bar", ":Bar/int", ":Bar/int"),
+          (t2, "Bar", ":Bar/str", ":Bar/str"),
         ))
+
+        // Specific namespace(s)
+        _ <- Schema.t.ns("Bar", "Baz").a.ident.getHistory.map(_ ==> List(
+          (t1, "Bar", ":Bar/int", ":Foo/int"),
+          (t1, "Bar", ":Bar/str", ":Foo/str"),
+          (t1, "Baz", ":Baz/boo", ":Baz/boo"),
+          (t2, "Bar", ":Bar/int", ":Bar/int"),
+          (t2, "Bar", ":Bar/str", ":Bar/str"),
+        ))
+        _ <- Schema.t.ns(Seq("Bar", "Baz")).a.ident.getHistory.map(_ ==> List(
+          (t1, "Bar", ":Bar/int", ":Foo/int"),
+          (t1, "Bar", ":Bar/str", ":Foo/str"),
+          (t1, "Baz", ":Baz/boo", ":Baz/boo"),
+          (t2, "Bar", ":Bar/int", ":Bar/int"),
+          (t2, "Bar", ":Bar/str", ":Bar/str"),
+        ))
+        _ <- Schema.t.ns("Bar").a.ident.getHistory.map(_ ==> List(
+          (t1, "Bar", ":Bar/int", ":Foo/int"),
+          (t1, "Bar", ":Bar/str", ":Foo/str"),
+          (t2, "Bar", ":Bar/int", ":Bar/int"),
+          (t2, "Bar", ":Bar/str", ":Bar/str"),
+        ))
+        _ <- Schema.t.ns(Seq("Baz")).a.ident.getHistory.map(_ ==> List(
+          (t1, "Baz", ":Baz/boo", ":Baz/boo"),
+        ))
+
+        // Excluding namespace(s)
+        _ <- Schema.t.ns.not("Baz").a.ident.getHistory.map(_ ==> List(
+          (t1, "Bar", ":Bar/int", ":Foo/int"),
+          (t1, "Bar", ":Bar/str", ":Foo/str"),
+          (t2, "Bar", ":Bar/int", ":Bar/int"),
+          (t2, "Bar", ":Bar/str", ":Bar/str"),
+        ))
+        _ <- Schema.t.ns.not(Seq("Bar")).a.ident.getHistory.map(_ ==> List(
+          (t1, "Baz", ":Baz/boo", ":Baz/boo"),
+        ))
+        _ <- Schema.t.ns.not("Bar", "Baz").a.ident.getHistory.map(_ ==> Nil)
+        _ <- Schema.t.ns.not(Seq("Bar", "Baz")).a.ident.getHistory.map(_ ==> Nil)
       } yield ()
     }
 
@@ -92,7 +197,7 @@ object SchemaChange_Namespace extends AsyncTestSuite {
         conn <- futConn
 
         // Initial data model
-        t0 <- transact(schema {
+        t1 <- transact(schema {
           trait Foo {
             val int = oneInt
             val str = oneString
@@ -103,9 +208,9 @@ object SchemaChange_Namespace extends AsyncTestSuite {
         }).map(_.last.t)
 
         _ <- Schema.t.a.d1.get.map(_ ==> List(
-          (t0, ":Foo/str"),
-          (t0, ":Foo/int"),
-          (t0, ":Bar/long"),
+          (t1, ":Foo/str"),
+          (t1, ":Foo/int"),
+          (t1, ":Bar/long"),
         ))
 
         // Checks
@@ -136,7 +241,6 @@ object SchemaChange_Namespace extends AsyncTestSuite {
         // Retract data asserted with int attribute
         _ <- conn.transact(s"[[:db/retract $e :Foo/int 1]]")
 
-
         // Now we can retire the namespace - in 5 steps:
 
         // 1. Call retireAttr to retire all attributes of the namespace in the database.
@@ -150,22 +254,78 @@ object SchemaChange_Namespace extends AsyncTestSuite {
         // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbName)`
         //    to transact the updated schema (depending on which system you use).
 
-
         // Attributes in `Foo` namespace are no longer available
-        _ <- Schema.t.a.get.map(_ ==> List(
-          (t0, ":Bar/long"),
+        _ <- Schema.t.ns.a.get.map(_ ==> List(
+          (t1, "Bar", ":Bar/long"),
         ))
 
         // Retired attributes are simply marked with a `-` prefix to exclude them from current Schema queries.
-        _ <- Schema.t.ns.attr.a.ident.getHistory.map(_ ==> List(
-          (t0, "Foo", "int", ":-Foo/int", ":Foo/int"), // :Foo/int created (`a` shows current retired attribute ident `:-Foo/int`)
-          (t0, "Foo", "str", ":-Foo/str", ":Foo/str"), // :Foo/str created (`a` shows current retired attribute ident `:-Foo/str`)
-          (t0, "Bar", "long", ":Bar/long", ":Bar/long"),
+        _ <- Schema.t.ns.a.ident.getHistory.map(_ ==> List(
+          (t1, "Foo", ":-Foo/int", ":Foo/int"), // :Foo/int created (`a` shows current retired attribute ident `:-Foo/int`)
+          (t1, "Foo", ":-Foo/str", ":Foo/str"), // :Foo/str created (`a` shows current retired attribute ident `:-Foo/str`)
+          (t1, "Bar", ":Bar/long", ":Bar/long"),
 
           // Namespace Foo retired
-          (t4, "Foo", "int", ":-Foo/int", ":-Foo/int"), // :Foo/int retired
-          (t4, "Foo", "str", ":-Foo/str", ":-Foo/str"), // :Foo/str retired
+          (t4, "Foo", ":-Foo/int", ":-Foo/int"), // :Foo/int retired
+          (t4, "Foo", ":-Foo/str", ":-Foo/str"), // :Foo/str retired
         ))
+
+        // Specific namespace(s)
+        _ <- Schema.t.ns("Foo", "Bar").a.ident.getHistory.map(_ ==> List(
+          (t1, "Foo", ":-Foo/int", ":Foo/int"),
+          (t1, "Foo", ":-Foo/str", ":Foo/str"),
+          (t1, "Bar", ":Bar/long", ":Bar/long"),
+          (t4, "Foo", ":-Foo/int", ":-Foo/int"),
+          (t4, "Foo", ":-Foo/str", ":-Foo/str"),
+        ))
+        _ <- Schema.t.ns(Seq("Foo", "Bar")).a.ident.getHistory.map(_ ==> List(
+          (t1, "Foo", ":-Foo/int", ":Foo/int"),
+          (t1, "Foo", ":-Foo/str", ":Foo/str"),
+          (t1, "Bar", ":Bar/long", ":Bar/long"),
+          (t4, "Foo", ":-Foo/int", ":-Foo/int"),
+          (t4, "Foo", ":-Foo/str", ":-Foo/str"),
+        ))
+        _ <- Schema.t.ns("Foo").a.ident.getHistory.map(_ ==> List(
+          (t1, "Foo", ":-Foo/int", ":Foo/int"),
+          (t1, "Foo", ":-Foo/str", ":Foo/str"),
+          (t4, "Foo", ":-Foo/int", ":-Foo/int"),
+          (t4, "Foo", ":-Foo/str", ":-Foo/str"),
+        ))
+        _ <- Schema.t.ns(Seq("Bar")).a.ident.getHistory.map(_ ==> List(
+          (t1, "Bar", ":Bar/long", ":Bar/long"),
+        ))
+        _ <- Schema.t.ns_("Foo").a.ident.getHistory.map(_ ==> List(
+          (t1, ":-Foo/int", ":Foo/int"),
+          (t1, ":-Foo/str", ":Foo/str"),
+          (t4, ":-Foo/int", ":-Foo/int"),
+          (t4, ":-Foo/str", ":-Foo/str"),
+        ))
+        _ <- Schema.t.ns_(Seq("Bar")).a.ident.getHistory.map(_ ==> List(
+          (t1, ":Bar/long", ":Bar/long"),
+        ))
+
+        // Excluding namespace(s)
+        _ <- Schema.t.ns.not("Bar").a.ident.getHistory.map(_ ==> List(
+          (t1, "Foo", ":-Foo/int", ":Foo/int"),
+          (t1, "Foo", ":-Foo/str", ":Foo/str"),
+          (t4, "Foo", ":-Foo/int", ":-Foo/int"),
+          (t4, "Foo", ":-Foo/str", ":-Foo/str"),
+        ))
+        _ <- Schema.t.ns.not(Seq("Foo")).a.ident.getHistory.map(_ ==> List(
+          (t1, "Bar", ":Bar/long", ":Bar/long"),
+        ))
+        _ <- Schema.t.ns_.not("Bar").a.ident.getHistory.map(_ ==> List(
+          (t1, ":-Foo/int", ":Foo/int"),
+          (t1, ":-Foo/str", ":Foo/str"),
+          (t4, ":-Foo/int", ":-Foo/int"),
+          (t4, ":-Foo/str", ":-Foo/str"),
+        ))
+        _ <- Schema.t.ns_.not(Seq("Foo")).a.ident.getHistory.map(_ ==> List(
+          (t1, ":Bar/long", ":Bar/long"),
+        ))
+        _ <- Schema.t.ns.not("Bar", "Foo").a.ident.getHistory.map(_ ==> Nil)
+        _ <- Schema.t.ns.not(Seq("Bar", "Foo")).a.ident.getHistory.map(_ ==> Nil)
+
       } yield ()
     }
   }

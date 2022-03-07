@@ -6,13 +6,13 @@ import java.util.{Collections, Date, Collection => jCollection, List => jList, M
 import clojure.lang.{PersistentArrayMap, PersistentVector}
 import com.cognitect.transit.impl.URIImpl
 import datomic.Util.{read, readAll}
-import datomic.{Database, Peer, Util}
+import datomic.{Peer, Util}
 import molecule.core.ast.elements._
-import molecule.core.dto
 import molecule.core.dto.SchemaAttr
 import molecule.core.exceptions.MoleculeException
 import molecule.core.util.{Helpers, JavaConversions}
 import molecule.datomic.base.ast.transactionModel.{Cas, Enum, RetractEntity, Statement, TempId}
+import molecule.datomic.base.ops.QueryOps.txBase
 import molecule.datomic.base.transform.Model2Query
 import molecule.datomic.base.util.Inspect
 import scala.concurrent.{ExecutionContext, Future}
@@ -248,29 +248,29 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers with QuerySchemaHi
   def getEnumHistory(implicit ec: ExecutionContext)
   : Future[List[(String, Int, Long, Date, String, Boolean)]] = {
     val enumQuery =
-      """[:find  ?a
-        |        ?enumT
-        |        ?enumTx
-        |        ?enumTxInst
-        |        ?enum
-        |        ?op
-        | :in $ $dbCurrent
-        | :where [:db.part/db :db.install/attribute ?attrId]
-        |        [$dbCurrent ?attrId :db/ident ?attrIdent]
-        |        [(name ?attrIdent) ?attr]
-        |        [(str ?attrIdent) ?a]
-        |        [(namespace ?attrIdent) ?nsFull0]
-        |        [(if (= (subs ?nsFull0 0 1) "-") (subs ?nsFull0 1) ?nsFull0) ?nsFull]
-        |        [(.matches ^String ?nsFull "^(db|db.alter|db.excise|db.install|db.part|db.sys|fressian|db.entity|db.attr|-.*)") ?sys]
-        |        [(= ?sys false)]
-        |        [_ :db/ident ?enumIdent ?enumTx ?op]
-        |        [(namespace ?enumIdent) ?enumNs]
-        |        [(str ?nsFull "." ?attr) ?enumSubNs]
-        |        [(= ?enumSubNs ?enumNs)]
-        |        [(name ?enumIdent) ?enum]
-        |        [(datomic.api/tx->t ?enumTx) ?enumT]
-        |        [?enumTx :db/txInstant ?enumTxInst]
-        |]""".stripMargin
+      s"""[:find  ?a
+         |        ?enumT
+         |        ?enumTx
+         |        ?enumTxInst
+         |        ?enum
+         |        ?op
+         | :in $$ $$dbCurrent
+         | :where [:db.part/db :db.install/attribute ?attrId]
+         |        [$$dbCurrent ?attrId :db/ident ?attrIdent]
+         |        [(name ?attrIdent) ?attr]
+         |        [(str ?attrIdent) ?a]
+         |        [(namespace ?attrIdent) ?nsFull0]
+         |        [(if (= (subs ?nsFull0 0 1) "-") (subs ?nsFull0 1) ?nsFull0) ?nsFull]
+         |        [(.matches ^String ?nsFull "^(db|db.alter|db.excise|db.install|db.part|db.sys|fressian|db.entity|db.attr|-.*)") ?sys]
+         |        [(= ?sys false)]
+         |        [_ :db/ident ?enumIdent ?enumTx ?op]
+         |        [(namespace ?enumIdent) ?enumNs]
+         |        [(str ?nsFull "." ?attr) ?enumSubNs]
+         |        [(= ?enumSubNs ?enumNs)]
+         |        [(name ?enumIdent) ?enum]
+         |        [(- ?enumTx $txBase) ?enumT]
+         |        [?enumTx :db/txInstant ?enumTxInst]
+         |]""".stripMargin
 
     historyQuery(enumQuery).map { enumRes =>
       val rows = List.newBuilder[(String, Int, Long, Date, String, Boolean)]
@@ -338,7 +338,7 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers with QuerySchemaHi
           case Lt(arg)       => ("<", Seq(date2str(arg.asInstanceOf[Date])))
           case Le(arg)       => ("<=", Seq(date2str(arg.asInstanceOf[Date])))
           case other         => throw MoleculeException(
-            "Unexpected txInstant schema historyt attribute expression: " + other)
+            "Unexpected txInstant schema history attribute expression: " + other)
         }
 
         case Generic(_, _, _, NoValue, _)       => ("", Nil)
@@ -357,7 +357,7 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers with QuerySchemaHi
     }
     val queryString = Model2Query(model, schemaHistory0 = true, optimize = false)._2
 
-    //        println(model)
+    //    println(model)
     //    println(queryString)
 
     fetchSchemaHistory(schemaAttrs, queryString)

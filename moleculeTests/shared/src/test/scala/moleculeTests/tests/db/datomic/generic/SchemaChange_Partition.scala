@@ -4,7 +4,7 @@ import molecule.core.data.model._
 import molecule.core.exceptions.MoleculeException
 import molecule.core.macros.GetTransactSchema.schema
 import molecule.core.util.Executor._
-import molecule.datomic.api.out13._
+import molecule.datomic.api.out7._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
 
@@ -13,7 +13,7 @@ object SchemaChange_Partition extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
-    "New" - empty { implicit futConn =>
+    "Add" - empty { implicit futConn =>
       for {
         t1 <- transact(schema {
           object part1 {
@@ -22,10 +22,6 @@ object SchemaChange_Partition extends AsyncTestSuite {
             }
           }
         }).map(_.last.t)
-
-        // When partitions are used, the schema is transacted in two steps:
-        // t0: partition is installed
-        // t1: attributes are installed
 
         // Schema has 1 partition
         _ <- Schema.part.a.get.map(_ ==> List(
@@ -36,7 +32,7 @@ object SchemaChange_Partition extends AsyncTestSuite {
         ))
 
         // Transact data model with added partition having multiple namespaces
-        t3 <- transact(schema {
+        t2 <- transact(schema {
           object part1 {
             trait Foo {
               val int = oneInt
@@ -53,16 +49,62 @@ object SchemaChange_Partition extends AsyncTestSuite {
         }).map(_.last.t)
 
         // Schema now has 2 partitions
-        _ <- Schema.part.a1.a.get.map(_ ==> List(
-          ("part1", ":part1_Foo/int"),
-          ("part2", ":part2_Bar/str"),
-          ("part2", ":part2_Baz/long"),
+        _ <- Schema.t.a1.part.a.a2.get.map(_ ==> List(
+          (t1, "part1", ":part1_Foo/int"),
+          (t2, "part2", ":part2_Bar/str"),
+          (t2, "part2", ":part2_Baz/long"),
         ))
+
+        // Partition definition history
         _ <- Schema.t.part.a.getHistory.map(_ ==> List(
           (t1, "part1", ":part1_Foo/int"),
-          (t3, "part2", ":part2_Bar/str"),
-          (t3, "part2", ":part2_Baz/long"),
+          (t2, "part2", ":part2_Bar/str"),
+          (t2, "part2", ":part2_Baz/long"),
         ))
+
+        // Specific partition(s)
+        _ <- Schema.t.part("part1", "part2").a.getHistory.map(_ ==> List(
+          (t1, "part1", ":part1_Foo/int"),
+          (t2, "part2", ":part2_Bar/str"),
+          (t2, "part2", ":part2_Baz/long"),
+        ))
+        _ <- Schema.t.part(Seq("part1", "part2")).a.getHistory.map(_ ==> List(
+          (t1, "part1", ":part1_Foo/int"),
+          (t2, "part2", ":part2_Bar/str"),
+          (t2, "part2", ":part2_Baz/long"),
+        ))
+        _ <- Schema.t.part("part1").a.getHistory.map(_ ==> List(
+          (t1, "part1", ":part1_Foo/int"),
+        ))
+        _ <- Schema.t.part(Seq("part2")).a.getHistory.map(_ ==> List(
+          (t2, "part2", ":part2_Bar/str"),
+          (t2, "part2", ":part2_Baz/long"),
+        ))
+        _ <- Schema.t.part_("part1").a.getHistory.map(_ ==> List(
+          (t1, ":part1_Foo/int"),
+        ))
+        _ <- Schema.t.part_(Seq("part2")).a.getHistory.map(_ ==> List(
+          (t2, ":part2_Bar/str"),
+          (t2, ":part2_Baz/long"),
+        ))
+
+        // Excluding partition(s)
+        _ <- Schema.t.part.not("part2").a.getHistory.map(_ ==> List(
+          (t1, "part1", ":part1_Foo/int"),
+        ))
+        _ <- Schema.t.part.not(Seq("part1")).a.getHistory.map(_ ==> List(
+          (t2, "part2", ":part2_Bar/str"),
+          (t2, "part2", ":part2_Baz/long"),
+        ))
+        _ <- Schema.t.part_.not("part2").a.getHistory.map(_ ==> List(
+          (t1, ":part1_Foo/int"),
+        ))
+        _ <- Schema.t.part_.not(Seq("part1")).a.getHistory.map(_ ==> List(
+          (t2, ":part2_Bar/str"),
+          (t2, ":part2_Baz/long"),
+        ))
+        _ <- Schema.t.part.not("part1", "part2").a.getHistory.map(_ ==> Nil)
+        _ <- Schema.t.part.not(Seq("part1", "part2")).a.getHistory.map(_ ==> Nil)
       } yield ()
     }
 
@@ -78,15 +120,21 @@ object SchemaChange_Partition extends AsyncTestSuite {
               val str = oneString
             }
             trait Bar {
-              val long = oneLong
+              val lon = oneLong
+            }
+          }
+          object partX {
+            trait Baz {
+              val bax = oneInt
             }
           }
         }).map(_.last.t)
 
-        _ <- Schema.part.ns.d1.a.get.map(_ ==> List(
+        _ <- Schema.part.a1.ns.d2.a.get.map(_ ==> List(
           ("part1", "Foo", ":part1_Foo/int"),
           ("part1", "Foo", ":part1_Foo/str"),
-          ("part1", "Bar", ":part1_Bar/long"),
+          ("part1", "Bar", ":part1_Bar/lon"),
+          ("partX", "Baz", ":partX_Baz/bax"),
         ))
 
         // Renaming a partition means changing the namespace prefix of all of its attributes in eachj namespace
@@ -103,30 +151,105 @@ object SchemaChange_Partition extends AsyncTestSuite {
         //          val str = oneString
         //        }
         //      }
+        //      object partX {
+        //        trait Baz {
+        //          val bax = oneInt
+        //        }
+        //      }
         // 3. Change all uses of the old namespace `Foo` to `Bar` in your code.
         // 4. Run `sbt compile -Dmolecule=true` to re-generate boilerplate code.
         // 5. For a live database, call `Datomic_Peer.transactSchema(YourSchema, protocol, yourDbName)`
         //    to transact the updated schema (depending on which system you use).
 
+        // Current partition definitions
         // Foo attributes have been renamed to belong to part2
-
-        _ <- Schema.part.ns.d1.a.get.map(_ ==> List(
-          ("part2", "Foo", ":part2_Foo/int"),
-          ("part2", "Foo", ":part2_Foo/str"),
-          ("part2", "Bar", ":part2_Bar/long"),
+        _ <- Schema.t.part.a1.ns.d2.nsFull.a.a3.get.map(_ ==> List(
+          (t1, "part2", "Foo", "part2_Foo", ":part2_Foo/int"),
+          (t1, "part2", "Foo", "part2_Foo", ":part2_Foo/str"),
+          (t1, "part2", "Bar", "part2_Bar", ":part2_Bar/lon"),
+          (t1, "partX", "Baz", "partX_Baz", ":partX_Baz/bax"),
         ))
 
-        // See name changes with getHistory
-        // Note that t, part nad ns refer to the current values
+        // Partition definition history
+        // Note that part and ns refer to the current values
         _ <- Schema.t.part.ns.a.ident.getHistory.map(_ ==> List(
           (t1, "part2", "Foo", ":part2_Foo/int", ":part1_Foo/int"),
           (t1, "part2", "Foo", ":part2_Foo/str", ":part1_Foo/str"),
-          (t1, "part2", "Bar", ":part2_Bar/long", ":part1_Bar/long"),
+          (t1, "part2", "Bar", ":part2_Bar/lon", ":part1_Bar/lon"),
+          (t1, "partX", "Baz", ":partX_Baz/bax", ":partX_Baz/bax"),
 
           (t2, "part2", "Foo", ":part2_Foo/int", ":part2_Foo/int"),
           (t2, "part2", "Foo", ":part2_Foo/str", ":part2_Foo/str"),
-          (t2, "part2", "Bar", ":part2_Bar/long", ":part2_Bar/long"),
+          (t2, "part2", "Bar", ":part2_Bar/lon", ":part2_Bar/lon"),
         ))
+
+        // Specific partition(s)
+        _ <- Schema.t.part("part2", "partX").ns.a.ident.getHistory.map(_ ==> List(
+          (t1, "part2", "Foo", ":part2_Foo/int", ":part1_Foo/int"),
+          (t1, "part2", "Foo", ":part2_Foo/str", ":part1_Foo/str"),
+          (t1, "part2", "Bar", ":part2_Bar/lon", ":part1_Bar/lon"),
+          (t1, "partX", "Baz", ":partX_Baz/bax", ":partX_Baz/bax"),
+          (t2, "part2", "Foo", ":part2_Foo/int", ":part2_Foo/int"),
+          (t2, "part2", "Foo", ":part2_Foo/str", ":part2_Foo/str"),
+          (t2, "part2", "Bar", ":part2_Bar/lon", ":part2_Bar/lon"),
+        ))
+        _ <- Schema.t.part(Seq("part2", "partX")).ns.a.ident.getHistory.map(_ ==> List(
+          (t1, "part2", "Foo", ":part2_Foo/int", ":part1_Foo/int"),
+          (t1, "part2", "Foo", ":part2_Foo/str", ":part1_Foo/str"),
+          (t1, "part2", "Bar", ":part2_Bar/lon", ":part1_Bar/lon"),
+          (t1, "partX", "Baz", ":partX_Baz/bax", ":partX_Baz/bax"),
+          (t2, "part2", "Foo", ":part2_Foo/int", ":part2_Foo/int"),
+          (t2, "part2", "Foo", ":part2_Foo/str", ":part2_Foo/str"),
+          (t2, "part2", "Bar", ":part2_Bar/lon", ":part2_Bar/lon"),
+        ))
+        _ <- Schema.t.part("part2").ns.a.ident.getHistory.map(_ ==> List(
+          (t1, "part2", "Foo", ":part2_Foo/int", ":part1_Foo/int"),
+          (t1, "part2", "Foo", ":part2_Foo/str", ":part1_Foo/str"),
+          (t1, "part2", "Bar", ":part2_Bar/lon", ":part1_Bar/lon"),
+          (t2, "part2", "Foo", ":part2_Foo/int", ":part2_Foo/int"),
+          (t2, "part2", "Foo", ":part2_Foo/str", ":part2_Foo/str"),
+          (t2, "part2", "Bar", ":part2_Bar/lon", ":part2_Bar/lon"),
+        ))
+        _ <- Schema.t.part(Seq("partX")).ns.a.ident.getHistory.map(_ ==> List(
+          (t1, "partX", "Baz", ":partX_Baz/bax", ":partX_Baz/bax"),
+        ))
+        _ <- Schema.t.part_("part2").ns.a.ident.getHistory.map(_ ==> List(
+          (t1, "Foo", ":part2_Foo/int", ":part1_Foo/int"),
+          (t1, "Foo", ":part2_Foo/str", ":part1_Foo/str"),
+          (t1, "Bar", ":part2_Bar/lon", ":part1_Bar/lon"),
+          (t2, "Foo", ":part2_Foo/int", ":part2_Foo/int"),
+          (t2, "Foo", ":part2_Foo/str", ":part2_Foo/str"),
+          (t2, "Bar", ":part2_Bar/lon", ":part2_Bar/lon"),
+        ))
+        _ <- Schema.t.part_(Seq("partX")).ns.a.ident.getHistory.map(_ ==> List(
+          (t1, "Baz", ":partX_Baz/bax", ":partX_Baz/bax"),
+        ))
+
+        // Excluding partition(s)
+        _ <- Schema.t.part.not("partX").ns.a.ident.getHistory.map(_ ==> List(
+          (t1, "part2", "Foo", ":part2_Foo/int", ":part1_Foo/int"),
+          (t1, "part2", "Foo", ":part2_Foo/str", ":part1_Foo/str"),
+          (t1, "part2", "Bar", ":part2_Bar/lon", ":part1_Bar/lon"),
+          (t2, "part2", "Foo", ":part2_Foo/int", ":part2_Foo/int"),
+          (t2, "part2", "Foo", ":part2_Foo/str", ":part2_Foo/str"),
+          (t2, "part2", "Bar", ":part2_Bar/lon", ":part2_Bar/lon"),
+        ))
+        _ <- Schema.t.part.not(Seq("part2")).ns.a.ident.getHistory.map(_ ==> List(
+          (t1, "partX", "Baz", ":partX_Baz/bax", ":partX_Baz/bax"),
+        ))
+        _ <- Schema.t.part_.not("partX").ns.a.ident.getHistory.map(_ ==> List(
+          (t1, "Foo", ":part2_Foo/int", ":part1_Foo/int"),
+          (t1, "Foo", ":part2_Foo/str", ":part1_Foo/str"),
+          (t1, "Bar", ":part2_Bar/lon", ":part1_Bar/lon"),
+          (t2, "Foo", ":part2_Foo/int", ":part2_Foo/int"),
+          (t2, "Foo", ":part2_Foo/str", ":part2_Foo/str"),
+          (t2, "Bar", ":part2_Bar/lon", ":part2_Bar/lon"),
+        ))
+        _ <- Schema.t.part_.not(Seq("part2")).ns.a.ident.getHistory.map(_ ==> List(
+          (t1, "Baz", ":partX_Baz/bax", ":partX_Baz/bax"),
+        ))
+        _ <- Schema.t.part.not("part2", "partX").ns.a.ident.getHistory.map(_ ==> Nil)
+        _ <- Schema.t.part.not(Seq("part2", "partX")).ns.a.ident.getHistory.map(_ ==> Nil)
       } yield ()
     }
 
@@ -145,21 +268,21 @@ object SchemaChange_Partition extends AsyncTestSuite {
               val str = oneString
             }
             trait Bar {
-              val long = oneLong
+              val lon = oneLong
             }
           }
           object part2 {
             trait Baz {
-              val bool = oneBoolean
+              val boo = oneBoolean
             }
           }
         }).map(_.last.t)
 
         _ <- Schema.t.a.a1.get.map(_ ==> List(
-          (t1, ":part1_Bar/long"),
+          (t1, ":part1_Bar/lon"),
           (t1, ":part1_Foo/int"),
           (t1, ":part1_Foo/str"),
-          (t1, ":part2_Baz/bool"),
+          (t1, ":part2_Baz/boo"),
         ))
 
         // Checks
@@ -207,23 +330,94 @@ object SchemaChange_Partition extends AsyncTestSuite {
         //    to transact the updated schema (depending on which system you use).
 
 
+        // Current partition definitions
         // Attributes in `part2` partition are no longer available
         _ <- Schema.t.part.ns.attr.a.get.map(_ ==> List(
-          (t1, "part2", "Baz", "bool", ":part2_Baz/bool"),
+          (t1, "part2", "Baz", "boo", ":part2_Baz/boo"),
         ))
 
+        // Partition definition history
+        // Note that part and ns refer to the current values
         // Retired attributes are simply marked with a `-` prefix to exclude them from current Schema queries.
         _ <- Schema.t.part.ns.attr.a.ident.getHistory.map(_ ==> List(
           (t1, "part1", "Foo", "int", ":-part1_Foo/int", ":part1_Foo/int"),
           (t1, "part1", "Foo", "str", ":-part1_Foo/str", ":part1_Foo/str"),
-          (t1, "part1", "Bar", "long", ":-part1_Bar/long", ":part1_Bar/long"),
-          (t1, "part2", "Baz", "bool", ":part2_Baz/bool", ":part2_Baz/bool"),
+          (t1, "part1", "Bar", "lon", ":-part1_Bar/lon", ":part1_Bar/lon"),
+          (t1, "part2", "Baz", "boo", ":part2_Baz/boo", ":part2_Baz/boo"),
 
           // Partition part1 retired
           (t5, "part1", "Foo", "int", ":-part1_Foo/int", ":-part1_Foo/int"),
           (t5, "part1", "Foo", "str", ":-part1_Foo/str", ":-part1_Foo/str"),
-          (t5, "part1", "Bar", "long", ":-part1_Bar/long", ":-part1_Bar/long"),
+          (t5, "part1", "Bar", "lon", ":-part1_Bar/lon", ":-part1_Bar/lon"),
         ))
+
+        // Specific partition(s)
+        _ <- Schema.t.part("part1", "part2").ns.attr.a.ident.getHistory.map(_ ==> List(
+          (t1, "part1", "Foo", "int", ":-part1_Foo/int", ":part1_Foo/int"),
+          (t1, "part1", "Foo", "str", ":-part1_Foo/str", ":part1_Foo/str"),
+          (t1, "part1", "Bar", "lon", ":-part1_Bar/lon", ":part1_Bar/lon"),
+          (t1, "part2", "Baz", "boo", ":part2_Baz/boo", ":part2_Baz/boo"),
+          (t5, "part1", "Foo", "int", ":-part1_Foo/int", ":-part1_Foo/int"),
+          (t5, "part1", "Foo", "str", ":-part1_Foo/str", ":-part1_Foo/str"),
+          (t5, "part1", "Bar", "lon", ":-part1_Bar/lon", ":-part1_Bar/lon"),
+        ))
+        _ <- Schema.t.part(Seq("part1", "part2")).ns.attr.a.ident.getHistory.map(_ ==> List(
+          (t1, "part1", "Foo", "int", ":-part1_Foo/int", ":part1_Foo/int"),
+          (t1, "part1", "Foo", "str", ":-part1_Foo/str", ":part1_Foo/str"),
+          (t1, "part1", "Bar", "lon", ":-part1_Bar/lon", ":part1_Bar/lon"),
+          (t1, "part2", "Baz", "boo", ":part2_Baz/boo", ":part2_Baz/boo"),
+          (t5, "part1", "Foo", "int", ":-part1_Foo/int", ":-part1_Foo/int"),
+          (t5, "part1", "Foo", "str", ":-part1_Foo/str", ":-part1_Foo/str"),
+          (t5, "part1", "Bar", "lon", ":-part1_Bar/lon", ":-part1_Bar/lon"),
+        ))
+        _ <- Schema.t.part("part1").ns.attr.a.ident.getHistory.map(_ ==> List(
+          (t1, "part1", "Foo", "int", ":-part1_Foo/int", ":part1_Foo/int"),
+          (t1, "part1", "Foo", "str", ":-part1_Foo/str", ":part1_Foo/str"),
+          (t1, "part1", "Bar", "lon", ":-part1_Bar/lon", ":part1_Bar/lon"),
+          (t5, "part1", "Foo", "int", ":-part1_Foo/int", ":-part1_Foo/int"),
+          (t5, "part1", "Foo", "str", ":-part1_Foo/str", ":-part1_Foo/str"),
+          (t5, "part1", "Bar", "lon", ":-part1_Bar/lon", ":-part1_Bar/lon"),
+        ))
+        _ <- Schema.t.part(Seq("part2")).ns.attr.a.ident.getHistory.map(_ ==> List(
+          (t1, "part2", "Baz", "boo", ":part2_Baz/boo", ":part2_Baz/boo"),
+        ))
+        _ <- Schema.t.part_("part1").ns.attr.a.ident.getHistory.map(_ ==> List(
+          (t1, "Foo", "int", ":-part1_Foo/int", ":part1_Foo/int"),
+          (t1, "Foo", "str", ":-part1_Foo/str", ":part1_Foo/str"),
+          (t1, "Bar", "lon", ":-part1_Bar/lon", ":part1_Bar/lon"),
+          (t5, "Foo", "int", ":-part1_Foo/int", ":-part1_Foo/int"),
+          (t5, "Foo", "str", ":-part1_Foo/str", ":-part1_Foo/str"),
+          (t5, "Bar", "lon", ":-part1_Bar/lon", ":-part1_Bar/lon"),
+        ))
+        _ <- Schema.t.part_(Seq("part2")).ns.attr.a.ident.getHistory.map(_ ==> List(
+          (t1, "Baz", "boo", ":part2_Baz/boo", ":part2_Baz/boo"),
+        ))
+
+        // Excluding partition(s)
+        _ <- Schema.t.part.not("part2").ns.attr.a.ident.getHistory.map(_ ==> List(
+          (t1, "part1", "Foo", "int", ":-part1_Foo/int", ":part1_Foo/int"),
+          (t1, "part1", "Foo", "str", ":-part1_Foo/str", ":part1_Foo/str"),
+          (t1, "part1", "Bar", "lon", ":-part1_Bar/lon", ":part1_Bar/lon"),
+          (t5, "part1", "Foo", "int", ":-part1_Foo/int", ":-part1_Foo/int"),
+          (t5, "part1", "Foo", "str", ":-part1_Foo/str", ":-part1_Foo/str"),
+          (t5, "part1", "Bar", "lon", ":-part1_Bar/lon", ":-part1_Bar/lon"),
+        ))
+        _ <- Schema.t.part.not(Seq("part1")).ns.attr.a.ident.getHistory.map(_ ==> List(
+          (t1, "part2", "Baz", "boo", ":part2_Baz/boo", ":part2_Baz/boo"),
+        ))
+        _ <- Schema.t.part_.not("part2").ns.attr.a.ident.getHistory.map(_ ==> List(
+          (t1, "Foo", "int", ":-part1_Foo/int", ":part1_Foo/int"),
+          (t1, "Foo", "str", ":-part1_Foo/str", ":part1_Foo/str"),
+          (t1, "Bar", "lon", ":-part1_Bar/lon", ":part1_Bar/lon"),
+          (t5, "Foo", "int", ":-part1_Foo/int", ":-part1_Foo/int"),
+          (t5, "Foo", "str", ":-part1_Foo/str", ":-part1_Foo/str"),
+          (t5, "Bar", "lon", ":-part1_Bar/lon", ":-part1_Bar/lon"),
+        ))
+        _ <- Schema.t.part_.not(Seq("part1")).ns.attr.a.ident.getHistory.map(_ ==> List(
+          (t1, "Baz", "boo", ":part2_Baz/boo", ":part2_Baz/boo"),
+        ))
+        _ <- Schema.t.part.not("part1", "part2").ns.attr.a.ident.getHistory.map(_ ==> Nil)
+        _ <- Schema.t.part.not(Seq("part1", "part2")).ns.attr.a.ident.getHistory.map(_ ==> Nil)
       } yield ()
     }
   }

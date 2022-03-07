@@ -3,11 +3,10 @@ package moleculeTests.tests.db.datomic.generic
 import molecule.core.data.model._
 import molecule.core.exceptions.MoleculeException
 import molecule.core.macros.GetTransactSchema.schema
-import molecule.core.util.Executor.global
-import molecule.datomic.api.out13._
+import molecule.core.util.Executor._
+import molecule.datomic.api.out7._
 import molecule.datomic.base.transform.exception.Model2QueryException
 import molecule.datomic.base.util.SystemPeer
-import moleculeTests.dataModels.core.base.dataModel.CoreTestDataModel.{Ns, Ref1}
 import moleculeTests.setup.AsyncTestSuite
 import utest._
 
@@ -55,8 +54,8 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
 
         t2 <- transact(schema {
           trait Foo {
-            val str  = oneString.doc("doc")
-            val bool = oneBoolean
+            val str = oneString.doc("doc")
+            val boo = oneBoolean
           }
         }).map(_.last.t)
 
@@ -64,17 +63,17 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
         _ <- Schema.t.a.valueType$.doc$.getHistory.map(_ ==> List(
           (t1, ":Foo/str", Some("string"), None),
           (t2, ":Foo/str", None, Some("doc")),
-          (t2, ":Foo/bool", Some("boolean"), None),
+          (t2, ":Foo/boo", Some("boolean"), None),
         ))
 
         // Value type definitions only
         _ <- Schema.t.a.valueType.doc$.getHistory.map(_ ==> List(
           (t1, ":Foo/str", "string", None),
-          (t2, ":Foo/bool", "boolean", None),
+          (t2, ":Foo/boo", "boolean", None),
         ))
         _ <- Schema.t.a.valueType_.doc$.getHistory.map(_ ==> List(
           (t1, ":Foo/str", None),
-          (t2, ":Foo/bool", None),
+          (t2, ":Foo/boo", None),
         ))
 
         // Exclude value type
@@ -106,11 +105,11 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
         // Value types except long
         _ <- Schema.t.a.valueType.not("long").getHistory.map(_ ==> List(
           (t1, ":Foo/str", "string"),
-          (t2, ":Foo/bool", "boolean"),
+          (t2, ":Foo/boo", "boolean"),
         ))
         _ <- Schema.t.a.valueType_.not("long").getHistory.map(_ ==> List(
           (t1, ":Foo/str"),
-          (t2, ":Foo/bool"),
+          (t2, ":Foo/boo"),
         ))
 
         // Variables can be applied too
@@ -187,48 +186,42 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
           }
         })
 
-        _ <- Schema.attrId.a1.cardinality.attr.valueType
-          .getHistory.map(_.map(r => (r._2, r._3, r._4)) ==> List(
-          ("one", "str", "string"),
-          ("one", "int", "long"), // Scala Int's are saved internally as Long's in Datomic
-          ("one", "long", "long"),
-          ("one", "double", "double"),
-          ("one", "bool", "boolean"),
-          ("one", "date", "instant"),
-          ("one", "uuid", "uuid"),
-          ("one", "uri", "uri"),
-          ("one", "bigInt", "bigint"),
-          ("one", "bigDec", "bigdec"),
-          ("one", "enumm", "ref"),
-          ("one", "bar", "ref"),
+        _ <- Schema.attr_("str").valueType.getHistory.map(_ ==> List("string"))
+        _ <- Schema.attr_("int").valueType.getHistory.map(_ ==> List("long"))
+        _ <- Schema.attr_("long").valueType.getHistory.map(_ ==> List("long"))
+        _ <- Schema.attr_("double").valueType.getHistory.map(_ ==> List("double"))
+        _ <- Schema.attr_("bool").valueType.getHistory.map(_ ==> List("boolean"))
+        _ <- Schema.attr_("date").valueType.getHistory.map(_ ==> List("instant"))
+        _ <- Schema.attr_("uuid").valueType.getHistory.map(_ ==> List("uuid"))
+        _ <- Schema.attr_("uri").valueType.getHistory.map(_ ==> List("uri"))
+        _ <- Schema.attr_("bigInt").valueType.getHistory.map(_ ==> List("bigint"))
+        _ <- Schema.attr_("bigDec").valueType.getHistory.map(_ ==> List("bigdec"))
+        _ <- Schema.attr_("enumm").valueType.getHistory.map(_ ==> List("ref"))
+        _ <- Schema.attr_("bar").valueType.getHistory.map(_ ==> List("ref"))
 
-          ("many", "strs", "string"),
-          ("many", "ints", "long"),
-          ("many", "longs", "long"),
-          ("many", "doubles", "double"),
-          ("many", "bools", "boolean"),
-          ("many", "dates", "instant"),
-          ("many", "uuids", "uuid"),
-          ("many", "uris", "uri"),
-          ("many", "bigInts", "bigint"),
-          ("many", "bigDecs", "bigdec"),
-          ("many", "enums", "ref"),
-          ("many", "bars", "ref"),
+        _ <- Schema.attr_("strs").valueType.getHistory.map(_ ==> List("string"))
+        _ <- Schema.attr_("ints").valueType.getHistory.map(_ ==> List("long"))
+        _ <- Schema.attr_("longs").valueType.getHistory.map(_ ==> List("long"))
+        _ <- Schema.attr_("doubles").valueType.getHistory.map(_ ==> List("double"))
+        _ <- Schema.attr_("bools").valueType.getHistory.map(_ ==> List("boolean"))
+        _ <- Schema.attr_("dates").valueType.getHistory.map(_ ==> List("instant"))
+        _ <- Schema.attr_("uuids").valueType.getHistory.map(_ ==> List("uuid"))
+        _ <- Schema.attr_("uris").valueType.getHistory.map(_ ==> List("uri"))
+        _ <- Schema.attr_("bigInts").valueType.getHistory.map(_ ==> List("bigint"))
+        _ <- Schema.attr_("bigDecs").valueType.getHistory.map(_ ==> List("bigdec"))
+        _ <- Schema.attr_("enums").valueType.getHistory.map(_ ==> List("ref"))
+        _ <- Schema.attr_("bars").valueType.getHistory.map(_ ==> List("ref"))
 
-          // Molecule map attributes are saved internally as cardinality-many
-          // string values ("<key>@<value>") in Datomic.
-          // We therefore can't distinguish map/many attributes
-          ("many", "strMap", "string"),
-          ("many", "intMap", "string"),
-          ("many", "longMap", "string"),
-          ("many", "doubleMap", "string"),
-          ("many", "boolMap", "string"),
-          ("many", "dateMap", "string"),
-          ("many", "uuidMap", "string"),
-          ("many", "uriMap", "string"),
-          ("many", "bigIntMap", "string"),
-          ("many", "bigDecMap", "string")
-        ))
+        _ <- Schema.attr_("strMap").valueType.getHistory.map(_ ==> List("string"))
+        _ <- Schema.attr_("intMap").valueType.getHistory.map(_ ==> List("string"))
+        _ <- Schema.attr_("longMap").valueType.getHistory.map(_ ==> List("string"))
+        _ <- Schema.attr_("doubleMap").valueType.getHistory.map(_ ==> List("string"))
+        _ <- Schema.attr_("boolMap").valueType.getHistory.map(_ ==> List("string"))
+        _ <- Schema.attr_("dateMap").valueType.getHistory.map(_ ==> List("string"))
+        _ <- Schema.attr_("uuidMap").valueType.getHistory.map(_ ==> List("string"))
+        _ <- Schema.attr_("uriMap").valueType.getHistory.map(_ ==> List("string"))
+        _ <- Schema.attr_("bigIntMap").valueType.getHistory.map(_ ==> List("string"))
+        _ <- Schema.attr_("bigDecMap").valueType.getHistory.map(_ ==> List("string"))
       } yield ()
     }
 

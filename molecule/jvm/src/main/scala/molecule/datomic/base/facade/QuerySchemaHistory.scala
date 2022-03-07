@@ -3,9 +3,8 @@ package molecule.datomic.base.facade
 import java.lang.{Boolean => jBoolean, Long => jLong}
 import java.util
 import java.util.{Collections, Comparator, Collection => jCollection, List => jList}
-import molecule.core.ast.elements._
 import molecule.core.dto.SchemaAttr
-import molecule.core.exceptions.MoleculeException
+import molecule.core.marshalling.{DatomicDevLocalProxy, DatomicPeerProxy, DatomicPeerServerProxy}
 import molecule.core.util.JavaUtil
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
@@ -41,26 +40,54 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
     }
   }
 
-  private def id2str(tpeId: AnyRef) = tpeId.toString.toInt match {
-    // value type
-    case 23 => "string"
-    case 22 => "long"
-    case 57 => "double"
-    case 24 => "boolean"
-    case 20 => "ref"
-    case 25 => "instant"
-    case 56 => "uuid"
-    case 59 => "uri"
-    case 60 => "bigint"
-    case 61 => "bigdec"
+  private lazy val id2str = {
+    self.connProxy match {
+      case _: DatomicPeerProxy => (tpeId: AnyRef) =>
+        tpeId.toString.toInt match {
+          // cardinality
+          case 35 => "one"
+          case 36 => "many"
 
-    // cardinality
-    case 35 => "one"
-    case 36 => "many"
+          // value type
+          case 20 => "ref"
+          case 22 => "long"
+          case 23 => "string"
+          case 24 => "boolean"
+          case 25 => "instant"
+          case 56 => "uuid"
+          case 57 => "double"
+          case 59 => "uri"
+          case 60 => "bigint"
+          case 61 => "bigdec"
 
-    // unique
-    case 37 => "value"
-    case 38 => "identity"
+          // unique
+          case 37 => "value"
+          case 38 => "identity"
+        }
+
+      case _ => (tpeId: AnyRef) =>
+        tpeId.toString.toInt match {
+          // cardinality
+          case 35 => "one"
+          case 36 => "many"
+
+          // value type
+          case 20 => "ref"
+          case 22 => "long"
+          case 23 => "string"
+          case 24 => "boolean"
+          case 25 => "instant"
+          case 54 => "uuid"
+          case 58 => "double"
+          case 60 => "uri"
+          case 61 => "bigint"
+          case 62 => "bigdec"
+
+          // unique
+          case 37 => "value"
+          case 38 => "identity"
+        }
+    }
   }
 
   private def row2schemaValue(schemaAttr: SchemaAttr): jList[AnyRef] => AnyRef = {
@@ -121,81 +148,72 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
 
       case SchemaAttr(attrClean@("valueType" | "cardinality" | "unique"), _, expr, args) =>
         val test = expr match {
-          case "="        => (add: Boolean, v: AnyRef) => add && args.contains(id2str(v))
-          case "!="       => (add: Boolean, v: AnyRef) => add && !args.contains(id2str(v))
+          case "="  => (add: Boolean, v: AnyRef) => add && args.contains(id2str(v))
+          case "!=" => (add: Boolean, v: AnyRef) => add && !args.contains(id2str(v))
         }
         attrClean -> test
 
       case SchemaAttr(attrClean, _, expr, args) =>
         val test = expr match {
-          case "="        => (add: Boolean, v: AnyRef) => add && args.contains(v.toString)
-          case "!="       => (add: Boolean, v: AnyRef) => add && !args.contains(v.toString)
-          case ">"        => (add: Boolean, v: AnyRef) => add && v.toString > args.head
-          case ">="       => (add: Boolean, v: AnyRef) => add && v.toString >= args.head
-          case "<"        => (add: Boolean, v: AnyRef) => add && v.toString < args.head
-          case "<="       => (add: Boolean, v: AnyRef) => add && v.toString <= args.head
+          case "="  => (add: Boolean, v: AnyRef) => add && args.contains(v.toString)
+          case "!=" => (add: Boolean, v: AnyRef) => add && !args.contains(v.toString)
+          case ">"  => (add: Boolean, v: AnyRef) => add && v.toString > args.head
+          case ">=" => (add: Boolean, v: AnyRef) => add && v.toString >= args.head
+          case "<"  => (add: Boolean, v: AnyRef) => add && v.toString < args.head
+          case "<=" => (add: Boolean, v: AnyRef) => add && v.toString <= args.head
         }
         attrClean -> test
     }.toMap
 
-    val attrChecks  = {
-      schemaAttrs.foldLeft(0, Map.empty[String, (Int, jList[AnyRef] => AnyRef)]) {
-        // Initial attributes filtered by query
-        case ((i, acc), SchemaAttr(attrClean, _, _, _)) if sharedAttrs.contains(attrClean) =>
+    val (length, attrChecks) = schemaAttrs.foldLeft(0, Map.empty[String, (Int, jList[AnyRef] => AnyRef)]) {
+      // Initial attributes filtered by query
+      case ((i, acc), SchemaAttr(attrClean, attr, _, _)) if sharedAttrs.contains(attrClean) =>
+        if (attr.last == '_') {
+          (i, acc)
+        } else {
           attrs += attrClean
           (i + 1, acc)
+        }
 
-        // Excluded optional
-        case ((i, acc), schemaAttr@SchemaAttr(attrClean, attr, "none", _)) if attr.last == '$' =>
-          attrs += attrClean
-          excludeAttrs += attrClean
-          (i + 1, acc + (attrClean -> (i, row2schemaValue(schemaAttr))))
+      // Excluded optional
+      case ((i, acc), schemaAttr@SchemaAttr(attrClean, attr, "none", _)) if attr.last == '$' =>
+        attrs += attrClean
+        excludeAttrs += attrClean
+        (i + 1, acc + (attrClean -> (i, row2schemaValue(schemaAttr))))
 
-        // Excluded
-        case ((i, acc), SchemaAttr(attrClean, _, "none", _)) =>
-          excludeAttrs += attrClean
-          (i, acc)
+      // Excluded
+      case ((i, acc), SchemaAttr(attrClean, _, "none", _)) =>
+        excludeAttrs += attrClean
+        (i, acc)
 
-        // Tacit without expression
-        case ((i, acc), SchemaAttr(attrClean, attr, "", _)) if attr.last == '_' =>
-          requireAttrs += attrClean
-          (i, acc)
+      // Tacit without expression
+      case ((i, acc), SchemaAttr(attrClean, attr, "", _)) if attr.last == '_' =>
+        requireAttrs += attrClean
+        (i, acc)
 
-        // Tacit with expression
-        case ((i, acc), schemaAttr@SchemaAttr(attrClean, attr, _, _)) if attr.last == '_' =>
-          validateAttrs += attrClean
-          (i, acc + (attrClean -> (i, row2schemaValue(schemaAttr))))
+      // Tacit with expression
+      case ((i, acc), schemaAttr@SchemaAttr(attrClean, attr, _, _)) if attr.last == '_' =>
+        validateAttrs += attrClean
+        (i, acc + (attrClean -> (i, row2schemaValue(schemaAttr))))
 
-        // Optional without expression
-        case ((i, acc), schemaAttr@SchemaAttr(attrClean, attr, "", _)) if attr.last == '$' =>
-          attrs += attrClean
-          (i + 1, acc + (attrClean -> (i, row2schemaValue(schemaAttr))))
+      // Optional without expression
+      case ((i, acc), schemaAttr@SchemaAttr(attrClean, attr, "", _)) if attr.last == '$' =>
+        attrs += attrClean
+        (i + 1, acc + (attrClean -> (i, row2schemaValue(schemaAttr))))
 
-        // Optional with expression
-        case ((i, acc), schemaAttr@SchemaAttr(attrClean, attr, _, _)) if attr.last == '$' =>
-          attrs += attrClean
-          validateAttrs += attrClean
-          (i + 1, acc + (attrClean -> (i, row2schemaValue(schemaAttr))))
+      // Optional with expression
+      case ((i, acc), schemaAttr@SchemaAttr(attrClean, attr, _, _)) if attr.last == '$' =>
+        attrs += attrClean
+        validateAttrs += attrClean
+        (i + 1, acc + (attrClean -> (i, row2schemaValue(schemaAttr))))
 
-        // Mandatory
-        case ((i, acc), schemaAttr@SchemaAttr(attrClean, _, _, _)) =>
-          attrs += attrClean
-          requireAttrs += attrClean
-          validateAttrs += attrClean
-          (i + 1, acc + (attrClean -> (i, row2schemaValue(schemaAttr))))
-      }._2
+      // Mandatory
+      case ((i, acc), schemaAttr@SchemaAttr(attrClean, _, _, _)) =>
+        attrs += attrClean
+        requireAttrs += attrClean
+        validateAttrs += attrClean
+        (i + 1, acc + (attrClean -> (i, row2schemaValue(schemaAttr))))
     }
-
-    schemaAttrs.foreach(println)
-    println("INPUTS: " + javaInputs)
-    println("attrs        : " + attrs)
-    println("attrChecks   :\n  " + attrChecks.mkString("\n  "))
-    println("requireAttrs : " + requireAttrs)
-    println("validateAttrs: " + validateAttrs)
-    println("excludeAttrs : " + excludeAttrs)
-
-    val length = attrs.size
-    println("Length: " + length)
 
     var valid      = true
     var add        = true
@@ -220,29 +238,18 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
       case _           => (_: jList[AnyRef]) => null // to be set when traversing additional schema attributes
     }
 
-    // Initializer of row lists with arity of model elements length
+    // Initializer of row lists with arity of the number of non-tacit attributes
     val initList: jList[AnyRef] => Unit = {
       length match {
         case 1  =>
           val resolve1 = initElement(attrs(0))
           (row: jList[AnyRef]) => {
-            //            val v = resolve1(row)
-            //            println("r: " + row)
-            //            println("v: " + v)
-            //            list.add(v)
             list.add(resolve1(row))
           }
         case 2  =>
           val resolve1 = initElement(attrs(0))
           val resolve2 = initElement(attrs(1))
           (row: jList[AnyRef]) => {
-            //            val v1 = resolve1(row)
-            //            println("v1: " + v1)
-            //            list.add(v1)
-            //
-            //            val v2 = resolve2(row)
-            //            println("v2: " + v2)
-            //            list.add(v2)
             list.add(resolve1(row))
             list.add(resolve2(row))
           }
@@ -674,6 +681,15 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
       }
     }
 
+    //    schemaAttrs.foreach(println)
+    //    println("INPUTS       : " + javaInputs)
+    //    println("attrs        : " + attrs)
+    //    println("attrChecks   :" + (if (attrChecks.nonEmpty) "\n  " else "") + attrChecks.mkString("\n  "))
+    //    println("requireAttrs : " + requireAttrs)
+    //    println("validateAttrs: " + validateAttrs)
+    //    println("excludeAttrs : " + excludeAttrs)
+    //    println("Length       : " + length)
+
     historyQuery(queryString, javaInputs).map { jColl =>
       // Sort by tx, attrId, schemaId, op
       val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
@@ -689,9 +705,9 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
         attrId = row.get(attrId_)
         attrClean = row.get(schemaAttr_).toString
 
-        if (tx != prevTx)
-          println("")
-        println(row)
+        //        if (tx != prevTx)
+        //          println("")
+        //        println(row)
 
         // Init list
         if (tx != prevTx || attrId != prevAttrId) {
@@ -741,9 +757,9 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
           }
         }
       }
-      println("--- coll: ---------------------------")
-      coll.forEach(row => println(row))
-      println("#####################################")
+      //      println("--- coll: ---------------------------")
+      //      coll.forEach(row => println(row))
+      //      println("#####################################")
       coll
     }
   } catch {
