@@ -1,4 +1,4 @@
-package molecule.core.macros.rowExtractors
+package molecule.core.macros.rowConverters
 
 import molecule.core.macros.rowAttr.RowValue2cast
 import molecule.core.marshalling.nodes._
@@ -10,8 +10,8 @@ trait Row2obj extends RowValue2cast {
 
   import c.universe._
 
-  //  private lazy val xx = InspectMacro("BuildObj", 1, mkError = true)
-  private lazy val xx = InspectMacro("BuildObj", 1)
+  //  private lazy val xx = InspectMacro("Row2obj", 1, mkError = true)
+  private lazy val xx = InspectMacro("Row2obj", 1)
 
   def classes(nodes: List[Node]): List[Tree] = {
     var prevClasses = List.empty[String]

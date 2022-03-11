@@ -1,6 +1,6 @@
 package molecule.core.api
 
-import java.util.{Date, List => jList}
+import java.util.{Date, List => jList, Collection => jCollection}
 import molecule.core.ast.elements.Generic
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.Marshalling
@@ -16,6 +16,32 @@ import scala.concurrent.{ExecutionContext, Future}
 private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
 
   // get ================================================================================================
+
+  private def rows2tuples(rows: jCollection[jList[AnyRef]], limit: Int, offset: Int = 0): List[Tpl] = {
+    limit match {
+      case 0 => List.empty[Tpl]
+      case 1 => List(row2tpl(rows.iterator.next))
+      case _ =>
+        val tuples = List.newBuilder[Tpl]
+        var i      = offset
+        if (sortRows) {
+          val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
+          sortedRows.sort(this) // using macro-implemented `compare` method
+          while (i != limit) {
+            tuples += row2tpl(sortedRows.get(i))
+            i += 1
+          }
+          tuples.result()
+        } else {
+          val rowsIterator = rows.iterator
+          while (i != limit) { // No need to check hasNext since we know the size
+            tuples += row2tpl(rowsIterator.next)
+            i += 1
+          }
+          tuples.result()
+        }
+    }
+  }
 
   /** Get Future with List of all rows as tuples matching a molecule.
    * <br><br>
@@ -47,28 +73,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
             _model, _query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
           )
         } else {
-          conn.jvmQuery(_model, _query).map { jColl =>
-            val last = jColl.size
-            last match {
-              case 0 => List.empty[Tpl]
-              case 1 => List(row2tpl(jColl.iterator().next()))
-              case _ =>
-                val rows   = if (sortRows) {
-                  val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
-                  rows.sort(this) // using macro-implemented `compare` method
-                  rows
-                } else {
-                  new java.util.ArrayList(jColl)
-                }
-                val tuples = List.newBuilder[Tpl]
-                var i      = 0
-                while (i != last) {
-                  tuples += row2tpl(rows.get(i))
-                  i += 1
-                }
-                tuples.result()
-            }
-          }
+          conn.jvmQuery(_model, _query).map { rows => rows2tuples(rows, rows.size) }
         }
       }
     )(Future.failed) // Wrap exception from input failure in Future
@@ -100,28 +105,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
               _model, _query, _datalog, limit, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
             )
           } else {
-            conn.jvmQuery(_model, _query).map { jColl =>
-              val last = jColl.size.min(limit)
-              last match {
-                case 0 => List.empty[Tpl]
-                case 1 => List(row2tpl(jColl.iterator().next()))
-                case _ =>
-                  val rows   = if (sortRows) {
-                    val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
-                    rows.sort(this) // using macro-implemented `compare` method
-                    rows
-                  } else {
-                    new java.util.ArrayList(jColl)
-                  }
-                  val tuples = List.newBuilder[Tpl]
-                  var i      = 0
-                  while (i != last) {
-                    tuples += row2tpl(rows.get(i))
-                    i += 1
-                  }
-                  tuples.result()
-              }
-            }
+            conn.jvmQuery(_model, _query).map { rows => rows2tuples(rows, rows.size.min(limit)) }
           }
         }
       )(Future.failed) // Wrap exception from input failure in Future
@@ -160,32 +144,12 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
             // todo
             Future((42, List.empty[Tpl]))
           } else {
-            conn.jvmQuery(_model, _query).map { jColl =>
-              val totalCount = jColl.size
+            conn.jvmQuery(_model, _query).map { rows =>
+              val totalCount = rows.size
               if (offset > totalCount) {
                 (totalCount, List.empty[Tpl])
               } else {
-                val last   = totalCount.min(offset + limit)
-                val tuples = last match {
-                  case 0 => List.empty[Tpl]
-                  case 1 => List(row2tpl(jColl.iterator().next()))
-                  case _ =>
-                    val rows   = if (sortRows) {
-                      val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
-                      rows.sort(this) // using macro-implemented `compare` method
-                      rows
-                    } else {
-                      new java.util.ArrayList(jColl)
-                    }
-                    val tuples = List.newBuilder[Tpl] // Build Scala List with tuples of data
-                    var i      = offset
-                    while (i != last) {
-                      tuples += row2tpl(rows.get(i))
-                      i += 1
-                    }
-                    tuples.result()
-                }
-                (totalCount, tuples)
+                (totalCount, rows2tuples(rows, totalCount.min(offset + limit), offset))
               }
             }
           }

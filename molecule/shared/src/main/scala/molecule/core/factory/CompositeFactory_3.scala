@@ -60,23 +60,18 @@ trait CompositeFactory_3_2 {
    * If the sub-molecule has multiple output attributes, a tuple is returned, otherwise
    * just the single value:
    * {{{
-   * Composite input molecule                  Composite type (1 output group)
+   * Composite input molecule                               Composite type (1 output group)
    *
-   * A.a1(?)       + B.b1_(?).b2_(?)     =>    a1
-   * A.a1.a2(?)    + B.b1_(?).b2_(?)     =>    (a1, a2)
-   * A.a1.a2.a3(?) + B.b1_(?).b2_(?)     =>    (a1, a2, a3)
+   * Person.name(?)            + Tag.score_(?).flags_(?) => name
+   * Person.name(?).age        + Tag.score_(?).flags_(?) => (name, age)
+   * Person.name(?).age.gender + Tag.score_(?).flags_(?) => (name, age, gender) etc...
    *
-   * A.a1_(?).a2_(?) + B.b1(?)           =>    b1
-   * A.a1_(?).a2_(?) + B.b1.b2(?)        =>    (b1, b2)
-   * A.a1_(?).a2_(?) + B.b1.b2.b3(?)     =>    (b1, b2, b3)
+   * Person.name_(?).age_(?) + Tag.score(?)              => score
+   * Person.name_(?).age_(?) + Tag.score(?).flags        => (score, flags)
+   * Person.name_(?).age_(?) + Tag.score(?).flags.group) => (score, flags, group) etc...
    *
    * We could even have multiple tacit sub-molecules with multiple tacit attributes
-   * A.a1_(?).a2_ + B.b1_(?) + C.c1.c2_(?).c3     =>    (c1, c3)
-   * }}}
-   * So, given 2 output attributes, a tuple is returned:
-   * {{{
-   * m(Person.name.age(?) + Tag.score_(?).flags_(?))(42, 7, 3).get.map(_.head ==> ("Ben", 42))
-   * //  A   . a1 . a2(?) +  B .   b1_(?).   b2_(?)                      => (  a1 , a2)
+   * Person.name_(?).age_ + Tag.score_(?) + Team.lead.inTournament_(?).position  => (lead, position) etc...
    * }}}
    *
    * @group composite3
@@ -114,26 +109,15 @@ trait CompositeFactory_3_2 {
    * has multiple output attributes, a tuple is returned, otherwise just the single value. The two
    * groups of either a single type or tuple are then tied together in an outer composite tuple:
    * {{{
-   * Composite input molecule               Composite type (2 output groups)
+   * Composite input molecule                        Composite type (2 output groups)
    *
-   * A.a1.a2_(?) + B.b1(?).b2_(?)     =>    (a1, b1)
-   * A.a1.a2_(?) + B.b1(?).b2(?)      =>    (a1, (b1, b2))
-   * A.a1.a2(?)  + B.b1(?).b2_(?)     =>    ((a1, a2), b1)
-   * A.a1.a2(?)  + B.b1(?).b2(?)      =>    ((a1, a2), (b1, b2)) etc...
+   * Person.name.age_(?) + Tag.score(?).flags_(?) => (name, score)
+   * Person.name.age_(?) + Tag.score(?).flags(?)  => (name, (score, flags))
+   * Person.name.age(?)  + Tag.score(?).flags_(?) => ((name, age), score)
+   * Person.name.age(?)  + Tag.score(?).flags(?)  => ((name, age), (score, flags)) etc...
    *
    * We could even have additional non-output sub-molecules:
-   * A.a1.a2(?) + B.b1(?).b2 + C.c1_(?)     =>    ((a1, a2), (b1, b2)) etc...
-   * }}}
-   * Translating into the example:
-   * {{{
-   * m(Person.name.age_(?) + Tag.score(?).flags_(?))(42, 7, 3).get.map(_.head ==> ("Ben", 7))
-   * m(Person.name.age_(?) + Tag.score(?).flags(?) )(42, 7, 3).get.map(_.head ==> ("Ben", (7, 3)))
-   * m(Person.name.age(?)  + Tag.score(?).flags_(?))(42, 7, 3).get.map(_.head ==> (("Ben", 42), 7))
-   * m(Person.name.age(?)  + Tag.score(?).flags(?) )(42, 7, 3).get.map(_.head ==> (("Ben", 42), (7, 3)))
-   *
-   * m(Person.name.age(?) +
-   *   Tag.score(?).flags +
-   *   Cat.name_(?))(42, 7, "pitcher").get.map(_.head ==> (("Ben", 42), (7, 3)))
+   * Person.name(?).age + Tag.score(?).flags + Team.inTournament_(?)  => ((name, age), (score, flags)) etc...
    * }}}
    *
    * @group composite3

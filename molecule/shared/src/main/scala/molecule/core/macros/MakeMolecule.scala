@@ -9,12 +9,12 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
   import c.universe._
 
   //  private lazy val xx = InspectMacro("MakeMolecule", 6, mkError = true)
-  private lazy val xx = InspectMacro("MakeMolecule", 60)
+  private lazy val xx = InspectMacro("MakeMolecule", 6)
 
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, OutTypes: Type*): Tree = {
     val (
-      genericImports, model0,
+      genericImports, model,
       typess, castss,
       obj,
       nestedRefs, hasVariables, txMetas,
@@ -51,19 +51,19 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
 
 
       if (hasVariables) {
-        val identifiers = mapIdentifiers(model0.elements).toMap
+        val identifiers = mapIdentifiers(model.elements).toMap
         q"""
-          final private val _resolvedModel: Model = resolveIdentifiers($model0, $identifiers)
+          final private val _resolvedModel: Model = resolveIdentifiers($model, $identifiers)
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel)) {
             ..$transformers
-            ..${compare(model0, doSort)}
+            ..${compare(model, doSort)}
           }
         """
       } else {
         q"""
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model0, ${Model2Query(model0)}) {
+          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model, ${Model2Query(model)}) {
             ..$transformers
-            ..${compare(model0, doSort)}
+            ..${compare(model, doSort)}
           }
         """
       }
@@ -94,16 +94,16 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
       }
 
       if (hasVariables) {
-        val identifiers = mapIdentifiers(model0.elements).toMap
+        val identifiers = mapIdentifiers(model.elements).toMap
         q"""
-          final private val _resolvedModel: Model = resolveIdentifiers($model0, $identifiers)
+          final private val _resolvedModel: Model = resolveIdentifiers($model, $identifiers)
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel)) {
             ..$transformers
           }
         """
       } else {
         q"""
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model0, ${Model2Query(model0)}) {
+          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model, ${Model2Query(model)}) {
             ..$transformers
           }
         """
@@ -121,16 +121,16 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
           final override def nestedLevels: Int = ${levels - 1}
         """
       if (hasVariables) {
-        val identifiers = mapIdentifiers(model0.elements).toMap
+        val identifiers = mapIdentifiers(model.elements).toMap
         q"""
-          final private val _resolvedModel: Model = resolveIdentifiers($model0, $identifiers)
+          final private val _resolvedModel: Model = resolveIdentifiers($model, $identifiers)
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel)) {
             ..$transformers
           }
         """
       } else {
         q"""
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model0, ${Model2Query(model0)}) {
+          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model, ${Model2Query(model)}) {
             ..$transformers
           }
         """
@@ -147,12 +147,13 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
           ..${buildJsonNested(obj, nestedRefs, txMetas, postJsons).get}
           final override def outerTpl2obj(tpl0: (..$OutTypes)): $ObjType = ${objTree(obj, tpl)}
           final override def nestedLevels: Int = ${levels - 1}
+          ..${compareNested(model, levels, doSort)}
          """
 
       if (hasVariables) {
-        val identifiers = mapIdentifiers(model0.elements).toMap
+        val identifiers = mapIdentifiers(model.elements).toMap
         q"""
-          final private val _resolvedModel: Model = resolveIdentifiers($model0, $identifiers)
+          final private val _resolvedModel: Model = resolveIdentifiers($model, $identifiers)
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel))
             with $nestedTupleClass[$ObjType, (..$OutTypes)]
             with $nestedJsonClass[$ObjType, (..$OutTypes)] {
@@ -161,7 +162,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
         """
       } else {
         q"""
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model0, ${Model2Query(model0)})
+          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model, ${Model2Query(model)})
             with $nestedTupleClass[$ObjType, (..$OutTypes)]
             with $nestedJsonClass[$ObjType, (..$OutTypes)] {
             ..$transformers
@@ -187,6 +188,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
         }
       """
 
+//    xx(6, levels, obj, tree, compareNested(model, levels, doSort), compare(model, doSort))
     xx(6, levels, obj, tree)
     tree
   }

@@ -51,12 +51,12 @@ object Settings extends SettingsDatomic {
       "io.github.cquiroz" %%% "scala-java-time-tzdb" % "2.3.0"
     ),
     jsEnv := new JSDOMNodeJSEnv()
-//    jsEnv := new JSDOMNodeJSEnv(
-//      JSDOMNodeJSEnv.Config()
-//        // for some reason still needed with Scala.js 1.8
-//        // https://github.com/scala-js/scala-js-js-envs/issues/12
-//        .withArgs(List("--dns-result-order=ipv4first"))
-//    )
+    //    jsEnv := new JSDOMNodeJSEnv(
+    //      JSDOMNodeJSEnv.Config()
+    //        // for some reason still needed with Scala.js 1.8
+    //        // https://github.com/scala-js/scala-js-js-envs/issues/12
+    //        .withArgs(List("--dns-result-order=ipv4first"))
+    //    )
   )
 
 
@@ -174,11 +174,11 @@ object Settings extends SettingsDatomic {
         //        sharedTests + "/core/json",
         //        sharedTests + "/core/nested",
         //        sharedTests + "/core/obj",
-//        sharedTests + "/core/pagination",
+        //        sharedTests + "/core/pagination",
         //        sharedTests + "/core/ref",
         //        sharedTests + "/db/datomic/composite",
         //        sharedTests + "/db/datomic/entity",
-        sharedTests + "/db/datomic/generic",
+        //        sharedTests + "/db/datomic/generic",
         //        sharedTests + "/db/datomic/schemaDef",
         //        sharedTests + "/db/datomic/time",
         //        sharedTests + "/db/datomic/txMetaData",

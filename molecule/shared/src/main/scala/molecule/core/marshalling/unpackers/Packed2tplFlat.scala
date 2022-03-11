@@ -1,6 +1,6 @@
 package molecule.core.marshalling.unpackers
 
-import molecule.core.macros.rowExtractors.Row2tplComposite
+import molecule.core.macros.rowConverters.Row2tplComposite
 import molecule.core.marshalling.nodes._
 import molecule.core.marshalling.unpackAttr.PackedValue2cast
 import scala.annotation.tailrec

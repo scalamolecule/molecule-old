@@ -89,44 +89,36 @@ private[molecule] trait MakeBase extends Dsl2Model {
     (identifiers0 ++ newIdentifiers).distinct
   }
 
-  def topLevelLookups(castss: List[List[Int => Tree]], lookups: List[Tree], offset: Int = 0): List[Tree] = {
-    var i = -1 + offset
-    castss.head.map { _ =>
-      i += 1
-      lookups(i)
-    }
-  }
+  def compareAttr(
+    i: Int,
+    attr: String,
+    tpe: String,
+    isEnum: Boolean,
+    fn: String,
+    optLimit: Option[Int],
+    sort: String,
+    reversed: Boolean = false
+  ): (Int, Tree) = {
+    if (attr.last == '$') {
 
-  def compare(model0: Model, doSort: Boolean): Tree = if (doSort) {
-    def comp(
-      i: Int,
-      attr: String,
-      tpe: String,
-      isEnum: Boolean,
-      fn: String,
-      optLimit: Option[Int],
-      sort: String
-    ): (Int, Tree) = {
-      if (attr.last == '$') {
+      // Optional --------------------------------------------------------------------------------
 
-        // Optional --------------------------------------------------------------------------------
+      val (order, pair) = sort match {
+        case r"a([1-5])$order" => (order.toInt, q"(a.get($i), b.get($i))") // ascending
+        case r"d([1-5])$order" => (order.toInt, q"(b.get($i), a.get($i))") // descending
+      }
+      val (a, b)        = tpe match {
+        case "String" =>
+          if (isEnum)
+            (
+              q"""getKwName(m1.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.toString)""",
+              q"""getKwName(m2.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.toString)"""
+            )
+          else
+            (q"m1.values.iterator.next.asInstanceOf[String]", q"m2.values.iterator.next.asInstanceOf[String]")
 
-        val (order, pair) = sort match {
-          case r"a([1-5])$order" => (order.toInt, q"(a.get($i), b.get($i))") // ascending
-          case r"d([1-5])$order" => (order.toInt, q"(b.get($i), a.get($i))") // descending
-        }
-        val (a, b)        = tpe match {
-          case "String" =>
-            if (isEnum)
-              (
-                q"""getKwName(m1.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.toString)""",
-                q"""getKwName(m2.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.toString)"""
-              )
-            else
-              (q"m1.values.iterator.next.asInstanceOf[String]", q"m2.values.iterator.next.asInstanceOf[String]")
-
-          case "ref" => (
-            q"""{
+        case "ref" => (
+          q"""{
               var id   = 0L
               var done = false
               // Hack to avoid looking up map by clojure Keyword - there must be a better way...
@@ -137,7 +129,7 @@ private[molecule] trait MakeBase extends Dsl2Model {
               }
               id
             }""",
-            q"""{
+          q"""{
               var id   = 0L
               var done = false
               // Hack to avoid looking up map by clojure Keyword - there must be a better way...
@@ -148,118 +140,123 @@ private[molecule] trait MakeBase extends Dsl2Model {
               }
               id
             }"""
+        )
+
+        case "Int" | "Long" => (q"m1.values.iterator.next.asInstanceOf[jLong]", q"m2.values.iterator.next.asInstanceOf[jLong]")
+        case "Double"       => (q"m1.values.iterator.next.asInstanceOf[jDouble]", q"m2.values.iterator.next.asInstanceOf[jDouble]")
+        case "Boolean"      => (q"m1.values.iterator.next.asInstanceOf[jBoolean]", q"m2.values.iterator.next.asInstanceOf[jBoolean]")
+        case "Date"         => (q"m1.values.iterator.next.asInstanceOf[Date]", q"m2.values.iterator.next.asInstanceOf[Date]")
+        case "UUID"         => (q"m1.values.iterator.next.asInstanceOf[UUID]", q"m2.values.iterator.next.asInstanceOf[UUID]")
+        case "URI"          => (q"m1.values.iterator.next.asInstanceOf[URI]", q"m2.values.iterator.next.asInstanceOf[URI]")
+        case "BigInt"       => (q"m1.values.iterator.next.asInstanceOf[jBigInt]", q"m2.values.iterator.next.asInstanceOf[jBigInt]")
+        case "BigDecimal"   => (q"m1.values.iterator.next.asInstanceOf[jBigDec]", q"m2.values.iterator.next.asInstanceOf[jBigDec]")
+
+        case "schema" => attr match {
+          case "doc$" => (q"m1.values.iterator.next.asInstanceOf[String]", q"m2.values.iterator.next.asInstanceOf[String]")
+
+          case "ident$" | "valueType$" | "cardinality$" | "unique$" => (
+            q"""getKwName(m1.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.toString)""",
+            q"""getKwName(m2.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.toString)"""
           )
 
-          case "Int" | "Long" => (q"m1.values.iterator.next.asInstanceOf[jLong]", q"m2.values.iterator.next.asInstanceOf[jLong]")
-          case "Double"       => (q"m1.values.iterator.next.asInstanceOf[jDouble]", q"m2.values.iterator.next.asInstanceOf[jDouble]")
-          case "Boolean"      => (q"m1.values.iterator.next.asInstanceOf[jBoolean]", q"m2.values.iterator.next.asInstanceOf[jBoolean]")
-          case "Date"         => (q"m1.values.iterator.next.asInstanceOf[Date]", q"m2.values.iterator.next.asInstanceOf[Date]")
-          case "UUID"         => (q"m1.values.iterator.next.asInstanceOf[UUID]", q"m2.values.iterator.next.asInstanceOf[UUID]")
-          case "URI"          => (q"m1.values.iterator.next.asInstanceOf[URI]", q"m2.values.iterator.next.asInstanceOf[URI]")
-          case "BigInt"       => (q"m1.values.iterator.next.asInstanceOf[jBigInt]", q"m2.values.iterator.next.asInstanceOf[jBigInt]")
-          case "BigDecimal"   => (q"m1.values.iterator.next.asInstanceOf[jBigDec]", q"m2.values.iterator.next.asInstanceOf[jBigDec]")
-
-          case "schema" => attr match {
-            case "doc$" => (q"m1.values.iterator.next.asInstanceOf[String]", q"m2.values.iterator.next.asInstanceOf[String]")
-
-            case "ident$" | "valueType$" | "cardinality$" | "unique$" => (
-              q"""getKwName(m1.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.toString)""",
-              q"""getKwName(m2.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.toString)"""
-            )
-
-            case _ => (q"m1.values.iterator.next.asInstanceOf[jBoolean]", q"m2.values.iterator.next.asInstanceOf[jBoolean]")
-          }
-
-          case other => abort(s"Unexpected type '$other' for optional sort attribute `$attr`")
+          case _ => (q"m1.values.iterator.next.asInstanceOf[jBoolean]", q"m2.values.iterator.next.asInstanceOf[jBoolean]")
         }
-        val result        =
-          q"""$pair match {
+
+        case other => abort(s"Unexpected type '$other' for optional sort attribute `$attr`")
+      }
+      val result        =
+        q"""$pair match {
              case (null, null)                     => 0
              case (null, _)                        => -1
              case (_, null)                        => 1
              case (m1: jMap[_, _], m2: jMap[_, _]) => $a.compareTo($b)
            }"""
-        (order, result)
-      } else {
+      (order, result)
 
-        // Mandatory --------------------------------------------------------------------------------
+    } else {
 
-        def compareType: (Tree, Tree) = {
-          tpe match {
-            case "String" | "enum"      => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
-            case "Int" | "Long" | "ref" => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
-            case "Double"               => (q"a.get($i).asInstanceOf[jDouble]", q"b.get($i).asInstanceOf[jDouble]")
-            case "Boolean"              => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
-            case "Date"                 => (q"a.get($i).asInstanceOf[Date]", q"b.get($i).asInstanceOf[Date]")
-            case "UUID"                 => (q"a.get($i).asInstanceOf[UUID]", q"b.get($i).asInstanceOf[UUID]")
-            case "URI"                  => (q"a.get($i).asInstanceOf[URI]", q"b.get($i).asInstanceOf[URI]")
-            case "BigInt"               => (q"a.get($i).asInstanceOf[jBigInt]", q"b.get($i).asInstanceOf[jBigInt]")
-            case "BigDecimal"           => (q"a.get($i).asInstanceOf[jBigDec]", q"b.get($i).asInstanceOf[jBigDec]")
+      // Mandatory --------------------------------------------------------------------------------
 
-            case "datom" | "log" | "eavt" | "aevt" | "avet" | "vaet" => attr match {
-              case "e"         => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
-              case "a"         => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
-              case "v"         => (q"a.get($i).toString", q"b.get($i).toString")
-              case "t"         => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
-              case "tx"        => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
-              case "txInstant" => (q"a.get($i).asInstanceOf[Date]", q"b.get($i).asInstanceOf[Date]")
-              case "op"        => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
-            }
+      def compareType: (Tree, Tree) = {
+        tpe match {
+          case "String" | "enum"      => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+          case "Int" | "Long" | "ref" => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
+          case "Double"               => (q"a.get($i).asInstanceOf[jDouble]", q"b.get($i).asInstanceOf[jDouble]")
+          case "Boolean"              => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
+          case "Date"                 => (q"a.get($i).asInstanceOf[Date]", q"b.get($i).asInstanceOf[Date]")
+          case "UUID"                 => (q"a.get($i).asInstanceOf[UUID]", q"b.get($i).asInstanceOf[UUID]")
+          case "URI"                  => (q"a.get($i).asInstanceOf[URI]", q"b.get($i).asInstanceOf[URI]")
+          case "BigInt"               => (q"a.get($i).asInstanceOf[jBigInt]", q"b.get($i).asInstanceOf[jBigInt]")
+          case "BigDecimal"           => (q"a.get($i).asInstanceOf[jBigDec]", q"b.get($i).asInstanceOf[jBigDec]")
 
-            case "schema" => attr match {
-              case "t"           => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
-              case "tx"          => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
-              case "txInstant"   => (q"a.get($i).asInstanceOf[Date]", q"b.get($i).asInstanceOf[Date]")
-              case "a"           => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
-              case "attrId"      => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
-              case "part"        => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
-              case "nsFull"      => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
-              case "ns"          => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
-              case "attr"        => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
-              case "enumm"       => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
-              case "ident"       => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
-              case "valueType"   => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
-              case "cardinality" => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
-              case "doc"         => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
-              case "unique"      => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
-              case "isComponent" => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
-              case "noHistory"   => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
-              case "index"       => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
-              case "fulltext"    => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
-            }
-            case other    => abort(s"Unexpected type '$other' for sort attribute `$attr`")
+          case "datom" | "log" | "eavt" | "aevt" | "avet" | "vaet" => attr match {
+            case "e"         => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
+            case "a"         => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "v"         => (q"a.get($i).toString", q"b.get($i).toString")
+            case "t"         => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
+            case "tx"        => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
+            case "txInstant" => (q"a.get($i).asInstanceOf[Date]", q"b.get($i).asInstanceOf[Date]")
+            case "op"        => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
           }
-        }
-        def compareInt: (Tree, Tree) = (q"a.get($i).asInstanceOf[jInteger]", q"b.get($i).asInstanceOf[jInteger]")
-        def compareDouble: (Tree, Tree) = (q"a.get($i).asInstanceOf[jDouble]", q"b.get($i).asInstanceOf[jDouble]")
 
-        val (a, b) = if (fn.isEmpty) {
-          compareType
-        } else {
-          (fn, optLimit) match {
-            case ("min" | "max" | "distinct" | "rand" | "sample", Some(limit)) => abort(
-              s"[Bug!] Unexpectedly trying to sort aggregate with applied limit. " +
-                s"Found: $attr($fn($limit))."
-            )
-            case ("count" | "count-distinct", _)                               => compareInt
-            case ("avg" | "stddev" | "variance", _)                            => compareDouble
-            case (_, _) /* min, max, rand, sample, sum, median */              => compareType
+          case "schema" => attr match {
+            case "t"           => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
+            case "tx"          => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
+            case "txInstant"   => (q"a.get($i).asInstanceOf[Date]", q"b.get($i).asInstanceOf[Date]")
+            case "a"           => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "attrId"      => (q"a.get($i).asInstanceOf[jLong]", q"b.get($i).asInstanceOf[jLong]")
+            case "part"        => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "nsFull"      => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "ns"          => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "attr"        => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "enumm"       => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "ident"       => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "valueType"   => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "cardinality" => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "doc"         => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "unique"      => (q"a.get($i).asInstanceOf[String]", q"b.get($i).asInstanceOf[String]")
+            case "isComponent" => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
+            case "noHistory"   => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
+            case "index"       => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
+            case "fulltext"    => (q"a.get($i).asInstanceOf[jBoolean]", q"b.get($i).asInstanceOf[jBoolean]")
           }
-        }
-
-        sort match {
-          case r"a([1-5])$order" => (order.toInt, q"$a.compareTo($b)") // ascending
-          case r"d([1-5])$order" => (order.toInt, q"$b.compareTo($a)") // descending
+          case other    => abort(s"Unexpected type '$other' for sort attribute `$attr`")
         }
       }
-    }
+      def compareInt: (Tree, Tree) = (q"a.get($i).asInstanceOf[jInteger]", q"b.get($i).asInstanceOf[jInteger]")
+      def compareDouble: (Tree, Tree) = (q"a.get($i).asInstanceOf[jDouble]", q"b.get($i).asInstanceOf[jDouble]")
 
-    val comparisons = model0.elements.foldLeft(0, Seq.empty[(Int, Tree)]) {
+      val (a, b) = if (fn.isEmpty) {
+        compareType
+      } else {
+        (fn, optLimit) match {
+          case ("min" | "max" | "distinct" | "rand" | "sample", Some(limit)) => abort(
+            s"[Bug!] Unexpectedly trying to sort aggregate with applied limit. " +
+              s"Found: $attr($fn($limit))."
+          )
+          case ("count" | "count-distinct", _)                               => compareInt
+          case ("avg" | "stddev" | "variance", _)                            => compareDouble
+          case (_, _) /* min, max, rand, sample, sum, median */              => compareType
+        }
+      }
+
+      sort match {
+        case r"a([1-5])$order" => (order.toInt, if (reversed) q"$b.compareTo($a)" else q"$a.compareTo($b)")
+        case r"d([1-5])$order" => (order.toInt, if (reversed) q"$a.compareTo($b)" else q"$b.compareTo($a)")
+      }
+    }
+  }
+
+  def compare(model0: Model, doSort: Boolean): Tree = {
+    lazy val comparisons = model0.elements.foldLeft(
+      0, // row index
+      Seq.empty[(Int, Tree)] // orderPos/comparison pairs
+    ) {
       case ((i, acc), Atom(_, attr, tpe, _, value, enumPrefix, _, _, sort)) =>
         if (sort.nonEmpty) {
           val comparator = value match {
-            case Fn(fn, limit) => comp(i, attr, tpe, enumPrefix.nonEmpty, fn, limit, sort)
-            case _             => comp(i, attr, tpe, enumPrefix.nonEmpty, "", None, sort)
+            case Fn(fn, limit) => compareAttr(i, attr, tpe, enumPrefix.nonEmpty, fn, limit, sort)
+            case _             => compareAttr(i, attr, tpe, enumPrefix.nonEmpty, "", None, sort)
           }
           (i + 1, acc :+ comparator)
         } else if (attr.last == '_') {
@@ -271,8 +268,8 @@ private[molecule] trait MakeBase extends Dsl2Model {
       case ((i, acc), Generic(_, attr, tpe, value, sort)) =>
         if (sort.nonEmpty) {
           val comparator = value match {
-            case Fn(fn, limit) => comp(i, attr, tpe, isEnum = false, fn, limit, sort)
-            case _             => comp(i, attr, tpe, isEnum = false, "", None, sort)
+            case Fn(fn, limit) => compareAttr(i, attr, tpe, isEnum = false, fn, limit, sort)
+            case _             => compareAttr(i, attr, tpe, isEnum = false, "", None, sort)
           }
           (i + 1, acc :+ comparator)
         } else if (attr.last == '_') {
@@ -287,7 +284,7 @@ private[molecule] trait MakeBase extends Dsl2Model {
       .sortBy(_._1) // sort order positions
       .map(_._2)
 
-    val ordering = comparisons.size match {
+    lazy val ordering = comparisons.size match {
       case 1 => q"${comparisons.head}"
       case _ =>
         val moreComparisons = comparisons.tail.map(comparison => q"if (result == 0) result = $comparison")
@@ -298,13 +295,122 @@ private[molecule] trait MakeBase extends Dsl2Model {
         """
     }
 
-    q"""
-      final override def sortRows: Boolean = true
-      final override def compare(a: jList[AnyRef], b: jList[AnyRef]): Int = {
-        import java.lang.{Integer => jInteger, Long => jLong, Double => jDouble, Boolean => jBoolean}
-        import java.math.{BigDecimal => jBigDec, BigInteger => jBigInt}
-        ..$ordering
+    if (doSort) {
+      q"""
+        final override def sortRows: Boolean = true
+        final override def compare(a: jList[AnyRef], b: jList[AnyRef]): Int = {
+          import java.lang.{Integer => jInteger, Long => jLong, Double => jDouble, Boolean => jBoolean}
+          import java.math.{BigDecimal => jBigDec, BigInteger => jBigInt}
+          ..$ordering
+        }
+      """
+    } else {
+      q""
+    }
+  }
+
+  def compareNested(model0: Model, levels: Int, doSort: Boolean): Tree = {
+    var i     = levels // skip nested indexes (1 for each level)
+    var level = 0
+
+    // Collect comparators on each level
+    val cur1 = Seq.newBuilder[(Int, Tree)] // Comparators with tuples, reversed
+    val cur2 = Seq.newBuilder[(Int, Tree)] // Comparators with Json, straight forward
+
+    // Accumulate all comparator trees
+    val acc1 = Seq.newBuilder[Tree]
+    val acc2 = Seq.newBuilder[Tree]
+
+    def addComparator(sort: String, value: Value, attr: String, tpe: String, isEnum: Boolean): Unit = {
+      if (sort.nonEmpty) {
+        val (comparator1, comparator2) = value match {
+          case Fn(fn, limit) => (
+            compareAttr(i, attr, tpe, isEnum, fn, limit, sort, true),
+            compareAttr(i, attr, tpe, isEnum, fn, limit, sort)
+          )
+          case _             => (
+            compareAttr(i, attr, tpe, isEnum, "", None, sort, true),
+            compareAttr(i, attr, tpe, isEnum, "", None, sort)
+          )
+        }
+        i += 1
+        cur1 += comparator1
+        cur2 += comparator2
+      } else if (attr.last != '_') {
+        i += 1
       }
-    """
-  } else q""
+    }
+
+    def sortNestedIndex(level: Int, reversed: Boolean): Tree = if (reversed) {
+      q"b.get($level).asInstanceOf[jLong].compareTo(a.get($level).asInstanceOf[jLong])"
+    } else {
+      q"a.get($level).asInstanceOf[jLong].compareTo(b.get($level).asInstanceOf[jLong])"
+    }
+
+    def resolveComparisons(elements: Seq[Element]): Unit = elements.foreach {
+      case Atom(_, attr, tpe, _, value, enumPrefix, _, _, sort) =>
+        addComparator(sort, value, attr, tpe, enumPrefix.nonEmpty)
+
+      case Generic(_, attr, tpe, value, sort) =>
+        addComparator(sort, value, attr, tpe, isEnum = false)
+
+      case nested: Nested =>
+        acc1 ++= cur1.result().sortBy(_._1).map(_._2) :+ sortNestedIndex(level, true)
+        acc2 ++= cur2.result().sortBy(_._1).map(_._2) :+ sortNestedIndex(level, false)
+        cur1.clear()
+        cur2.clear()
+        level += 1
+        resolveComparisons(nested.elements)
+
+      case _ =>
+    }
+
+    lazy val (comparators1, comparators2) = {
+      resolveComparisons(model0.elements)
+      if (levels > 0) {
+        (
+          acc1.result() ++ cur1.result().sortBy(_._1).map(_._2) :+ sortNestedIndex(level, true),
+          acc2.result() ++ cur2.result().sortBy(_._1).map(_._2) :+ sortNestedIndex(level, false)
+        )
+      } else {
+        (
+          cur1.result().sortBy(_._1).map(_._2),
+          cur2.result().sortBy(_._1).map(_._2)
+        )
+      }
+    }
+
+    def getOrdering(comparators: Seq[Tree]): Tree = comparators.size match {
+      case 1 => q"${comparators.head}"
+      case _ =>
+        val moreComparisons = comparators.tail.map(comparison => q"if (result == 0) result = $comparison")
+        q"""
+          var result = ${comparators.head}
+          ..$moreComparisons
+          result
+        """
+    }
+    lazy val ordering1 = getOrdering(comparators1)
+    lazy val ordering2 = getOrdering(comparators2)
+
+    if (doSort) {
+      // Override `compare` in NestedBase
+      q"""
+        final override def sortRows: Boolean = true
+        final override def compare(a: jList[AnyRef], b: jList[AnyRef]): Int = {
+          import java.lang.{Integer => jInteger, Long => jLong, Double => jDouble, Boolean => jBoolean}
+          import java.math.{BigDecimal => jBigDec, BigInteger => jBigInt}
+
+          if (isNestedTuples) {
+            ..$ordering1
+          } else {
+            ..$ordering2
+          }
+        }
+      """
+    } else {
+      // Fall back on `compare` in NestedBase
+      q""
+    }
+  }
 }

@@ -1,8 +1,9 @@
-package moleculeTests.tests.core.pagination
+package moleculeTests.tests.core.sorting
 
 import molecule.core.util.Executor._
 import molecule.datomic.api.in1_out7._
 import molecule.datomic.base.util.{SystemPeer, SystemPeerServer}
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.concurrent.Future

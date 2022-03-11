@@ -11,7 +11,7 @@ import molecule.core.generic.Schema._
 import molecule.core.generic.VAET._
 import molecule.core.generic._
 import molecule.core.macros.rowAttr._
-import molecule.core.macros.rowExtractors._
+import molecule.core.macros.rowConverters.{Row2jsonFlat, Row2jsonNested, Row2jsonOptNested, Row2obj, Row2tplComposite, Row2tplFlat, Row2tplNested, Row2tplOptNested}
 import molecule.core.marshalling.nodes._
 import molecule.core.marshalling.unpackAttr.PackedValue2json
 import molecule.core.marshalling.unpackers._
@@ -61,8 +61,8 @@ private[molecule] trait Dsl2Model extends TreeOps
 
   import c.universe._
 
-  //  private lazy val xx = InspectMacro("Dsl2Model", 241, 900, mkError = true)
-  //  private lazy val xx = InspectMacro("Dsl2Model", 101, 900)
+  //  private lazy val xy = InspectMacro("Dsl2Model", 540, 550, mkError = true)
+  private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
 
   protected val isJsPlatform: Boolean = Check(getClass.getClassLoader.loadClass("scala.scalajs.js.Any")).isSuccess
 
@@ -84,12 +84,20 @@ private[molecule] trait Dsl2Model extends TreeOps
       Boolean
     ) = {
 
+    lazy val numberTypes      = Seq("Int", "Long", "Float", "Double", "BigInt", "BigDecimal")
     lazy val mandatoryGeneric = Seq("e", "tx", "t", "txInstant", "op", "a", "v", "Self")
     lazy val tacitGeneric     = Seq("e_", "ns_", "a_", "v_", "tx_", "t_", "txInstant_", "op_")
-    lazy val datomGeneric     = Seq("e", "e_", "tx", "t", "txInstant", "op", "tx_", "t_", "txInstant_", "op_", "a", "a_", "v", "v_")
-    lazy val keywords         = Seq("$qmark", "Nil", "None", "count", "countDistinct", "min", "max", "sum", "avg", "unify", "distinct", "median", "variance", "stddev", "rand", "sample")
-    lazy val numberTypes      = Seq("Int", "Long", "Float", "Double", "BigInt", "BigDecimal")
-    def badFn(fn: String) = List("countDistinct", "distinct", "max", "min", "rand", "sample", "avg", "median", "stddev", "sum", "variance").contains(fn)
+    lazy val datomGeneric     = Seq(
+      "e", "e_", "tx", "t", "txInstant", "op", "tx_", "t_", "txInstant_", "op_", "a", "a_", "v", "v_"
+    )
+    lazy val keywords         = Seq(
+      "$qmark", "Nil", "None", "count", "countDistinct", "min", "max", "sum", "avg",
+      "unify", "distinct", "median", "variance", "stddev", "rand", "sample"
+    )
+
+    def badFn(fn: String) = List(
+      "countDistinct", "distinct", "max", "min", "rand", "sample", "avg", "median", "stddev", "sum", "variance"
+    ).contains(fn)
 
     var txMetaDataStarted       : Boolean = false
     var txMetaDataDone          : Boolean = false
@@ -127,8 +135,8 @@ private[molecule] trait Dsl2Model extends TreeOps
     var first      : Boolean = true
     var genericType: String  = "datom"
 
-    var sortMarker : String    = ""
-    var sortIndexes: List[Int] = Nil
+    var sortMarker : String          = ""
+    var sortIndexes: List[List[Int]] = List(List.empty[Int])
 
     def getType(t: richTree): Tree = {
       val typeName = TypeName(t.tpeS)
@@ -331,20 +339,21 @@ private[molecule] trait Dsl2Model extends TreeOps
 
       tree match {
         case q"$prev.$attr" =>
-          //xx(100, attr)
+          //xx(100, prev, attr, sortIndexes, typess)
           attr.toString match {
             case at@r"[ad]([1-5])$i" =>
               val sortIndex = i.toInt
-              if (sortIndexes.contains(sortIndex)) {
+              //xx(101, prev, attr, sortIndexes, typess, sortIndex, sortIndexes.head)
+              if (sortIndexes.head.contains(sortIndex)) {
                 abort(s"Please use unique sorting markers. Can't use `$attr` with order $sortIndex twice.")
               } else {
                 sortMarker = at
-                sortIndexes = sortIndex :: sortIndexes
+                sortIndexes = (sortIndex :: sortIndexes.head) +: sortIndexes.tail
                 resolve(tree = q"$prev")
               }
 
             case attrStr =>
-              //xx(101, attrStr)
+              //xx(102, prev, attr, sortIndexes)
               resolveAttr(tree, richTree(tree), q"$prev", richTree(q"$prev"), attrStr)
           }
 
@@ -360,11 +369,10 @@ private[molecule] trait Dsl2Model extends TreeOps
 
         case q"$_.$_(..$_)" =>
           //xx(400, tree)
-          //          disAllowSortMarker(attr.toString)
           resolveOperation(tree)
 
         case q"$prev.$manyRef.*[..$_]($nested)" =>
-          //xx(500, manyRef)
+          //xx(500, prev, manyRef, nested, sortIndexes, q"$prev", richTree(q"$prev"), TermName(manyRef.toString), q"$nested")
           resolveNested(q"$prev", richTree(q"$prev"), TermName(manyRef.toString), q"$nested")
 
         case q"$prev.$manyRef.*?[..$_]($nested)" =>
@@ -427,6 +435,7 @@ private[molecule] trait Dsl2Model extends TreeOps
       // Start new level
       typess = List.empty[Tree] :: typess
       castss = List.empty[Int => Tree] :: castss
+      sortIndexes = List.empty[Int] :: sortIndexes
 
       if (txMetaDataStarted)
         txMetas = if (txMetas == 0) 2 else txMetas + 1
@@ -843,7 +852,7 @@ private[molecule] trait Dsl2Model extends TreeOps
                 abort(s"Can only apply `count` to mandatory generic attribute. Please remove underscore from `$attrStr`")
               }
 
-            case "optional"  =>
+            case "optional" =>
               if (aggrType.isEmpty) {
                 val group0 = Some(t.card match {
                   case 1 => "OptApplyOne"
@@ -1036,6 +1045,8 @@ private[molecule] trait Dsl2Model extends TreeOps
         // Start new level
         typess = List.empty[Tree] :: typess
         castss = List.empty[Int => Tree] :: castss
+        sortIndexes = List.empty[Int] :: sortIndexes
+
         if (txMetas == 0)
           txMetas = 1
         txMetaDataDone = true
@@ -1224,6 +1235,7 @@ private[molecule] trait Dsl2Model extends TreeOps
       // Start new level
       typess = List.empty[Tree] :: typess
       castss = List.empty[Int => Tree] :: castss
+      sortIndexes = List.empty[Int] :: sortIndexes
 
       //xx(523, nestedElement, post, prev, manyRef, nested, obj)
       traverseElement(q"$prev", p, nestedElement)
@@ -1242,13 +1254,14 @@ private[molecule] trait Dsl2Model extends TreeOps
       // Start new level
       typess = List.empty[Tree] :: typess
       castss = List.empty[Int => Tree] :: castss
+      sortIndexes = List.empty[Int] :: sortIndexes
       //xx(526, nestedElement, post)
       traverseElement(q"$prev", p, nestedElement)
     }
 
     def nested1(prev: Tree, p: richTree, manyRef: TermName, nestedTree: Tree) = {
-      val refNext           = q"$prev.$manyRef".refNext
-      val parentNs          = prev match {
+      val refNext  = q"$prev.$manyRef".refNext
+      val parentNs = prev match {
         case q"$_.apply($_)" if p.isMapAttrK            => new nsp(c.typecheck(prev).tpe.typeSymbol.owner)
         case q"$pre.apply($_)" if p.isAttr              => richTree(q"$pre").nsFull
         case q"$pre.apply($_)"                          => richTree(q"$pre").name.capitalize
@@ -1256,8 +1269,13 @@ private[molecule] trait Dsl2Model extends TreeOps
         case q"$pre.e" if p.isAttr                      => q"$pre".symbol.name
         case _ if p.isAttr                              => p.nsFull
         case _ if p.isRef                               => p.refNext
+        case q"$prev1.$sort"                            => sort.toString match {
+          case r"[ad][1-5]" => richTree(q"$prev1").nsFull
+          case _            => p.name.capitalize
+        }
         case _                                          => p.name.capitalize
       }
+      //xx(540, prev, manyRef, q"$prev.$manyRef", refNext, parentNs)
       val opt               = if (isOptNested) "$" else ""
       val (nsFull, refAttr) = (parentNs.toString, firstLow(manyRef))
       //xx(550, q"$prev.$manyRef", prev, manyRef, refNext, parentNs, post, nsFull, refAttr, obj)
@@ -1501,7 +1519,7 @@ private[molecule] trait Dsl2Model extends TreeOps
                   )
               }
             }
-          //xx(85, aggrType)
+            //xx(85, aggrType)
         }
         standard = true
         aggrType = ""
@@ -1740,7 +1758,7 @@ private[molecule] trait Dsl2Model extends TreeOps
           multiple(values.asInstanceOf[Seq[Tree]])
 
         case other =>
-          //xx(4, other, attrStr)
+          //xx(4, other)
           resolveValues(other, t)
       }
     }
@@ -1926,7 +1944,7 @@ private[molecule] trait Dsl2Model extends TreeOps
       postJsons,
       isOptNested,
       optNestedRefIndexes, optNestedTacitIndexes,
-      sortIndexes.nonEmpty
+      sortIndexes.flatten.nonEmpty
     )
   }
 }

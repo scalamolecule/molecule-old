@@ -1,4 +1,4 @@
-package molecule.core.macros.rowExtractors
+package molecule.core.macros.rowConverters
 
 import molecule.core.macros.rowAttr.{JsonBase, RowValue2json}
 import molecule.core.marshalling.nodes._
@@ -9,7 +9,7 @@ trait Row2jsonFlat extends JsonBase with RowValue2json {
 
   import c.universe._
 
-  private lazy val xx = InspectMacro("BuildJson", 2)
+  private lazy val xx = InspectMacro("Row2jsonFlat", 2)
 
   def jsonFlat(obj: Obj): Tree = {
     val tree = if (hasSameNss(obj)) {

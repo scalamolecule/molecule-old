@@ -42,7 +42,7 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
     resetVars()
     
     // Traverse forward through rows (tuples require traversing backwards)
-    descending = false
+    isNestedTuples = false
     firstLevel0 = true
 
     sb0.setLength(0)

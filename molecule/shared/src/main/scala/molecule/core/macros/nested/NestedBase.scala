@@ -6,9 +6,7 @@ import molecule.core.api.Molecule_0
 
 
 /** Builder classes of various arity of nested tuples. */
-trait NestedBase[Obj, Tpl]
-//  extends jComparator[jList[AnyRef]] { self: Molecule_0[Obj, Tpl] =>
-   { self: Molecule_0[Obj, Tpl] =>
+trait NestedBase[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
   val levels = nestedLevels + 1
 
@@ -35,7 +33,9 @@ trait NestedBase[Obj, Tpl]
   protected var i                = 0
   protected var sortIndex        = 0
   protected var result           = 0
-  protected var descending       = true
+
+  // Traverse backwards through rows (default setting for tuples - json sorts ascending)
+  protected var isNestedTuples = true
 
   protected def resetVars(): Unit = {
     p0 = 0L
@@ -62,14 +62,14 @@ trait NestedBase[Obj, Tpl]
   override def compare(a: jList[AnyRef], b: jList[AnyRef]): Int = {
     sortIndex = 0
     result = 0
-    if (descending) {
-      // Tuples: Sorting backwards, building from leaf to branches
+    if (isNestedTuples) {
+      // Tuples: Sorting/building backwards by prepending each row to the list of rows
       do {
-        result = (-a.get(sortIndex).asInstanceOf[jLong]).compareTo(-b.get(sortIndex).asInstanceOf[jLong])
+        result = b.get(sortIndex).asInstanceOf[jLong].compareTo(a.get(sortIndex).asInstanceOf[jLong])
         sortIndex += 1 // 1 level deeper
       } while (sortIndex < levels && result == 0)
     } else {
-      // Json: Sorting from outer to nested levels, level by level
+      // Json: Sorting/building forwards by appending each row data to the json string builder
       do {
         result = a.get(sortIndex).asInstanceOf[jLong].compareTo(b.get(sortIndex).asInstanceOf[jLong])
         sortIndex += 1 // 1 level deeper

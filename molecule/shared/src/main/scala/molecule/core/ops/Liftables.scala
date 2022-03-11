@@ -360,10 +360,18 @@ private[molecule] trait Liftables extends MacroHelpers {
     case MapKeys(keys)                => q"MapKeys(Seq(..$keys))"
   }
 
-  implicit val liftAtom   : c.universe.Liftable[Atom]    = Liftable[Atom] { a => q"Atom(${a.nsFull}, ${a.attr}, ${a.tpe}, ${a.card}, ${a.value}, ${a.enumPrefix}, Seq(..${a.gvs}), Seq(..${a.keys}))" }
-  implicit val liftBond   : c.universe.Liftable[Bond]    = Liftable[Bond] { b => q"Bond(${b.nsFull}, ${b.refAttr}, ${b.refNs}, ${b.card}, Seq(..${b.gvs}))" }
+  implicit val liftAtom   : c.universe.Liftable[Atom]    = Liftable[Atom] { a =>
+    q"Atom(${a.nsFull}, ${a.attr}, ${a.tpe}, ${a.card}, ${a.value}, ${a.enumPrefix}, Seq(..${a.gvs}), Seq(..${a.keys}), ${a.sort})"
+  }
+
+  implicit val liftBond   : c.universe.Liftable[Bond]    = Liftable[Bond] { b =>
+    q"Bond(${b.nsFull}, ${b.refAttr}, ${b.refNs}, ${b.card}, Seq(..${b.gvs}))" }
+
   implicit val liftReBond : c.universe.Liftable[ReBond]  = Liftable[ReBond] { r => q"ReBond(${r.backRef})" }
-  implicit val liftGeneric: c.universe.Liftable[Generic] = Liftable[Generic] { m => q"Generic(${m.nsFull}, ${m.attr}, ${m.tpe}, ${m.value})" }
+
+  implicit val liftGeneric: c.universe.Liftable[Generic] = Liftable[Generic] { g =>
+    q"Generic(${g.nsFull}, ${g.attr}, ${g.tpe}, ${g.value}, ${g.sort})" }
+
   implicit val liftGroup  : c.universe.Liftable[Nested]  = Liftable[Nested] { n0 =>
     val es0: Seq[c.universe.Tree] = n0.elements map {
       case a: Atom       => q"$a"
@@ -496,7 +504,8 @@ private[molecule] trait Liftables extends MacroHelpers {
   }
 
   implicit val liftElement: c.universe.Liftable[Element] = Liftable[Element] {
-    case Atom(nsFull, attr, tpeS, card, value, enumPrefix, gs, keys, sort) => q"Atom($nsFull, $attr, $tpeS, $card, $value, $enumPrefix, Seq(..$gs), Seq(..$keys), $sort)"
+    case Atom(nsFull, attr, tpeS, card, value, enumPrefix, gs, keys, sort) =>
+      q"Atom($nsFull, $attr, $tpeS, $card, $value, $enumPrefix, Seq(..$gs), Seq(..$keys), $sort)"
     case Bond(nsFull, refAttr, refNs, card, gs)                            => q"Bond($nsFull, $refAttr, $refNs, $card, Seq(..$gs))"
     case ReBond(backRef)                                                   => q"ReBond($backRef)"
     case Nested(ref, elements)                                             => q"Nested($ref, $elements)"

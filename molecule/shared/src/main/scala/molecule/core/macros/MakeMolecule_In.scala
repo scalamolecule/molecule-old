@@ -18,7 +18,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
 
   private[this] final def generateInputMolecule(dsl: Tree, ObjType: Type, InTypes: Type*)(OutTypes: Type*): Tree = {
     val (
-      genericImports, model0,
+      genericImports, model,
       typess, castss,
       obj,
       nestedRefs, hasVariables, txMetas,
@@ -97,9 +97,9 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
 
 
     def getInputClass(outMoleculeClass: Tree) = if (hasVariables) {
-      val identifiers = mapIdentifiers(model0.elements).toMap
+      val identifiers = mapIdentifiers(model.elements).toMap
       q"""
-        private val _resolvedModel: Model = resolveIdentifiers($model0, $identifiers)
+        private val _resolvedModel: Model = resolveIdentifiers($model, $identifiers)
         final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$OutTypes](
           _resolvedModel, Model2Query(_resolvedModel)
         ) {
@@ -111,7 +111,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
     } else {
       q"""
         final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$OutTypes](
-          $model0, ${Model2Query(model0)}
+          $model, ${Model2Query(model)}
         ) {
           val isJsPlatform = $isJsPlatform
           ${getApplyValues(outMoleculeClass)}
@@ -129,6 +129,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
             final override def packed2obj(vs: Iterator[String]): $ObjType = ${objTree(obj, jsTpl)}
             final override def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ${packed2jsonFlat(obj, txMetas)}
             final override def obj: nodes.Obj = $obj
+            ..${compare(model, doSort)}
           }
         """
       } else {
@@ -143,7 +144,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
             final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $tplCasts
             final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
             final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
-            ..${compare(model0, doSort)}
+            ..${compare(model, doSort)}
           }
         """
       }
@@ -160,6 +161,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
             final override def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ${packed2jsonNested(levels, obj, txMetas)}
             final override def obj: nodes.Obj = $obj
             final override def nestedLevels: Int = ${levels - 1}
+            ..${compareNested(model, levels, doSort)}
           }
         """
       } else {
@@ -172,6 +174,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
             ..${buildJsonNested(obj, nestedRefs, txMetas, postJsons).get}
             final override def outerTpl2obj(tpl0: (..$OutTypes)): $ObjType = ${objTree(obj, tpl)}
             final override def nestedLevels: Int = ${levels - 1}
+            ..${compareNested(model, levels, doSort)}
           }
         """
       }

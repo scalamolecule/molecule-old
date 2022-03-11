@@ -1,4 +1,4 @@
-package molecule.core.macros.rowExtractors
+package molecule.core.macros.rowConverters
 
 import molecule.core.macros.rowAttr.{JsonBase, RowValue2json}
 import molecule.core.marshalling.nodes._
@@ -10,7 +10,7 @@ trait Row2jsonNested extends JsonBase with RowValue2json {
 
   import c.universe._
 
-  private lazy val xx = InspectMacro("BuildJsonNested", 10)
+  private lazy val xx = InspectMacro("Row2jsonNested", 10)
 
   case class buildJsonNested(
     obj: Obj,

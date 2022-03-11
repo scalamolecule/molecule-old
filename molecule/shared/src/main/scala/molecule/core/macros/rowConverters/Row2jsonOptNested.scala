@@ -1,4 +1,4 @@
-package molecule.core.macros.rowExtractors
+package molecule.core.macros.rowConverters
 
 import molecule.core.macros.rowAttr.{JsonBase, RowValue2jsonOptNested}
 import molecule.core.marshalling.nodes._
@@ -9,7 +9,7 @@ private[molecule] trait Row2jsonOptNested extends RowValue2jsonOptNested with Js
 
   import c.universe._
 
-  private lazy val xx = InspectMacro("BuildJsonOptNested", 2, 1)
+  private lazy val xx = InspectMacro("Row2jsonOptNested", 2, 1)
 
   def jsonOptNested(
     current: Obj,

@@ -86,7 +86,7 @@ object elements {
     nsFull: String,
     refAttr: String,
     refNs: String = "",
-    card: Int,
+    card: Int = 1,
     gvs: Seq[GenericValue] = Nil) extends Element {
     override def toString: String = s"""Bond("$nsFull", "$refAttr", "$refNs", $card, ${sq(gvs)})"""
   }

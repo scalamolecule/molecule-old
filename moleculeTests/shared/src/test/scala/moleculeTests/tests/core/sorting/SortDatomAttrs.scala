@@ -1,10 +1,9 @@
-package moleculeTests.tests.core.pagination
+package moleculeTests.tests.core.sorting
 
 import molecule.core.util.Executor._
-import molecule.core.util.testing.expectCompileError
-import molecule.datomic.api.in1_out7._
-import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
+import molecule.datomic.api.out7._
 import utest._
 
 

@@ -1,4 +1,4 @@
-package molecule.core.macros.rowExtractors
+package molecule.core.macros.rowConverters
 
 import molecule.core.ops.TreeOps
 import scala.reflect.macros.blackbox

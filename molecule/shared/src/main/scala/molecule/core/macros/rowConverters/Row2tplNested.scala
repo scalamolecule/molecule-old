@@ -1,4 +1,4 @@
-package molecule.core.macros.rowExtractors
+package molecule.core.macros.rowConverters
 
 import scala.reflect.macros.blackbox
 
@@ -8,8 +8,8 @@ private[molecule] trait Row2tplNested { self: Row2tplComposite with Row2tplFlat 
 
   import c.universe._
 
-  //  private lazy val xx = InspectMacro("BuildTplNested", 1, mkError = true)
-  private lazy val xx = InspectMacro("BuildTplNested", 10)
+  //  private lazy val xy = InspectMacro("Row2tplNested", 1, mkError = true)
+  private lazy val xx = InspectMacro("Row2tplNested", 10)
 
   case class buildTplNested(
     castss: List[List[Int => Tree]],

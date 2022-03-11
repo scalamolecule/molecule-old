@@ -33,7 +33,6 @@ private[molecule] trait TreeOps extends Liftables {
     lazy val at           : att            = att(t)
     lazy val nsFull       : String         = if (t.isFirstNS) t.symbol.name.toString else at.nsFull.toString
     lazy val name         : String         = at.toString
-    lazy val nameClean    : String         = clean(at.toString)
     lazy val tpeS         : String         = at.tpeS
     lazy val card         : Int            = at.card
     lazy val enumPrefix   : String         = at.enumPrefix
@@ -84,15 +83,12 @@ private[molecule] trait TreeOps extends Liftables {
     def isMapAttrK: Boolean = tpe_ <:< typeOf[MapAttrK]
     def isMapAttr: Boolean = tpe_ <:< weakTypeOf[MapAttr[_, _, _, _]]
     def isMapAttr$: Boolean = tpe_ <:< weakTypeOf[MapAttr$[_, _, _]]
-    def isOne: Boolean = tpe_ <:< weakTypeOf[One[_, _, _]]
     def isMany: Boolean = tpe_ <:< weakTypeOf[Many[_, _, _, _]]
     def isEnum: Boolean = tpe_ <:< weakTypeOf[Enum]
     def isEnum$: Boolean = tpe_ <:< weakTypeOf[Enum$[_, _]]
     def isAnyEnum: Boolean = isEnum || isEnum$
   }
   def nsString(nsFull: String): String = nsFull
-  def nsString(nsTree: Tree): String = nsString(nsTree.symbol.name.toString)
-  def nsString(nsName: Name): String = nsString(nsName.decodedName.toString)
 
   def extractNsAttr(tpe: Type, tree: Tree): String = {
     val ss = c.typecheck(tree).tpe.baseType(tpe.typeSymbol).typeArgs.head.typeSymbol.name.toString.split('_')
@@ -277,7 +273,6 @@ private[molecule] trait TreeOps extends Liftables {
 
 
     def enums: List[att] = attrs.filter(_.isAnyEnum).distinct
-    def isNamespace: Boolean = true
   }
 
   object nsp {
@@ -330,18 +325,8 @@ private[molecule] trait TreeOps extends Liftables {
     def nsFull: nsp = new nsp(owner)
 
     def name: TermName = TermName(toString)
-    def fullName: String = attrType.typeSymbol.fullName
 
     def tpeS: String = if (tpe =:= NoType) "" else truncTpe(tpe.toString)
-
-
-    def contentType: Type = tpe
-
-    lazy val isOne: Boolean = attrType <:< weakTypeOf[One[_, _, _]] ||
-      attrType <:< weakTypeOf[OneValueAttr$[_, _]] ||
-      attrType <:< weakTypeOf[OneEnum$[_]] ||
-      attrType <:< weakTypeOf[OneRefAttr[_, _]] ||
-      attrType <:< weakTypeOf[OneRefAttr$[_]]
 
     lazy val isMany: Boolean = attrType <:< weakTypeOf[Many[_, _, _, _]] ||
       attrType <:< weakTypeOf[ManyValueAttr$[_, _, _]] ||
@@ -356,10 +341,6 @@ private[molecule] trait TreeOps extends Liftables {
     lazy val isMapK: Boolean = attrType <:< weakTypeOf[MapAttrK]
 
     def card: Int = if (isMapK) 4 else if (isMap) 3 else if (isMany) 2 else 1
-
-    def isValue: Boolean = attrType <:< weakTypeOf[One[_, _, _]] ||
-      attrType <:< weakTypeOf[Many[_, _, _, _]] ||
-      attrType <:< weakTypeOf[OneEnum[_, _]]
 
     def isAnyEnum: Boolean = attrType <:< weakTypeOf[Enum]
 
@@ -379,7 +360,6 @@ private[molecule] trait TreeOps extends Liftables {
       }.toList.reverse
     }
 
-    def hasEnum(enumCandidate: String): Boolean = enumValues.contains(enumCandidate)
     def enumPrefix: String = nsFull.enums.size match {
       case 0 => ""
       case _ =>

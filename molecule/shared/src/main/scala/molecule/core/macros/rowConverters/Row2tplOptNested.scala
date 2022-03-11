@@ -1,4 +1,4 @@
-package molecule.core.macros.rowExtractors
+package molecule.core.macros.rowConverters
 
 import molecule.core.macros.rowAttr.RowValue2castOptNested
 import molecule.core.marshalling.nodes._
@@ -9,7 +9,7 @@ private[molecule] trait Row2tplOptNested extends RowValue2castOptNested {
 
   import c.universe._
 
-  private lazy val xx = InspectMacro("BuildTplOptNested", 10)
+  private lazy val xx = InspectMacro("Row2tplOptNested", 10)
 
   def tplOptNested(
     current: Obj,

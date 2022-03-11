@@ -15,7 +15,7 @@ class MakeComposite(val c: blackbox.Context) extends MakeBase {
 
 
   private[this] final def generateCompositeMolecule(dsl: Tree, ObjType: Type, OutTypes: Type*): Tree = {
-    val (genericImports, model0, _, castss, obj, _, hasVariables, txMetas, _, _, _, _, _) = getModel(dsl)
+    val (genericImports, model, _, castss, obj, _, hasVariables, txMetas, _, _, _, _, doSort) = getModel(dsl)
 
     val imports        = getImports(genericImports)
     val OutMoleculeTpe = molecule_o(OutTypes.size)
@@ -38,20 +38,22 @@ class MakeComposite(val c: blackbox.Context) extends MakeBase {
     }
 
     val tree = if (hasVariables) {
-      val identifiers = mapIdentifiers(model0.elements).toMap
+      val identifiers = mapIdentifiers(model.elements).toMap
       q"""
         ..$imports
-        private val _resolvedModel: Model = resolveIdentifiers($model0, $identifiers)
+        private val _resolvedModel: Model = resolveIdentifiers($model, $identifiers)
         final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel)) {
           ..$transformers
+          ..${compare(model, doSort)}
         }
         new $outMolecule
       """
     } else {
       q"""
         ..$imports
-        final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model0, ${Model2Query(model0)}) {
+        final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model, ${Model2Query(model)}) {
           ..$transformers
+          ..${compare(model, doSort)}
         }
         new $outMolecule
       """

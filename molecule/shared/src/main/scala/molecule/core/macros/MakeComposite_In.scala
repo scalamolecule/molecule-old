@@ -16,7 +16,7 @@ class MakeComposite_In(val c: blackbox.Context) extends MakeBase {
   private lazy val xx = InspectMacro("MakeComposite_In", 90)
 
   private[this] final def generateComposite_In_Molecule(dsl: Tree, ObjType: Type, InTypes: Type*)(OutTypes: Type*): Tree = {
-    val (genericImports, model0, _, castss, obj, _, hasVariables, txMetas, _, _, _, _, _) = getModel(dsl)
+    val (genericImports, model, _, castss, obj, _, hasVariables, txMetas, _, _, _, _, _) = getModel(dsl)
 
     val imports          = getImports(genericImports)
     val InputMoleculeTpe = inputMolecule_i_o(InTypes.size, OutTypes.size)
@@ -120,9 +120,9 @@ class MakeComposite_In(val c: blackbox.Context) extends MakeBase {
     }
 
     val inputMoleculeClass = if (hasVariables) {
-      val identifiers = mapIdentifiers(model0.elements).toMap
+      val identifiers = mapIdentifiers(model.elements).toMap
       q"""
-        private val _resolvedModel: Model = resolveIdentifiers($model0, $identifiers)
+        private val _resolvedModel: Model = resolveIdentifiers($model, $identifiers)
         final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$OutTypes](
           _resolvedModel, Model2Query(_resolvedModel)
         ) {
@@ -134,7 +134,7 @@ class MakeComposite_In(val c: blackbox.Context) extends MakeBase {
     } else {
       q"""
         final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$OutTypes](
-          $model0, ${Model2Query(model0)}
+          $model, ${Model2Query(model)}
         ) {
           val isJsPlatform = $isJsPlatform
           ${getApplyValues(outMoleculeClass)}

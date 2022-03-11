@@ -136,9 +136,9 @@ trait EntityOps {
     * =============================================================================
     * Model(
     *   TxMetaData(
-    *     Atom("Ref2", "str2", "String", 1, Eq(Seq("meta2")), None, Seq(), Seq()))
+    *     Atom("Ref2", "str2", "String", 1, Eq(Seq("meta2")), None, Seq(), Seq(), ""))
     *   TxMetaData(
-    *     Atom("Ref1", "str1", "String", 1, Eq(Seq("meta1")), None, Seq(), Seq())))
+    *     Atom("Ref1", "str1", "String", 1, Eq(Seq("meta1")), None, Seq(), Seq(), "")))
     * -----------------------------------------------------------------------------
     * List(
     *   Add(tx,:Ref2/str2,Values(Eq(Seq("meta2")),None),Card(1)),
