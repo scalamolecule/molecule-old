@@ -54,7 +54,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
     quote(sb, field)
     sb.append(": [")
     var next = false
-    val vs         = it.next.asInstanceOf[jList[_]].iterator
+    val vs   = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext) {
       if (next) sb.append(", ") else next = true
       sb.append(indent(tabs + 1))
@@ -68,7 +68,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
     quote(sb, field)
     sb.append(": [")
     var next = false
-    val vs         = it.next.asInstanceOf[jList[_]].iterator
+    val vs   = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext) {
       if (next) sb.append(", ") else next = true
       sb.append(indent(tabs + 1))
@@ -82,7 +82,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
     quote(sb, field)
     sb.append(": [")
     var next = false
-    val vs         = it.next.asInstanceOf[jList[_]].iterator
+    val vs   = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext) {
       if (next) sb.append(", ") else next = true
       sb.append(indent(tabs + 1))
@@ -96,7 +96,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
     quote(sb, field)
     sb.append(": [")
     var next = false
-    val vs         = it.next.asInstanceOf[jList[_]].iterator
+    val vs   = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext) {
       if (next) sb.append(", ") else next = true
       sb.append(indent(tabs + 1))
@@ -110,7 +110,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
     quote(sb, field)
     sb.append(": [")
     var next = false
-    val vs         = it.next.asInstanceOf[jList[_]].iterator
+    val vs   = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext) {
       if (next) sb.append(", ") else next = true
       sb.append(indent(tabs + 1))
@@ -124,7 +124,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
     quote(sb, field)
     sb.append(": [")
     var next = false
-    val vs         = it.next.asInstanceOf[jList[_]].iterator
+    val vs   = it.next.asInstanceOf[jList[_]].iterator
     while (vs.hasNext) {
       if (next) sb.append(", ") else next = true
       val refAttr = vs.next
@@ -140,43 +140,49 @@ private[molecule] trait JsonOptNested extends JsonBase {
 
   protected def jsonOptNestedOptOneQuoted(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
     it.next match {
-      case "__none__" => pair(sb, field, "null")
-      case v          => quotedPair(sb, field, v.toString)
+      case "__none__" | null => pair(sb, field, "null")
+      case m: jMap[_, _]     => quotedPair(sb, field, m.values().iterator().next().toString)
+      case v                 => quotedPair(sb, field, v.toString)
     }
   }
 
   protected def jsonOptNestedOptOne(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
     it.next match {
-      case "__none__" => pair(sb, field, "null")
-      case v          => pair(sb, field, v)
+      case "__none__" | null => pair(sb, field, "null")
+      case m: jMap[_, _]     => pair(sb, field, m.values().iterator().next().toString)
+      case v                 => pair(sb, field, v)
     }
   }
 
   protected def jsonOptNestedOptOneToString(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
     it.next match {
-      case "__none__" => pair(sb, field, "null")
-      case v          => pair(sb, field, v.toString)
+      case "__none__" | null => pair(sb, field, "null")
+      case m: jMap[_, _]     => pair(sb, field, m.values().iterator().next().toString)
+      case v                 => pair(sb, field, v.toString)
     }
   }
 
   protected def jsonOptNestedOptOneDate(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
     it.next match {
-      case "__none__" => pair(sb, field, "null")
-      case v          => quotedPair(sb, field, date2str(v.asInstanceOf[Date]))
+      case "__none__" | null => pair(sb, field, "null")
+      case m: jMap[_, _]     => quotedPair(sb, field, date2str(m.values().iterator().next().asInstanceOf[Date]))
+      case v                 => quotedPair(sb, field, date2str(v.asInstanceOf[Date]))
     }
   }
 
   protected def jsonOptNestedOptOneEnum(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
     it.next match {
-      case "__none__" => pair(sb, field, "null")
-      case v          => quotedPair(sb, field, getKwName(v.asInstanceOf[jMap[_, _]].values.iterator.next.toString))
+      case "__none__" | null => pair(sb, field, "null")
+//      case m: jMap[_, _]     => quotedPair(sb, field, m.values().iterator().next().toString)
+      case v                 => quotedPair(sb, field, getKwName(v.asInstanceOf[jMap[_, _]].values.iterator.next.toString))
     }
   }
 
   protected def jsonOptNestedOptOneRefAttr(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
     it.next match {
-      case "__none__" => pair(sb, field, "null")
-      case v          =>
+      case "__none__" | null => pair(sb, field, "null")
+//      case m: jMap[_, _]     => quotedPair(sb, field, m.values().iterator().next().toString)
+      case v                 =>
         val refAttr = v
           .asInstanceOf[jMap[_, _]].values.iterator.next
           .asInstanceOf[jLong].toLong
@@ -189,12 +195,25 @@ private[molecule] trait JsonOptNested extends JsonBase {
 
   protected def jsonOptNestedOptManyQuoted(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
     it0.next match {
-      case "__none__" => pair(sb, field, "null")
-      case v          =>
+      case "__none__" | null => pair(sb, field, "null")
+      case m: jMap[_, _]     =>
         quote(sb, field)
         sb.append(": [")
         var next = false
-        val vs         = v.asInstanceOf[jList[_]].iterator
+        val vs   = m.values().iterator().next().asInstanceOf[jList[_]].iterator
+        while (vs.hasNext) {
+          if (next) sb.append(", ") else next = true
+          sb.append(indent(tabs + 2))
+          quote(sb, vs.next.toString)
+        }
+        if (next) sb.append(indent(tabs + 1))
+        sb.append("]")
+
+      case v                 =>
+        quote(sb, field)
+        sb.append(": [")
+        var next = false
+        val vs   = v.asInstanceOf[jList[_]].iterator
         while (vs.hasNext) {
           if (next) sb.append(", ") else next = true
           sb.append(indent(tabs + 1))
@@ -207,12 +226,12 @@ private[molecule] trait JsonOptNested extends JsonBase {
 
   protected def jsonOptNestedOptMany(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
     it0.next match {
-      case "__none__" => pair(sb, field, "null")
-      case v          =>
+      case "__none__" | null => pair(sb, field, "null")
+      case v                 =>
         quote(sb, field)
         sb.append(": [")
         var next = false
-        val vs         = v.asInstanceOf[jList[_]].iterator
+        val vs   = v.asInstanceOf[jList[_]].iterator
         while (vs.hasNext) {
           if (next) sb.append(", ") else next = true
           sb.append(indent(tabs + 1))
@@ -225,12 +244,12 @@ private[molecule] trait JsonOptNested extends JsonBase {
 
   protected def jsonOptNestedOptManyToString(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
     it0.next match {
-      case "__none__" => pair(sb, field, "null")
-      case v          =>
+      case "__none__" | null => pair(sb, field, "null")
+      case v                 =>
         quote(sb, field)
         sb.append(": [")
         var next = false
-        val vs         = v.asInstanceOf[jList[_]].iterator
+        val vs   = v.asInstanceOf[jList[_]].iterator
         while (vs.hasNext) {
           if (next) sb.append(", ") else next = true
           sb.append(indent(tabs + 1))
@@ -243,12 +262,12 @@ private[molecule] trait JsonOptNested extends JsonBase {
 
   protected def jsonOptNestedOptManyDate(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
     it0.next match {
-      case "__none__" => pair(sb, field, "null")
-      case v          =>
+      case "__none__" | null => pair(sb, field, "null")
+      case v                 =>
         quote(sb, field)
         sb.append(": [")
         var next = false
-        val vs         = v.asInstanceOf[jList[_]].iterator
+        val vs   = v.asInstanceOf[jList[_]].iterator
         while (vs.hasNext) {
           if (next) sb.append(", ") else next = true
           sb.append(indent(tabs + 1))
@@ -261,12 +280,12 @@ private[molecule] trait JsonOptNested extends JsonBase {
 
   protected def jsonOptNestedOptManyEnum(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
     it0.next match {
-      case "__none__" => pair(sb, field, "null")
-      case v          =>
+      case "__none__" | null => pair(sb, field, "null")
+      case v                 =>
         quote(sb, field)
         sb.append(": [")
         var next = false
-        val vs         = v.asInstanceOf[jList[_]].iterator
+        val vs   = v.asInstanceOf[jList[_]].iterator
         while (vs.hasNext) {
           if (next) sb.append(", ") else next = true
           sb.append(indent(tabs + 1))
@@ -279,12 +298,12 @@ private[molecule] trait JsonOptNested extends JsonBase {
 
   protected def jsonOptNestedOptManyRefAttr(sb: StringBuffer, field: String, it0: jIterator[_], tabs: Int): StringBuffer = {
     it0.next match {
-      case "__none__" => pair(sb, field, "null")
-      case v          =>
+      case "__none__" | null => pair(sb, field, "null")
+      case v                 =>
         quote(sb, field)
         sb.append(": [")
         var next = false
-        val vs         = v.asInstanceOf[jList[_]].iterator
+        val vs   = v.asInstanceOf[jList[_]].iterator
         while (vs.hasNext) {
           if (next) sb.append(", ") else next = true
           sb.append(indent(tabs + 1))
@@ -306,8 +325,8 @@ private[molecule] trait JsonOptNested extends JsonBase {
     quote(sb, field)
     sb.append(": {")
     var next = false
-    val vs         = it.next.asInstanceOf[jList[_]].iterator
-    var pair       = new Array[String](2)
+    val vs   = it.next.asInstanceOf[jList[_]].iterator
+    var pair = new Array[String](2)
     while (vs.hasNext) {
       if (next) sb.append(", ") else next = true
       sb.append(indent(tabs + 1))
@@ -324,8 +343,8 @@ private[molecule] trait JsonOptNested extends JsonBase {
     quote(sb, field)
     sb.append(": {")
     var next = false
-    val vs         = it.next.asInstanceOf[jList[_]].iterator
-    var pair       = new Array[String](2)
+    val vs   = it.next.asInstanceOf[jList[_]].iterator
+    var pair = new Array[String](2)
     while (vs.hasNext) {
       if (next) sb.append(", ") else next = true
       sb.append(indent(tabs + 1))
@@ -343,13 +362,30 @@ private[molecule] trait JsonOptNested extends JsonBase {
 
   protected def jsonOptNestedOptMapQuoted(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
     it.next match {
-      case "__none__" => pair(sb, field, "null")
-      case v          =>
+      case "__none__" | null => pair(sb, field, "null")
+      case m: jMap[_, _]     =>
         quote(sb, field)
         sb.append(": {")
         var next = false
-        val it         = v.asInstanceOf[jList[_]].iterator
-        var pair       = new Array[String](2)
+        val it   = m.values().iterator().next().asInstanceOf[jList[_]].iterator
+        var pair = new Array[String](2)
+        while (it.hasNext) {
+          if (next) sb.append(", ") else next = true
+          sb.append(indent(tabs + 2))
+          pair = it.next.toString.split("@", 2)
+          quote(sb, pair(0))
+          sb.append(": ")
+          quote(sb, pair(1))
+        }
+        if (next) sb.append(indent(tabs + 1))
+        sb.append("}")
+
+      case v                 =>
+        quote(sb, field)
+        sb.append(": {")
+        var next = false
+        val it   = v.asInstanceOf[jList[_]].iterator
+        var pair = new Array[String](2)
         while (it.hasNext) {
           if (next) sb.append(", ") else next = true
           sb.append(indent(tabs + 1))
@@ -365,13 +401,13 @@ private[molecule] trait JsonOptNested extends JsonBase {
 
   protected def jsonOptNestedOptMap(sb: StringBuffer, field: String, it: jIterator[_], tabs: Int): StringBuffer = {
     it.next match {
-      case "__none__" => pair(sb, field, "null")
-      case v          =>
+      case "__none__" | null => pair(sb, field, "null")
+      case v                 =>
         quote(sb, field)
         sb.append(": {")
         var next = false
-        val it         = v.asInstanceOf[jList[_]].iterator
-        var pair       = new Array[String](2)
+        val it   = v.asInstanceOf[jList[_]].iterator
+        var pair = new Array[String](2)
         while (it.hasNext) {
           if (next) sb.append(", ") else next = true
           sb.append(indent(tabs + 1))

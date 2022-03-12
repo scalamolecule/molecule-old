@@ -18,6 +18,8 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
   // get ================================================================================================
 
   private def rows2tuples(rows: jCollection[jList[AnyRef]], limit: Int, offset: Int = 0): List[Tpl] = {
+    //    val count = rows.size()
+    //    limit.min(count) match {
     limit match {
       case 0 => List.empty[Tpl]
       case 1 => List(row2tpl(rows.iterator.next))
@@ -34,7 +36,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
           tuples.result()
         } else {
           val rowsIterator = rows.iterator
-          while (i != limit) { // No need to check hasNext since we know the size
+          while (i != limit) { // No need to check hasNext since (offset + limit) will not exceed total count
             tuples += row2tpl(rowsIterator.next)
             i += 1
           }

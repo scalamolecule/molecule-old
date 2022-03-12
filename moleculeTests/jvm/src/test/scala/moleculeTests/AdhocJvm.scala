@@ -1,5 +1,7 @@
 package moleculeTests
 
+import java.net.URI
+import java.util.{Date, UUID}
 import clojure.lang.Keyword
 import datomic.{Database, Peer, Util}
 import molecule.core.data.model._
@@ -20,9 +22,9 @@ import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Sorting
 
 object AdhocJvm extends AsyncTestSuite with Helpers with JavaConversions {
-
 
   lazy val tests = Tests {
 
@@ -30,85 +32,109 @@ object AdhocJvm extends AsyncTestSuite with Helpers with JavaConversions {
       for {
         conn <- futConn
 
-        _ <- Ns.str.Refs1.*(Ref1.int1) insert List(
-          ("A", List(1, 2)),
-          ("B", List(1, 2)),
-          ("C", List()),
+
+        //        _ <- Ns.int.str.Refs1.*?(Ref1.int1) insert List((1, "a", Nil))
+        //        _ <- Ns.int.strs.Refs1.*?(Ref1.int1) insert List((1, Set("a"), Nil))
+        //        _ <- Ns.int.strMap.Refs1.*?(Ref1.int1) insert List((1, Map("a" -> "aa"), Nil))
+
+        _ <- Ns.int.str$.Refs1.*?(Ref1.int1) insert List((1, Some("a"), Nil))
+        _ <- Ns.int.strs$.Refs1.*?(Ref1.int1) insert List((2, Some(Set("a")), Nil))
+        _ <- Ns.int.strMap$.Refs1.*?(Ref1.int1) insert List((3, Some(Map("a" -> "aa")), Nil))
+
+        //        _ <- Ns.int.str.Refs1.*?(Ref1.int1).get.map(_ ==> List((1, "a", Nil)))
+        //        _ <- Ns.int.strs.Refs1.*?(Ref1.int1).get.map(_ ==> List((1, Set("a"), Nil)))
+        //        _ <- Ns.int.strMap.Refs1.*?(Ref1.int1).get.map(_ ==> List((1, Map("a" -> "aa"), Nil)))
+
+        _ <- Ns.int(1).str$.Refs1.*?(Ref1.int1).get.map(_ ==> List((1, Some("a"), Nil)))
+        _ <- Ns.int(2).strs$.Refs1.*?(Ref1.int1).get.map(_ ==> List((2, Some(Set("a")), Nil)))
+        _ <- Ns.int(3).strMap$.Refs1.*?(Ref1.int1).get.map(_ ==> List((3, Some(Map("a" -> "aa")), Nil)))
+
+        //        _ <- Ns.int.str.Refs1.*?(Ref1.int1).getJson.map(_ ==> List((1, "a", Nil)))
+        //        _ <- Ns.int.strs.Refs1.*?(Ref1.int1).getJson.map(_ ==> List((1, Set("a"), Nil)))
+        //        _ <- Ns.int.strMap.Refs1.*?(Ref1.int1).getJson.map(_ ==> List((1, Map("a" -> "aa"), Nil)))
+
+        _ <- Ns.int(1).str$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
+        """{
+          |  "data": {
+          |    "Ns": [
+          |      {
+          |        "int": 1,
+          |        "str$": "a",
+          |        "Refs1": []
+          |      }
+          |    ]
+          |  }
+          |}""".stripMargin
+        )
+        _ <- Ns.int(2).strs$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 2,
+            |        "strs$": [
+            |          "a"
+            |        ],
+            |        "Refs1": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
+        )
+        _ <- Ns.int(3).strMap$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 3,
+            |        "strMap$": {
+            |          "a": "aa"
+            |        },
+            |        "Refs1": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
 
-        _ <- Ns.str.a1.Refs1.*(Ref1.int1.a1).inspectGet
-        _ <- Ns.str.a1.Refs1.*?(Ref1.int1.a1).inspectGet
-
-//        _ <- Ns.str.a1.Refs1.*?(Ref1.int1.a1).get.map(_ ==> List(
-//          ("A", List(1, 2)),
-//          ("B", List(1, 2)),
-//          ("C", List()),
-//        ))
-//        _ <- Ns.str.a1.Refs1.*?(Ref1.int1.d1).get.map(_ ==> List(
-//          ("A", List(2, 1)),
-//          ("B", List(2, 1)),
-//          ("C", List()),
-//        ))
-//        _ <- Ns.str.d1.Refs1.*?(Ref1.int1.a1).get.map(_ ==> List(
-//          ("C", List()),
-//          ("B", List(1, 2)),
-//          ("A", List(1, 2)),
-//        ))
-//        _ <- Ns.str.d1.Refs1.*?(Ref1.int1.d1).get.map(_ ==> List(
-//          ("C", List()),
-//          ("B", List(2, 1)),
-//          ("A", List(2, 1)),
-//        ))
 
 
-
-//        _ <- (Ns.str + Ref1.int1) insert List(
-//          ("A", 1),
-//          ("A", 2),
-//          ("B", 1),
-//          ("B", 2),
-//        )
-//        _ <- (Ns.str.a1 + Ref1.int1.a1).get.map(_ ==> List(
-//          ("A", 1),
-//          ("A", 2),
-//          ("B", 1),
-//          ("B", 2),
-//        ))
-//        _ <- (Ns.str.a1 + Ref1.int1.d1).get.map(_ ==> List(
-//          ("A", 2),
-//          ("A", 1),
-//          ("B", 2),
-//          ("B", 1),
-//        ))
-//        _ <- (Ns.str.d1 + Ref1.int1.a1).get.map(_ ==> List(
-//          ("B", 1),
-//          ("B", 2),
-//          ("A", 1),
-//          ("A", 2),
-//        ))
-//        _ <- (Ns.str.d1 + Ref1.int1.d1).get.map(_ ==> List(
-//          ("B", 2),
-//          ("B", 1),
-//          ("A", 2),
-//          ("A", 1),
-//        ))
-
+        //        _ <- (Ns.str + Ref1.int1) insert List(
+        //          ("A", 1),
+        //          ("A", 2),
+        //          ("B", 1),
+        //          ("B", 2),
+        //        )
+        //        _ <- (Ns.str.a1 + Ref1.int1.a1).get.map(_ ==> List(
+        //          ("A", 1),
+        //          ("A", 2),
+        //          ("B", 1),
+        //          ("B", 2),
+        //        ))
+        //        _ <- (Ns.str.a1 + Ref1.int1.d1).get.map(_ ==> List(
+        //          ("A", 2),
+        //          ("A", 1),
+        //          ("B", 2),
+        //          ("B", 1),
+        //        ))
+        //        _ <- (Ns.str.d1 + Ref1.int1.a1).get.map(_ ==> List(
+        //          ("B", 1),
+        //          ("B", 2),
+        //          ("A", 1),
+        //          ("A", 2),
+        //        ))
+        //        _ <- (Ns.str.d1 + Ref1.int1.d1).get.map(_ ==> List(
+        //          ("B", 2),
+        //          ("B", 1),
+        //          ("A", 2),
+        //          ("A", 1),
+        //        ))
 
 
-
-
-
-
-
-
-
-
-
-
-//        _ <- Ns.str.a1.Refs1.*(Ref1.int1.a1).getJson.map(_ ==> List(
-//          ("B", List(2, 1)),
-//          ("A", List(2, 1)),
-//        ))
+        //        _ <- Ns.str.a1.Refs1.*(Ref1.int1.a1).getJson.map(_ ==> List(
+        //          ("B", List(2, 1)),
+        //          ("A", List(2, 1)),
+        //        ))
 
 
       } yield ()

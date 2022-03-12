@@ -15,7 +15,8 @@ private[molecule] trait Row2tplOptNested extends RowValue2castOptNested {
     current: Obj,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
-    level: Int = 0
+    level: Int = 0,
+    orderings: Seq[Tree] = Nil
   ): Tree = {
 
     def properties(nodes: List[Node]): Seq[Tree] = {
@@ -32,7 +33,7 @@ private[molecule] trait Row2tplOptNested extends RowValue2castOptNested {
                 case last =>
                   val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]]
                   val it = extractFlatValues($propCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)(list)
-                  ..${tplOptNested(nested, refIndexes, tacitIndexes, level + 1)}
+                  ..${tplOptNested(nested, refIndexes, tacitIndexes, level + 1, orderings)}
               }
             """
           )
@@ -71,6 +72,7 @@ private[molecule] trait Row2tplOptNested extends RowValue2castOptNested {
        """
 
     } else {
+      val orderingTree = if(orderings.nonEmpty) orderings(level) else q""
       current.props.last match {
         case last@Obj(_, _, nested, _) if nested || isDeeper(last) =>
           val (props, nestedObj) = if (nested) {
@@ -100,10 +102,11 @@ private[molecule] trait Row2tplOptNested extends RowValue2castOptNested {
                   case "__none__" => Nil
                   case last       =>
                     val it = $flatValues(last.asInstanceOf[jList[Any]])
-                    ..${tplOptNested(nestedObj, refIndexes, tacitIndexes, level + 1)}
+                    ..${tplOptNested(nestedObj, refIndexes, tacitIndexes, level + 1, orderings)}
                 }
               )
             }
+            ..$orderingTree
             buf
            """
 
@@ -114,6 +117,7 @@ private[molecule] trait Row2tplOptNested extends RowValue2castOptNested {
             while (it.hasNext) {
               buf = buf :+ (..${properties(current.props)})
             }
+            ..$orderingTree
             buf
           """
       }

@@ -5,6 +5,7 @@ import moleculeTests.setup.AsyncTestSuite
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import utest._
 import molecule.core.util.Executor._
+import moleculeTests.tests.core.sorting.SortNested.core
 
 
 object NestedAttrs1 extends AsyncTestSuite {
@@ -574,6 +575,23 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("A", List(1)),
           ("B", List())
         ))
+      } yield ()
+    }
+
+
+
+    "Optional nested top-level types" - core { implicit conn =>
+      for {
+        _ <- Ns.int.strs.Refs1.*?(Ref1.int1) insert List((1, Set("a"), List(1)))
+        _ <- Ns.int.strs$.Refs1.*?(Ref1.int1) insert List((1, Some(Set("a")), List(1)))
+        _ <- Ns.int.strMap.Refs1.*?(Ref1.int1) insert List((1, Map("a" -> "aa"), List(1)))
+        _ <- Ns.int.strMap$.Refs1.*?(Ref1.int1) insert List((1, Some(Map("a" -> "aa")), List(1)))
+
+        _ <- Ns.int.strs.Refs1.*?(Ref1.int1).getJson.map(_ ==> List((1, Set("a"), List(1))))
+        _ <- Ns.int.strs$.Refs1.*?(Ref1.int1).getJson.map(_ ==> List((1, Some(Set("a")), List(1))))
+        _ <- Ns.int.strMap.Refs1.*?(Ref1.int1).getJson.map(_ ==> List((1, Map("a" -> "aa"), List(1))))
+        _ <- Ns.int.strMap$.Refs1.*?(Ref1.int1).getJson.map(_ ==> List((1, Some(Map("a" -> "aa")), List(1))))
+
       } yield ()
     }
   }

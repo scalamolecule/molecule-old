@@ -82,14 +82,17 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
           final override def tacitIndexes: List[List[Int]] = $tacitIndexes
         """
       } else {
+        val (compareImpl, orderings) = compareOptNested(model, doSort)
         q"""
           final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) =
-            ${tplOptNested(obj, refIndexes, tacitIndexes)}.asInstanceOf[(..$OutTypes)]
+            ${tplOptNested(obj, refIndexes, tacitIndexes, orderings = orderings)}.asInstanceOf[(..$OutTypes)]
 
           final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj, jvmTpl)}
 
           final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer =
             ${jsonOptNested(obj, refIndexes, tacitIndexes)}
+
+          ..$compareImpl
         """
       }
 
@@ -188,8 +191,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
         }
       """
 
-//    xx(6, levels, obj, tree, compareNested(model, levels, doSort), compare(model, doSort))
-    xx(6, levels, obj, tree)
+    xx(6, levels, obj, tree, compareOptNested(model, doSort))
     tree
   }
 
