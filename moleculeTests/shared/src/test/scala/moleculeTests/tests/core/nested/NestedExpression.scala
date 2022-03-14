@@ -25,7 +25,7 @@ object NestedExpression extends AsyncTestSuite {
         _ <- m(Ns.int.>(1).Refs1 * Ref1.int1).get.map(_ ==> List(
           (2, List(2, 3)),
         ))
-        _ <- m(Ns.int.>(1).Refs1 *? Ref1.int1).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.int.>(1).a1.Refs1 *? Ref1.int1).get.map(_ ==> List(
           (2, List(2, 3)),
           (3, List())
         ))
@@ -34,7 +34,7 @@ object NestedExpression extends AsyncTestSuite {
         _ <- m(Ns.int.>(one).Refs1 * Ref1.int1).get.map(_ ==> List(
           (2, List(2, 3))
         ))
-        _ <- m(Ns.int.>(one).Refs1 *? Ref1.int1).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.int.>(one).a1.Refs1 *? Ref1.int1).get.map(_ ==> List(
           (2, List(2, 3)),
           (3, List())
         ))
@@ -53,12 +53,12 @@ object NestedExpression extends AsyncTestSuite {
         _ <- m(Ns.int.Refs1 * Ref1.int1(1)).get.map(_ ==> List(
           (1, List(1)),
         ))
-        _ <- m(Ns.int.Refs1 * Ref1.int1(2)).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.int.a1.Refs1 * Ref1.int1(2)).get.map(_ ==> List(
           (1, List(2)),
           (2, List(2))
         ))
 
-        _ <- m(Ns.int.Refs1 * Ref1.int1.>(1)).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.int.a1.Refs1 * Ref1.int1.>(1)).get.map(_ ==> List(
           (1, List(2)),
           (2, List(2, 3))
         ))
@@ -70,7 +70,7 @@ object NestedExpression extends AsyncTestSuite {
         _ <- m(Ns.int.Refs1 * Ref1.int1(one)).get.map(_ ==> List(
           (1, List(1))
         ))
-        _ <- m(Ns.int.Refs1 * Ref1.int1.>(one)).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.int.a1.Refs1 * Ref1.int1.>(one)).get.map(_ ==> List(
           (1, List(2)),
           (2, List(2, 3))
         ))

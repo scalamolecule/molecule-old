@@ -13,6 +13,7 @@ import molecule.core.util.Executor._
 import molecule.core.util.{Helpers, JavaConversions}
 import molecule.datomic.api
 import molecule.datomic.api.in1_out15._
+import molecule.datomic.api.out11.m
 import molecule.datomic.base.api.Datom
 import molecule.datomic.base.ast.dbView.History
 import molecule.datomic.base.facade.TxReport
@@ -31,71 +32,6 @@ object AdhocJvm extends AsyncTestSuite with Helpers with JavaConversions {
     "adhocJvm" - core { implicit futConn =>
       for {
         conn <- futConn
-
-
-        //        _ <- Ns.int.str.Refs1.*?(Ref1.int1) insert List((1, "a", Nil))
-        //        _ <- Ns.int.strs.Refs1.*?(Ref1.int1) insert List((1, Set("a"), Nil))
-        //        _ <- Ns.int.strMap.Refs1.*?(Ref1.int1) insert List((1, Map("a" -> "aa"), Nil))
-
-        _ <- Ns.int.str$.Refs1.*?(Ref1.int1) insert List((1, Some("a"), Nil))
-        _ <- Ns.int.strs$.Refs1.*?(Ref1.int1) insert List((2, Some(Set("a")), Nil))
-        _ <- Ns.int.strMap$.Refs1.*?(Ref1.int1) insert List((3, Some(Map("a" -> "aa")), Nil))
-
-        //        _ <- Ns.int.str.Refs1.*?(Ref1.int1).get.map(_ ==> List((1, "a", Nil)))
-        //        _ <- Ns.int.strs.Refs1.*?(Ref1.int1).get.map(_ ==> List((1, Set("a"), Nil)))
-        //        _ <- Ns.int.strMap.Refs1.*?(Ref1.int1).get.map(_ ==> List((1, Map("a" -> "aa"), Nil)))
-
-        _ <- Ns.int(1).str$.Refs1.*?(Ref1.int1).get.map(_ ==> List((1, Some("a"), Nil)))
-        _ <- Ns.int(2).strs$.Refs1.*?(Ref1.int1).get.map(_ ==> List((2, Some(Set("a")), Nil)))
-        _ <- Ns.int(3).strMap$.Refs1.*?(Ref1.int1).get.map(_ ==> List((3, Some(Map("a" -> "aa")), Nil)))
-
-        //        _ <- Ns.int.str.Refs1.*?(Ref1.int1).getJson.map(_ ==> List((1, "a", Nil)))
-        //        _ <- Ns.int.strs.Refs1.*?(Ref1.int1).getJson.map(_ ==> List((1, Set("a"), Nil)))
-        //        _ <- Ns.int.strMap.Refs1.*?(Ref1.int1).getJson.map(_ ==> List((1, Map("a" -> "aa"), Nil)))
-
-        _ <- Ns.int(1).str$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
-        """{
-          |  "data": {
-          |    "Ns": [
-          |      {
-          |        "int": 1,
-          |        "str$": "a",
-          |        "Refs1": []
-          |      }
-          |    ]
-          |  }
-          |}""".stripMargin
-        )
-        _ <- Ns.int(2).strs$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "int": 2,
-            |        "strs$": [
-            |          "a"
-            |        ],
-            |        "Refs1": []
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin
-        )
-        _ <- Ns.int(3).strMap$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "int": 3,
-            |        "strMap$": {
-            |          "a": "aa"
-            |        },
-            |        "Refs1": []
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin
-        )
 
 
 

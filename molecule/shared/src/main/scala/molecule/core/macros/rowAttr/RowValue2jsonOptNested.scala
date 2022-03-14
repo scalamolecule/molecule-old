@@ -33,8 +33,8 @@ private[molecule] trait RowValue2jsonOptNested extends TreeOps {
     case "Date"       => (_: Int, _: Int) => q"jsonOptNestedOneDate(sb, $field, it)"
     case "UUID"       => (_: Int, _: Int) => q"jsonOptNestedOneQuoted(sb, $field, it)"
     case "URI"        => (_: Int, _: Int) => q"jsonOptNestedOneQuoted(sb, $field, it)"
-    case "BigInt"     => (_: Int, _: Int) => q"jsonOptNestedOneToString(sb, $field, it)"
-    case "BigDecimal" => (_: Int, _: Int) => q"jsonOptNestedOneToString(sb, $field, it)"
+    case "BigInt"     => (_: Int, _: Int) => q"jsonOptNestedOneQuoted(sb, $field, it)"
+    case "BigDecimal" => (_: Int, _: Int) => q"jsonOptNestedOneQuoted(sb, $field, it)"
     case "enum"       => (_: Int, _: Int) => q"jsonOptNestedOneEnum(sb, $field, it)"
     case "ref"        => (_: Int, _: Int) => q"jsonOptNestedOneRefAttr(sb, $field, it)"
   }
@@ -48,8 +48,8 @@ private[molecule] trait RowValue2jsonOptNested extends TreeOps {
     case "Date"       => (_: Int, tabs: Int) => q"jsonOptNestedManyDate(sb, $field, it, $tabs)"
     case "UUID"       => (_: Int, tabs: Int) => q"jsonOptNestedManyQuoted(sb, $field, it, $tabs)"
     case "URI"        => (_: Int, tabs: Int) => q"jsonOptNestedManyQuoted(sb, $field, it, $tabs)"
-    case "BigInt"     => (_: Int, tabs: Int) => q"jsonOptNestedManyToString(sb, $field, it, $tabs)"
-    case "BigDecimal" => (_: Int, tabs: Int) => q"jsonOptNestedManyToString(sb, $field, it, $tabs)"
+    case "BigInt"     => (_: Int, tabs: Int) => q"jsonOptNestedManyQuoted(sb, $field, it, $tabs)"
+    case "BigDecimal" => (_: Int, tabs: Int) => q"jsonOptNestedManyQuoted(sb, $field, it, $tabs)"
     case "enum"       => (_: Int, tabs: Int) => q"jsonOptNestedManyEnum(sb, $field, it, $tabs)"
     case "ref"        => (_: Int, tabs: Int) => q"jsonOptNestedManyRefAttr(sb, $field, it, $tabs)"
   }
@@ -89,8 +89,8 @@ private[molecule] trait RowValue2jsonOptNested extends TreeOps {
       case "Date"       => (_: Int, _: Int) => q"jsonOptNestedOptOneDate(sb, $field, it)"
       case "UUID"       => (_: Int, _: Int) => q"jsonOptNestedOptOneQuoted(sb, $field, it)"
       case "URI"        => (_: Int, _: Int) => q"jsonOptNestedOptOneQuoted(sb, $field, it)"
-      case "BigInt"     => (_: Int, _: Int) => q"jsonOptNestedOptOneToString(sb, $field, it)"
-      case "BigDecimal" => (_: Int, _: Int) => q"jsonOptNestedOptOneToString(sb, $field, it)"
+      case "BigInt"     => (_: Int, _: Int) => q"jsonOptNestedOptOneQuoted(sb, $field, it)"
+      case "BigDecimal" => (_: Int, _: Int) => q"jsonOptNestedOptOneQuoted(sb, $field, it)"
       case "enum"       => (_: Int, _: Int) => q"jsonOptNestedOptOneEnum(sb, $field, it)"
       case "ref"        => (_: Int, _: Int) => q"jsonOptNestedOptOneRefAttr(sb, $field, it)"
     }
@@ -106,8 +106,8 @@ private[molecule] trait RowValue2jsonOptNested extends TreeOps {
       case "Date"       => (_: Int, tabs: Int) => q"jsonOptNestedOptManyDate(sb, $field, it, $tabs)"
       case "UUID"       => (_: Int, tabs: Int) => q"jsonOptNestedOptManyQuoted(sb, $field, it, $tabs)"
       case "URI"        => (_: Int, tabs: Int) => q"jsonOptNestedOptManyQuoted(sb, $field, it, $tabs)"
-      case "BigInt"     => (_: Int, tabs: Int) => q"jsonOptNestedOptManyToString(sb, $field, it, $tabs)"
-      case "BigDecimal" => (_: Int, tabs: Int) => q"jsonOptNestedOptManyToString(sb, $field, it, $tabs)"
+      case "BigInt"     => (_: Int, tabs: Int) => q"jsonOptNestedOptManyQuoted(sb, $field, it, $tabs)"
+      case "BigDecimal" => (_: Int, tabs: Int) => q"jsonOptNestedOptManyQuoted(sb, $field, it, $tabs)"
       case "enum"       => (_: Int, tabs: Int) => q"jsonOptNestedOptManyEnum(sb, $field, it, $tabs)"
       case "ref"        => (_: Int, tabs: Int) => q"jsonOptNestedOptManyRefAttr(sb, $field, it, $tabs)"
     }
@@ -177,8 +177,8 @@ private[molecule] trait RowValue2jsonOptNested extends TreeOps {
       case "Date"       => (_: Int, _: Int) => q"jsonOptNestedOneDate(sb, $field, it)"
       case "UUID"       => (_: Int, _: Int) => q"jsonOptNestedOneQuoted(sb, $field, it)"
       case "URI"        => (_: Int, _: Int) => q"jsonOptNestedOneQuoted(sb, $field, it)"
-      case "BigInt"     => (_: Int, _: Int) => q"jsonOptNestedOneToString(sb, $field, it)"
-      case "BigDecimal" => (_: Int, _: Int) => q"jsonOptNestedOneToString(sb, $field, it)"
+      case "BigInt"     => (_: Int, _: Int) => q"jsonOptNestedOneQuoted(sb, $field, it)"
+      case "BigDecimal" => (_: Int, _: Int) => q"jsonOptNestedOneQuoted(sb, $field, it)"
     }
   }
 }

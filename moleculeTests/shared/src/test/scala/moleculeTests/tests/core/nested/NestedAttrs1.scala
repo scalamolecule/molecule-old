@@ -1,11 +1,10 @@
 package moleculeTests.tests.core.nested
 
-import molecule.datomic.api.out6._
-import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.dataModels.core.base.dsl.CoreTest._
-import utest._
 import molecule.core.util.Executor._
-import moleculeTests.tests.core.sorting.SortNested.core
+import molecule.datomic.api.out6._
+import moleculeTests.dataModels.core.base.dsl.CoreTest._
+import moleculeTests.setup.AsyncTestSuite
+import utest._
 
 
 object NestedAttrs1 extends AsyncTestSuite {
@@ -29,15 +28,15 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("A", List(1))
         ))
 
-        _ <- m(Ref1.str1.Nss *? Ns.int.str$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.str$).get.map(_ ==> List(
           ("A", List((1, Some("a")), (2, None))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.str).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.str).get.map(_ ==> List(
           ("A", List((1, "a"))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.str_).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.str_).get.map(_ ==> List(
           ("A", List(1)),
           ("B", List())
         ))
@@ -224,7 +223,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.enumm$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.enumm$).get.map(_ ==> List(
           ("A", List((1, Some("enum1")), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.enumm).get.map(_ ==> List(
@@ -234,15 +233,15 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("A", List(1))
         ))
 
-        _ <- m(Ref1.str1.Nss *? Ns.int.enumm$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.enumm$).get.map(_ ==> List(
           ("A", List((1, Some("enum1")), (2, None))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.enumm).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.enumm).get.map(_ ==> List(
           ("A", List((1, "enum1"))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.enumm_).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.enumm_).get.map(_ ==> List(
           ("A", List(1)),
           ("B", List())
         ))
@@ -257,7 +256,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.str.int$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.str.int$).get.map(_ ==> List(
           ("A", List(("a", Some(10)), ("aa", None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.str.int).get.map(_ ==> List(
@@ -267,15 +266,15 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("A", List("a"))
         ))
 
-        _ <- m(Ref1.str1.Nss *? Ns.str.int$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.str.int$).get.map(_ ==> List(
           ("A", List(("a", Some(10)), ("aa", None))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.str.int).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.str.int).get.map(_ ==> List(
           ("A", List(("a", 10))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.str.int_).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.str.int_).get.map(_ ==> List(
           ("A", List("a")),
           ("B", List())
         ))
@@ -290,7 +289,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.long$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.long$).get.map(_ ==> List(
           ("A", List((1, Some(10L)), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.long).get.map(_ ==> List(
@@ -300,15 +299,15 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("A", List(1))
         ))
 
-        _ <- m(Ref1.str1.Nss *? Ns.int.long$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.long$).get.map(_ ==> List(
           ("A", List((1, Some(10L)), (2, None))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.long).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.long).get.map(_ ==> List(
           ("A", List((1, 10L))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.long_).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.long_).get.map(_ ==> List(
           ("A", List(1)),
           ("B", List())
         ))
@@ -322,7 +321,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.ref1$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.ref1$).get.map(_ ==> List(
           ("A", List((1, Some(42L)), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.ref1).get.map(_ ==> List(
@@ -332,15 +331,15 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("A", List(1))
         ))
 
-        _ <- m(Ref1.str1.Nss *? Ns.int.ref1$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.ref1$).get.map(_ ==> List(
           ("A", List((1, Some(42L)), (2, None))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.ref1).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.ref1).get.map(_ ==> List(
           ("A", List((1, 42L))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.ref1_).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.ref1_).get.map(_ ==> List(
           ("A", List(1)),
           ("B", List())
         ))
@@ -355,7 +354,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.double$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.double$).get.map(_ ==> List(
           ("A", List((1, Some(1.1)), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.double).get.map(_ ==> List(
@@ -365,15 +364,15 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("A", List(1))
         ))
 
-        _ <- m(Ref1.str1.Nss *? Ns.int.double$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.double$).get.map(_ ==> List(
           ("A", List((1, Some(1.1)), (2, None))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.double).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.double).get.map(_ ==> List(
           ("A", List((1, 1.1))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.double_).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.double_).get.map(_ ==> List(
           ("A", List(1)),
           ("B", List())
         ))
@@ -388,7 +387,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.bool$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.bool$).get.map(_ ==> List(
           ("A", List((1, Some(true)), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.bool).get.map(_ ==> List(
@@ -398,15 +397,15 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("A", List(1))
         ))
 
-        _ <- m(Ref1.str1.Nss *? Ns.int.bool$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.bool$).get.map(_ ==> List(
           ("A", List((1, Some(true)), (2, None))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.bool).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.bool).get.map(_ ==> List(
           ("A", List((1, true))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.bool_).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.bool_).get.map(_ ==> List(
           ("A", List(1)),
           ("B", List())
         ))
@@ -421,7 +420,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.date$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.date$).get.map(_ ==> List(
           ("A", List((1, Some(date1)), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.date).get.map(_ ==> List(
@@ -431,15 +430,15 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("A", List(1))
         ))
 
-        _ <- m(Ref1.str1.Nss *? Ns.int.date$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.date$).get.map(_ ==> List(
           ("A", List((1, Some(date1)), (2, None))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.date).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.date).get.map(_ ==> List(
           ("A", List((1, date1))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.date_).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.date_).get.map(_ ==> List(
           ("A", List(1)),
           ("B", List())
         ))
@@ -454,7 +453,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.uuid$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.uuid$).get.map(_ ==> List(
           ("A", List((1, Some(uuid1)), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.uuid).get.map(_ ==> List(
@@ -464,15 +463,15 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("A", List(1))
         ))
 
-        _ <- m(Ref1.str1.Nss *? Ns.int.uuid$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.uuid$).get.map(_ ==> List(
           ("A", List((1, Some(uuid1)), (2, None))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.uuid).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.uuid).get.map(_ ==> List(
           ("A", List((1, uuid1))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.uuid_).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.uuid_).get.map(_ ==> List(
           ("A", List(1)),
           ("B", List())
         ))
@@ -487,7 +486,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.uri$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.uri$).get.map(_ ==> List(
           ("A", List((1, Some(uri1)), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.uri).get.map(_ ==> List(
@@ -497,15 +496,15 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("A", List(1))
         ))
 
-        _ <- m(Ref1.str1.Nss *? Ns.int.uri$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.uri$).get.map(_ ==> List(
           ("A", List((1, Some(uri1)), (2, None))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.uri).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.uri).get.map(_ ==> List(
           ("A", List((1, uri1))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.uri_).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.uri_).get.map(_ ==> List(
           ("A", List(1)),
           ("B", List())
         ))
@@ -520,7 +519,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.bigInt$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.bigInt$).get.map(_ ==> List(
           ("A", List((1, Some(bigInt1)), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.bigInt).get.map(_ ==> List(
@@ -530,15 +529,15 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("A", List(1))
         ))
 
-        _ <- m(Ref1.str1.Nss *? Ns.int.bigInt$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.bigInt$).get.map(_ ==> List(
           ("A", List((1, Some(bigInt1)), (2, None))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.bigInt).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.bigInt).get.map(_ ==> List(
           ("A", List((1, bigInt1))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.bigInt_).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.bigInt_).get.map(_ ==> List(
           ("A", List(1)),
           ("B", List())
         ))
@@ -553,7 +552,7 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("B", List())
         )
 
-        _ <- m(Ref1.str1.Nss * Ns.int.bigDec$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.Nss * Ns.int.bigDec$).get.map(_ ==> List(
           ("A", List((1, Some(bigDec1)), (2, None)))
         ))
         _ <- m(Ref1.str1.Nss * Ns.int.bigDec).get.map(_ ==> List(
@@ -563,35 +562,18 @@ object NestedAttrs1 extends AsyncTestSuite {
           ("A", List(1))
         ))
 
-        _ <- m(Ref1.str1.Nss *? Ns.int.bigDec$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.bigDec$).get.map(_ ==> List(
           ("A", List((1, Some(bigDec1)), (2, None))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.bigDec).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.bigDec).get.map(_ ==> List(
           ("A", List((1, bigDec1))),
           ("B", List())
         ))
-        _ <- m(Ref1.str1.Nss *? Ns.int.bigDec_).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ref1.str1.a1.Nss *? Ns.int.bigDec_).get.map(_ ==> List(
           ("A", List(1)),
           ("B", List())
         ))
-      } yield ()
-    }
-
-
-
-    "Optional nested top-level types" - core { implicit conn =>
-      for {
-        _ <- Ns.int.strs.Refs1.*?(Ref1.int1) insert List((1, Set("a"), List(1)))
-        _ <- Ns.int.strs$.Refs1.*?(Ref1.int1) insert List((1, Some(Set("a")), List(1)))
-        _ <- Ns.int.strMap.Refs1.*?(Ref1.int1) insert List((1, Map("a" -> "aa"), List(1)))
-        _ <- Ns.int.strMap$.Refs1.*?(Ref1.int1) insert List((1, Some(Map("a" -> "aa")), List(1)))
-
-        _ <- Ns.int.strs.Refs1.*?(Ref1.int1).getJson.map(_ ==> List((1, Set("a"), List(1))))
-        _ <- Ns.int.strs$.Refs1.*?(Ref1.int1).getJson.map(_ ==> List((1, Some(Set("a")), List(1))))
-        _ <- Ns.int.strMap.Refs1.*?(Ref1.int1).getJson.map(_ ==> List((1, Map("a" -> "aa"), List(1))))
-        _ <- Ns.int.strMap$.Refs1.*?(Ref1.int1).getJson.map(_ ==> List((1, Some(Map("a" -> "aa")), List(1))))
-
       } yield ()
     }
   }

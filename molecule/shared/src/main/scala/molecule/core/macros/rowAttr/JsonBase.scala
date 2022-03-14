@@ -74,22 +74,8 @@ trait JsonBase extends Helpers {
     sb.append(value)
   }
 
-  protected def jsonAnyValue(sb: StringBuffer, v: Any): StringBuffer = v match {
-    case value: String         => quote(sb, value)
-    case value: Int            => sb.append(value)
-    case value: Float          => sb.append(value)
-    case value: Boolean        => sb.append(value)
-    case value: Long           => sb.append(value)
-    case value: Double         => sb.append(value)
-    case value: java.util.Date => quote(sb, date2str(value))
-    case value: java.util.UUID => quote(sb, value.toString)
-    case value: java.net.URI   => quote(sb, value.toString)
-    case value: BigInt         => sb.append(value)
-    case value: BigDecimal     => sb.append(value)
-    case valueOfUnknownType    => quote(sb, valueOfUnknownType.toString)
-  }
-
   def indent(tabs: Int): String = "\n" + "  " * (3 + tabs)
+
 
   def extractFlatValues(
     propCount: Int,

@@ -21,7 +21,9 @@ private[molecule] trait Row2tplOptNested extends RowValue2castOptNested {
 
     def properties(nodes: List[Node]): Seq[Tree] = {
       nodes.flatMap {
-        case Prop(_, _, baseTpe, _, group, _)    => Seq(getRowValue2castOptNestedLambda(group, baseTpe)(-10)) // colIndex not used with iterator
+        case Prop(_, _, baseTpe, _, group, _) =>
+          Seq(getRowValue2castOptNestedLambda(group, baseTpe)(-10)) // colIndex not used with iterator
+
         case nested@Obj(_, _, true, nestedProps) =>
           val propCount = getPropCount(nestedProps)
           val deeper    = isDeeper(nested)
@@ -43,7 +45,7 @@ private[molecule] trait Row2tplOptNested extends RowValue2castOptNested {
     }
 
     val tree = if (level == 0) {
-      val relatedProps      = properties(current.props)
+      val relatedProps   = properties(current.props)
       val metaPropCounts = current.props.last match {
         case Obj("Tx_", _, _, metaProps) =>
           metaProps.collect {
@@ -72,7 +74,7 @@ private[molecule] trait Row2tplOptNested extends RowValue2castOptNested {
        """
 
     } else {
-      val orderingTree = if(orderings.nonEmpty) orderings(level) else q""
+      val orderingTree = if (orderings.nonEmpty) orderings(level) else q""
       current.props.last match {
         case last@Obj(_, _, nested, _) if nested || isDeeper(last) =>
           val (props, nestedObj) = if (nested) {

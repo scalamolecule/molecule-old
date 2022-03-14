@@ -38,25 +38,25 @@ object NestedRef extends AsyncTestSuite {
           ("a", List((11, 12, "aa"))),
         ))
 
-        _ <- m(Ns.str.Refs1 *? Ref1.int1$.Ref2.int2$.str2).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.str.a1.Refs1 *? Ref1.int1$.Ref2.int2$.str2).get.map(_ ==> List(
           ("a", List((Some(11), Some(12), "aa"))),
           ("b", List((Some(13), None, "bb"))),
           ("c", List((None, Some(14), "cc"))),
           ("d", List())
         ))
-        _ <- m(Ns.str.Refs1 *? Ref1.int1$.Ref2.int2.str2).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.str.a1.Refs1 *? Ref1.int1$.Ref2.int2.str2).get.map(_ ==> List(
           ("a", List((Some(11), 12, "aa"))),
           ("b", List()),
           ("c", List((None, 14, "cc"))),
           ("d", List())
         ))
-        _ <- m(Ns.str.Refs1 *? Ref1.int1.Ref2.int2$.str2).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.str.a1.Refs1 *? Ref1.int1.Ref2.int2$.str2).get.map(_ ==> List(
           ("a", List((11, Some(12), "aa"))),
           ("b", List((13, None, "bb"))),
           ("c", List()),
           ("d", List())
         ))
-        _ <- m(Ns.str.Refs1 *? Ref1.int1.Ref2.int2.str2).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.str.a1.Refs1 *? Ref1.int1.Ref2.int2.str2).get.map(_ ==> List(
           ("a", List((11, 12, "aa"))),
           ("b", List()),
           ("c", List()),
@@ -93,31 +93,31 @@ object NestedRef extends AsyncTestSuite {
           ("a", List("aa")),
         ))
 
-        _ <- m(Ns.str.Refs1 *? Ref1.int1$.Ref2.int2_.str2).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.str.a1.Refs1 *? Ref1.int1$.Ref2.int2_.str2).get.map(_ ==> List(
           ("a", List((Some(11), "aa"))),
           ("b", List()),
           ("c", List((None, "cc"))),
           ("d", List())
         ))
-        _ <- m(Ns.str.Refs1 *? Ref1.int1.Ref2.int2_.str2).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.str.a1.Refs1 *? Ref1.int1.Ref2.int2_.str2).get.map(_ ==> List(
           ("a", List((11, "aa"))),
           ("b", List()),
           ("c", List()),
           ("d", List())
         ))
-        _ <- m(Ns.str.Refs1 *? Ref1.int1_.Ref2.int2$.str2).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.str.a1.Refs1 *? Ref1.int1_.Ref2.int2$.str2).get.map(_ ==> List(
           ("a", List((Some(12), "aa"))),
           ("b", List((None, "bb"))),
           ("c", List()),
           ("d", List())
         ))
-        _ <- m(Ns.str.Refs1 *? Ref1.int1_.Ref2.int2.str2).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.str.a1.Refs1 *? Ref1.int1_.Ref2.int2.str2).get.map(_ ==> List(
           ("a", List((12, "aa"))),
           ("b", List()),
           ("c", List()),
           ("d", List())
         ))
-        _ <- m(Ns.str.Refs1 *? Ref1.int1_.Ref2.int2_.str2).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.str.a1.Refs1 *? Ref1.int1_.Ref2.int2_.str2).get.map(_ ==> List(
           ("a", List("aa")),
           ("b", List()),
           ("c", List()),
@@ -144,15 +144,15 @@ object NestedRef extends AsyncTestSuite {
           ("A", List(10)),
         ))
 
-        _ <- m(Ns.str.Refs1 *? Ref1.Ref2.int2.str2$).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.str.a1.Refs1 *? Ref1.Ref2.int2.str2$).get.map(_ ==> List(
           ("A", List((10, Some("a")), (20, None))),
           ("B", List())
         ))
-        _ <- m(Ns.str.Refs1 *? Ref1.Ref2.int2.str2).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.str.a1.Refs1 *? Ref1.Ref2.int2.str2).get.map(_ ==> List(
           ("A", List((10, "a"))),
           ("B", List())
         ))
-        _ <- m(Ns.str.Refs1 *? Ref1.Ref2.int2.str2_).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.str.a1.Refs1 *? Ref1.Ref2.int2.str2_).get.map(_ ==> List(
           ("A", List(10)),
           ("B", List())
         ))
@@ -171,6 +171,13 @@ object NestedRef extends AsyncTestSuite {
         )
 
         // Flat card many ref allowed in mandatory nested structure
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1.a1.Refs2.int2).get.map(_ ==> List(
+          ("a", List(
+            (1, 11),
+            (1, 12),
+          ))
+        ))
+        // Without sort markers and sorting on the returned result
         _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.int2).get.map(_.map(p => (p._1, p._2.sorted)) ==> List(
           ("a", List(
             (1, 11),
@@ -260,20 +267,20 @@ object NestedRef extends AsyncTestSuite {
           ("b", List(2)),
         ))
 
-        _ <- m(Ns.str.Refs1.int1$.Refs2 *? Ref2.int2).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.str.a1.Refs1.int1$.Refs2 *? Ref2.int2).get.map(_ ==> List(
           ("a", Some(1), List(1)),
           ("b", None, List(2)),
           ("c", Some(3), List())
         ))
-        _ <- m(Ns.str.Refs1.int1.Refs2 *? Ref2.int2).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.str.a1.Refs1.int1.Refs2 *? Ref2.int2).get.map(_ ==> List(
           ("a", 1, List(1)),
           ("c", 3, List()),
         ))
-        _ <- m(Ns.str.Refs1.int1_.Refs2 *? Ref2.int2).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.str.a1.Refs1.int1_.Refs2 *? Ref2.int2).get.map(_ ==> List(
           ("a", List(1)),
           ("c", List()),
         ))
-        _ <- m(Ns.str.Refs1.Refs2 *? Ref2.int2).get.map(_.sortBy(_._1) ==> List(
+        _ <- m(Ns.str.a1.Refs1.Refs2 *? Ref2.int2).get.map(_ ==> List(
           ("a", List(1)),
           ("b", List(2)),
           ("c", List()),
@@ -291,6 +298,13 @@ object NestedRef extends AsyncTestSuite {
           (Some(date4), 40, List()),
         )
 
+        _ <- m(Ns.date$.Refs1.int1.a1.Refs2 *? Ref2.int2).get.map(_ ==> List(
+          (Some(date1), 10, List(1, 2)),
+          (Some(date2), 20, List(3)),
+          (None, 30, List()),
+          (Some(date4), 40, List())
+        ))
+        // Without sort marker and sorting on the returned result
         _ <- m(Ns.date$.Refs1.int1.Refs2 *? Ref2.int2).get.map(_.sortBy(_._2) ==> List(
           (Some(date1), 10, List(1, 2)),
           (Some(date2), 20, List(3)),

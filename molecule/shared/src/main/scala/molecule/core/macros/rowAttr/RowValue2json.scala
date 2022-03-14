@@ -43,8 +43,8 @@ private[molecule] trait RowValue2json extends TreeOps {
     case "Date"         => (colIndex: Int, _: Int) => q"jsonOneDate(sb, $field, row, $colIndex)"
     case "UUID"         => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
     case "URI"          => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
-    case "BigInt"       => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
-    case "BigDecimal"   => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
+    case "BigInt"       => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
+    case "BigDecimal"   => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
     case "Any"          => (colIndex: Int, _: Int) => q"jsonOneAny(sb, $field, row, $colIndex)"
     case "enum"         => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
     case "ref"          => (colIndex: Int, _: Int) => q"jsonOne(sb, $field, row, $colIndex)"
@@ -59,8 +59,8 @@ private[molecule] trait RowValue2json extends TreeOps {
     case "Date"       => (colIndex: Int, tabs: Int) => q"jsonManyDate(sb, $field, row, $colIndex, $tabs)"
     case "UUID"       => (colIndex: Int, tabs: Int) => q"jsonManyQuoted(sb, $field, row, $colIndex, $tabs)"
     case "URI"        => (colIndex: Int, tabs: Int) => q"jsonManyQuoted(sb, $field, row, $colIndex, $tabs)"
-    case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonManyToString(sb, $field, row, $colIndex, $tabs)"
-    case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonManyToString(sb, $field, row, $colIndex, $tabs)"
+    case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonManyQuoted(sb, $field, row, $colIndex, $tabs)"
+    case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonManyQuoted(sb, $field, row, $colIndex, $tabs)"
     case "enum"       => (colIndex: Int, tabs: Int) => q"jsonManyQuoted(sb, $field, row, $colIndex, $tabs)"
     case "ref"        => (colIndex: Int, tabs: Int) => q"jsonManyToString(sb, $field, row, $colIndex, $tabs)"
   }
@@ -93,8 +93,8 @@ private[molecule] trait RowValue2json extends TreeOps {
     case "Date"       => (colIndex: Int, _: Int) => q"jsonOptOneDate(sb, $field, row, $colIndex)"
     case "UUID"       => (colIndex: Int, _: Int) => q"jsonOptOneQuoted(sb, $field, row, $colIndex)"
     case "URI"        => (colIndex: Int, _: Int) => q"jsonOptOneQuoted(sb, $field, row, $colIndex)"
-    case "BigInt"     => (colIndex: Int, _: Int) => q"jsonOptOneToString(sb, $field, row, $colIndex)"
-    case "BigDecimal" => (colIndex: Int, _: Int) => q"jsonOptOneToString(sb, $field, row, $colIndex)"
+    case "BigInt"     => (colIndex: Int, _: Int) => q"jsonOptOneQuoted(sb, $field, row, $colIndex)"
+    case "BigDecimal" => (colIndex: Int, _: Int) => q"jsonOptOneQuoted(sb, $field, row, $colIndex)"
     case "enum"       => (colIndex: Int, _: Int) => q"jsonOptOneEnum(sb, $field, row, $colIndex)"
     case "ref"        => (colIndex: Int, _: Int) => q"jsonOptOneRefAttr(sb, $field, row, $colIndex)"
   }
@@ -108,8 +108,8 @@ private[molecule] trait RowValue2json extends TreeOps {
     case "Date"       => (colIndex: Int, tabs: Int) => q"jsonOptManyDate(sb, $field, row, $colIndex, $tabs)"
     case "UUID"       => (colIndex: Int, tabs: Int) => q"jsonOptManyQuoted(sb, $field, row, $colIndex, $tabs)"
     case "URI"        => (colIndex: Int, tabs: Int) => q"jsonOptManyQuoted(sb, $field, row, $colIndex, $tabs)"
-    case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonOptManyToString(sb, $field, row, $colIndex, $tabs)"
-    case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonOptManyToString(sb, $field, row, $colIndex, $tabs)"
+    case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonOptManyQuoted(sb, $field, row, $colIndex, $tabs)"
+    case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonOptManyQuoted(sb, $field, row, $colIndex, $tabs)"
     case "enum"       => (colIndex: Int, tabs: Int) => q"jsonOptManyEnum(sb, $field, row, $colIndex, $tabs)"
     case "ref"        => (colIndex: Int, tabs: Int) => q"jsonOptManyRefAttr(sb, $field, row, $colIndex, $tabs)"
   }
@@ -145,8 +145,8 @@ private[molecule] trait RowValue2json extends TreeOps {
       case "Date"       => (colIndex: Int, tabs: Int) => q"jsonMapQuoted(sb, $field, row, $colIndex, $tabs)"
       case "UUID"       => (colIndex: Int, tabs: Int) => q"jsonMapQuoted(sb, $field, row, $colIndex, $tabs)"
       case "URI"        => (colIndex: Int, tabs: Int) => q"jsonMapQuoted(sb, $field, row, $colIndex, $tabs)"
-      case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonMap(sb, $field, row, $colIndex, $tabs)"
-      case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonMap(sb, $field, row, $colIndex, $tabs)"
+      case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonMapQuoted(sb, $field, row, $colIndex, $tabs)"
+      case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonMapQuoted(sb, $field, row, $colIndex, $tabs)"
     }
   }
 
@@ -162,8 +162,8 @@ private[molecule] trait RowValue2json extends TreeOps {
       case "Date"       => (colIndex: Int, tabs: Int) => q"jsonOptMapQuoted(sb, $field, row, $colIndex, $tabs)"
       case "UUID"       => (colIndex: Int, tabs: Int) => q"jsonOptMapQuoted(sb, $field, row, $colIndex, $tabs)"
       case "URI"        => (colIndex: Int, tabs: Int) => q"jsonOptMapQuoted(sb, $field, row, $colIndex, $tabs)"
-      case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonOptMap(sb, $field, row, $colIndex, $tabs)"
-      case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonOptMap(sb, $field, row, $colIndex, $tabs)"
+      case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonOptMapQuoted(sb, $field, row, $colIndex, $tabs)"
+      case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonOptMapQuoted(sb, $field, row, $colIndex, $tabs)"
     }
   }
 
@@ -186,8 +186,8 @@ private[molecule] trait RowValue2json extends TreeOps {
       case "Date"       => (colIndex: Int, _: Int) => q"jsonOptApplyOneDate(sb, $field, row, $colIndex)"
       case "UUID"       => (colIndex: Int, _: Int) => q"jsonOptApplyOneQuoted(sb, $field, row, $colIndex)"
       case "URI"        => (colIndex: Int, _: Int) => q"jsonOptApplyOneQuoted(sb, $field, row, $colIndex)"
-      case "BigInt"     => (colIndex: Int, _: Int) => q"jsonOptApplyOneToString(sb, $field, row, $colIndex)"
-      case "BigDecimal" => (colIndex: Int, _: Int) => q"jsonOptApplyOneToString(sb, $field, row, $colIndex)"
+      case "BigInt"     => (colIndex: Int, _: Int) => q"jsonOptApplyOneQuoted(sb, $field, row, $colIndex)"
+      case "BigDecimal" => (colIndex: Int, _: Int) => q"jsonOptApplyOneQuoted(sb, $field, row, $colIndex)"
       case "ref"        => (colIndex: Int, _: Int) => q"jsonOptApplyOneToString(sb, $field, row, $colIndex)"
     }
   }
@@ -202,8 +202,8 @@ private[molecule] trait RowValue2json extends TreeOps {
       case "Date"       => (colIndex: Int, tabs: Int) => q"jsonOptApplyManyDate(sb, $field, row, $colIndex, $tabs)"
       case "UUID"       => (colIndex: Int, tabs: Int) => q"jsonOptApplyManyQuoted(sb, $field, row, $colIndex, $tabs)"
       case "URI"        => (colIndex: Int, tabs: Int) => q"jsonOptApplyManyQuoted(sb, $field, row, $colIndex, $tabs)"
-      case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonOptApplyManyToString(sb, $field, row, $colIndex, $tabs)"
-      case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonOptApplyManyToString(sb, $field, row, $colIndex, $tabs)"
+      case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonOptApplyManyQuoted(sb, $field, row, $colIndex, $tabs)"
+      case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonOptApplyManyQuoted(sb, $field, row, $colIndex, $tabs)"
       case "ref"        => (colIndex: Int, tabs: Int) => q"jsonOptApplyManyToString(sb, $field, row, $colIndex, $tabs)"
     }
   }
@@ -220,8 +220,8 @@ private[molecule] trait RowValue2json extends TreeOps {
       case "Date"       => (colIndex: Int, tabs: Int) => q"jsonOptApplyMapQuoted(sb, $field, row, $colIndex, $tabs)"
       case "UUID"       => (colIndex: Int, tabs: Int) => q"jsonOptApplyMapQuoted(sb, $field, row, $colIndex, $tabs)"
       case "URI"        => (colIndex: Int, tabs: Int) => q"jsonOptApplyMapQuoted(sb, $field, row, $colIndex, $tabs)"
-      case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonOptApplyMap(sb, $field, row, $colIndex, $tabs)"
-      case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonOptApplyMap(sb, $field, row, $colIndex, $tabs)"
+      case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonOptApplyMapQuoted(sb, $field, row, $colIndex, $tabs)"
+      case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonOptApplyMapQuoted(sb, $field, row, $colIndex, $tabs)"
     }
   }
 
@@ -235,8 +235,8 @@ private[molecule] trait RowValue2json extends TreeOps {
       case "Date"       => (colIndex: Int, _: Int) => q"jsonOneDate(sb, $field, row, $colIndex)"
       case "UUID"       => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
       case "URI"        => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
-      case "BigInt"     => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
-      case "BigDecimal" => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
+      case "BigInt"     => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
+      case "BigDecimal" => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
       case "Any"        => (colIndex: Int, _: Int) => q"jsonOneAny(sb, $field, row, $colIndex)"
     }
   }
@@ -254,8 +254,8 @@ private[molecule] trait RowValue2json extends TreeOps {
     case "Date"       => (colIndex: Int, tabs: Int) => q"jsonAggrOneListDate(sb, $field, row, $colIndex, $tabs)"
     case "UUID"       => (colIndex: Int, tabs: Int) => q"jsonAggrOneListQuoted(sb, $field, row, $colIndex, $tabs)"
     case "URI"        => (colIndex: Int, tabs: Int) => q"jsonAggrOneListQuoted(sb, $field, row, $colIndex, $tabs)"
-    case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonAggrOneListToString(sb, $field, row, $colIndex, $tabs)"
-    case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonAggrOneListToString(sb, $field, row, $colIndex, $tabs)"
+    case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonAggrOneListQuoted(sb, $field, row, $colIndex, $tabs)"
+    case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonAggrOneListQuoted(sb, $field, row, $colIndex, $tabs)"
   }
 
   lazy val jsonAggrManyList: (String, String) => (Int, Int) => Tree = (baseTpe: String, field: String) => baseTpe match {
@@ -267,8 +267,8 @@ private[molecule] trait RowValue2json extends TreeOps {
     case "Date"       => (colIndex: Int, tabs: Int) => q"jsonAggrManyListDate(sb, $field, row, $colIndex, $tabs)"
     case "UUID"       => (colIndex: Int, tabs: Int) => q"jsonAggrManyListQuoted(sb, $field, row, $colIndex, $tabs)"
     case "URI"        => (colIndex: Int, tabs: Int) => q"jsonAggrManyListQuoted(sb, $field, row, $colIndex, $tabs)"
-    case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonAggrManyListToString(sb, $field, row, $colIndex, $tabs)"
-    case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonAggrManyListToString(sb, $field, row, $colIndex, $tabs)"
+    case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonAggrManyListQuoted(sb, $field, row, $colIndex, $tabs)"
+    case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonAggrManyListQuoted(sb, $field, row, $colIndex, $tabs)"
   }
 
   lazy val jsonAggrOneListDistinct: (String, String) => (Int, Int) => Tree = (baseTpe: String, field: String) => baseTpe match {
@@ -280,8 +280,8 @@ private[molecule] trait RowValue2json extends TreeOps {
     case "Date"       => (colIndex: Int, tabs: Int) => q"jsonAggrOneListDistinctDate(sb, $field, row, $colIndex, $tabs)"
     case "UUID"       => (colIndex: Int, tabs: Int) => q"jsonAggrOneListDistinctQuoted(sb, $field, row, $colIndex, $tabs)"
     case "URI"        => (colIndex: Int, tabs: Int) => q"jsonAggrOneListDistinctQuoted(sb, $field, row, $colIndex, $tabs)"
-    case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonAggrOneListDistinctToString(sb, $field, row, $colIndex, $tabs)"
-    case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonAggrOneListDistinctToString(sb, $field, row, $colIndex, $tabs)"
+    case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonAggrOneListDistinctQuoted(sb, $field, row, $colIndex, $tabs)"
+    case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonAggrOneListDistinctQuoted(sb, $field, row, $colIndex, $tabs)"
   }
 
   lazy val jsonAggrManyListDistinct: (String, String) => (Int, Int) => Tree = (baseTpe: String, field: String) => baseTpe match {
@@ -293,8 +293,8 @@ private[molecule] trait RowValue2json extends TreeOps {
     case "Date"       => (colIndex: Int, tabs: Int) => q"jsonAggrManyListDistinctDate(sb, $field, row, $colIndex, $tabs)"
     case "UUID"       => (colIndex: Int, tabs: Int) => q"jsonAggrManyListDistinctQuoted(sb, $field, row, $colIndex, $tabs)"
     case "URI"        => (colIndex: Int, tabs: Int) => q"jsonAggrManyListDistinctQuoted(sb, $field, row, $colIndex, $tabs)"
-    case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonAggrManyListDistinctToString(sb, $field, row, $colIndex, $tabs)"
-    case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonAggrManyListDistinctToString(sb, $field, row, $colIndex, $tabs)"
+    case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonAggrManyListDistinctQuoted(sb, $field, row, $colIndex, $tabs)"
+    case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonAggrManyListDistinctQuoted(sb, $field, row, $colIndex, $tabs)"
   }
 
   lazy val jsonAggrOneListRand: (String, String) => (Int, Int) => Tree = (baseTpe: String, field: String) => baseTpe match {
@@ -306,8 +306,8 @@ private[molecule] trait RowValue2json extends TreeOps {
     case "Date"       => (colIndex: Int, tabs: Int) => q"jsonAggrOneListRandDate(sb, $field, row, $colIndex, $tabs)"
     case "UUID"       => (colIndex: Int, tabs: Int) => q"jsonAggrOneListRandQuoted(sb, $field, row, $colIndex, $tabs)"
     case "URI"        => (colIndex: Int, tabs: Int) => q"jsonAggrOneListRandQuoted(sb, $field, row, $colIndex, $tabs)"
-    case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonAggrOneListRandToString(sb, $field, row, $colIndex, $tabs)"
-    case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonAggrOneListRandToString(sb, $field, row, $colIndex, $tabs)"
+    case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonAggrOneListRandQuoted(sb, $field, row, $colIndex, $tabs)"
+    case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonAggrOneListRandQuoted(sb, $field, row, $colIndex, $tabs)"
   }
 
   lazy val jsonAggrManyListRand: (String, String) => (Int, Int) => Tree = (baseTpe: String, field: String) => baseTpe match {
@@ -319,8 +319,8 @@ private[molecule] trait RowValue2json extends TreeOps {
     case "Date"       => (colIndex: Int, tabs: Int) => q"jsonAggrManyListRandDate(sb, $field, row, $colIndex, $tabs)"
     case "UUID"       => (colIndex: Int, tabs: Int) => q"jsonAggrManyListRandQuoted(sb, $field, row, $colIndex, $tabs)"
     case "URI"        => (colIndex: Int, tabs: Int) => q"jsonAggrManyListRandQuoted(sb, $field, row, $colIndex, $tabs)"
-    case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonAggrManyListRandToString(sb, $field, row, $colIndex, $tabs)"
-    case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonAggrManyListRandToString(sb, $field, row, $colIndex, $tabs)"
+    case "BigInt"     => (colIndex: Int, tabs: Int) => q"jsonAggrManyListRandQuoted(sb, $field, row, $colIndex, $tabs)"
+    case "BigDecimal" => (colIndex: Int, tabs: Int) => q"jsonAggrManyListRandQuoted(sb, $field, row, $colIndex, $tabs)"
   }
 
   lazy val jsonAggrSingleSample: (String, String) => (Int, Int) => Tree = (baseTpe: String, field: String) => baseTpe match {
@@ -332,8 +332,8 @@ private[molecule] trait RowValue2json extends TreeOps {
     case "Date"       => (colIndex: Int, _: Int) => q"jsonAggrSingleSampleDate(sb, $field, row, $colIndex)"
     case "UUID"       => (colIndex: Int, _: Int) => q"jsonAggrSingleSampleQuoted(sb, $field, row, $colIndex)"
     case "URI"        => (colIndex: Int, _: Int) => q"jsonAggrSingleSampleQuoted(sb, $field, row, $colIndex)"
-    case "BigInt"     => (colIndex: Int, _: Int) => q"jsonAggrSingleSampleToString(sb, $field, row, $colIndex)"
-    case "BigDecimal" => (colIndex: Int, _: Int) => q"jsonAggrSingleSampleToString(sb, $field, row, $colIndex)"
+    case "BigInt"     => (colIndex: Int, _: Int) => q"jsonAggrSingleSampleQuoted(sb, $field, row, $colIndex)"
+    case "BigDecimal" => (colIndex: Int, _: Int) => q"jsonAggrSingleSampleQuoted(sb, $field, row, $colIndex)"
   }
 
   lazy val jsonAggrOneSingle: (String, String) => (Int, Int) => Tree = (baseTpe: String, field: String) => baseTpe match {
@@ -345,8 +345,8 @@ private[molecule] trait RowValue2json extends TreeOps {
     case "Date"       => (colIndex: Int, _: Int) => q"jsonOneDate(sb, $field, row, $colIndex)"
     case "UUID"       => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
     case "URI"        => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
-    case "BigInt"     => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
-    case "BigDecimal" => (colIndex: Int, _: Int) => q"jsonOneToString(sb, $field, row, $colIndex)"
+    case "BigInt"     => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
+    case "BigDecimal" => (colIndex: Int, _: Int) => q"jsonOneQuoted(sb, $field, row, $colIndex)"
   }
 
   lazy val jsonAggrManySingle: (String, String) => (Int, Int) => Tree = (baseTpe: String, field: String) => baseTpe match {
@@ -358,7 +358,7 @@ private[molecule] trait RowValue2json extends TreeOps {
     case "Date"       => (colIndex: Int, _: Int) => q"jsonAggrManySingleDate(sb, $field, row, $colIndex)"
     case "UUID"       => (colIndex: Int, _: Int) => q"jsonAggrManySingleQuoted(sb, $field, row, $colIndex)"
     case "URI"        => (colIndex: Int, _: Int) => q"jsonAggrManySingleQuoted(sb, $field, row, $colIndex)"
-    case "BigInt"     => (colIndex: Int, _: Int) => q"jsonAggrManySingleToString(sb, $field, row, $colIndex)"
-    case "BigDecimal" => (colIndex: Int, _: Int) => q"jsonAggrManySingleToString(sb, $field, row, $colIndex)"
+    case "BigInt"     => (colIndex: Int, _: Int) => q"jsonAggrManySingleQuoted(sb, $field, row, $colIndex)"
+    case "BigDecimal" => (colIndex: Int, _: Int) => q"jsonAggrManySingleQuoted(sb, $field, row, $colIndex)"
   }
 }

@@ -318,8 +318,7 @@ object JsonNestedTypes extends AsyncTestSuite {
              |  }
              |}""".stripMargin)
 
-        _ <- if (system == SystemPeerServer) {
-          Ns.uris.Refs1.*(Ref1.int1).getJson.map(_ ==>
+        _ <- Ns.uris.Refs1.*(Ref1.int1).getJson.map(_ ==>
             """{
               |  "data": {
               |    "Ns": [
@@ -337,26 +336,6 @@ object JsonNestedTypes extends AsyncTestSuite {
               |    ]
               |  }
               |}""".stripMargin)
-        } else {
-          Ns.uris.Refs1.*(Ref1.int1).getJson.map(_ ==>
-            """{
-              |  "data": {
-              |    "Ns": [
-              |      {
-              |        "uris": [
-              |          "uri1",
-              |          "uri2"
-              |        ],
-              |        "Refs1": [
-              |          {
-              |            "int1": 1
-              |          }
-              |        ]
-              |      }
-              |    ]
-              |  }
-              |}""".stripMargin)
-        }
 
         _ <- Ns.enums.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
@@ -383,8 +362,8 @@ object JsonNestedTypes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "bigInts": [
-            |          1,
-            |          2
+            |          "1",
+            |          "2"
             |        ],
             |        "Refs1": [
             |          {
@@ -402,8 +381,8 @@ object JsonNestedTypes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "bigDecs": [
-            |          2.0,
-            |          1.0
+            |          "2.0",
+            |          "1.0"
             |        ],
             |        "Refs1": [
             |          {
@@ -588,8 +567,8 @@ object JsonNestedTypes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "bigIntMap": {
-            |          "b": 2,
-            |          "a": 1
+            |          "b": "2",
+            |          "a": "1"
             |        },
             |        "Refs1": [
             |          {
@@ -607,8 +586,8 @@ object JsonNestedTypes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "bigDecMap": {
-            |          "b": 2.0,
-            |          "a": 1.0
+            |          "b": "2.0",
+            |          "a": "1.0"
             |        },
             |        "Refs1": [
             |          {
@@ -904,7 +883,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 11,
-            |        "bigInt$": 2,
+            |        "bigInt$": "2",
             |        "Refs1": [
             |          {
             |            "int1": 2
@@ -930,7 +909,7 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      },
             |      {
             |        "int": 12,
-            |        "bigDec$": 2.0,
+            |        "bigDec$": "2.0",
             |        "Refs1": [
             |          {
             |            "int1": 2
@@ -1266,8 +1245,8 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      {
             |        "int": 11,
             |        "bigInts$": [
-            |          1,
-            |          2
+            |          "1",
+            |          "2"
             |        ],
             |        "Refs1": [
             |          {
@@ -1295,8 +1274,8 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      {
             |        "int": 12,
             |        "bigDecs$": [
-            |          1.0,
-            |          2.0
+            |          "1.0",
+            |          "2.0"
             |        ],
             |        "Refs1": [
             |          {
@@ -1572,8 +1551,8 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      {
             |        "int": 11,
             |        "bigIntMap$": {
-            |          "a": 1,
-            |          "b": 2
+            |          "a": "1",
+            |          "b": "2"
             |        },
             |        "Refs1": [
             |          {
@@ -1601,8 +1580,8 @@ object JsonNestedTypes extends AsyncTestSuite {
             |      {
             |        "int": 12,
             |        "bigDecMap$": {
-            |          "a": 1.0,
-            |          "b": 2.0
+            |          "a": "1.0",
+            |          "b": "2.0"
             |        },
             |        "Refs1": [
             |          {

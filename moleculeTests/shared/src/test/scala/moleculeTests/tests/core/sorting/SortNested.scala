@@ -4,6 +4,7 @@ import molecule.core.util.Executor._
 import molecule.datomic.api.in1_out7._
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
+import moleculeTests.tests.core.sorting.SortAttrs.core
 import moleculeTests.tests.core.sorting.SortComposites.core
 import utest._
 
@@ -539,6 +540,25 @@ object SortNested extends AsyncTestSuite {
           )),
         ))
       } yield ()
+    }
+
+
+    "Optional nested top attribute types" - {
+
+      "String" - core { implicit conn =>
+        for {
+          _ <- Ns.int.insert(1, 2)
+
+          _ <- Ns.int.a1.getObjs.collect { case List(o1, o2) =>
+            o1.int ==> 1
+            o2.int ==> 2
+          }
+          _ <- Ns.int.d1.getObjs.collect { case List(o1, o2) =>
+            o1.int ==> 2
+            o2.int ==> 1
+          }
+        } yield ()
+      }
     }
   }
 }

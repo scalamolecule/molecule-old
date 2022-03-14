@@ -34,8 +34,8 @@ private[molecule] trait JsonTypes extends JsonBase {
     case value: java.util.Date => quotedPair(sb, field, date2str(value))
     case value: java.util.UUID => quotedPair(sb, field, value.toString)
     case value: java.net.URI   => quotedPair(sb, field, value.toString)
-    case value: BigInt         => pair(sb, field, value)
-    case value: BigDecimal     => pair(sb, field, value)
+    case value: BigInt         => quotedPair(sb, field, value.toString)
+    case value: BigDecimal     => quotedPair(sb, field, value.toString)
     case valueOfUnknownType    => quotedPair(sb, field, valueOfUnknownType.toString)
   }
 

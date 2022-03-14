@@ -131,7 +131,7 @@ object JsonAttributes extends AsyncTestSuite {
              |  "data": {
              |    "Ns": [
              |      {
-             |        "bigInt": $bigInt1
+             |        "bigInt": "$bigInt1"
              |      }
              |    ]
              |  }
@@ -142,7 +142,7 @@ object JsonAttributes extends AsyncTestSuite {
              |  "data": {
              |    "Ns": [
              |      {
-             |        "bigDec": 1.0
+             |        "bigDec": "1.0"
              |      }
              |    ]
              |  }
@@ -182,7 +182,7 @@ object JsonAttributes extends AsyncTestSuite {
         _ <- Ns.bools insert Set(true, false)
         _ <- Ns.dates insert Set(date1, date2)
         _ <- Ns.uuids insert Set(uuid1)
-        _ <- Ns.uris insert Set(uri1, uri2)
+        _ <- Ns.uris insert Set(uri1)
         _ <- Ns.bigInts insert Set(bigInt1, bigInt2)
         _ <- Ns.bigDecs insert Set(bigDec1, bigDec2)
         _ <- Ns.enums insert Set(enum1, enum2)
@@ -288,35 +288,19 @@ object JsonAttributes extends AsyncTestSuite {
              |  }
              |}""".stripMargin)
 
-        _ <- if (system == SystemPeerServer) {
-          Ns.uris.getJson.map(_ ==>
-            s"""{
-               |  "data": {
-               |    "Ns": [
-               |      {
-               |        "uris": [
-               |          "$uri2",
-               |          "$uri1"
-               |        ]
-               |      }
-               |    ]
-               |  }
-               |}""".stripMargin)
-        } else {
-          Ns.uris.getJson.map(_ ==>
-            s"""{
-               |  "data": {
-               |    "Ns": [
-               |      {
-               |        "uris": [
-               |          "$uri1",
-               |          "$uri2"
-               |        ]
-               |      }
-               |    ]
-               |  }
-               |}""".stripMargin)
-        }
+        _ <- Ns.uris.getJson.map(_ ==>
+          s"""{
+             |  "data": {
+             |    "Ns": [
+             |      {
+             |        "uris": [
+             |          "$uri1"
+             |        ]
+             |      }
+             |    ]
+             |  }
+             |}""".stripMargin)
+
 
         _ <- Ns.bigInts.getJson.map(_ ==>
           """{
@@ -324,8 +308,8 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "bigInts": [
-            |          1,
-            |          2
+            |          "1",
+            |          "2"
             |        ]
             |      }
             |    ]
@@ -338,8 +322,8 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "bigDecs": [
-            |          2.0,
-            |          1.0
+            |          "2.0",
+            |          "1.0"
             |        ]
             |      }
             |    ]
@@ -515,8 +499,8 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "bigIntMap": {
-            |          "b": 2,
-            |          "a": 1
+            |          "b": "2",
+            |          "a": "1"
             |        }
             |      }
             |    ]
@@ -529,8 +513,8 @@ object JsonAttributes extends AsyncTestSuite {
             |    "Ns": [
             |      {
             |        "bigDecMap": {
-            |          "b": 2.0,
-            |          "a": 1.0
+            |          "b": "2.0",
+            |          "a": "1.0"
             |        }
             |      }
             |    ]
@@ -700,7 +684,7 @@ object JsonAttributes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 9,
-             |        "bigInt$$": 2
+             |        "bigInt$$": "2"
              |      }
              |    ]
              |  }
@@ -716,7 +700,7 @@ object JsonAttributes extends AsyncTestSuite {
              |      },
              |      {
              |        "int": 10,
-             |        "bigDec$$": 2.0
+             |        "bigDec$$": "2.0"
              |      }
              |    ]
              |  }
@@ -758,266 +742,248 @@ object JsonAttributes extends AsyncTestSuite {
 
 
     "Card many optional" - core { implicit conn =>
-      def diff(a: String, b: String): String = {
-        val res = if (useFree) s"$b,\n      $a" else s"$a,\n      $b"
-        s"""{
-           |  "data": {
-           |    "Ns": [
-           |      $res
-           |    ]
-           |  }
-           |}""".stripMargin
-      }
-
-      def same(a: String, b: String): String = {
-        s"""{
-           |  "data": {
-           |    "Ns": [
-           |      $a,
-           |      $b
-           |    ]
-           |  }
-           |}""".stripMargin
-      }
-
       for {
         refId <- Ref1.int1(1).save.map(_.eid)
-        _ <- Ns.int.strs$ insert List((1, None), (1, Some(Set("", "b"))))
-        _ <- Ns.int.ints$ insert List((2, None), (2, Some(Set(1, 2))))
-        _ <- Ns.int.longs$ insert List((3, None), (3, Some(Set(1L, 2L))))
-        _ <- Ns.int.doubles$ insert List((4, None), (4, Some(Set(1.1, 2.2))))
-        _ <- Ns.int.bools$ insert List((5, None), (5, Some(Set(true, false))))
-        _ <- Ns.int.dates$ insert List((6, None), (6, Some(Set(date1, date2))))
-        _ <- Ns.int.uuids$ insert List((7, None), (7, Some(Set(uuid1, uuid2))))
-        _ <- Ns.int.uris$ insert List((8, None), (8, Some(Set(uri1, uri2))))
-        _ <- Ns.int.bigInts$ insert List((9, None), (9, Some(Set(bigInt1, bigInt2))))
-        _ <- Ns.int.bigDecs$ insert List((10, None), (10, Some(Set(bigDec1, bigDec2))))
-        _ <- Ns.int.enums$ insert List((11, None), (11, Some(Set(enum1, enum2))))
+        _ <- Ns.int.strs$ insert List((1, None), (1, Some(Set("a"))))
+        _ <- Ns.int.ints$ insert List((2, None), (2, Some(Set(1))))
+        _ <- Ns.int.longs$ insert List((3, None), (3, Some(Set(1L))))
+        _ <- Ns.int.doubles$ insert List((4, None), (4, Some(Set(1.1))))
+        _ <- Ns.int.bools$ insert List((5, None), (5, Some(Set(true))))
+        _ <- Ns.int.dates$ insert List((6, None), (6, Some(Set(date1))))
+        _ <- Ns.int.uuids$ insert List((7, None), (7, Some(Set(uuid1))))
+        _ <- Ns.int.uris$ insert List((8, None), (8, Some(Set(uri1))))
+        _ <- Ns.int.bigInts$ insert List((9, None), (9, Some(Set(bigInt1))))
+        _ <- Ns.int.bigDecs$ insert List((10, None), (10, Some(Set(bigDec1))))
+        _ <- Ns.int.enums$ insert List((11, None), (11, Some(Set(enum1))))
         _ <- Ns.int.refs1$ insert List((12, None), (12, Some(Set(refId))))
 
-        _ <- {
-          val a =
-            """{
-              |        "int": 1,
-              |        "strs$": null
-              |      }""".stripMargin
-          val b =
-            """{
-              |        "int": 1,
-              |        "strs$": [
-              |          "",
-              |          "b"
-              |        ]
-              |      }""".stripMargin
+        _ <- Ns.int(1).strs$.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1,
+            |        "strs$": null
+            |      },
+            |      {
+            |        "int": 1,
+            |        "strs$": [
+            |          "a"
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
+        )
 
-          Ns.int(1).strs$.getJson.map(_ ==> diff(a, b))
-        }
+        _ <- Ns.int(2).ints$.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 2,
+            |        "ints$": null
+            |      },
+            |      {
+            |        "int": 2,
+            |        "ints$": [
+            |          1
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
+        )
 
-        _ <- {
-          val a =
-            """{
-              |        "int": 2,
-              |        "ints$": null
-              |      }""".stripMargin
-          val b =
-            """{
-              |        "int": 2,
-              |        "ints$": [
-              |          1,
-              |          2
-              |        ]
-              |      }""".stripMargin
+        _ <- Ns.int(3).longs$.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 3,
+            |        "longs$": null
+            |      },
+            |      {
+            |        "int": 3,
+            |        "longs$": [
+            |          1
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
+        )
 
-          Ns.int(2).ints$.getJson.map(_ ==> same(a, b))
-        }
+        _ <- Ns.int(4).doubles$.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 4,
+            |        "doubles$": null
+            |      },
+            |      {
+            |        "int": 4,
+            |        "doubles$": [
+            |          1.1
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
+        )
 
-        _ <- {
-          val a =
-            """{
-              |        "int": 3,
-              |        "longs$": null
-              |      }""".stripMargin
-          val b =
-            """{
-              |        "int": 3,
-              |        "longs$": [
-              |          1,
-              |          2
-              |        ]
-              |      }""".stripMargin
+        _ <- Ns.int(5).bools$.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 5,
+            |        "bools$": null
+            |      },
+            |      {
+            |        "int": 5,
+            |        "bools$": [
+            |          true
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
+        )
 
-          Ns.int(3).longs$.getJson.map(_ ==> same(a, b))
-        }
+        _ <- Ns.int(6).dates$.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 6,
+            |        "dates$": null
+            |      },
+            |      {
+            |        "int": 6,
+            |        "dates$": [
+            |          "2001-07-01"
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
+        )
 
-        _ <- {
-          val a =
-            """{
-              |        "int": 4,
-              |        "doubles$": null
-              |      }""".stripMargin
-          val b =
-            """{
-              |        "int": 4,
-              |        "doubles$": [
-              |          1.1,
-              |          2.2
-              |        ]
-              |      }""".stripMargin
+        _ <- Ns.int(7).uuids$.getJson.map(_ ==>
+          s"""{
+             |  "data": {
+             |    "Ns": [
+             |      {
+             |        "int": 7,
+             |        "uuids$$": null
+             |      },
+             |      {
+             |        "int": 7,
+             |        "uuids$$": [
+             |          "$uuid1"
+             |        ]
+             |      }
+             |    ]
+             |  }
+             |}""".stripMargin
+        )
 
-          Ns.int(4).doubles$.getJson.map(_ ==> same(a, b))
-        }
+        _ <- Ns.int(8).uris$.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 8,
+            |        "uris$": null
+            |      },
+            |      {
+            |        "int": 8,
+            |        "uris$": [
+            |          "uri1"
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
+        )
 
-        _ <- {
-          val a  =
-            """{
-              |        "int": 5,
-              |        "bools$": null
-              |      }""".stripMargin
-          val b1 =
-            """{
-              |        "int": 5,
-              |        "bools$": [
-              |          true
-              |        ]
-              |      }""".stripMargin
-          val b2 =
-            """{
-              |        "int": 5,
-              |        "bools$": [
-              |          false,
-              |          true
-              |        ]
-              |      }""".stripMargin
+        _ <- Ns.int(9).bigInts$.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 9,
+            |        "bigInts$": null
+            |      },
+            |      {
+            |        "int": 9,
+            |        "bigInts$": [
+            |          "1"
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
+        )
 
-          Ns.int(5).bools$.getJson.map(_ ==>
-            (if (useFree) same(a, b1) else same(a, b2))
-          )
-        }
+        _ <- Ns.int(10).bigDecs$.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 10,
+            |        "bigDecs$": null
+            |      },
+            |      {
+            |        "int": 10,
+            |        "bigDecs$": [
+            |          "1.0"
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
+        )
 
-        _ <- {
-          val a =
-            """{
-              |        "int": 6,
-              |        "dates$": null
-              |      }""".stripMargin
-          val b =
-            """{
-              |        "int": 6,
-              |        "dates$": [
-              |          "2001-07-01",
-              |          "2002-01-01"
-              |        ]
-              |      }""".stripMargin
+        _ <- Ns.int(11).enums$.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 11,
+            |        "enums$": null
+            |      },
+            |      {
+            |        "int": 11,
+            |        "enums$": [
+            |          "enum1"
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
+        )
 
-          Ns.int(6).dates$.getJson.map(_ ==> same(a, b))
-        }
-
-        _ <- {
-          val a =
-            s"""{
-               |        "int": 7,
-               |        "uuids$$": null
-               |      }""".stripMargin
-          val b =
-            s"""{
-               |        "int": 7,
-               |        "uuids$$": [
-               |          "$uuid1",
-               |          "$uuid2"
-               |        ]
-               |      }""".stripMargin
-
-          Ns.int(7).uuids$.getJson.map(_ ==> same(a, b))
-        }
-
-        _ <- {
-          val a =
-            s"""{
-               |        "int": 8,
-               |        "uris$$": null
-               |      }""".stripMargin
-          val b =
-            s"""{
-               |        "int": 8,
-               |        "uris$$": [
-               |          "$uri1",
-               |          "$uri2"
-               |        ]
-               |      }""".stripMargin
-
-          Ns.int(8).uris$.getJson.map(_ ==> same(a, b))
-        }
-
-        _ <- {
-          val a =
-            s"""{
-               |        "int": 9,
-               |        "bigInts$$": null
-               |      }""".stripMargin
-          val b =
-            s"""{
-               |        "int": 9,
-               |        "bigInts$$": [
-               |          1,
-               |          2
-               |        ]
-               |      }""".stripMargin
-
-          Ns.int(9).bigInts$.getJson.map(_ ==> diff(a, b))
-        }
-
-        _ <- {
-          val a =
-            s"""{
-               |        "int": 10,
-               |        "bigDecs$$": null
-               |      }""".stripMargin
-          val b =
-            s"""{
-               |        "int": 10,
-               |        "bigDecs$$": [
-               |          1.0,
-               |          2.0
-               |        ]
-               |      }""".stripMargin
-
-          Ns.int(10).bigDecs$.getJson.map(_ ==> same(a, b))
-        }
-
-        _ <- {
-          val a =
-            """{
-              |        "int": 11,
-              |        "enums$": null
-              |      }""".stripMargin
-          val b =
-            """{
-              |        "int": 11,
-              |        "enums$": [
-              |          "enum1",
-              |          "enum2"
-              |        ]
-              |      }""".stripMargin
-
-          Ns.int(11).enums$.getJson.map(_ ==> same(a, b))
-        }
-
-        _ <- {
-          val a =
-            s"""{
-               |        "int": 12,
-               |        "refs1$$": null
-               |      }""".stripMargin
-          val b =
-            s"""{
-               |        "int": 12,
-               |        "refs1$$": [
-               |          $refId
-               |        ]
-               |      }""".stripMargin
-
-          Ns.int(12).refs1$.getJson.map(_ ==> same(a, b))
-        }
+        _ <- Ns.int(12).refs1$.getJson.map(_ ==>
+          s"""{
+             |  "data": {
+             |    "Ns": [
+             |      {
+             |        "int": 12,
+             |        "refs1$$": null
+             |      },
+             |      {
+             |        "int": 12,
+             |        "refs1$$": [
+             |          $refId
+             |        ]
+             |      }
+             |    ]
+             |  }
+             |}""".stripMargin
+        )
       } yield ()
     }
 
@@ -1198,8 +1164,8 @@ object JsonAttributes extends AsyncTestSuite {
              |      {
              |        "int": 9,
              |        "bigIntMap$$": {
-             |          "a": 1,
-             |          "b": 2
+             |          "a": "1",
+             |          "b": "2"
              |        }
              |      }
              |    ]
@@ -1217,8 +1183,8 @@ object JsonAttributes extends AsyncTestSuite {
              |      {
              |        "int": 10,
              |        "bigDecMap$$": {
-             |          "a": 1.0,
-             |          "b": 2.0
+             |          "a": "1.0",
+             |          "b": "2.0"
              |        }
              |      }
              |    ]

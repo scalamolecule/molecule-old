@@ -79,7 +79,6 @@ private[molecule] trait Row2jsonOptNested extends RowValue2jsonOptNested with Js
     } else {
       current.props.last match {
         case last@Obj(_, ref, true, nestedProps) =>
-          //          val propCount  = getPropCount(nestedProps)
           val propCount  = nestedProps.length
           val deeper     = isDeeper(last)
           val flatValues = TermName("flatValues" + level)

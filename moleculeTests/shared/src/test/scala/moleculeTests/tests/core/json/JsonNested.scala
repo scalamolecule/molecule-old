@@ -1,11 +1,10 @@
 package moleculeTests.tests.core.json
 
+import molecule.core.util.Executor._
 import molecule.datomic.api.out11._
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
-import molecule.core.util.Executor._
-import moleculeTests.Adhoc.useFree
 
 
 object JsonNested extends AsyncTestSuite {
@@ -20,101 +19,66 @@ object JsonNested extends AsyncTestSuite {
           ("c", Nil)
         )
 
-        // Flat
-        _ <- Ns.str.Refs1.int1.getJson.map { result =>
-          val orderings  = List(
-            ("a", "b", "b", 1, 2, 3),
-            ("b", "a", "b", 2, 1, 3),
-          )
-          val variations = orderings.map {
-            case (a, b, c, d, e, f) =>
-              s"""{
-                 |  "data": {
-                 |    "Ns": [
-                 |      {
-                 |        "str": "$a",
-                 |        "Refs1": {
-                 |          "int1": $d
-                 |        }
-                 |      },
-                 |      {
-                 |        "str": "$b",
-                 |        "Refs1": {
-                 |          "int1": $e
-                 |        }
-                 |      },
-                 |      {
-                 |        "str": "$c",
-                 |        "Refs1": {
-                 |          "int1": $f
-                 |        }
-                 |      }
-                 |    ]
-                 |  }
-                 |}""".stripMargin
-          }
-          if (!variations.contains(result)) {
-            println(result)
-          }
-          variations.contains(result) ==> true
-        }
+        _ <- Ns.str.a1.Refs1.int1.a2.getJson.map(_ ==>
+          s"""{
+             |  "data": {
+             |    "Ns": [
+             |      {
+             |        "str": "a",
+             |        "Refs1": {
+             |          "int1": 1
+             |        }
+             |      },
+             |      {
+             |        "str": "b",
+             |        "Refs1": {
+             |          "int1": 2
+             |        }
+             |      },
+             |      {
+             |        "str": "b",
+             |        "Refs1": {
+             |          "int1": 3
+             |        }
+             |      }
+             |    ]
+             |  }
+             |}""".stripMargin
+        )
 
-        // NestedOpt
-        _ <- {
-          val a =
-            """{
-              |        "str": "a",
-              |        "Refs1": [
-              |          {
-              |            "int1": 1
-              |          }
-              |        ]
-              |      }""".stripMargin
-          val b =
-            """{
-              |        "str": "b",
-              |        "Refs1": [
-              |          {
-              |            "int1": 2
-              |          },
-              |          {
-              |            "int1": 3
-              |          }
-              |        ]
-              |      }""".stripMargin
-          val c =
-            """{
-              |        "str": "c",
-              |        "Refs1": []
-              |      }""".stripMargin
+        _ <- Ns.str.a1.Refs1.*?(Ref1.int1.a1).getJson.map(_ ==>
+          s"""{
+             |  "data": {
+             |    "Ns": [
+             |      {
+             |        "str": "a",
+             |        "Refs1": [
+             |          {
+             |            "int1": 1
+             |          }
+             |        ]
+             |      },
+             |      {
+             |        "str": "b",
+             |        "Refs1": [
+             |          {
+             |            "int1": 2
+             |          },
+             |          {
+             |            "int1": 3
+             |          }
+             |        ]
+             |      },
+             |      {
+             |        "str": "c",
+             |        "Refs1": []
+             |      }
+             |    ]
+             |  }
+             |}""".
+            stripMargin
+        )
 
-          Ns.str.Refs1.*?(Ref1.int1).getJson.map(_ ==>
-            (if (useFree) {
-              s"""{
-                 |  "data": {
-                 |    "Ns": [
-                 |      $c,
-                 |      $a,
-                 |      $b
-                 |    ]
-                 |  }
-                 |}""".
-                stripMargin
-            } else {
-              s"""{
-                 |  "data": {
-                 |    "Ns": [
-                 |      $a,
-                 |      $b,
-                 |      $c
-                 |    ]
-                 |  }
-                 |}""".stripMargin
-            })
-          )
-        }
-
-        // Nested
         _ <- Ns.str.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
             |  "data": {
@@ -947,18 +911,7 @@ object JsonNested extends AsyncTestSuite {
             |}""".stripMargin)
 
 
-        // Ordering only stable with Peer
-        _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.int2).getJson.map { result =>
-          val variations = for {
-            a <- List(11, 12)
-            b <- List(11, 12) if b != a
-            c <- List(21, 22)
-            d <- List(21, 22) if d != c
-            e <- List(31, 32)
-            f <- List(31, 32) if f != e
-            g <- List(41, 42)
-            h <- List(41, 42) if h != g
-          } yield {
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1.a1.Refs2.int2.a2).getJson.map(_ ==>
             s"""{
                |  "data": {
                |    "Ns": [
@@ -968,25 +921,25 @@ object JsonNested extends AsyncTestSuite {
                |          {
                |            "int1": 1,
                |            "Refs2": {
-               |              "int2": $a
+               |              "int2": 11
                |            }
                |          },
                |          {
                |            "int1": 1,
                |            "Refs2": {
-               |              "int2": $b
+               |              "int2": 12
                |            }
                |          },
                |          {
                |            "int1": 2,
                |            "Refs2": {
-               |              "int2": $c
+               |              "int2": 21
                |            }
                |          },
                |          {
                |            "int1": 2,
                |            "Refs2": {
-               |              "int2": $d
+               |              "int2": 22
                |            }
                |          }
                |        ]
@@ -997,25 +950,25 @@ object JsonNested extends AsyncTestSuite {
                |          {
                |            "int1": 3,
                |            "Refs2": {
-               |              "int2": $e
+               |              "int2": 31
                |            }
                |          },
                |          {
                |            "int1": 3,
                |            "Refs2": {
-               |              "int2": $f
+               |              "int2": 32
                |            }
                |          },
                |          {
                |            "int1": 4,
                |            "Refs2": {
-               |              "int2": $g
+               |              "int2": 41
                |            }
                |          },
                |          {
                |            "int1": 4,
                |            "Refs2": {
-               |              "int2": $h
+               |              "int2": 42
                |            }
                |          }
                |        ]
@@ -1023,26 +976,11 @@ object JsonNested extends AsyncTestSuite {
                |    ]
                |  }
                |}""".stripMargin
-          }
-          if (!variations.contains(result)) {
-            println(result)
-          }
-          variations.contains(result) ==> true
-        }
+        )
 
 
         // Semi-nested A without intermediary attr `int1`
-        _ <- Ns.str.Refs1.*(Ref1.Refs2.int2).getJson.map { result =>
-          val variations = for {
-            a <- List(11, 12)
-            b <- List(11, 12) if b != a
-            c <- List(21, 22)
-            d <- List(21, 22) if d != c
-            e <- List(31, 32)
-            f <- List(31, 32) if f != e
-            g <- List(41, 42)
-            h <- List(41, 42) if h != g
-          } yield {
+        _ <- Ns.str.a1.Refs1.*(Ref1.Refs2.int2.a1).getJson.map(_ ==>
             s"""{
                |  "data": {
                |    "Ns": [
@@ -1051,22 +989,22 @@ object JsonNested extends AsyncTestSuite {
                |        "Refs1": [
                |          {
                |            "Refs2": {
-               |              "int2": $a
+               |              "int2": 11
                |            }
                |          },
                |          {
                |            "Refs2": {
-               |              "int2": $b
+               |              "int2": 12
                |            }
                |          },
                |          {
                |            "Refs2": {
-               |              "int2": $c
+               |              "int2": 21
                |            }
                |          },
                |          {
                |            "Refs2": {
-               |              "int2": $d
+               |              "int2": 22
                |            }
                |          }
                |        ]
@@ -1076,22 +1014,22 @@ object JsonNested extends AsyncTestSuite {
                |        "Refs1": [
                |          {
                |            "Refs2": {
-               |              "int2": $e
+               |              "int2": 31
                |            }
                |          },
                |          {
                |            "Refs2": {
-               |              "int2": $f
+               |              "int2": 32
                |            }
                |          },
                |          {
                |            "Refs2": {
-               |              "int2": $g
+               |              "int2": 41
                |            }
                |          },
                |          {
                |            "Refs2": {
-               |              "int2": $h
+               |              "int2": 42
                |            }
                |          }
                |        ]
@@ -1099,18 +1037,11 @@ object JsonNested extends AsyncTestSuite {
                |    ]
                |  }
                |}""".stripMargin
-          }
-          if (!variations.contains(result)) {
-            variations foreach println
-            println("------ result: -------")
-            println(result)
-          }
-          variations.contains(result) ==> true
-        }
+        )
 
 
         // Semi-nested B
-        _ <- Ns.str.Refs1.int1.Refs2.*(Ref2.int2).getJson.map(_ ==>
+        _ <- Ns.str.a1.Refs1.int1.a2.Refs2.*(Ref2.int2.a1).getJson.map(_ ==>
           """{
             |  "data": {
             |    "Ns": [
@@ -1176,7 +1107,7 @@ object JsonNested extends AsyncTestSuite {
 
 
         // Semi-nested B without intermediary attr `int1`
-        _ <- Ns.str.Refs1.Refs2.*(Ref2.int2).getJson.map(_ ==>
+        _ <- Ns.str.a1.Refs1.Refs2.*(Ref2.int2.a1).getJson.map(_ ==>
           """{
             |  "data": {
             |    "Ns": [
@@ -1224,7 +1155,7 @@ object JsonNested extends AsyncTestSuite {
 
 
         // Tacit filter
-        _ <- m(Ns.str_("a").Refs1.int1.Refs2 * Ref2.int2).getJson.map(_ ==>
+        _ <- m(Ns.str_("a").Refs1.int1.a1.Refs2 * Ref2.int2.a1).getJson.map(_ ==>
           """{
             |  "data": {
             |    "Ns": [
@@ -1259,7 +1190,7 @@ object JsonNested extends AsyncTestSuite {
             |}""".stripMargin)
 
         // Tacit filters
-        _ <- m(Ns.str_("a").Refs1.int1_(2).Refs2 * Ref2.int2).getJson.map(_ ==>
+        _ <- m(Ns.str_("a").Refs1.int1_(2).Refs2 * Ref2.int2.a1).getJson.map(_ ==>
           """{
             |  "data": {
             |    "Ns": [
@@ -1279,12 +1210,29 @@ object JsonNested extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-
         // Flat
-        _ <- m(Ns.str.Refs1.int1.Refs2.int2).getJson.map(_ ==>
+        _ <- m(Ns.str.a1.Refs1.int1.a2.Refs2.int2.a3).getJson.map(_ ==>
           """{
             |  "data": {
             |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "int1": 1,
+            |          "Refs2": {
+            |            "int2": 11
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "int1": 1,
+            |          "Refs2": {
+            |            "int2": 12
+            |          }
+            |        }
+            |      },
             |      {
             |        "str": "a",
             |        "Refs1": {
@@ -1306,9 +1254,18 @@ object JsonNested extends AsyncTestSuite {
             |      {
             |        "str": "b",
             |        "Refs1": {
-            |          "int1": 4,
+            |          "int1": 3,
             |          "Refs2": {
-            |            "int2": 42
+            |            "int2": 31
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "int1": 3,
+            |          "Refs2": {
+            |            "int2": 32
             |          }
             |        }
             |      },
@@ -1322,38 +1279,11 @@ object JsonNested extends AsyncTestSuite {
             |        }
             |      },
             |      {
-            |        "str": "a",
-            |        "Refs1": {
-            |          "int1": 1,
-            |          "Refs2": {
-            |            "int2": 12
-            |          }
-            |        }
-            |      },
-            |      {
-            |        "str": "a",
-            |        "Refs1": {
-            |          "int1": 1,
-            |          "Refs2": {
-            |            "int2": 11
-            |          }
-            |        }
-            |      },
-            |      {
             |        "str": "b",
             |        "Refs1": {
-            |          "int1": 3,
+            |          "int1": 4,
             |          "Refs2": {
-            |            "int2": 31
-            |          }
-            |        }
-            |      },
-            |      {
-            |        "str": "b",
-            |        "Refs1": {
-            |          "int1": 3,
-            |          "Refs2": {
-            |            "int2": 32
+            |            "int2": 42
             |          }
             |        }
             |      }
@@ -1361,12 +1291,27 @@ object JsonNested extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-
         // Flat without intermediary attr `int1`
-        _ <- m(Ns.str.Refs1.Refs2.int2).getJson.map(_ ==>
+        _ <- m(Ns.str.a1.Refs1.Refs2.int2.a2).getJson.map(_ ==>
           """{
             |  "data": {
             |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "Refs2": {
+            |            "int2": 11
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "Refs2": {
+            |            "int2": 12
+            |          }
+            |        }
+            |      },
             |      {
             |        "str": "a",
             |        "Refs1": {
@@ -1387,38 +1332,6 @@ object JsonNested extends AsyncTestSuite {
             |        "str": "b",
             |        "Refs1": {
             |          "Refs2": {
-            |            "int2": 41
-            |          }
-            |        }
-            |      },
-            |      {
-            |        "str": "b",
-            |        "Refs1": {
-            |          "Refs2": {
-            |            "int2": 42
-            |          }
-            |        }
-            |      },
-            |      {
-            |        "str": "a",
-            |        "Refs1": {
-            |          "Refs2": {
-            |            "int2": 11
-            |          }
-            |        }
-            |      },
-            |      {
-            |        "str": "a",
-            |        "Refs1": {
-            |          "Refs2": {
-            |            "int2": 12
-            |          }
-            |        }
-            |      },
-            |      {
-            |        "str": "b",
-            |        "Refs1": {
-            |          "Refs2": {
             |            "int2": 31
             |          }
             |        }
@@ -1428,6 +1341,22 @@ object JsonNested extends AsyncTestSuite {
             |        "Refs1": {
             |          "Refs2": {
             |            "int2": 32
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "Refs2": {
+            |            "int2": 41
+            |          }
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "Refs2": {
+            |            "int2": 42
             |          }
             |        }
             |      }
@@ -1589,7 +1518,7 @@ object JsonNested extends AsyncTestSuite {
     "Applied eid" - core { implicit conn =>
       for {
         eid <- Ns.str.Refs1.*(Ref1.int1).insert("a", List(1, 2)).map(_.eid)
-        _ <- Ns(eid).Refs1.*(Ref1.int1).getJson.map(_ ==>
+        _ <- Ns(eid).Refs1.*(Ref1.int1.a1).getJson.map(_ ==>
           """{
             |  "data": {
             |    "Ns": [
@@ -1624,7 +1553,7 @@ object JsonNested extends AsyncTestSuite {
         )
 
         // Without Ns
-        _ <- Ref1.str1.Refs2.*(Ref2.str2).getJson.map(_ ==>
+        _ <- Ref1.str1.a1.Refs2.*(Ref2.str2.a1).getJson.map(_ ==>
           """{
             |  "data": {
             |    "Ref1": [
@@ -1658,7 +1587,7 @@ object JsonNested extends AsyncTestSuite {
         // "Implicit" reference from Ns to Ref1 (without any attributes) implies that
         // some Ns entity is referencing some Ref1 entity.
         // This excludes "r1b" since no Ns entities reference it.
-        _ <- Ns.Refs1.str1.Refs2.*(Ref2.str2).getJson.map(_ ==>
+        _ <- Ns.Refs1.str1.Refs2.*(Ref2.str2.a1).getJson.map(_ ==>
           """{
             |  "data": {
             |    "Ns": [

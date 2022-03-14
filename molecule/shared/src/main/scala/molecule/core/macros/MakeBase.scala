@@ -315,9 +315,15 @@ private[molecule] trait MakeBase extends Dsl2Model {
       return (q"", Nil)
     }
 
-    var i   = 0
+    var i = 0
+
+    // Accumulate sort position / comparator
     val com = Seq.newBuilder[(Int, Tree)]
+
+    // Accumulate current sort positions on this level
     val cur = Seq.newBuilder[(Int, Tree, Tree, Tree)]
+
+    // Accumulate sort positions for each level
     var acc = Seq.empty[Seq[(Int, Tree, Tree, Tree)]]
 
     def addComparator(sort: String, value: Value, attr: String, tpeStr: String, isEnum: Boolean, level: Int): Unit = {
@@ -371,8 +377,7 @@ private[molecule] trait MakeBase extends Dsl2Model {
     }
 
     addOrderings(model.elements, 0)
-    val orderingTrees = acc :+ cur.result().sortBy(_._1) // add last level orderings, sorted by sorting position
-
+    val orderingTrees   = acc :+ cur.result().sortBy(_._1) // add last level orderings, sorted by sorting position
     val comparatorTrees = com.result().sortBy(_._1).map(_._2)
     val comparators     = comparatorTrees.size match {
       case 1 => q"${comparatorTrees.head}"

@@ -8,8 +8,8 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
 
   import c.universe._
 
-  //  private lazy val xx = InspectMacro("MakeMolecule", 6, mkError = true)
-  private lazy val xx = InspectMacro("MakeMolecule", 6)
+//  private lazy val xy = InspectMacro("MakeMolecule", 6, mkError = true)
+  private lazy val xx = InspectMacro("MakeMolecule", 60)
 
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, OutTypes: Type*): Tree = {
@@ -174,7 +174,6 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
       }
     }
 
-
     val outMoleculeClass = if (levels == 1)
       mkFlat
     else if (isOptNested)
@@ -191,7 +190,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
         }
       """
 
-    xx(6, levels, obj, tree, compareOptNested(model, doSort))
+    xx(6, levels, obj, tree)
     tree
   }
 

@@ -15,33 +15,26 @@ object JsonRef extends AsyncTestSuite {
       for {
         _ <- Ns.str.Ref1.int1 insert List(("a", 1), ("b", 2))
 
-        _ <- Ns.str.Ref1.int1.getJson.map { result =>
-          val orderings  = List(
-            ("a", 1, "b", 2),
-            ("b", 2, "a", 1)
-          )
-          val variations = orderings.map { case (s1, i1, s2, i2) =>
-            s"""{
-               |  "data": {
-               |    "Ns": [
-               |      {
-               |        "str": "$s1",
-               |        "Ref1": {
-               |          "int1": $i1
-               |        }
-               |      },
-               |      {
-               |        "str": "$s2",
-               |        "Ref1": {
-               |          "int1": $i2
-               |        }
-               |      }
-               |    ]
-               |  }
-               |}""".stripMargin
-          }
-          variations.contains(result) ==> true
-        }
+        _ <- Ns.str.a1.Ref1.int1.a2.getJson.map(_ ==>
+          s"""{
+             |  "data": {
+             |    "Ns": [
+             |      {
+             |        "str": "a",
+             |        "Ref1": {
+             |          "int1": 1
+             |        }
+             |      },
+             |      {
+             |        "str": "b",
+             |        "Ref1": {
+             |          "int1": 2
+             |        }
+             |      }
+             |    ]
+             |  }
+             |}""".stripMargin
+        )
       } yield ()
     }
 
@@ -53,46 +46,33 @@ object JsonRef extends AsyncTestSuite {
           ("b", List(2, 3))
         )
 
-        // Flat
-        _ <- Ns.str.Refs1.int1.getJson.map { result =>
-          val orderings  = List(
-            ("a", "b", "b", 1, 2, 3),
-            ("b", "a", "b", 2, 1, 3),
-          )
-          val variations = orderings.map {
-            case (a, b, c, d, e, f) =>
-              s"""{
-                 |  "data": {
-                 |    "Ns": [
-                 |      {
-                 |        "str": "$a",
-                 |        "Refs1": {
-                 |          "int1": $d
-                 |        }
-                 |      },
-                 |      {
-                 |        "str": "$b",
-                 |        "Refs1": {
-                 |          "int1": $e
-                 |        }
-                 |      },
-                 |      {
-                 |        "str": "$c",
-                 |        "Refs1": {
-                 |          "int1": $f
-                 |        }
-                 |      }
-                 |    ]
-                 |  }
-                 |}""".stripMargin
-          }
-          if (!variations.contains(result)) {
-            println(result)
-          }
-          variations.contains(result) ==> true
-        }
+        _ <- Ns.str.a1.Refs1.int1.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "str": "a",
+            |        "Refs1": {
+            |          "int1": 1
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "int1": 2
+            |        }
+            |      },
+            |      {
+            |        "str": "b",
+            |        "Refs1": {
+            |          "int1": 3
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
+        )
 
-        // Nested
         _ <- Ns.str.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
             |  "data": {
@@ -131,56 +111,44 @@ object JsonRef extends AsyncTestSuite {
         ) map (_.eids)
 
         // Ref namespace
-        _ <- Ns.int.Ref1.str1.getJson.map { result =>
-          val variations = List(
-            (1, "a", 2, "b"),
-            (2, "b", 1, "a")
-          ).map { case (i1, s1, i2, s2) =>
-            s"""{
-               |  "data": {
-               |    "Ns": [
-               |      {
-               |        "int": $i1,
-               |        "Ref1": {
-               |          "str1": "$s1"
-               |        }
-               |      },
-               |      {
-               |        "int": $i2,
-               |        "Ref1": {
-               |          "str1": "$s2"
-               |        }
-               |      }
-               |    ]
-               |  }
-               |}""".stripMargin
-          }
-          variations.contains(result) ==> true
-        }
+        _ <- Ns.int.a1.Ref1.str1.getJson.map(_ ==>
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1,
+            |        "Ref1": {
+            |          "str1": "a"
+            |        }
+            |      },
+            |      {
+            |        "int": 2,
+            |        "Ref1": {
+            |          "str1": "b"
+            |        }
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
+        )
 
         // Ref attr
-        _ <- Ns.int.ref1.getJson.map { result =>
-          val variations = List(
-            (1, refA, 2, refB),
-            (2, refB, 1, refA),
-          ).map { case (i1, r1, i2, r2) =>
-            s"""{
-               |  "data": {
-               |    "Ns": [
-               |      {
-               |        "int": $i1,
-               |        "ref1": $r1
-               |      },
-               |      {
-               |        "int": $i2,
-               |        "ref1": $r2
-               |      }
-               |    ]
-               |  }
-               |}""".stripMargin
-          }
-          variations.contains(result) ==> true
-        }
+        _ <- Ns.int.a1.ref1.getJson.map(_ ==>
+          s"""{
+             |  "data": {
+             |    "Ns": [
+             |      {
+             |        "int": 1,
+             |        "ref1": $refA
+             |      },
+             |      {
+             |        "int": 2,
+             |        "ref1": $refB
+             |      }
+             |    ]
+             |  }
+             |}""".stripMargin
+        )
       } yield ()
     }
 
