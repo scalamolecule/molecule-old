@@ -407,7 +407,7 @@ object SortNested extends AsyncTestSuite {
             |}""".stripMargin
         )
 
-        _ <- Ns.int.str$.d1.Refs1.*?(Ref1.int1.d2.str1$.d1).getObjs.map{case List(o1, o2, o3, o4) =>
+        _ <- Ns.int.str$.d1.Refs1.*?(Ref1.int1.d2.str1$.d1).getObjs.collect { case List(o1, o2, o3, o4) =>
           o1.int ==> 3
           o1.str$ ==> Some("C")
           o1.Refs1 ==> Nil

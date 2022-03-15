@@ -219,7 +219,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
           if (next) sb.append(",") else next = true
           sb.append(indent(tabs + 2))
           val refAttr = it1.next
-//            .asInstanceOf[jMap[_, _]].values.iterator.next
+            //            .asInstanceOf[jMap[_, _]].values.iterator.next
             .asInstanceOf[jLong].toLong
           sb.append(refAttr)
         }
@@ -292,13 +292,12 @@ private[molecule] trait JsonOptNested extends JsonBase {
   protected def jsonOptNestedOptOneRefAttr(sb: StringBuffer, field: String, it: jIterator[_]): StringBuffer = {
     it.next match {
       case "__none__" | null => pair(sb, field, "null")
-      //      case m: jMap[_, _]     => quotedPair(sb, field, m.values.iterator.next.toString)
-      case l: jLong => pair(sb, field, l)
-      case v =>
-        val refAttr = v
-          .asInstanceOf[jMap[_, _]].values.iterator.next
-          .asInstanceOf[jMap[_, _]].values.iterator.next
-          .asInstanceOf[jLong].toLong
+      case l: jLong          => pair(sb, field, l)
+      case vs                =>
+        val refAttr = vs.asInstanceOf[jMap[_, _]].values.iterator.next match {
+          case l: jLong => l.toLong
+          case m        => m.asInstanceOf[jMap[_, _]].values.iterator.next.asInstanceOf[jLong].toLong
+        }
         pair(sb, field, refAttr)
     }
   }
@@ -468,7 +467,7 @@ private[molecule] trait JsonOptNested extends JsonBase {
         quote(sb, field)
         sb.append(": [")
         var next = false
-        val it1 = vs.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
+        val it1  = vs.asInstanceOf[jMap[String, jList[_]]].values.iterator.next.iterator
         while (it1.hasNext) {
           if (next) sb.append(",") else next = true
           sb.append(indent(tabs + 2))

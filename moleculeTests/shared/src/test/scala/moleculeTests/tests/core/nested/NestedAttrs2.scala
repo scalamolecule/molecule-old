@@ -1227,100 +1227,100 @@ object NestedAttrs2 extends AsyncTestSuite {
 
         _ <- m(Ref1.int1.Nss *? Ns.int.dates$).getJson.map(_ ==>
           """{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "dates$": [
-             |              "2001-07-01",
-             |              "2002-01-01"
-             |            ]
-             |          },
-             |          {
-             |            "int": 12,
-             |            "dates$": null
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int1": 2,
-             |        "Nss": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "dates$": [
+            |              "2001-07-01",
+            |              "2002-01-01"
+            |            ]
+            |          },
+            |          {
+            |            "int": 12,
+            |            "dates$": null
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int1": 2,
+            |        "Nss": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- m(Ref1.int1.Nss * Ns.int.dates$).getJson.map(_ ==>
           """{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "dates$": [
-             |              "2001-07-01",
-             |              "2002-01-01"
-             |            ]
-             |          },
-             |          {
-             |            "int": 12,
-             |            "dates$": null
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "dates$": [
+            |              "2001-07-01",
+            |              "2002-01-01"
+            |            ]
+            |          },
+            |          {
+            |            "int": 12,
+            |            "dates$": null
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
 
         _ <- m(Ref1.int1.Nss *? Ns.int.dates).getJson.map(_ ==>
           """{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "dates": [
-             |              "2001-07-01",
-             |              "2002-01-01"
-             |            ]
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int1": 2,
-             |        "Nss": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "dates": [
+            |              "2001-07-01",
+            |              "2002-01-01"
+            |            ]
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int1": 2,
+            |        "Nss": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- m(Ref1.int1.Nss * Ns.int.dates).getJson.map(_ ==>
           """{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "dates": [
-             |              "2001-07-01",
-             |              "2002-01-01"
-             |            ]
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "dates": [
+            |              "2001-07-01",
+            |              "2002-01-01"
+            |            ]
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
 
         _ <- m(Ref1.int1.Nss *? Ns.int.dates_).getJson.map(_ ==>
@@ -1560,101 +1560,101 @@ object NestedAttrs2 extends AsyncTestSuite {
         ))
 
         _ <- m(Ref1.int1.Nss *? Ns.int.uris$).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "uris$$": [
-             |              "$uri1",
-             |              "$uri2"
-             |            ]
-             |          },
-             |          {
-             |            "int": 12,
-             |            "uris$$": null
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int1": 2,
-             |        "Nss": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "uris$": [
+            |              "uri1",
+            |              "uri2"
+            |            ]
+            |          },
+            |          {
+            |            "int": 12,
+            |            "uris$": null
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int1": 2,
+            |        "Nss": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- m(Ref1.int1.Nss * Ns.int.uris$).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "uris$$": [
-             |              "$uri1",
-             |              "$uri2"
-             |            ]
-             |          },
-             |          {
-             |            "int": 12,
-             |            "uris$$": null
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "uris$": [
+            |              "uri1",
+            |              "uri2"
+            |            ]
+            |          },
+            |          {
+            |            "int": 12,
+            |            "uris$": null
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
 
         _ <- m(Ref1.int1.Nss *? Ns.int.uris).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "uris": [
-             |              "$uri1",
-             |              "$uri2"
-             |            ]
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int1": 2,
-             |        "Nss": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "uris": [
+            |              "uri1",
+            |              "uri2"
+            |            ]
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int1": 2,
+            |        "Nss": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- m(Ref1.int1.Nss * Ns.int.uris).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "uris": [
-             |              "$uri1",
-             |              "$uri2"
-             |            ]
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "uris": [
+            |              "uri1",
+            |              "uri2"
+            |            ]
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
 
         _ <- m(Ref1.int1.Nss *? Ns.int.uris_).getJson.map(_ ==>
@@ -1729,7 +1729,7 @@ object NestedAttrs2 extends AsyncTestSuite {
         ))
 
         _ <- m(Ref1.int1.Nss *? Ns.int.bigInts$).getJson.map(_ ==>
-          s"""{
+          """{
              |  "data": {
              |    "Ref1": [
              |      {
@@ -1737,14 +1737,14 @@ object NestedAttrs2 extends AsyncTestSuite {
              |        "Nss": [
              |          {
              |            "int": 11,
-             |            "bigInts$$": [
-             |              "$bigInt1",
-             |              "$bigInt2"
+             |            "bigInts$": [
+             |              "1",
+             |              "2"
              |            ]
              |          },
              |          {
              |            "int": 12,
-             |            "bigInts$$": null
+             |            "bigInts$": null
              |          }
              |        ]
              |      },
@@ -1757,7 +1757,7 @@ object NestedAttrs2 extends AsyncTestSuite {
              |}""".stripMargin
         )
         _ <- m(Ref1.int1.Nss * Ns.int.bigInts$).getJson.map(_ ==>
-          s"""{
+          """{
              |  "data": {
              |    "Ref1": [
              |      {
@@ -1765,14 +1765,14 @@ object NestedAttrs2 extends AsyncTestSuite {
              |        "Nss": [
              |          {
              |            "int": 11,
-             |            "bigInts$$": [
-             |              "$bigInt1",
-             |              "$bigInt2"
+             |            "bigInts$": [
+             |              "1",
+             |              "2"
              |            ]
              |          },
              |          {
              |            "int": 12,
-             |            "bigInts$$": null
+             |            "bigInts$": null
              |          }
              |        ]
              |      }
@@ -1782,7 +1782,7 @@ object NestedAttrs2 extends AsyncTestSuite {
         )
 
         _ <- m(Ref1.int1.Nss *? Ns.int.bigInts).getJson.map(_ ==>
-          s"""{
+          """{
              |  "data": {
              |    "Ref1": [
              |      {
@@ -1791,8 +1791,8 @@ object NestedAttrs2 extends AsyncTestSuite {
              |          {
              |            "int": 11,
              |            "bigInts": [
-             |              "$bigInt1",
-             |              "$bigInt2"
+             |              "1",
+             |              "2"
              |            ]
              |          }
              |        ]
@@ -1806,7 +1806,7 @@ object NestedAttrs2 extends AsyncTestSuite {
              |}""".stripMargin
         )
         _ <- m(Ref1.int1.Nss * Ns.int.bigInts).getJson.map(_ ==>
-          s"""{
+          """{
              |  "data": {
              |    "Ref1": [
              |      {
@@ -1815,8 +1815,8 @@ object NestedAttrs2 extends AsyncTestSuite {
              |          {
              |            "int": 11,
              |            "bigInts": [
-             |              "$bigInt1",
-             |              "$bigInt2"
+             |              "1",
+             |              "2"
              |            ]
              |          }
              |        ]
@@ -1898,101 +1898,101 @@ object NestedAttrs2 extends AsyncTestSuite {
         ))
 
         _ <- m(Ref1.int1.Nss *? Ns.int.bigDecs$).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "bigDecs$$": [
-             |              "$bigDec1",
-             |              "$bigDec2"
-             |            ]
-             |          },
-             |          {
-             |            "int": 12,
-             |            "bigDecs$$": null
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int1": 2,
-             |        "Nss": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "bigDecs$": [
+            |              "1.0",
+            |              "2.0"
+            |            ]
+            |          },
+            |          {
+            |            "int": 12,
+            |            "bigDecs$": null
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int1": 2,
+            |        "Nss": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- m(Ref1.int1.Nss * Ns.int.bigDecs$).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "bigDecs$$": [
-             |              "$bigDec1",
-             |              "$bigDec2"
-             |            ]
-             |          },
-             |          {
-             |            "int": 12,
-             |            "bigDecs$$": null
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "bigDecs$": [
+            |              "1.0",
+            |              "2.0"
+            |            ]
+            |          },
+            |          {
+            |            "int": 12,
+            |            "bigDecs$": null
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
 
         _ <- m(Ref1.int1.Nss *? Ns.int.bigDecs).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "bigDecs": [
-             |              "$bigDec1",
-             |              "$bigDec2"
-             |            ]
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int1": 2,
-             |        "Nss": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "bigDecs": [
+            |              "1.0",
+            |              "2.0"
+            |            ]
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int1": 2,
+            |        "Nss": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- m(Ref1.int1.Nss * Ns.int.bigDecs).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "bigDecs": [
-             |              "$bigDec2",
-             |              "$bigDec1"
-             |            ]
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "bigDecs": [
+            |              "2.0",
+            |              "1.0"
+            |            ]
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
 
         _ <- m(Ref1.int1.Nss *? Ns.int.bigDecs_).getJson.map(_ ==>

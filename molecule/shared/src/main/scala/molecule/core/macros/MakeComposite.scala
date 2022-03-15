@@ -44,7 +44,7 @@ class MakeComposite(val c: blackbox.Context) extends MakeBase {
         private val _resolvedModel: Model = resolveIdentifiers($model, $identifiers)
         final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel)) {
           ..$transformers
-          ..${compare(model, doSort)}
+//          ..{compare(model, doSort)}
         }
         new $outMolecule
       """
@@ -53,7 +53,7 @@ class MakeComposite(val c: blackbox.Context) extends MakeBase {
         ..$imports
         final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model, ${Model2Query(model)}) {
           ..$transformers
-          ..${compare(model, doSort)}
+//          ..{compare(model, doSort)}
         }
         new $outMolecule
       """

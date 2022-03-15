@@ -1222,101 +1222,101 @@ object NestedAttrs3 extends AsyncTestSuite {
         ))
 
         _ <- m(Ref1.int1.Nss *? Ns.int.uriMap$).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "uriMap$$": {
-             |              "a": "$uri1",
-             |              "b": "$uri2"
-             |            }
-             |          },
-             |          {
-             |            "int": 12,
-             |            "uriMap$$": null
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int1": 2,
-             |        "Nss": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "uriMap$": {
+            |              "a": "uri1",
+            |              "b": "uri2"
+            |            }
+            |          },
+            |          {
+            |            "int": 12,
+            |            "uriMap$": null
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int1": 2,
+            |        "Nss": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- m(Ref1.int1.Nss * Ns.int.uriMap$).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "uriMap$$": {
-             |              "a": "$uri1",
-             |              "b": "$uri2"
-             |            }
-             |          },
-             |          {
-             |            "int": 12,
-             |            "uriMap$$": null
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "uriMap$": {
+            |              "a": "uri1",
+            |              "b": "uri2"
+            |            }
+            |          },
+            |          {
+            |            "int": 12,
+            |            "uriMap$": null
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
 
         _ <- m(Ref1.int1.Nss *? Ns.int.uriMap).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "uriMap": {
-             |              "a": "$uri1",
-             |              "b": "$uri2"
-             |            }
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int1": 2,
-             |        "Nss": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "uriMap": {
+            |              "a": "uri1",
+            |              "b": "uri2"
+            |            }
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int1": 2,
+            |        "Nss": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- m(Ref1.int1.Nss * Ns.int.uriMap).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "uriMap": {
-             |              "b": "$uri2",
-             |              "a": "$uri1"
-             |            }
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "uriMap": {
+            |              "b": "uri2",
+            |              "a": "uri1"
+            |            }
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
 
         _ <- m(Ref1.int1.Nss *? Ns.int.uriMap_).getJson.map(_ ==>
@@ -1391,81 +1391,81 @@ object NestedAttrs3 extends AsyncTestSuite {
         ))
 
         _ <- m(Ref1.int1.Nss *? Ns.int.bigIntMap$).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "bigIntMap$$": {
-             |              "a": "$bigInt1",
-             |              "b": "$bigInt2"
-             |            }
-             |          },
-             |          {
-             |            "int": 12,
-             |            "bigIntMap$$": null
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int1": 2,
-             |        "Nss": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "bigIntMap$": {
+            |              "a": "1",
+            |              "b": "2"
+            |            }
+            |          },
+            |          {
+            |            "int": 12,
+            |            "bigIntMap$": null
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int1": 2,
+            |        "Nss": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- m(Ref1.int1.Nss * Ns.int.bigIntMap$).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "bigIntMap$$": {
-             |              "a": "$bigInt1",
-             |              "b": "$bigInt2"
-             |            }
-             |          },
-             |          {
-             |            "int": 12,
-             |            "bigIntMap$$": null
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "bigIntMap$": {
+            |              "a": "1",
+            |              "b": "2"
+            |            }
+            |          },
+            |          {
+            |            "int": 12,
+            |            "bigIntMap$": null
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
 
         _ <- m(Ref1.int1.Nss *? Ns.int.bigIntMap).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "bigIntMap": {
-             |              "a": "$bigInt1",
-             |              "b": "$bigInt2"
-             |            }
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int1": 2,
-             |        "Nss": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "bigIntMap": {
+            |              "a": "1",
+            |              "b": "2"
+            |            }
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int1": 2,
+            |        "Nss": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- m(Ref1.int1.Nss * Ns.int.bigIntMap).getJson.map(_ ==>
           s"""{
@@ -1477,8 +1477,8 @@ object NestedAttrs3 extends AsyncTestSuite {
              |          {
              |            "int": 11,
              |            "bigIntMap": {
-             |              "b": "$bigInt2",
-             |              "a": "$bigInt1"
+             |              "b": "2",
+             |              "a": "1"
              |            }
              |          }
              |        ]
@@ -1560,56 +1560,56 @@ object NestedAttrs3 extends AsyncTestSuite {
         ))
 
         _ <- m(Ref1.int1.Nss *? Ns.int.bigDecMap$).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "bigDecMap$$": {
-             |              "a": "$bigDec1",
-             |              "b": "$bigDec2"
-             |            }
-             |          },
-             |          {
-             |            "int": 12,
-             |            "bigDecMap$$": null
-             |          }
-             |        ]
-             |      },
-             |      {
-             |        "int1": 2,
-             |        "Nss": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "bigDecMap$": {
+            |              "a": "1.0",
+            |              "b": "2.0"
+            |            }
+            |          },
+            |          {
+            |            "int": 12,
+            |            "bigDecMap$": null
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int1": 2,
+            |        "Nss": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- m(Ref1.int1.Nss * Ns.int.bigDecMap$).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ref1": [
-             |      {
-             |        "int1": 1,
-             |        "Nss": [
-             |          {
-             |            "int": 11,
-             |            "bigDecMap$$": {
-             |              "a": "$bigDec1",
-             |              "b": "$bigDec2"
-             |            }
-             |          },
-             |          {
-             |            "int": 12,
-             |            "bigDecMap$$": null
-             |          }
-             |        ]
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ref1": [
+            |      {
+            |        "int1": 1,
+            |        "Nss": [
+            |          {
+            |            "int": 11,
+            |            "bigDecMap$": {
+            |              "a": "1.0",
+            |              "b": "2.0"
+            |            }
+            |          },
+            |          {
+            |            "int": 12,
+            |            "bigDecMap$": null
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
 
         _ <- m(Ref1.int1.Nss *? Ns.int.bigDecMap).getJson.map(_ ==>
@@ -1622,8 +1622,8 @@ object NestedAttrs3 extends AsyncTestSuite {
              |          {
              |            "int": 11,
              |            "bigDecMap": {
-             |              "a": "$bigDec1",
-             |              "b": "$bigDec2"
+             |              "a": "1.0",
+             |              "b": "2.0"
              |            }
              |          }
              |        ]
@@ -1646,8 +1646,8 @@ object NestedAttrs3 extends AsyncTestSuite {
              |          {
              |            "int": 11,
              |            "bigDecMap": {
-             |              "b": "$bigDec2",
-             |              "a": "$bigDec1"
+             |              "b": "2.0",
+             |              "a": "1.0"
              |            }
              |          }
              |        ]
