@@ -9,6 +9,7 @@ import utest._
 
 object SortComposites extends AsyncTestSuite {
 
+
   lazy val tests = Tests {
 
     "1 + 1" - core { implicit conn =>
@@ -44,42 +45,6 @@ object SortComposites extends AsyncTestSuite {
           ("A", 2),
           ("A", 1),
         ))
-      } yield ()
-    }
-
-
-    "1 + 2" - core { implicit conn =>
-      for {
-        _ <- (Ns.str + Ref1.int1) insert List(
-          ("A", 1),
-          ("A", 2),
-          ("B", 1),
-          ("B", 2),
-        )
-      } yield ()
-    }
-
-
-    "2 + 1" - core { implicit conn =>
-      for {
-        _ <- (Ns.str + Ref1.int1) insert List(
-          ("A", 1),
-          ("A", 2),
-          ("B", 1),
-          ("B", 2),
-        )
-      } yield ()
-    }
-
-
-    "2 + 2" - core { implicit conn =>
-      for {
-        _ <- (Ns.str + Ref1.int1) insert List(
-          ("A", 1),
-          ("A", 2),
-          ("B", 1),
-          ("B", 2),
-        )
       } yield ()
     }
   }

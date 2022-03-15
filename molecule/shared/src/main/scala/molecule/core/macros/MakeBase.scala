@@ -247,53 +247,58 @@ private[molecule] trait MakeBase extends Dsl2Model {
     }
   }
 
-  def compare(model: Model, doSort: Boolean = false): Tree = {
+  // For flat and composite molecules
+  def compare(model: Model, doSort: Boolean): Tree = {
     if (!doSort) {
       return q""
     }
 
-    lazy val comparisons = model.elements.foldLeft(
-      0, // row index
-      Seq.empty[(Int, Tree)] // orderPos/comparison pairs
-    ) {
-      case ((i, acc), Atom(_, attr, tpe, _, value, enumPrefix, _, _, sort)) =>
-        if (sort.nonEmpty) {
-          val comparator = value match {
-            case Fn(fn, limit) => compareAttr(i, attr, tpe, enumPrefix.nonEmpty, fn, limit, sort)
-            case _             => compareAttr(i, attr, tpe, enumPrefix.nonEmpty, "", None, sort)
+    // Accumulate sort position / comparator
+    val com = Seq.newBuilder[(Int, Tree)]
+
+    var i = 0
+    def addComparator(sort: String, value: Value, attr: String, tpeStr: String, isEnum: Boolean): Unit = {
+      if (sort.nonEmpty) {
+          val (sortPos, comparator) = value match {
+            case Fn(fn, limit) => compareAttr(i, attr, tpeStr, isEnum, fn, limit, sort)
+            case _             => compareAttr(i, attr, tpeStr, isEnum, "", None, sort)
           }
-          (i + 1, acc :+ comparator)
-        } else if (attr.last == '_') {
-          (i, acc)
-        } else {
-          (i + 1, acc)
-        }
+          com.+=((sortPos, comparator))
 
-      case ((i, acc), Generic(_, attr, tpe, value, sort)) =>
-        if (sort.nonEmpty) {
-          val comparator = value match {
-            case Fn(fn, limit) => compareAttr(i, attr, tpe, isEnum = false, fn, limit, sort)
-            case _             => compareAttr(i, attr, tpe, isEnum = false, "", None, sort)
-          }
-          (i + 1, acc :+ comparator)
-        } else if (attr.last == '_') {
-          (i, acc)
-        } else {
-          (i + 1, acc)
-        }
+        i += 1
+      } else if (attr.last != '_') {
+        i += 1
+      }
+    }
 
-      case ((i, acc), _) =>
-        (i, acc)
-    }._2
-      .sortBy(_._1) // sort order positions
-      .map(_._2)
+    def addOrderings(elements: Seq[Element]): Unit = {
+      elements.collect {
+        case Atom(_, attr, tpe, _, value, enumPrefix, _, _, sort) =>
+          addComparator(sort, value, attr, tpe, enumPrefix.nonEmpty)
 
-    lazy val comparators = comparisons.size match {
-      case 1 => q"${comparisons.head}"
+        case Generic(_, attr, tpe, value, sort) =>
+          addComparator(sort, value, attr, tpe, isEnum = false)
+
+        case nested: Nested =>
+          abort("Unexpectedly found nested elements in model for `compare`.")
+
+        case Composite(elements) =>
+          addOrderings(elements)
+
+        case TxMetaData(elements) =>
+          addOrderings(elements)
+      }
+    }
+
+    // Resolve comparators
+    addOrderings(model.elements)
+    val comparatorTrees = com.result().sortBy(_._1).map(_._2)
+    val comparators = comparatorTrees.size match {
+      case 1 => q"${comparatorTrees.head}"
       case _ =>
-        val moreComparisons = comparisons.tail.map(comparison => q"if (result == 0) result = $comparison")
+        val moreComparisons = comparatorTrees.tail.map(comparison => q"if (result == 0) result = $comparison")
         q"""
-          var result = ${comparisons.head}
+          var result = ${comparatorTrees.head}
           ..$moreComparisons
           result
         """
@@ -315,8 +320,6 @@ private[molecule] trait MakeBase extends Dsl2Model {
       return (q"", Nil)
     }
 
-    var i = 0
-
     // Accumulate sort position / comparator
     val com = Seq.newBuilder[(Int, Tree)]
 
@@ -326,6 +329,7 @@ private[molecule] trait MakeBase extends Dsl2Model {
     // Accumulate sort positions for each level
     var acc = Seq.empty[Seq[(Int, Tree, Tree, Tree)]]
 
+    var i = 0
     def addComparator(sort: String, value: Value, attr: String, tpeStr: String, isEnum: Boolean, level: Int): Unit = {
       val opt = attr.last == '$'
       if (sort.nonEmpty) {
@@ -370,12 +374,14 @@ private[molecule] trait MakeBase extends Dsl2Model {
 
         case nested: Nested =>
           acc = acc :+ cur.result().sortBy(_._1)
+          // New sorting order on each nested level
           cur.clear()
           i = 0
           addOrderings(nested.elements, level + 1)
       }
     }
 
+    // Resolve comparators
     addOrderings(model.elements, 0)
     val orderingTrees   = acc :+ cur.result().sortBy(_._1) // add last level orderings, sorted by sorting position
     val comparatorTrees = com.result().sortBy(_._1).map(_._2)

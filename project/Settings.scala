@@ -177,7 +177,7 @@ object Settings extends SettingsDatomic {
         //        sharedTests + "/core/pagination",
         //        sharedTests + "/core/ref",
         sharedTests + "/core/sorting",
-        //        sharedTests + "/db/datomic/composite",
+        sharedTests + "/db/datomic/composite",
         //        sharedTests + "/db/datomic/entity",
         //        sharedTests + "/db/datomic/generic",
         //        sharedTests + "/db/datomic/schemaDef",

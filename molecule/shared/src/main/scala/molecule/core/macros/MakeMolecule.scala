@@ -46,6 +46,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
           final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = ${tplFlat(castss, txMetas)}
           final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
           final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
+          ..${compare(model, doSort)}
         """
       }
 
@@ -56,14 +57,12 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
           final private val _resolvedModel: Model = resolveIdentifiers($model, $identifiers)
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel)) {
             ..$transformers
-            ..${compare(model, doSort)}
           }
         """
       } else {
         q"""
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model, ${Model2Query(model)}) {
             ..$transformers
-            ..${compare(model, doSort)}
           }
         """
       }
@@ -190,7 +189,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
         }
       """
 
-    xx(6, levels, obj, tree)
+//    xx(6, levels, obj, tree)
     tree
   }
 
