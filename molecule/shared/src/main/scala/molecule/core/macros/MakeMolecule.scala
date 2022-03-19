@@ -8,7 +8,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
 
   import c.universe._
 
-//  private lazy val xy = InspectMacro("MakeMolecule", 6, mkError = true)
+  private lazy val xy = InspectMacro("MakeMolecule", 60, mkError = true)
   private lazy val xx = InspectMacro("MakeMolecule", 60)
 
 
@@ -46,7 +46,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
           final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = ${tplFlat(castss, txMetas)}
           final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
           final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
-          ..${compare(model, doSort)}
+          ..${compareFlat(model, doSort)}
         """
       }
 
@@ -81,7 +81,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
           final override def tacitIndexes: List[List[Int]] = $tacitIndexes
         """
       } else {
-        val (compareImpl, orderings) = compareOptNested(model, doSort)
+        val (topLevelComparisons, orderings) = compareOptNested(model, doSort)
         q"""
           final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) =
             ${tplOptNested(obj, refIndexes, tacitIndexes, orderings = orderings)}.asInstanceOf[(..$OutTypes)]
@@ -91,7 +91,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
           final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer =
             ${jsonOptNested(obj, refIndexes, tacitIndexes)}
 
-          ..$compareImpl
+          ..$topLevelComparisons
         """
       }
 
@@ -188,8 +188,9 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
           new $outMolecule
         }
       """
-
-//    xx(6, levels, obj, tree)
+//    if (doSort)
+//      xy(6, obj, tree)
+    xx(6, levels, obj, tree)
     tree
   }
 

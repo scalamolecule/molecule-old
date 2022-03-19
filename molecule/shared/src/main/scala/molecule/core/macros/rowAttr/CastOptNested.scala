@@ -25,15 +25,15 @@ trait CastOptNested extends Helpers {
 
   protected def castOptNestedOneEnum(it: jIterator[_]): String = {
     it.next match {
-      case s: String => getKwName(s)
-      case v         => getKwName(v.asInstanceOf[jMap[_, _]].values().iterator.next.toString)
+      case m: jMap[_, _] => getKwName(m.values.iterator.next.toString)
+      case v             => getKwName(v.toString)
     }
   }
 
   protected def castOptNestedOneRefAttr(it: jIterator[_]): Long = {
     it.next match {
       case l: jLong => l.toLong
-      case vs       => vs.asInstanceOf[jMap[_, _]].values().iterator.next.asInstanceOf[jLong].toLong
+      case vs       => vs.asInstanceOf[jMap[_, _]].values.iterator.next.asInstanceOf[jLong].toLong
     }
   }
 

@@ -34,7 +34,7 @@ class MakeComposite(val c: blackbox.Context) extends MakeBase {
         final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = ${tplComposite(castss, txMetas)}
         final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
         final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
-        ..${compare(model, doSort)}
+        ..${compareFlat(model, doSort)}
       """
     }
 

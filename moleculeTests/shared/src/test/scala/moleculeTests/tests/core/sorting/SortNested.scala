@@ -541,24 +541,5 @@ object SortNested extends AsyncTestSuite {
         ))
       } yield ()
     }
-
-
-    "Optional nested top attribute types" - {
-
-      "String" - core { implicit conn =>
-        for {
-          _ <- Ns.int.insert(1, 2)
-
-          _ <- Ns.int.a1.getObjs.collect { case List(o1, o2) =>
-            o1.int ==> 1
-            o2.int ==> 2
-          }
-          _ <- Ns.int.d1.getObjs.collect { case List(o1, o2) =>
-            o1.int ==> 2
-            o2.int ==> 1
-          }
-        } yield ()
-      }
-    }
   }
 }

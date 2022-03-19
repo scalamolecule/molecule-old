@@ -81,7 +81,9 @@ object MetaNested extends AsyncTestSuite {
       for {
         _ <- m(Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3))
           .Tx(Ref2.str2_("b").int2_(5).Ref3.str3_("c") + Ns.int_(6).bool_(true))) insert List(
-          ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil))),
+          ("A", List(
+            (1, 2, "a", List(3, 4)),
+            (11, 22, "aa", Nil))),
           ("B", Nil)
         )
 

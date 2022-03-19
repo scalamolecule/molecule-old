@@ -62,7 +62,7 @@ private[molecule] trait Dsl2Model extends TreeOps
   import c.universe._
 
   //  private lazy val xy = InspectMacro("Dsl2Model", 540, 550, mkError = true)
-  private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
+  //  private lazy val xx = InspectMacro("Dsl2Model", 901, 900)
 
   protected val isJsPlatform: Boolean = Check(getClass.getClassLoader.loadClass("scala.scalajs.js.Any")).isSuccess
 
@@ -124,7 +124,6 @@ private[molecule] trait Dsl2Model extends TreeOps
     var obj     : Obj = Obj("", "", nested = false, Nil)
     var objLevel: Int = 0
 
-    var tx        : String       = ""
     var nestedRefs: List[String] = List.empty[String]
 
     var hasVariables: Boolean = false
@@ -135,8 +134,9 @@ private[molecule] trait Dsl2Model extends TreeOps
     var first      : Boolean = true
     var genericType: String  = "datom"
 
-    var sortMarker : String          = ""
-    var sortIndexes: List[List[Int]] = List(List.empty[Int])
+    var sortMarker   : String          = ""
+    var sortIndexes  : List[List[Int]] = List(List.empty[Int])
+    var sortIndexesTx: List[Int]       = List.empty[Int]
 
     def getType(t: richTree): Tree = {
       val typeName = TypeName(t.tpeS)
@@ -346,6 +346,11 @@ private[molecule] trait Dsl2Model extends TreeOps
               //xx(101, prev, attr, sortIndexes, typess, sortIndex, sortIndexes.head)
               if (sortIndexes.head.contains(sortIndex)) {
                 abort(s"Please use unique sorting markers. Can't use `$attr` with order $sortIndex twice.")
+              }
+              if (txMetaDataStarted) {
+                sortMarker = at
+                sortIndexesTx = sortIndex :: sortIndexesTx
+                resolve(tree = q"$prev")
               } else {
                 sortMarker = at
                 sortIndexes = (sortIndex :: sortIndexes.head) +: sortIndexes.tail
@@ -435,7 +440,6 @@ private[molecule] trait Dsl2Model extends TreeOps
       // Start new level
       typess = List.empty[Tree] :: typess
       castss = List.empty[Int => Tree] :: castss
-      sortIndexes = List.empty[Int] :: sortIndexes
 
       if (txMetaDataStarted)
         txMetas = if (txMetas == 0) 2 else txMetas + 1
@@ -1012,12 +1016,8 @@ private[molecule] trait Dsl2Model extends TreeOps
     def resolveTypedApply(tree: Tree, p: richTree): Seq[Element] = tree match {
       case q"$prev.Tx.apply[..$_]($txMolecule)" =>
         txMetaDataStarted = true
-
-        // tx prefix for json field names. Available for tx molecule resolve. But needs to be blanked for appending attributes of the main molecule.
-        tx = "tx."
         val txMetaProps = resolve(q"$txMolecule")
         val txMetaData  = TxMetaData(txMetaProps)
-        tx = ""
 
         val err = "Unexpectedly couldn't find ns in sub composite:\n  " + txMetaProps.mkString("\n  ")
         val ns  = txMetaProps.collectFirst {
@@ -1045,7 +1045,7 @@ private[molecule] trait Dsl2Model extends TreeOps
         // Start new level
         typess = List.empty[Tree] :: typess
         castss = List.empty[Int => Tree] :: castss
-        sortIndexes = List.empty[Int] :: sortIndexes
+        //        sortIndexes = List.empty[Int] :: sortIndexes
 
         if (txMetas == 0)
           txMetas = 1
@@ -1260,8 +1260,8 @@ private[molecule] trait Dsl2Model extends TreeOps
     }
 
     def nested1(prev: Tree, p: richTree, manyRef: TermName, nestedTree: Tree) = {
-      val refNext  = q"$prev.$manyRef".refNext
-      val parentNs = prev match {
+      val refNext           = q"$prev.$manyRef".refNext
+      val parentNs          = prev match {
         case q"$_.apply($_)" if p.isMapAttrK            => new nsp(c.typecheck(prev).tpe.typeSymbol.owner)
         case q"$pre.apply($_)" if p.isAttr              => richTree(q"$pre").nsFull
         case q"$pre.apply($_)"                          => richTree(q"$pre").name.capitalize
@@ -1519,7 +1519,7 @@ private[molecule] trait Dsl2Model extends TreeOps
                   )
               }
             }
-            //xx(85, aggrType)
+          //xx(85, aggrType)
         }
         standard = true
         aggrType = ""
@@ -1907,7 +1907,6 @@ private[molecule] trait Dsl2Model extends TreeOps
     }
 
     // Set outer objects ref and nested status
-
     @tailrec
     def streamline(element: Element): Obj = element match {
       case Atom(nsFull, _, _, _, _, _, _, _, _) => obj.copy(ref = nsFull, nested = false)
@@ -1920,6 +1919,31 @@ private[molecule] trait Dsl2Model extends TreeOps
     }
     val obj1 = streamline(elements.head)
 
+    val doSort: Boolean = if (sortIndexes.flatten.nonEmpty || sortIndexesTx.nonEmpty) {
+      // Ensure that top level and tx meta attributes are sorted correctly
+      val redundantTxMetaSortOrders = sortIndexes.head.intersect(sortIndexesTx)
+      if (redundantTxMetaSortOrders.nonEmpty) {
+        abort(s"Tx meta attributes are sorted on the same level as the top level attributes " +
+          s"and redundant sort order indexes are therefore not allowed. Found redundant indexes: " +
+          redundantTxMetaSortOrders.mkString(", "))
+      }
+      val allSortIndexes = sortIndexes.head ++ sortIndexesTx :: sortIndexes.tail
+      allSortIndexes.map(_.sorted).zipWithIndex.foreach {
+        case (List(1), _)             => // ok
+        case (List(1, 2), _)          => // ok
+        case (List(1, 2, 3), _)       => // ok
+        case (List(1, 2, 3, 4), _)    => // ok
+        case (List(1, 2, 3, 4, 5), _) => // ok
+        case (_, i)                   => abort(
+          s"Sort index 1 should be present and additional indexes continuously increase (in any order). " +
+            s"Found: " + allSortIndexes(i).mkString(", ")
+        )
+      }
+      true
+    } else false
+
+    val checkedModel: Model = Model(VerifyRawModel(elements, allowTempGenerics = false))
+
     //    if (post) {
     //      // no nested, so transfer
     //      typess = List(postTypes)
@@ -1928,23 +1952,24 @@ private[molecule] trait Dsl2Model extends TreeOps
     //      postCasts = Nil
     //      postJsons = Nil
     //    }
+
     //    //xx(801, elements)
     //    //xx(801, elements, types, casts)
     //xx(801, elements, typess, castss, nestedRefs, hasVariables, txMetas, post)
     //xx(802, obj1, typess, castss, txMetas)
+    //xx(802, obj1, sortIndexes, sortIndexesTx)
 
 
-    // Return checked model
     (
       genericImports,
-      Model(VerifyRawModel(elements, allowTempGenerics = false)),
+      checkedModel,
       typess, castss,
       obj1,
       nestedRefs, hasVariables, txMetas,
       postJsons,
       isOptNested,
       optNestedRefIndexes, optNestedTacitIndexes,
-      sortIndexes.flatten.nonEmpty
+      doSort
     )
   }
 }

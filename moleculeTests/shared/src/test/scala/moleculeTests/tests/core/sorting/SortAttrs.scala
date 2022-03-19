@@ -293,6 +293,32 @@ object SortAttrs extends AsyncTestSuite {
       )
     }
 
+    "Can't repeat same sorting index" - core { implicit conn =>
+      expectCompileError("m(Ns.str.a1.int.a1)",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Please use unique sorting markers. Can't use `a1` with order 1 twice."
+      )
+      expectCompileError("m(Ns.str.d1.int.d2.long.d2)",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Please use unique sorting markers. Can't use `d2` with order 2 twice."
+      )
+    }
+
+    "Sort indexes should begin with 1 and be continuosly increasing" - core { implicit conn =>
+      expectCompileError("m(Ns.str.a1.int.a3)",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Sort index 1 should be present and additional indexes continuously increase (in any order). Found: 1, 3"
+      )
+      expectCompileError("m(Ns.str.d3.int.d1)",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Sort index 1 should be present and additional indexes continuously increase (in any order). Found: 3, 1"
+      )
+      expectCompileError("m(Ns.str.d2.int.a3)",
+        "molecule.core.transform.exception.Dsl2ModelException: " +
+          "Sort index 1 should be present and additional indexes continuously increase (in any order). Found: 2, 3"
+      )
+    }
+
 
     "2 sort markers" - core { implicit conn =>
       for {

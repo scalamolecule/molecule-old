@@ -10,8 +10,13 @@ private[molecule] trait MakeBase extends Dsl2Model {
 
   import c.universe._
 
+  private lazy val xy = InspectMacro("MakeBase", 1, 10, mkError = true)
+  private lazy val xx = InspectMacro("MakeBase", 1, 10)
+
   def getImports(genericImports: List[Tree]) =
     q"""
+      import java.lang.{Integer => jInteger, Long => jLong, Double => jDouble, Boolean => jBoolean}
+      import java.math.{BigDecimal => jBigDec, BigInteger => jBigInt}
       import java.net.URI
       import java.util.{Collections, Date, UUID, List => jList, Map => jMap, Iterator => jIterator, Set => jSet}
       import molecule.core.ast.elements._
@@ -97,15 +102,14 @@ private[molecule] trait MakeBase extends Dsl2Model {
     fn: String,
     optLimit: Option[Int],
     sort: String,
-    reversed: Boolean = false
   ): (Int, Tree) = {
     if (attr.last == '$') {
 
       // Optional --------------------------------------------------------------------------------
 
       val (order, pair) = sort match {
-        case r"a([1-5])$pos" => (pos.toInt, if (reversed) q"(y.get($i), x.get($i))" else q"(x.get($i), y.get($i))")
-        case r"d([1-5])$pos" => (pos.toInt, if (reversed) q"(x.get($i), y.get($i))" else q"(y.get($i), x.get($i))")
+        case r"a([1-5])$pos" => (pos.toInt, q"(x.get($i), y.get($i))")
+        case r"d([1-5])$pos" => (pos.toInt, q"(y.get($i), x.get($i))")
       }
       val (x, y)        = tpe match {
         case "String" =>
@@ -241,14 +245,14 @@ private[molecule] trait MakeBase extends Dsl2Model {
       }
 
       sort match {
-        case r"a([1-5])$pos" => (pos.toInt, if (reversed) q"$y.compareTo($x)" else q"$x.compareTo($y)")
-        case r"d([1-5])$pos" => (pos.toInt, if (reversed) q"$x.compareTo($y)" else q"$y.compareTo($x)")
+        case r"a([1-5])$pos" => (pos.toInt, q"$x.compareTo($y)")
+        case r"d([1-5])$pos" => (pos.toInt, q"$y.compareTo($x)")
       }
     }
   }
 
   // For flat and composite molecules
-  def compare(model: Model, doSort: Boolean): Tree = {
+  def compareFlat(model: Model, doSort: Boolean): Tree = {
     if (!doSort) {
       return q""
     }
@@ -259,11 +263,11 @@ private[molecule] trait MakeBase extends Dsl2Model {
     var i = 0
     def addComparator(sort: String, value: Value, attr: String, tpeStr: String, isEnum: Boolean): Unit = {
       if (sort.nonEmpty) {
-          val (sortPos, comparator) = value match {
-            case Fn(fn, limit) => compareAttr(i, attr, tpeStr, isEnum, fn, limit, sort)
-            case _             => compareAttr(i, attr, tpeStr, isEnum, "", None, sort)
-          }
-          com.+=((sortPos, comparator))
+        val (sortPos, comparator) = value match {
+          case Fn(fn, limit) => compareAttr(i, attr, tpeStr, isEnum, fn, limit, sort)
+          case _             => compareAttr(i, attr, tpeStr, isEnum, "", None, sort)
+        }
+        com.+=((sortPos, comparator))
 
         i += 1
       } else if (attr.last != '_') {
@@ -279,8 +283,8 @@ private[molecule] trait MakeBase extends Dsl2Model {
         case Generic(_, attr, tpe, value, sort) =>
           addComparator(sort, value, attr, tpe, isEnum = false)
 
-        case nested: Nested =>
-          abort("Unexpectedly found nested elements in model for `compare`.")
+        case Nested(_, _) =>
+          abort("Unexpectedly found nested elements in model for `compareFlat`.")
 
         case Composite(elements) =>
           addOrderings(elements)
@@ -293,7 +297,7 @@ private[molecule] trait MakeBase extends Dsl2Model {
     // Resolve comparators
     addOrderings(model.elements)
     val comparatorTrees = com.result().sortBy(_._1).map(_._2)
-    val comparators = comparatorTrees.size match {
+    val comparators     = comparatorTrees.size match {
       case 1 => q"${comparatorTrees.head}"
       case _ =>
         val moreComparisons = comparatorTrees.tail.map(comparison => q"if (result == 0) result = $comparison")
@@ -320,25 +324,36 @@ private[molecule] trait MakeBase extends Dsl2Model {
       return (q"", Nil)
     }
 
-    // Accumulate sort position / comparator
-    val com = Seq.newBuilder[(Int, Tree)]
+    // Accumulate sort position / comparator on top level
+    var top = Seq.empty[(Int, Tree)]
+    var topIndex = 0
+    var firstTxMetaData = false
 
     // Accumulate current sort positions on this level
-    val cur = Seq.newBuilder[(Int, Tree, Tree, Tree)]
+    var curLevel = Seq.empty[(Int, Tree, Tree, Tree, Int)]
 
     // Accumulate sort positions for each level
-    var acc = Seq.empty[Seq[(Int, Tree, Tree, Tree)]]
+    var nested = Seq.empty[Seq[(Int, Tree, Tree, Tree, Int)]]
 
     var i = 0
-    def addComparator(sort: String, value: Value, attr: String, tpeStr: String, isEnum: Boolean, level: Int): Unit = {
+    def addComparator(
+      sort: String,
+      value: Value,
+      attr: String,
+      tpeStr: String,
+      isEnum: Boolean,
+      level: Int,
+      attrOnLevel: Int
+    ): Unit = {
       val opt = attr.last == '$'
       if (sort.nonEmpty) {
         if (level == 0) {
+          topIndex += 1
           val (sortPos, comparator) = value match {
             case Fn(fn, limit) => compareAttr(i, attr, tpeStr, isEnum, fn, limit, sort)
             case _             => compareAttr(i, attr, tpeStr, isEnum, "", None, sort)
           }
-          com.+=((sortPos, comparator))
+          top = top :+ (sortPos, comparator)
 
         } else {
           val asc     = sort.head == 'a'
@@ -352,66 +367,108 @@ private[molecule] trait MakeBase extends Dsl2Model {
           }
           if (opt) {
             val ordering = if (asc) q"Ordering.Option[$tpe]" else q"Ordering.Option[$tpe].reverse"
-            cur.+=((sortPos, q"t.asInstanceOf[Option[$tpe]]", q"p.productElement($i).asInstanceOf[Option[$tpe]]", ordering))
+            curLevel = curLevel :+ (
+              sortPos,
+              q"t.asInstanceOf[Option[$tpe]]",
+              q"p.productElement($i).asInstanceOf[Option[$tpe]]",
+              ordering,
+              attrOnLevel
+            )
           } else {
             val ordering = if (asc) q"Ordering[$tpe]" else q"Ordering[$tpe].reverse"
-            cur.+=((sortPos, q"t.asInstanceOf[$tpe]", q"p.productElement($i).asInstanceOf[$tpe]", ordering))
+            curLevel = curLevel :+ (
+              sortPos,
+              q"t.asInstanceOf[$tpe]",
+              q"p.productElement($i).asInstanceOf[$tpe]",
+              ordering,
+              attrOnLevel
+            )
           }
         }
         i += 1
       } else if (attr.last != '_') {
+        if (level == 0) {
+          topIndex += 1
+        }
         i += 1
       }
     }
 
     def addOrderings(elements: Seq[Element], level: Int): Unit = {
+      val attrOnLevel = elements.size
       elements.collect {
         case Atom(_, attr, tpe, _, value, enumPrefix, _, _, sort) =>
-          addComparator(sort, value, attr, tpe, enumPrefix.nonEmpty, level)
+          addComparator(sort, value, attr, tpe, enumPrefix.nonEmpty, level, attrOnLevel)
 
         case Generic(_, attr, tpe, value, sort) =>
-          addComparator(sort, value, attr, tpe, isEnum = false, level)
+          addComparator(sort, value, attr, tpe, isEnum = false, level, attrOnLevel)
 
-        case nested: Nested =>
-          acc = acc :+ cur.result().sortBy(_._1)
+        case Nested(_, elements) =>
+          nested = nested :+ curLevel
           // New sorting order on each nested level
-          cur.clear()
+          curLevel = Seq.empty[(Int, Tree, Tree, Tree, Int)]
           i = 0
-          addOrderings(nested.elements, level + 1)
+          addOrderings(elements, level + 1)
+
+        case TxMetaData(txElements) =>
+          // Continue on top level
+          i = topIndex + 1 // nested data
+          firstTxMetaData = true
+          addOrderings(txElements, 0)
+
+        case Composite(elements) =>
+          if (firstTxMetaData) {
+            i = topIndex + 1 // nested data
+            firstTxMetaData = false
+          }
+          // Composites only allowed in tx meta data, so we can presume that we are on the top level
+          addOrderings(elements, 0)
       }
     }
 
     // Resolve comparators
     addOrderings(model.elements, 0)
-    val orderingTrees   = acc :+ cur.result().sortBy(_._1) // add last level orderings, sorted by sorting position
-    val comparatorTrees = com.result().sortBy(_._1).map(_._2)
-    val comparators     = comparatorTrees.size match {
-      case 1 => q"${comparatorTrees.head}"
-      case _ =>
-        val moreComparators = comparatorTrees.tail.map(comparator => q"if (result == 0) result = $comparator")
-        q"""
+
+    val topLevelComparisons = if (top.nonEmpty) {
+      val comparatorTrees = top.sortBy(_._1).map(_._2)
+      lazy val comparators = comparatorTrees.size match {
+        case 1 => q"${comparatorTrees.head}"
+        case _ =>
+          val moreComparators = comparatorTrees.tail.map(comparator => q"if (result == 0) result = $comparator")
+          q"""
           var result = ${comparatorTrees.head}
           ..$moreComparators
           result
         """
-    }
-    val compareImpl     =
+      }
       q"""
         final override def sortRows: Boolean = true
         final override def compare(x: jList[AnyRef], y: jList[AnyRef]): Int = {
-          import java.lang.{Integer => jInteger, Long => jLong, Double => jDouble, Boolean => jBoolean}
-          import java.math.{BigDecimal => jBigDec, BigInteger => jBigInt}
           ..$comparators
         }
       """
+    } else {
+      q"""
+        final override def sortRows: Boolean = true
+        final override def compare(x: jList[AnyRef], y: jList[AnyRef]): Int = 0
+      """
+    }
 
-    val orderings = orderingTrees.map { levelOrderings =>
+    val orderings = (nested :+ curLevel).map(_.sortBy(_._1)).map { levelOrderings =>
       levelOrderings.size match {
-        case 0 => q""
-        case 1 => q"buf = buf.sortBy(t => ${levelOrderings.head._2})(${levelOrderings.head._4})"
-        case n =>
-          val (_, productCasts, orders) = levelOrderings.map(t => (t._2, t._3, t._4)).unzip3
-          val tupleN                    = n match {
+        case 0                                => q""
+        case 1 if levelOrderings.head._5 == 1 =>
+          q"buf = buf.sortBy(t => ${levelOrderings.head._2})(${levelOrderings.head._4})"
+        case 1                                =>
+          q"""
+            buf = buf.sortBy { t =>
+              val p = t.asInstanceOf[Product]
+              ${levelOrderings.head._3}
+            }(${levelOrderings.head._4})
+          """
+        case n                                =>
+          val (productCasts, orders) = levelOrderings.map(t => (t._3, t._4)).unzip
+          val tupleN                 = n match {
             case 2 => TermName("Tuple2")
             case 3 => TermName("Tuple3")
             case 4 => TermName("Tuple4")
@@ -425,7 +482,7 @@ private[molecule] trait MakeBase extends Dsl2Model {
           """
       }
     }
-    (compareImpl, orderings)
+    (topLevelComparisons, orderings)
   }
 
 
@@ -435,41 +492,32 @@ private[molecule] trait MakeBase extends Dsl2Model {
       return q""
     }
 
-    var i     = levels // skip nested indexes (1 for each level)
-    var level = 0
+    var level         = 0
+    var hasTxMetaData = false
 
-    // Collect comparators on each level
-    val cur1 = Seq.newBuilder[(Int, Tree)] // Comparators with tuples, reversed
-    val cur2 = Seq.newBuilder[(Int, Tree)] // Comparators with Json, straight forward
+    // Collect sort indexes and comparators on current level
+    var curLevel = Seq.empty[(Int, Tree)]
 
-    // Accumulate all comparator trees
-    val acc1 = Seq.newBuilder[Tree]
-    val acc2 = Seq.newBuilder[Tree]
+    // Accumulate comparator trees for all levels
+    var accLevels = Seq.empty[Seq[(Int, Tree)]]
 
+    var i = levels // skip nested indexes in raw output (1 for each level)
     def addComparator(sort: String, value: Value, attr: String, tpe: String, isEnum: Boolean): Unit = {
       if (sort.nonEmpty) {
-        val (comparator1, comparator2) = value match {
-          case Fn(fn, limit) => (
-            compareAttr(i, attr, tpe, isEnum, fn, limit, sort, true),
-            compareAttr(i, attr, tpe, isEnum, fn, limit, sort)
-          )
-          case _             => (
-            compareAttr(i, attr, tpe, isEnum, "", None, sort, true),
-            compareAttr(i, attr, tpe, isEnum, "", None, sort)
-          )
+        val comparator = value match {
+          case Fn(fn, limit) => compareAttr(i, attr, tpe, isEnum, fn, limit, sort)
+          case _             => compareAttr(i, attr, tpe, isEnum, "", None, sort)
         }
         i += 1
-        cur1 += comparator1
-        cur2 += comparator2
+        curLevel = curLevel :+ comparator
       } else if (attr.last != '_') {
         i += 1
       }
     }
 
-    def sortNestedIndex(level: Int, reversed: Boolean): Tree = if (reversed) {
-      q"y.get($level).asInstanceOf[jLong].compareTo(x.get($level).asInstanceOf[jLong])"
-    } else {
-      q"x.get($level).asInstanceOf[jLong].compareTo(y.get($level).asInstanceOf[jLong])"
+    def sortNestedIndex: (Int, Tree) = {
+      // Level sorting always last
+      (6, q"x.get($level).asInstanceOf[jLong].compareTo(y.get($level).asInstanceOf[jLong])")
     }
 
     def resolveComparisons(elements: Seq[Element]): Unit = elements.collect {
@@ -479,23 +527,37 @@ private[molecule] trait MakeBase extends Dsl2Model {
       case Generic(_, attr, tpe, value, sort) =>
         addComparator(sort, value, attr, tpe, isEnum = false)
 
-      case nested: Nested =>
-        acc1 ++= cur1.result().sortBy(_._1).map(_._2) :+ sortNestedIndex(level, true)
-        acc2 ++= cur2.result().sortBy(_._1).map(_._2) :+ sortNestedIndex(level, false)
-        cur1.clear()
-        cur2.clear()
+      case Nested(_, elements) =>
+        accLevels = accLevels :+ (curLevel :+ sortNestedIndex)
+        curLevel = Seq.empty[(Int, Tree)]
         level += 1
-        resolveComparisons(nested.elements)
+        resolveComparisons(elements)
 
-      //      case _ =>
+      case TxMetaData(txElements) =>
+        accLevels = accLevels :+ (curLevel :+ sortNestedIndex)
+        hasTxMetaData = true
+        // Continue on top level
+        curLevel = accLevels.head
+        resolveComparisons(txElements)
+
+      case Composite(elements) =>
+        // Composites only allowed in tx meta data, so we can presume that we are
+        // on the top level and therefore continue accumulating curLevel.
+        resolveComparisons(elements)
     }
 
-    lazy val (comparators1, comparators2) = {
+    lazy val comparators: Seq[Tree] = {
       resolveComparisons(model.elements)
-      (
-        acc1.result() ++ cur1.result().sortBy(_._1).map(_._2) :+ sortNestedIndex(level, true),
-        acc2.result() ++ cur2.result().sortBy(_._1).map(_._2) :+ sortNestedIndex(level, false)
-      )
+      accLevels = if (hasTxMetaData) {
+        // Add tx meta sortings to top level
+        curLevel +: accLevels.tail
+      } else {
+        // Add last level
+        val lastNestedLevel = curLevel :+ sortNestedIndex
+        accLevels :+ lastNestedLevel
+      }
+      // Sort by sort position on each level and return flattened comparator trees
+      accLevels.flatMap(_.sortBy(_._1).map(_._2))
     }
 
     def getOrdering(comparators: Seq[Tree]): Tree = comparators.size match {
@@ -508,20 +570,15 @@ private[molecule] trait MakeBase extends Dsl2Model {
           result
         """
     }
-    lazy val ordering1 = getOrdering(comparators1)
-    lazy val ordering2 = getOrdering(comparators2)
+    lazy val ordering = getOrdering(comparators)
 
     // Override `compare` in NestedBase
     q"""
       final override def sortRows: Boolean = true
-      final override def compare(x: jList[AnyRef], y: jList[AnyRef]): Int = {
-        import java.lang.{Integer => jInteger, Long => jLong, Double => jDouble, Boolean => jBoolean}
-        import java.math.{BigDecimal => jBigDec, BigInteger => jBigInt}
-        if (isNestedTuples) {
-          ..$ordering1
-        } else {
-          ..$ordering2
-        }
+      final override def compare(x0: jList[AnyRef], y0: jList[AnyRef]): Int = {
+        val x = if (isNestedTuples) y0 else x0
+        val y = if (isNestedTuples) x0 else y0
+        ..$ordering
       }
     """
   }
