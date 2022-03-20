@@ -666,8 +666,7 @@ object SortTxMetaData extends AsyncTestSuite {
         ))
 
         // + previous
-        // Notice that tx meta sortings are considered on the top level
-        // Ns.str is now asc
+        // Top level Ns.str is now asc and sorted after Tx.Ref2.int2 that is also considered on top level.
         _ <- Ns.str.a2.Refs1.*?(Ref1.int1.d3.Ref2.enum2.d2.str2.d1.Refs3.*?(Ref3.int3.d1))
           .Tx(Ref2.str2.int2.d1.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
           ("C", List(
@@ -746,8 +745,8 @@ object SortTxMetaData extends AsyncTestSuite {
         ))
 
         // + previous
-        _ <- Ns.str.a2.Refs1.*?(Ref1.int1.d3.Ref2.enum2.d2.str2.d1.Refs3.*?(Ref3.int3.d1))
-          .Tx(Ref2.str2.int2.d1.Ref3.str3.d1 + Ns.int.bool).get.map(_ ==> List(
+        _ <- Ns.str.a3.Refs1.*?(Ref1.int1.d3.Ref2.enum2.d2.str2.d1.Refs3.*?(Ref3.int3.d1))
+          .Tx(Ref2.str2.int2.d2.Ref3.str3.d1 + Ns.int.bool).get.map(_ ==> List(
           ("C", List(
             (4, "enum20", "d", List(41, 40))),
             ("y1", 333, "y2"), (444, false)),
@@ -759,8 +758,8 @@ object SortTxMetaData extends AsyncTestSuite {
           ("B", Nil,
             ("x1", 111, "x2"), (222, true)),
         ))
-        _ <- Ns.str.a2.Refs1.*(Ref1.int1.d3.Ref2.enum2.d2.str2.d1.Refs3.*(Ref3.int3.d1))
-          .Tx(Ref2.str2.int2.d1.Ref3.str3.d1 + Ns.int.bool).get.map(_ ==> List(
+        _ <- Ns.str.a3.Refs1.*(Ref1.int1.d3.Ref2.enum2.d2.str2.d1.Refs3.*(Ref3.int3.d1))
+          .Tx(Ref2.str2.int2.d2.Ref3.str3.d1 + Ns.int.bool).get.map(_ ==> List(
           ("C", List(
             (4, "enum20", "d", List(41, 40))),
             ("y1", 333, "y2"), (444, false)),
@@ -822,8 +821,8 @@ object SortTxMetaData extends AsyncTestSuite {
         ))
 
         // + previous
-        _ <- Ns.str.a2.Refs1.*?(Ref1.int1.d3.Ref2.enum2.d2.str2.d1.Refs3.*?(Ref3.int3.d1))
-          .Tx(Ref2.str2.int2.d1.Ref3.str3.d1 + Ns.int.d1.bool).get.map(_ ==> List(
+        _ <- Ns.str.a4.Refs1.*?(Ref1.int1.d3.Ref2.enum2.d2.str2.d1.Refs3.*?(Ref3.int3.d1))
+          .Tx(Ref2.str2.int2.d3.Ref3.str3.d2 + Ns.int.d1.bool).get.map(_ ==> List(
           ("C", List(
             (4, "enum20", "d", List(41, 40))),
             ("y1", 333, "y2"), (444, false)),
@@ -835,8 +834,8 @@ object SortTxMetaData extends AsyncTestSuite {
           ("B", Nil,
             ("x1", 111, "x2"), (222, true)),
         ))
-        _ <- Ns.str.a2.Refs1.*(Ref1.int1.d3.Ref2.enum2.d2.str2.d1.Refs3.*(Ref3.int3.d1))
-          .Tx(Ref2.str2.int2.d1.Ref3.str3.d1 + Ns.int.bool.a1).get.map(_ ==> List(
+        _ <- Ns.str.a4.Refs1.*(Ref1.int1.d3.Ref2.enum2.d2.str2.d1.Refs3.*(Ref3.int3.d1))
+          .Tx(Ref2.str2.int2.d3.Ref3.str3.d2 + Ns.int.bool.a1).get.map(_ ==> List(
           ("C", List(
             (4, "enum20", "d", List(41, 40))),
             ("y1", 333, "y2"), (444, false)),

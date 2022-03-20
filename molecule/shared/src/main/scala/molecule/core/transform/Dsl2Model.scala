@@ -10,9 +10,10 @@ import molecule.core.generic.Log._
 import molecule.core.generic.Schema._
 import molecule.core.generic.VAET._
 import molecule.core.generic._
+import molecule.core.macros.{MakeSortingJs, MakeSortingJvm}
 import molecule.core.macros.rowAttr._
 import molecule.core.macros.rowConverters.{Row2jsonFlat, Row2jsonNested, Row2jsonOptNested, Row2obj, Row2tplComposite, Row2tplFlat, Row2tplNested, Row2tplOptNested}
-import molecule.core.marshalling.nodes._
+import molecule.core.marshalling.ast.nodes._
 import molecule.core.marshalling.unpackAttr.PackedValue2json
 import molecule.core.marshalling.unpackers._
 import molecule.core.ops.{TreeOps, VerifyRawModel}
@@ -55,7 +56,10 @@ private[molecule] trait Dsl2Model extends TreeOps
 
   with JsonTypes
   with JsonAggr
-  with JsonOptNested {
+  with JsonOptNested
+
+  with MakeSortingJvm
+  with MakeSortingJs {
 
   val c: blackbox.Context
 
@@ -1929,6 +1933,7 @@ private[molecule] trait Dsl2Model extends TreeOps
       }
       val allSortIndexes = sortIndexes.head ++ sortIndexesTx :: sortIndexes.tail
       allSortIndexes.map(_.sorted).zipWithIndex.foreach {
+        case (Nil, _)                 => // ok
         case (List(1), _)             => // ok
         case (List(1, 2), _)          => // ok
         case (List(1, 2, 3), _)       => // ok

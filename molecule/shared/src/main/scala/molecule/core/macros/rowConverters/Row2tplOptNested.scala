@@ -1,7 +1,7 @@
 package molecule.core.macros.rowConverters
 
 import molecule.core.macros.rowAttr.RowValue2castOptNested
-import molecule.core.marshalling.nodes._
+import molecule.core.marshalling.ast.nodes._
 import scala.reflect.macros.blackbox
 
 private[molecule] trait Row2tplOptNested extends RowValue2castOptNested {

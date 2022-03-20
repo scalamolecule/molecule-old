@@ -16,7 +16,7 @@ class MakeComposite_In(val c: blackbox.Context) extends MakeBase {
   private lazy val xx = InspectMacro("MakeComposite_In", 90)
 
   private[this] final def generateComposite_In_Molecule(dsl: Tree, ObjType: Type, InTypes: Type*)(OutTypes: Type*): Tree = {
-    val (genericImports, model, _, castss, obj, _, hasVariables, txMetas, _, _, _, _, _) = getModel(dsl)
+    val (genericImports, model, _, castss, obj, _, hasVariables, txMetas, _, _, _, _, doSort) = getModel(dsl)
 
     val imports          = getImports(genericImports)
     val InputMoleculeTpe = inputMolecule_i_o(InTypes.size, OutTypes.size)
@@ -89,6 +89,7 @@ class MakeComposite_In(val c: blackbox.Context) extends MakeBase {
           final override def packed2obj(vs: Iterator[String]): $ObjType = ${objTree(obj, jsTpl)}
           final override def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ${packed2jsonFlat(obj, txMetas)}
           final override def obj: nodes.Obj = $obj
+          ..${sortCoordinatesFlat(model, doSort)}
         }
       """
     } else {
@@ -115,6 +116,7 @@ class MakeComposite_In(val c: blackbox.Context) extends MakeBase {
           final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $casts
           final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
           final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
+          ..${compareFlat(model, doSort)}
         }
       """
     }

@@ -172,11 +172,11 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
       } yield render(rows)
     }
 
-    //    def jsRows(conn: Conn): Future[jCollection[_ <: jList[_]]] = {
     def jsRows(conn: Conn): Future[jCollection[jList[AnyRef]]] = {
       // Converting tuples to java list (for now - not critical for inspection of 500 rows)
       conn.jsQueryTpl(
-        _model, _query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
+        _model, _query, _datalog, -1,
+        obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl, sortCoordinates
       ).map { listOfTuples =>
         val x = listOfTuples.map {
           case tpl: Product => Collections.list(tpl.productIterator.asJavaEnumeration)
@@ -216,7 +216,6 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
       (0 to levels).toList.map(level => (1, false, false, false)) ++ outMatrix
     }
 
-    //    def resolve(jColl: jCollection[_ <: jList[_]]): Seq[ListBuffer[Any]] = {
     def resolve(jColl: jCollection[jList[AnyRef]]): Seq[ListBuffer[Any]] = {
       def cardOneOpt(v: Any, isDate: Boolean): Option[String] = {
         if (v == null) {

@@ -3,7 +3,7 @@ package molecule.datomic.peer.facade
 import java.util.UUID.randomUUID
 import datomic.Peer
 import molecule.core.data.SchemaTransaction
-import molecule.core.marshalling.{ConnProxy, DatomicPeerProxy}
+import molecule.core.marshalling.ast.{ConnProxy, DatomicPeerProxy}
 import molecule.core.util.JavaConversions
 import scala.concurrent.{ExecutionContext, Future}
 

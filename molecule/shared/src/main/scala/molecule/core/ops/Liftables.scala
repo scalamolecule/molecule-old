@@ -4,7 +4,7 @@ import java.net.URI
 import java.util.{Date, UUID}
 import molecule.core.ast.elements._
 import molecule.core.macros.MacroHelpers
-import molecule.core.marshalling.nodes._
+import molecule.core.marshalling.ast.nodes._
 import molecule.core.ops.exception.LiftablesException
 import molecule.datomic.base.ast.metaSchema._
 import molecule.datomic.base.ast.query._

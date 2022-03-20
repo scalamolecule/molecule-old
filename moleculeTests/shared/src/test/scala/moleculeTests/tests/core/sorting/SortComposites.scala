@@ -1,7 +1,7 @@
 package moleculeTests.tests.core.sorting
 
 import molecule.core.util.Executor._
-import molecule.datomic.api.out4._
+import molecule.datomic.api.in1_out4._
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
@@ -11,6 +11,15 @@ object SortComposites extends AsyncTestSuite {
 
 
   lazy val tests = Tests {
+
+    "Input" - core { implicit conn =>
+      for {
+        _ <- Ns.int + Ref1.int1 insert List((1, 10), (2, 20))
+        _ <- m(Ns.int(?).a1 + Ref1.int1)(List(1, 2)).get.map(_ ==> List((1, 10), (2, 20)))
+        _ <- m(Ns.int(?).d1 + Ref1.int1)(List(1, 2)).get.map(_ ==> List((2, 20), (1, 10)))
+      } yield ()
+    }
+
 
     "1 + 1" - core { implicit conn =>
       for {

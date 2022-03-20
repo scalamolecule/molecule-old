@@ -1,7 +1,7 @@
 package molecule.core.macros.rowConverters
 
 import molecule.core.macros.rowAttr.{JsonBase, RowValue2jsonOptNested}
-import molecule.core.marshalling.nodes._
+import molecule.core.marshalling.ast.nodes._
 import scala.reflect.macros.blackbox
 
 private[molecule] trait Row2jsonOptNested extends RowValue2jsonOptNested with JsonBase {

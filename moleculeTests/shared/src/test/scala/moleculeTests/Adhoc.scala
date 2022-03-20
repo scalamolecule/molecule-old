@@ -1,28 +1,16 @@
 package moleculeTests
 
-import java.net.URI
-import java.util.{Date, UUID}
-import molecule.core.ast.elements._
-import molecule.core.exceptions.MoleculeException
-import molecule.core.ops.exception.VerifyModelException
+import molecule.core.util.Executor._
 import molecule.core.util.Helpers
-import molecule.core.util.testing.expectCompileError
-import molecule.datomic.api.in3_out18._
-import molecule.datomic.base.api.Datom
-import molecule.datomic.base.ast.transactionModel._
-import molecule.datomic.base.transform.Model2Query
-import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}
+import molecule.datomic.api.out8._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
-import scala.concurrent.Future
-import scala.util.{Failure, Success}
 
 
 object Adhoc extends AsyncTestSuite with Helpers {
 
 
   lazy val tests = Tests {
-    import molecule.core.util.Executor._
 
     "core" - core { implicit futConn =>
       import moleculeTests.dataModels.core.base.dsl.CoreTest._
@@ -31,8 +19,26 @@ object Adhoc extends AsyncTestSuite with Helpers {
 
 
 
+        _ <- Ns.int.str insert List(
+          (1, "b"),
+          (1, "a"),
+          (2, "c"),
+        )
+        _ <- Ns.int.d1.str.a2.get.map(_ ==> List(
+          (2, "c"),
+          (1, "a"),
+          (1, "b"),
+        ))
+        _ <- Ns.int.d1.str.d2.get.map(_ ==> List(
+          (2, "c"),
+          (1, "b"),
+          (1, "a"),
+        ))
+
+
+
+
       } yield ()
     }
-
   }
 }

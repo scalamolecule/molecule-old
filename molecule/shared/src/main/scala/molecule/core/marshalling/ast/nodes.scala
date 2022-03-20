@@ -1,4 +1,4 @@
-package molecule.core.marshalling
+package molecule.core.marshalling.ast
 
 import boopickle.Default._
 import scala.annotation.tailrec

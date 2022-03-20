@@ -3,7 +3,8 @@ package molecule.datomic.base.marshalling
 import java.io.StringReader
 import java.net.URI
 import java.util
-import java.util.{Collections, Date, UUID, List => jList}
+import java.util.{Collections, Comparator, Date, UUID, List => jList}
+import java.lang.{Boolean => jBoolean, Double => jDouble, Integer => jInteger, Long => jLong}
 import datomic.Peer.toT
 import datomic.Util._
 import datomic.{Util, Database => PeerDb, Datom => PeerDatom}
@@ -11,12 +12,14 @@ import datomicClient.ClojureBridge
 import datomicScala.client.api.{Datom => ClientDatom}
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling._
-import molecule.core.marshalling.nodes.Obj
+import molecule.core.marshalling.ast.{ConnProxy, DatomicDevLocalProxy, DatomicPeerProxy, DatomicPeerServerProxy, IndexArgs, SortCoordinate}
+import molecule.core.marshalling.ast.nodes.Obj
 import molecule.core.util.testing.TimerPrint
 import molecule.core.util.{DateHandling, Helpers, JavaConversions, Quoted}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.facade._
 import molecule.datomic.base.marshalling.packers.PackEntityGraph
+import molecule.datomic.base.marshalling.sorting.Sort
 import molecule.datomic.client.facade.{Conn_Client, DatomicDb_Client, Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.{Conn_Peer, DatomicDb_Peer, Datomic_Peer}
 import scala.collection.mutable
@@ -65,14 +68,15 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
     nestedLevels: Int,
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
-    tacitIndexes: List[List[Int]]
+    tacitIndexes: List[List[Int]],
+    sortCoordinates: List[List[SortCoordinate]]
   ): Future[String] = Future {
     try {
       val log = new log
       val t   = TimerPrint("DatomicRpc")
 
       //    println("------------------------------")
-      //    println("================================================================================")
+      //      println("================================================================================")
       //      println(datalogQuery)
       //      if (rules.nonEmpty) {
       //        println("Rules:")
@@ -95,9 +99,9 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
 
       for {
         conn <- getConn(connProxy)
-        allRows <- conn.rawQuery(datalogQuery, allInputs)
+        rawRows <- conn.rawQuery(datalogQuery, allInputs)
       } yield {
-        val rowCountAll = allRows.size
+        val rowCountAll = rawRows.size
         val maxRows     = if (maxRows0 == -1 || rowCountAll < maxRows0) rowCountAll else maxRows0
         val queryTime   = t.delta
         val space       = " " * (70 - datalogQuery.split('\n').last.length)
@@ -126,16 +130,18 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
         //      log("-------------------------------")
         //      log(tacitIndexes.mkString("\n"))
         //      log("-------------------------------")
-        allRows.forEach(row => log(row.toString))
+        rawRows.forEach(row => log(row.toString))
+        log("-------------------------------")
+        sortCoordinates.foreach(level => level.foreach(c => log(c.toString)))
         log.print()
 
         val packed = if (isOptNested) {
-          OptNested2packed(obj, allRows, maxRows, refIndexes, tacitIndexes).getPacked
+          OptNested2packed(obj, rawRows, maxRows, refIndexes, tacitIndexes).getPacked
         } else if (nestedLevels == 0) {
-          // Flat and composites
-          Flat2packed(obj, allRows, maxRows).getPacked
+          val rows = if (sortCoordinates.nonEmpty) Sort(rawRows, sortCoordinates).get else rawRows
+          Flat2packed(obj, rows, maxRows).getPacked
         } else {
-          Nested2packed(obj, allRows, nestedLevels).getPacked
+          Nested2packed(obj, Sort(rawRows, sortCoordinates).get, nestedLevels).getPacked
         }
 
         //        println("-------------------------------" + packed)

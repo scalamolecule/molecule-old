@@ -6,8 +6,9 @@ import boopickle.Default._
 import molecule.core.ast.elements._
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling._
+import molecule.core.marshalling.ast.{ConnProxy, IndexArgs, SortCoordinate, nodes}
 import molecule.core.marshalling.convert.Stmts2Edn
-import molecule.core.marshalling.nodes.Obj
+import molecule.core.marshalling.ast.nodes.Obj
 import molecule.core.util.{Helpers, Inspect}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
@@ -132,12 +133,13 @@ case class Conn_Js(
     nestedLevels: Int,
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
-    tacitIndexes: List[List[Int]]
+    tacitIndexes: List[List[Int]],
+    sortCoordinates: List[List[SortCoordinate]]
   ): Future[String] = {
     model.elements.head match {
       case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _, _) => indexQuery(model)
       case _                                                              => datalogQuery(
-        query, datalog, maxRows, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
+        query, datalog, maxRows, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
       )
     }
   }
@@ -306,7 +308,8 @@ case class Conn_Js(
     nestedLevels: Int,
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
-    tacitIndexes: List[List[Int]]
+    tacitIndexes: List[List[Int]],
+    sortCoordinates: List[List[SortCoordinate]]
   ): Future[String] = {
     val q2s          = Query2String(query)
     val p            = q2s.p
@@ -327,7 +330,8 @@ case class Conn_Js(
     //    println("lll: " + lll)
 
     rpc.query2packed(
-      connProxy, datalog, rules, l, ll, lll, maxRows, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
+      connProxy, datalog, rules, l, ll, lll, maxRows,
+      obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
     )
   }
 
@@ -348,10 +352,11 @@ case class Conn_Js(
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
-    packed2T: Iterator[String] => T
+    packed2T: Iterator[String] => T,
+    sortCoordinates: List[List[SortCoordinate]]
   )(implicit ec: ExecutionContext): Future[List[T]] = withDbView(
     jsMoleculeQuery(
-      model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes
+      model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
     ).map { packed =>
       if (packed.isEmpty) {
         List.empty[T]
@@ -377,9 +382,10 @@ case class Conn_Js(
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
-    packed2tpl: Iterator[String] => Tpl
+    packed2tpl: Iterator[String] => Tpl,
+    sortCoordinates: List[List[SortCoordinate]]
   )(implicit ec: ExecutionContext): Future[List[Tpl]] = queryJs(
-    model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
+    model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl, sortCoordinates
   )
 
   override def jsQueryObj[Obj](
@@ -392,9 +398,10 @@ case class Conn_Js(
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
-    packed2obj: Iterator[String] => Obj
+    packed2obj: Iterator[String] => Obj,
+    sortCoordinates: List[List[SortCoordinate]]
   )(implicit ec: ExecutionContext): Future[List[Obj]] = queryJs(
-    model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj
+    model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj, sortCoordinates
   )
 
   override def jsQueryJson(
@@ -406,9 +413,10 @@ case class Conn_Js(
     nestedLevels: Int,
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
-    tacitIndexes: List[List[Int]]
+    tacitIndexes: List[List[Int]],
+    sortCoordinates: List[List[SortCoordinate]]
   )(implicit ec: ExecutionContext): Future[String] = withDbView(
-    jsMoleculeQuery(model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes)
+    jsMoleculeQuery(model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates)
   )
 
 

@@ -2,7 +2,7 @@ package molecule.datomic.client.facade
 
 import datomicScala.client.api.sync.Datomic
 import molecule.core.data.SchemaTransaction
-import molecule.core.marshalling.{ConnProxy, DatomicPeerServerProxy}
+import molecule.core.marshalling.ast.{ConnProxy, DatomicPeerServerProxy}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.sys.process._
 import scala.util.control.NonFatal

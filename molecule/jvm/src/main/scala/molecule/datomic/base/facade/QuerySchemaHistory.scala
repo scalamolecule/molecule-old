@@ -4,7 +4,7 @@ import java.lang.{Boolean => jBoolean, Long => jLong}
 import java.util
 import java.util.{Collections, Comparator, Collection => jCollection, List => jList}
 import molecule.core.dto.SchemaAttr
-import molecule.core.marshalling.{DatomicDevLocalProxy, DatomicPeerProxy, DatomicPeerServerProxy}
+import molecule.core.marshalling.ast.{DatomicDevLocalProxy, DatomicPeerProxy, DatomicPeerServerProxy}
 import molecule.core.util.JavaUtil
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}

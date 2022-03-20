@@ -7,6 +7,7 @@ import datomic._
 import molecule.core.ast.elements._
 import molecule.core.exceptions._
 import molecule.core.marshalling._
+import molecule.core.marshalling.ast.{ConnProxy, DatomicPeerProxy}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.metaSchema.MetaNs

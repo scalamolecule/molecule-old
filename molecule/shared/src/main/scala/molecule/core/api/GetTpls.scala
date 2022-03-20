@@ -18,8 +18,6 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
   // get ================================================================================================
 
   private def rows2tuples(rows: jCollection[jList[AnyRef]], limit: Int, offset: Int = 0): List[Tpl] = {
-    //    val count = rows.size()
-    //    limit.min(count) match {
     limit match {
       case 0 => List.empty[Tpl]
       case 1 => List(row2tpl(rows.iterator.next))
@@ -72,7 +70,8 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
           // println("----------------")
           // println(_datalog)
           conn.jsQueryTpl(
-            _model, _query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
+            _model, _query, _datalog, -1,
+            obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl, sortCoordinates
           )
         } else {
           conn.jvmQuery(_model, _query).map { rows => rows2tuples(rows, rows.size) }
@@ -104,7 +103,8 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
         futConn.flatMap { conn =>
           if (conn.isJsPlatform) {
             conn.jsQueryTpl(
-              _model, _query, _datalog, limit, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
+              _model, _query, _datalog, limit,
+              obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl, sortCoordinates
             )
           } else {
             conn.jvmQuery(_model, _query).map { rows => rows2tuples(rows, rows.size.min(limit)) }
@@ -222,8 +222,8 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
         futConn.flatMap { conn =>
           if (conn.isJsPlatform) {
             conn.jsQueryTpl(
-              _model, _query, _datalog, -1, obj, nestedLevels, isOptNested,
-              refIndexes, tacitIndexes, packed2tpl
+              _model, _query, _datalog, -1,
+              obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl, sortCoordinates
             )
           } else {
             conn.jvmSchemaHistoryQueryTpl(_model).map { jColl =>

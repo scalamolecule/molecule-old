@@ -40,6 +40,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
           final override def packed2obj(vs: Iterator[String]): $ObjType = ${objTree(obj, jsTpl)}
           final override def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ${packed2jsonFlat(obj, txMetas)}
           final override def obj: nodes.Obj = $obj
+          ..${sortCoordinatesFlat(model, doSort)}
          """
       } else {
         q"""
@@ -121,6 +122,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
           final override def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ${packed2jsonNested(levels, obj, txMetas)}
           final override def obj: nodes.Obj = $obj
           final override def nestedLevels: Int = ${levels - 1}
+          ..${sortCoordinatesNested(model, levels)}
         """
       if (hasVariables) {
         val identifiers = mapIdentifiers(model.elements).toMap

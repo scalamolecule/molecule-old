@@ -4,7 +4,7 @@ import java.util.UUID.randomUUID
 import datomic.Peer
 import datomicScala.client.api.sync.Datomic
 import molecule.core.data.SchemaTransaction
-import molecule.core.marshalling.{ConnProxy, DatomicDevLocalProxy}
+import molecule.core.marshalling.ast.{ConnProxy, DatomicDevLocalProxy}
 import scala.concurrent.{ExecutionContext, Future}
 
 

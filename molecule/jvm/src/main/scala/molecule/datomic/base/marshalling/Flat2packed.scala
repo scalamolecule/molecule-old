@@ -1,7 +1,7 @@
 package molecule.datomic.base.marshalling
 
 import java.util.{Collection => jCollection, List => jList}
-import molecule.core.marshalling.nodes._
+import molecule.core.marshalling.ast.nodes._
 import molecule.datomic.base.marshalling.packers.ResolverFlat
 
 private[molecule] case class Flat2packed(

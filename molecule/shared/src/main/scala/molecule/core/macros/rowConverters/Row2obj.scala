@@ -1,7 +1,7 @@
 package molecule.core.macros.rowConverters
 
 import molecule.core.macros.rowAttr.RowValue2cast
-import molecule.core.marshalling.nodes._
+import molecule.core.marshalling.ast.nodes._
 import scala.reflect.macros.blackbox
 
 

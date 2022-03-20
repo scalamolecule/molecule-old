@@ -19,6 +19,11 @@ object SortNested extends AsyncTestSuite {
           ("B", List(1, 2)),
         )
 
+        _ <- Ns.str.Refs1.*(Ref1.int1).get.map(_ ==> List(
+          ("A", List(1, 2)),
+          ("B", List(1, 2)),
+        ))
+
         _ <- Ns.str.a1.Refs1.*(Ref1.int1.a1).get.map(_ ==> List(
           ("A", List(1, 2)),
           ("B", List(1, 2)),
@@ -35,7 +40,6 @@ object SortNested extends AsyncTestSuite {
           ("B", List(2, 1)),
           ("A", List(2, 1)),
         ))
-
 
         _ <- Ns.str.a1.Refs1.*(Ref1.int1.a1).getJson.map(_ ==>
           """{

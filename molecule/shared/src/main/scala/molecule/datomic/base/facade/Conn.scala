@@ -6,7 +6,8 @@ import molecule.core.ast.elements.Model
 import molecule.core.data.SchemaTransaction
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling._
-import molecule.core.marshalling.nodes.Obj
+import molecule.core.marshalling.ast.{ConnProxy, DatomicDevLocalProxy, DatomicPeerProxy, DatomicPeerServerProxy, SortCoordinate, nodes}
+import molecule.core.marshalling.ast.nodes.Obj
 import molecule.core.ops.ColOps
 import molecule.core.transform.Model2Stmts
 import molecule.datomic.base.api.DatomicEntity
@@ -398,7 +399,8 @@ trait Conn extends ColOps with BooPicklers {
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
-    packed2tpl: Iterator[String] => Tpl
+    packed2tpl: Iterator[String] => Tpl,
+    sortCoordinates: List[List[SortCoordinate]]
   )(implicit ec: ExecutionContext): Future[List[Tpl]] = Future.failed(jsOnly("jsQueryTpl"))
 
   private[molecule] def jsQueryObj[Obj](
@@ -412,6 +414,7 @@ trait Conn extends ColOps with BooPicklers {
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
     packed2obj: Iterator[String] => Obj,
+    sortCoordinates: List[List[SortCoordinate]]
   )(implicit ec: ExecutionContext): Future[List[Obj]] = Future.failed(jsOnly("jsQueryObj"))
 
   private[molecule] def jsQueryJson(
@@ -423,7 +426,8 @@ trait Conn extends ColOps with BooPicklers {
     nestedLevels: Int,
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
-    tacitIndexes: List[List[Int]]
+    tacitIndexes: List[List[Int]],
+    sortCoordinates: List[List[SortCoordinate]]
   )(implicit ec: ExecutionContext): Future[String] = Future.failed(jsOnly("jsQueryJson"))
 
 

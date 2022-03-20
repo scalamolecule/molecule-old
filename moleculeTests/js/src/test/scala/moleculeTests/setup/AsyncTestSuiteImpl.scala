@@ -2,7 +2,7 @@ package moleculeTests.setup
 
 import molecule.core.data.SchemaTransaction
 import molecule.core.facade.Conn_Js
-import molecule.core.marshalling.{DatomicDevLocalProxy, DatomicPeerProxy, DatomicPeerServerProxy}
+import molecule.core.marshalling.ast.{DatomicDevLocalProxy, DatomicPeerProxy, DatomicPeerServerProxy}
 import molecule.core.util.EmptySchema
 import molecule.core.util.Executor._
 import molecule.datomic.base.facade.Conn

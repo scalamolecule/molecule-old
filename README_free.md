@@ -18,7 +18,7 @@ Run test against only the free version by completing the following steps:
 
 ## STEP 1 - Give Intellij enough memory (once)
 
-In order for Intellij to be happy, set VM option -Xmx2G in preferences:
+In order for Intellij to be happy, set the VM option to for instance -Xmx2G in the preferences:
 
 `Preferences > Build, Execution, Deployment > Compiler > Scala Compiler > Scala Compiler Server / VM options`
 
@@ -70,7 +70,7 @@ sbt:moleculeTests> ++2.12.15; testOnly moleculeTests.tests.*
 sbt:moleculeTests> ++2.12.15; testOnly moleculeTests.tests.core.ref.*
 sbt:moleculeTests> ++2.12.15; testOnly moleculeTests.tests.core.ref.TwoStepQueries
 ```
-Remember to ctrl-c the sbt process to avoid process locks if testing in IDE.
+Remember to ctrl-c the sbt process to avoid process locks if testing in your IDE too.
 
 
 ## Test molecules in JS project

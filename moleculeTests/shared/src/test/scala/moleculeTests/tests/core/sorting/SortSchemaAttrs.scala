@@ -336,7 +336,7 @@ object SortSchemaAttrs extends AsyncTestSuite {
 
         // Count of unique options (two values possible)
         _ <- Schema.ns.unique(count).a1.get.map(_ ==> List(("Ref2", 2)))
-        _ <- Schema.ns.unique(count).d2.get.map(_ ==> List(("Ref2", 2)))
+        _ <- Schema.ns.unique(count).d1.get.map(_ ==> List(("Ref2", 2)))
       } yield ()
     }
 

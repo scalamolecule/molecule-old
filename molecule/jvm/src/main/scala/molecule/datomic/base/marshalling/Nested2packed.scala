@@ -2,34 +2,16 @@ package molecule.datomic.base.marshalling
 
 import java.lang.{Long => jLong}
 import java.util.{ArrayList => jArrayList, Collection => jCollection, Comparator => jComparator, Iterator => jIterator, List => jList}
-import molecule.core.marshalling.nodes._
+import molecule.core.marshalling.ast.nodes._
 import molecule.datomic.base.marshalling.packers.ResolverFlat
 
 private[molecule] case class Nested2packed(
   obj: Obj,
-  rowCollection: jCollection[jList[AnyRef]],
+  sortedRows: jCollection[jList[AnyRef]],
   nestedLevels: Int
-) extends jComparator[jList[AnyRef]] with ResolverFlat {
+) extends ResolverFlat {
 
-  // Sort rows by entity ids for each level
-
-  val sortedRows = new java.util.ArrayList(rowCollection)
-  sortedRows.sort(this)
-
-  def compare(a: jList[AnyRef], b: jList[AnyRef]): Int = {
-    var sortIndex = 0
-    var result    = 0
-    do {
-      result = a.get(sortIndex).asInstanceOf[jLong].compareTo(b.get(sortIndex).asInstanceOf[jLong])
-      sortIndex += 1 // 1 level deeper
-    } while (sortIndex <= nestedLevels && result == 0)
-    result
-  }
-
-
-  // Mutable placeholders for fast iterations with minimal object allocation
-
-  val last                           = rowCollection.size
+  val last                           = sortedRows.size
   val rows: jIterator[jList[AnyRef]] = sortedRows.iterator
 
   protected var row   : jList[AnyRef] = new jArrayList[AnyRef]()
@@ -69,7 +51,7 @@ private[molecule] case class Nested2packed(
   val sb = new StringBuffer()
 
   def getPacked: String = {
-    if (!rowCollection.isEmpty) {
+    if (!sortedRows.isEmpty) {
       packRows(obj.props)
     }
     sb.toString

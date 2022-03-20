@@ -3,6 +3,7 @@ package molecule.core.marshalling
 import java.util.{Comparator, List => jList}
 import molecule.core.api.Molecule
 import molecule.core.ast.elements.Model
+import molecule.core.marshalling.ast.{SortCoordinate, nodes}
 import molecule.core.util.Helpers
 import molecule.datomic.base.ast.query.Query
 
@@ -25,6 +26,7 @@ abstract class Marshalling[Obj, Tpl](model: Model, queryData: (Query, String, Op
   protected def nestedLevels: Int = 0
   protected def refIndexes: List[List[Int]] = List(List.empty[Int])
   protected def tacitIndexes: List[List[Int]] = List(List.empty[Int])
+  protected def sortCoordinates: List[List[SortCoordinate]] = List.empty[List[SortCoordinate]]
 
   // Sorting
   protected def sortRows: Boolean = false

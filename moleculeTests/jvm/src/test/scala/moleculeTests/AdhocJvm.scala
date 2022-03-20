@@ -32,52 +32,11 @@ object AdhocJvm extends AsyncTestSuite with Helpers with JavaConversions {
       for {
         conn <- futConn
 
-//        _ <- Ref2.int2.str2 + Ns.str.int insert List(
-//          ((1, "a"), ("aa", 11)),
-//          ((2, "b"), ("bb", 22))
-//        )
 
 
-        _ <- Ns.str + Ref1.int1 insert List(
-          ("A", 1),
-          ("A", 2),
-          ("B", 1),
-          ("B", 2),
-        )
-//
-//        //                _ <- (Ns.str.a1 + Ref1.int1.a1).get.map(_ ==> List(
-//        //                  ("A", 1),
-//        //                  ("A", 2),
-//        //                  ("B", 1),
-//        //                  ("B", 2),
-//        //                ))
 
-        _ <- (Ns.str + Ref1.int1).inspectGet
-        _ <- (Ns.str.a1 + Ref1.int1.d1).get.map(_ ==> List(
-          ("A", 2),
-          ("A", 1),
-          ("B", 2),
-          ("B", 1),
-        ))
-        //                _ <- (Ns.str.d1 + Ref1.int1.a1).get.map(_ ==> List(
-        //                  ("B", 1),
-        //                  ("B", 2),
-        //                  ("A", 1),
-        //                  ("A", 2),
-        //                ))
-        //                _ <- (Ns.str.d1 + Ref1.int1.d1).get.map(_ ==> List(
-        //                  ("B", 2),
-        //                  ("B", 1),
-        //                  ("A", 2),
-        //                  ("A", 1),
-        //                ))
-
-
-        //        _ <- Ns.str.a1.Refs1.*(Ref1.int1.a1).getJson.map(_ ==> List(
-        //          ("B", List(2, 1)),
-        //          ("A", List(2, 1)),
-        //        ))
-
+        _ <- Ns.int.insert(2, 3, 4)
+        _ <- Ns.int.d1.get.map(_ ==> List(4, 3, 2))
 
       } yield ()
     }

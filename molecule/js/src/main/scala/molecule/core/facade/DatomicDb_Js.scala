@@ -3,7 +3,8 @@ package molecule.core.facade
 import java.util
 import java.util.Date
 import molecule.core.exceptions.MoleculeException
-import molecule.core.marshalling.{ConnProxy, MoleculeRpc}
+import molecule.core.marshalling.MoleculeRpc
+import molecule.core.marshalling.ast.ConnProxy
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.facade.{Conn, DatomicDb}
 import scala.concurrent.{ExecutionContext, Future}

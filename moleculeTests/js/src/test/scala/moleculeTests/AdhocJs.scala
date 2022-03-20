@@ -23,6 +23,10 @@ object AdhocJs extends AsyncTestSuite with Helpers
         conn <- futConn
 
 
+        _ <- Ns.int.insert(1, 2, 3)
+        _ <- Ns.int.d1.get.map(_ ==> List(3, 2, 1))
+
+
 
       } yield ()
     }

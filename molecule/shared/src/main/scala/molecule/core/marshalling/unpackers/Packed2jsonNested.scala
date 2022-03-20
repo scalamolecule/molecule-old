@@ -1,7 +1,7 @@
 package molecule.core.marshalling.unpackers
 
 import molecule.core.macros.rowAttr.JsonBase
-import molecule.core.marshalling.nodes._
+import molecule.core.marshalling.ast.nodes._
 import molecule.core.marshalling.unpackAttr.PackedValue2json
 import scala.collection.mutable
 import scala.reflect.macros.blackbox

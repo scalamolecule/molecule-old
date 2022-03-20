@@ -1,6 +1,7 @@
 package molecule.core.marshalling
 
-import molecule.core.marshalling.nodes.Obj
+import molecule.core.marshalling.ast.{ConnProxy, IndexArgs, SortCoordinate}
+import molecule.core.marshalling.ast.nodes.Obj
 import molecule.datomic.base.facade.TxReportRPC
 import sloth.PathName
 import scala.concurrent.Future
@@ -30,7 +31,8 @@ trait MoleculeRpc {
     nestedLevels: Int,
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
-    tacitIndexes: List[List[Int]]
+    tacitIndexes: List[List[Int]],
+    sortCoordinates: List[List[SortCoordinate]]
   ): Future[String]
 
   def index2packed(

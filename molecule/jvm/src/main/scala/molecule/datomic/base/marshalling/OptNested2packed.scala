@@ -2,7 +2,7 @@ package molecule.datomic.base.marshalling
 
 import java.util.{Collection => jCollection, Iterator => jIterator, List => jList, Map => jMap}
 import molecule.core.macros.rowAttr.JsonBase
-import molecule.core.marshalling.nodes._
+import molecule.core.marshalling.ast.nodes._
 import molecule.datomic.base.marshalling.packers.ResolverOptNested
 
 private[molecule] case class OptNested2packed(

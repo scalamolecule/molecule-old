@@ -7,6 +7,7 @@ import boopickle.Default._
 import chameleon._
 import molecule.core.api.exception.EntityException
 import molecule.core.exceptions._
+import molecule.core.marshalling.ast.{ConnProxy, DatomicDevLocalProxy, DatomicPeerProxy, DatomicPeerServerProxy}
 import molecule.core.util.Helpers
 import molecule.datomic.base.facade.exception.DatomicFacadeException
 import scala.util.{Failure, Success, Try}
