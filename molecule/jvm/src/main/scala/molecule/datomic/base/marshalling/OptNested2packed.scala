@@ -2,33 +2,37 @@ package molecule.datomic.base.marshalling
 
 import java.util.{Collection => jCollection, Iterator => jIterator, List => jList, Map => jMap}
 import molecule.core.macros.rowAttr.JsonBase
+import molecule.core.marshalling.ast.SortCoordinate
 import molecule.core.marshalling.ast.nodes._
 import molecule.datomic.base.marshalling.packers.ResolverOptNested
+import molecule.datomic.base.marshalling.sorting.ExtractFlatValues
 
 private[molecule] case class OptNested2packed(
   obj: Obj,
-  rowCollection: jCollection[jList[AnyRef]],
-  maxRows: Int = -1,
-  refIndexes: List[List[Int]] = Nil,
-  tacitIndexes: List[List[Int]] = Nil
+  sortedRows: jCollection[jList[AnyRef]],
+  maxRows: Int,
+  refIndexes: List[List[Int]],
+  tacitIndexes: List[List[Int]],
+  sortCoordinates: List[List[SortCoordinate]]
 ) extends ResolverOptNested with JsonBase {
 
-  def getList(nestedData: Any): jList[Any] = {
+  def getList(nestedData: Any): jList[AnyRef] = {
     if (nestedData.isInstanceOf[jList[_]])
-      nestedData.asInstanceOf[jList[Any]]
+      nestedData.asInstanceOf[jList[AnyRef]]
     else
-      nestedData.asInstanceOf[jMap[String, Any]].values().iterator.next.asInstanceOf[jList[Any]]
+      nestedData.asInstanceOf[jMap[String, AnyRef]].values().iterator.next.asInstanceOf[jList[AnyRef]]
   }
 
   def getPacked: String = {
-    val sb = new StringBuffer()
-    if (!rowCollection.isEmpty) {
-      // Recursively build lambda to process each row of nested data
-      val rowLambda: (StringBuffer, jIterator[_]) => StringBuffer = packNested(obj.props, 0, true)
-
-      // Process data with lambda
-      rowLambda(sb, rowCollection.iterator)
+    if (sortedRows.isEmpty) {
+      return ""
     }
+    // Recursively build lambda to process each row of nested data
+    val rowLambda: (StringBuffer, jIterator[_]) => StringBuffer = packNested(obj.props, 0, deeper = true)
+
+    // Process data with lambda
+    val sb = new StringBuffer()
+    rowLambda(sb, sortedRows.iterator)
     sb.toString
   }
 
@@ -41,8 +45,8 @@ private[molecule] case class OptNested2packed(
   def packNode(node: Node, level: Int): (StringBuffer, jIterator[_]) => StringBuffer = {
     node match {
       case Prop(_, _, baseTpe, _, group, optAggrTpe) => packOptNestedAttr(group, baseTpe, optAggrTpe)
-      case nested@Obj(_, _, true, props)    => packNested(getRelatedProps(props), level + 1, isDeeper(nested))
-      case Obj(_, _, _, props)              =>
+      case nested@Obj(_, _, true, props)             => packNested(getRelatedProps(props), level + 1, isDeeper(nested))
+      case Obj(_, _, _, props)                       =>
         val populatedProps = props.flatMap {
           case Obj(_, _, _, Nil) => None // skip objects with only tacit attributes
           case node              => Some(node)
@@ -161,7 +165,7 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(1, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(1, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" => nil(sb)
@@ -202,11 +206,10 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(2, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(2, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" =>
-            nil(sb)
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
@@ -248,11 +251,10 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(3, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(3, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" =>
-            nil(sb)
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
@@ -298,11 +300,10 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(4, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(4, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
-          case null | "__none__" =>
-            nil(sb)
+          case null | "__none__" => nil(sb)
           case nestedData        =>
             val it = flatValues(getList(nestedData))
             if (it.hasNext) {
@@ -352,7 +353,7 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(5, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(5, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" => nil(sb)
@@ -409,7 +410,7 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(6, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(6, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" => nil(sb)
@@ -470,7 +471,7 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(7, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(7, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" => nil(sb)
@@ -535,7 +536,7 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(8, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(8, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" => nil(sb)
@@ -604,7 +605,7 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(9, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(9, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" => nil(sb)
@@ -677,7 +678,7 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(10, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(10, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" => nil(sb)
@@ -754,7 +755,7 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(11, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(11, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" => nil(sb)
@@ -835,7 +836,7 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(12, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(12, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" => nil(sb)
@@ -920,7 +921,7 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(13, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(13, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" => nil(sb)
@@ -1009,7 +1010,7 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(14, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(14, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" => nil(sb)
@@ -1102,7 +1103,7 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(15, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(15, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" => nil(sb)
@@ -1199,7 +1200,7 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(16, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(16, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" => nil(sb)
@@ -1300,7 +1301,7 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(17, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(17, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" => nil(sb)
@@ -1405,7 +1406,7 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(18, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(18, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" => nil(sb)
@@ -1514,7 +1515,7 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(19, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(19, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" => nil(sb)
@@ -1627,7 +1628,7 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(20, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(20, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" => nil(sb)
@@ -1744,7 +1745,7 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(21, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(21, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" => nil(sb)
@@ -1865,7 +1866,7 @@ private[molecule] case class OptNested2packed(
           sb
         }
     } else {
-      val flatValues = extractFlatValues(22, refIndexes(level), tacitIndexes(level), deeper)
+      val flatValues = ExtractFlatValues(22, refIndexes(level), tacitIndexes(level), deeper, sortCoordinates, level)
       (sb: StringBuffer, vs: jIterator[_]) =>
         vs.next match {
           case null | "__none__" => nil(sb)

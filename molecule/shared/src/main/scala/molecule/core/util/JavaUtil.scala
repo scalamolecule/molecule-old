@@ -7,28 +7,28 @@ import java.util.{Collection => jCollection, List => jList}
 
 trait JavaUtil {
 
-  def javaList(items: AnyRef*): java.util.List[AnyRef] = {
+  def javaList(items: Any*): java.util.List[AnyRef] = {
     if (items == null) {
       new java.util.ArrayList[AnyRef]
     } else {
       val list: java.util.List[AnyRef] = new java.util.ArrayList[AnyRef](items.length)
       var i   : Int                    = 0
       while (i < items.length) {
-        list.add(items(i))
+        list.add(items(i).asInstanceOf[AnyRef])
         i += 1
       }
       Collections.unmodifiableList(list)
     }
   }
 
-  def javaMap(pairs: (AnyRef, AnyRef)*): java.util.Map[AnyRef, AnyRef] = {
+  def javaMap(pairs: (Any, Any)*): java.util.Map[AnyRef, AnyRef] = {
     if (pairs == null) {
       new util.HashMap[AnyRef, AnyRef]()
     } else {
       val map: java.util.Map[AnyRef, AnyRef] = new util.HashMap[AnyRef, AnyRef](pairs.length)
       var i  : Int                           = 0
       while (i < pairs.length) {
-        map.put(pairs(i)._1, pairs(i)._2)
+        map.put(pairs(i)._1.asInstanceOf[AnyRef], pairs(i)._2.asInstanceOf[AnyRef])
         i += 1
       }
       Collections.unmodifiableMap(map)
@@ -47,20 +47,21 @@ trait JavaUtil {
     javaList
   }
 
-  // Raw output has different implementations but same interface. Printing
-  // output in tests is therefore formatted differently in tests and this
-  // transformer can unify the tested results (here just Int's)
+  /*
+    Raw output has different implementations but same interface. Printing
+    output in tests is therefore formatted differently in tests and this
+    transformer can unify the tested results (here just Int's)
 
-  // Interface: jCollection[jList[AnyRef]]
+    Interface: jCollection[jList[AnyRef]]
 
-  // Implementations:
+    Implementations:
 
-  // Peer:
-  // java.util.HashSet[clojure.lang.PersistentVector<Object>]
+    Peer:
+    java.util.HashSet[clojure.lang.PersistentVector<Object>]
 
-  // Peer-server and dev-local:
-  // clojure.lang.PersistentVector[clojure.lang.PersistentVector<Object>]
-
+    Peer-server and dev-local:
+    clojure.lang.PersistentVector[clojure.lang.PersistentVector<Object>]
+  */
   implicit class raw2list(raw: jCollection[jList[AnyRef]]) {
     var intList = List.empty[Int]
     def ints: List[Int] = {

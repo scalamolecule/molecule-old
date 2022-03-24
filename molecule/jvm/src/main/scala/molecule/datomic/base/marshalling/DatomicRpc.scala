@@ -132,14 +132,18 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
         //      log("-------------------------------")
         rawRows.forEach(row => log(row.toString))
         log("-------------------------------")
-        sortCoordinates.foreach(level => level.foreach(c => log(c.toString)))
+        //        sortCoordinates.foreach(level => log(level.mkString("List(\n  ", ",\n  ", ")")))
         log.print()
 
         val packed = if (isOptNested) {
-          OptNested2packed(obj, rawRows, maxRows, refIndexes, tacitIndexes).getPacked
+          val rows = if (sortCoordinates.nonEmpty && sortCoordinates.head.nonEmpty)
+            Sort(rawRows, sortCoordinates).get else rawRows
+          OptNested2packed(obj, rows, maxRows, refIndexes, tacitIndexes, sortCoordinates).getPacked
+
         } else if (nestedLevels == 0) {
-          val rows = if (sortCoordinates.nonEmpty) Sort(rawRows, sortCoordinates).get else rawRows
+          val rows = if (sortCoordinates.flatten.nonEmpty) Sort(rawRows, sortCoordinates).get else rawRows
           Flat2packed(obj, rows, maxRows).getPacked
+
         } else {
           Nested2packed(obj, Sort(rawRows, sortCoordinates).get, nestedLevels).getPacked
         }

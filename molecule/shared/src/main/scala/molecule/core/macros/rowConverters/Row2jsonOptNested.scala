@@ -49,7 +49,7 @@ private[molecule] trait Row2jsonOptNested extends RowValue2jsonOptNested with Js
                   case null => sb.append("]")
                   case last =>
                     val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]]
-                    val it = extractFlatValues($propCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)(list)
+                    val it = ExtractFlatValues($propCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)(list)
                     ..${jsonOptNested(nested, refIndexes, tacitIndexes, level + 1, tabs + 2)}
                     sb.append(${indent(tabs + 1) + "]"})
                 }
@@ -84,7 +84,7 @@ private[molecule] trait Row2jsonOptNested extends RowValue2jsonOptNested with Js
           val flatValues = TermName("flatValues" + level)
           q"""
             var next = false
-            val $flatValues = extractFlatValues($propCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)
+            val $flatValues = ExtractFlatValues($propCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)
             while (it.hasNext) {
               if (next) sb.append(",") else next = true
               sb.append(${indent(tabs) + "{" + indent(tabs + 1)})

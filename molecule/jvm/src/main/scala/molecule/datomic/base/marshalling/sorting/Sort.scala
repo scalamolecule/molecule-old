@@ -17,32 +17,31 @@ case class Sort(
   val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
 
   def getSorter(sortCoordinate: SortCoordinate): (jList[AnyRef], jList[AnyRef]) => Int = {
-    val SortCoordinate(i, asc, attr, opt, tpe, isEnum, aggrFn, aggrLimit) = sortCoordinate
-    if (opt) {
-      def compare(
-        x: jList[AnyRef],
-        y: jList[AnyRef],
-        compareMapValues: (jMap[_, _], jMap[_, _]) => Int
-      ): Int = {
-        (x.get(i), y.get(i)) match {
-          case (null, null)                     => 0
-          case (null, _)                        => -1
-          case (_, null)                        => 1
-          case (m1: jMap[_, _], m2: jMap[_, _]) => compareMapValues(m1, m2)
-        }
-      }
+    val SortCoordinate(i, asc, attr, opt, tpe, aggrFn, aggrLimit) = sortCoordinate
 
+    def compare(
+      x: jList[AnyRef],
+      y: jList[AnyRef],
+      compareMapValues: (jMap[_, _], jMap[_, _]) => Int
+    ): Int = {
+      (x.get(i), y.get(i)) match {
+        case (null, null)                     => 0
+        case (null, _)                        => -1
+        case (_, null)                        => 1
+        case (m1: jMap[_, _], m2: jMap[_, _]) => compareMapValues(m1, m2)
+      }
+    }
+
+    if (opt) {
       val mapComparison = tpe match {
-        case "String" | "enum" =>
-          if (isEnum) {
+        case "String" =>
+            (m1: jMap[_, _], m2: jMap[_, _]) =>
+              m1.values.iterator.next.asInstanceOf[String].compareTo(m2.values.iterator.next.asInstanceOf[String])
+
+        case "enum" =>
             (m1: jMap[_, _], m2: jMap[_, _]) =>
               m1.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.asInstanceOf[Keyword].getName.compareTo(
                 m2.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.asInstanceOf[Keyword].getName)
-
-          } else {
-            (m1: jMap[_, _], m2: jMap[_, _]) =>
-              m1.values.iterator.next.asInstanceOf[String].compareTo(m2.values.iterator.next.asInstanceOf[String])
-          }
 
         case "ref" => (m1: jMap[_, _], m2: jMap[_, _]) =>
           m1.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.asInstanceOf[jLong].compareTo(
@@ -74,15 +73,11 @@ case class Sort(
           m1.values.iterator.next.asInstanceOf[jBigDec].compareTo(m2.values.iterator.next.asInstanceOf[jBigDec])
 
         case "schema" => attr match {
-          case "doc$" => (m1: jMap[_, _], m2: jMap[_, _]) =>
-            m1.values.iterator.next.asInstanceOf[String].compareTo(m2.values.iterator.next.asInstanceOf[String])
-
-          case "ident$" | "valueType$" | "cardinality$" | "unique$" => (m1: jMap[_, _], m2: jMap[_, _]) =>
+          case "unique$" => (m1: jMap[_, _], m2: jMap[_, _]) =>
             m1.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.asInstanceOf[Keyword].getName.compareTo(
               m2.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.asInstanceOf[Keyword].getName)
 
-          case _ => (m1: jMap[_, _], m2: jMap[_, _]) =>
-            m1.values.iterator.next.asInstanceOf[Boolean].compareTo(m2.values.iterator.next.asInstanceOf[Boolean])
+          case _ => throw MoleculeException(s"Unexpected optional schema attr: $attr")
         }
       }
       if (asc)
@@ -126,6 +121,12 @@ case class Sort(
         case "Any" => (x: jList[AnyRef], y: jList[AnyRef]) =>
           x.get(i).toString.compareTo(y.get(i).toString)
 
+        case "schema" => attr match {
+          case "unique" => (x: jList[AnyRef], y: jList[AnyRef]) =>
+            x.get(i).asInstanceOf[String].compareTo(y.get(i).asInstanceOf[String])
+
+          case _ => throw MoleculeException(s"Unexpected mandatory schema attr: $attr")
+        }
       }
 
       val rowComparison = if (aggrFn.isEmpty) {
@@ -152,7 +153,7 @@ case class Sort(
     }
   }
 
-  val sorter = {
+  val sorter: (jList[AnyRef], jList[AnyRef]) => Int = {
     val topSorts = sortCoordinates.head
     topSorts.size match {
       case 1 => getSorter(topSorts.head)
@@ -337,7 +338,7 @@ case class Sort(
           result
         }
 
-      // Nested with 7 levels and 5 sort markers on top level need 12 sort comparators
+      // Max of 7 nested levels and 5 sort markers on top level need 12 sort comparators
       case 12 =>
         val sort1  = getSorter(topSorts(0))
         val sort2  = getSorter(topSorts(1))
@@ -369,14 +370,11 @@ case class Sort(
     }
   }
 
-  //  class RowComparator extends Comparator[jList[AnyRef]] {
-  //  }
   override def compare(x: jList[AnyRef], y: jList[AnyRef]): Int = {
     sorter(x, y)
   }
 
   def get: jCollection[jList[AnyRef]] = {
-    //    sortedRows.sort(new RowComparator)
     sortedRows.sort(this)
     sortedRows
   }

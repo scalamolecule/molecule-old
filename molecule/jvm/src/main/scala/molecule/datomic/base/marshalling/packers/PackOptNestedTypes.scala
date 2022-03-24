@@ -40,7 +40,10 @@ private[molecule] trait PackOptNestedTypes extends PackBase with Helpers {
   }
 
   protected lazy val packOptNestedOneEnum = (sb: StringBuffer, it: jIterator[_]) => {
-    add(sb, it.next.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[Keyword].getName)
+    it.next match {
+      case kw: Keyword   => add(sb, kw.getName)
+      case m: jMap[_, _] => add(sb, m.values.iterator.next.asInstanceOf[Keyword].getName)
+    }
   }
 
   protected lazy val packOptNestedOneRefAttr = (sb: StringBuffer, it: jIterator[_]) => {
@@ -73,8 +76,8 @@ private[molecule] trait PackOptNestedTypes extends PackBase with Helpers {
   protected lazy val packOptNestedOptOneEnum = (sb: StringBuffer, it: jIterator[_]) => {
     it.next match {
       case null | "__none__" => end(sb)
-      case v: jMap[_, _]     => add(sb, v.asInstanceOf[jMap[String, Any]].values.iterator.next.asInstanceOf[Keyword].getName)
-      case v                 => add(sb, v.asInstanceOf[Keyword].getName)
+      case m: jMap[_, _]     => add(sb, m.values.iterator.next.asInstanceOf[Keyword].getName)
+      case kw: Keyword       => add(sb, kw.getName)
     }
   }
 
@@ -314,7 +317,7 @@ private[molecule] trait PackOptNestedTypes extends PackBase with Helpers {
     end(sb)
   }
 
-  protected lazy val packOptNestedKeyedMap_    = (sb: StringBuffer, it: jIterator[_]) =>
+  protected lazy val packOptNestedKeyedMap_ = (sb: StringBuffer, it: jIterator[_]) =>
     add(sb, it.next.toString)
 
   protected lazy val packOptNestedKeyedMapDate = (sb: StringBuffer, it: jIterator[_]) =>

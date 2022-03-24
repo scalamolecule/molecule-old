@@ -6,6 +6,7 @@ import molecule.datomic.base.util.{SystemPeer, SystemPeerServer}
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
+import scala.collection.immutable.List
 import scala.concurrent.Future
 
 /*
@@ -20,7 +21,7 @@ object SortSchemaAttrs extends AsyncTestSuite {
 
     "id" - core { implicit conn =>
       // Client attribute ids are
-      val clientDelta = if(system == SystemPeer) 0 else 1
+      val clientDelta = if (system == SystemPeer) 0 else 1
       for {
         // Ordering by id shows the order of attributes defined in the Data Model
         _ <- Schema.attrId.a1.a.get(5).map(_ ==> List(
@@ -416,86 +417,57 @@ object SortSchemaAttrs extends AsyncTestSuite {
       if (system == SystemPeer) {
         for {
           // Mandatory
-          _ <- Schema.a.a2.index.a1.get(3).map(_ ==> (
-            if (isJsPlatform) {
-              // No attributes indexed
-              Nil
-            } else {
-              // All attributes indexed (not much sense in sorting by one value)
-              List(
-                (":Ns/bigDec", true),
-                (":Ns/bigDecMap", true),
-                (":Ns/bigDecs", true),
-              )
-            })
+          _ <- Schema.a.a2.index.a1.get(3).map(_ ==>
+            // All attributes indexed (not much sense in sorting by one value)
+            List(
+              (":Ns/bigDec", true),
+              (":Ns/bigDecMap", true),
+              (":Ns/bigDecs", true),
+            )
           )
 
           // Optional
-          _ <- Schema.a.index$.a1.get(3).map(_ ==> (
-            if (isJsPlatform) {
-              // No attributes indexed
-              List(
-                (":Ns/str", None),
-                (":Ns/int", None),
-                (":Ns/long", None),
-              )
-            } else {
-              // All attributes indexed
-              List(
-                (":Ns/str", Some(true)),
-                (":Ns/int", Some(true)),
-                (":Ns/long", Some(true)),
-              )
-            })
+          _ <- Schema.a.index$.a1.get(3).map(_ ==>
+            // All attributes indexed
+            List(
+              (":Ns/str", Some(true)),
+              (":Ns/int", Some(true)),
+              (":Ns/long", Some(true)),
+            )
           )
 
           // Count of index options
-          _ <- Schema.ns.a2.index(count).a1.get.map(_ ==> (
-            if (isJsPlatform) {
-              // No attributes indexed
-              Nil
-            } else {
-              // All attributes indexed
-              List(
-                ("Ns", 1),
-                ("Ref1", 1),
-                ("Ref2", 1),
-                ("Ref3", 1),
-                ("Ref4", 1),
-              )
-            })
+          _ <- Schema.ns.a2.index(count).a1.get.map(_ ==>
+            // All attributes indexed
+            List(
+              ("Ns", 1),
+              ("Ref1", 1),
+              ("Ref2", 1),
+              ("Ref3", 1),
+              ("Ref4", 1),
+            )
           )
-          _ <- Schema.ns.d2.index(count).d1.get.map(_ ==> (
-            if (isJsPlatform) {
-              // No attributes indexed
-              Nil
-            } else {
-              // All attributes indexed
-              List(
-                ("Ref4", 1),
-                ("Ref3", 1),
-                ("Ref2", 1),
-                ("Ref1", 1),
-                ("Ns", 1),
-              )
-            })
+          _ <- Schema.ns.d2.index(count).d1.get.map(_ ==>
+            // All attributes indexed
+            List(
+              ("Ref4", 1),
+              ("Ref3", 1),
+              ("Ref2", 1),
+              ("Ref1", 1),
+              ("Ns", 1),
+            )
           )
 
           // Count of indexed attributes in each namespace
-          _ <- Schema.ns.a2.index_.a(count).d1.get.map(_ ==> (
-            if (isJsPlatform) {
-              // No attributes indexed
-              Nil
-            } else {
-              // All attributes indexed
-              List(
-                ("Ns", 38),
-                ("Ref1", 12),
-                ("Ref2", 7),
-                ("Ref3", 4),
-                ("Ref4", 2),
-              )
-            })
+          _ <- Schema.ns.a2.index_.a(count).d1.get.map(_ ==>
+            // All attributes indexed
+            List(
+              ("Ns", 38),
+              ("Ref1", 12),
+              ("Ref2", 7),
+              ("Ref3", 4),
+              ("Ref4", 2),
+            )
           )
         } yield ()
       }

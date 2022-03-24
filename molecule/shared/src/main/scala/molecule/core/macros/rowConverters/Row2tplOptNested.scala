@@ -33,8 +33,8 @@ private[molecule] trait Row2tplOptNested extends RowValue2castOptNested {
               it.next match {
                 case null => Nil
                 case last =>
-                  val list = last.asInstanceOf[jMap[Any, Any]].values().iterator().next.asInstanceOf[jList[Any]]
-                  val it = extractFlatValues($propCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)(list)
+                  val list = last.asInstanceOf[jMap[Any, Any]].values.iterator.next.asInstanceOf[jList[Any]]
+                  val it = ExtractFlatValues($propCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)(list)
                   ..${tplOptNested(nested, refIndexes, tacitIndexes, level + 1, orderings)}
               }
             """
@@ -69,7 +69,7 @@ private[molecule] trait Row2tplOptNested extends RowValue2castOptNested {
       }
       xx(1, level, current, relatedProps, topLevelTuple, metaPropCounts)
       q"""
-         val it = row.iterator()
+         val it = row.iterator
          $topLevelTuple
        """
 
@@ -96,7 +96,7 @@ private[molecule] trait Row2tplOptNested extends RowValue2castOptNested {
           xx(3, level, current, props, nestedObj, nestedPropCount, deeper)
           q"""
             var buf = List.empty[Any]
-            val $flatValues = extractFlatValues($nestedPropCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)
+            val $flatValues = ExtractFlatValues($nestedPropCount, ${refIndexes(level + 1)}, ${tacitIndexes(level + 1)}, $deeper)
             while (it.hasNext) {
               buf = buf :+ (
                 ..${properties(props)},

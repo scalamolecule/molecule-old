@@ -35,8 +35,8 @@ object AdhocJvm extends AsyncTestSuite with Helpers with JavaConversions {
 
 
 
-        _ <- Ns.int.insert(2, 3, 4)
-        _ <- Ns.int.d1.get.map(_ ==> List(4, 3, 2))
+//        _ <- Ns.int.insert(2, 3, 4)
+//        _ <- Ns.int.d1.get.map(_ ==> List(4, 3, 2))
 
       } yield ()
     }

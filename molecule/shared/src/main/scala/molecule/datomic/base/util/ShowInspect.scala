@@ -178,17 +178,13 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
         _model, _query, _datalog, -1,
         obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl, sortCoordinates
       ).map { listOfTuples =>
-        val x = listOfTuples.map {
+        listOfTuples.map {
           case tpl: Product => Collections.list(tpl.productIterator.asJavaEnumeration)
           case v            =>
             val list = new util.ArrayList[Any](1)
             list.add(v)
             Collections.list(Collections.enumeration(list))
-        }.asJava
-
-        val x1 = x.asInstanceOf[jCollection[jList[AnyRef]]]
-
-        x1
+        }.asJava.asInstanceOf[jCollection[jList[AnyRef]]]
       }
     }
 

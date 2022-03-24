@@ -24,19 +24,18 @@ private[molecule] trait MakeBase extends Dsl2Model {
       import molecule.core.dsl.base.Init
       import molecule.core.exceptions.MoleculeException
       ..$genericImports
-      import molecule.core.marshalling.MoleculeRpc
       import molecule.core.marshalling.ast.nodes
       import molecule.core.marshalling.ast.nodes._
       import molecule.core.marshalling.ast.SortCoordinate
-      import molecule.core.ops.ModelOps._
-      import molecule.datomic.base.ast.query._
-      import molecule.datomic.base.transform.{Model2Query, QueryOptimizer, Query2String}
-      import molecule.datomic.base.facade.Conn
-      import scala.collection.mutable.ListBuffer
-      import scala.concurrent.Future
-
       import molecule.core.marshalling.unpackAttr.String2cast._
       import molecule.core.marshalling.unpackAttr.String2json._
+      import molecule.core.marshalling.MoleculeRpc
+      import molecule.core.ops.ModelOps._
+      import molecule.datomic.base.ast.query._
+      import molecule.datomic.base.facade.Conn
+      import molecule.datomic.base.transform.{Model2Query, QueryOptimizer, Query2String}
+      import scala.collection.mutable.ListBuffer
+      import scala.concurrent.Future
      """
 
   def mapIdents(idents: Seq[Any]): Seq[(String, Tree)] = idents.flatMap {

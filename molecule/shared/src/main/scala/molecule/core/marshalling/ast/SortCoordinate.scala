@@ -6,7 +6,6 @@ case class SortCoordinate(
   attr: String,
   opt: Boolean,
   tpe: String,
-  isEnum: Boolean = false,
   aggrFn: String = "",
   aggrLimit: Option[Int] = None
 )

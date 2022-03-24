@@ -68,6 +68,19 @@ object nodes {
     case (acc, nested: Obj)                => acc + 1 // nested counting as 1 prop
   }
 
+  def flattenTxMetaProps(obj: Obj): Obj = {
+    def flatten(props: Seq[Node]): Seq[Node] = {
+      props.flatMap {
+        case Obj(_, _, _, props) => flatten(props) // flatten composites and refs
+        case prop                => List(prop)
+      }
+    }
+    obj.props.last match {
+      case Obj(_, "Tx", _, txMetaProps) => obj.copy(props = obj.props.init ++ flatten(txMetaProps))
+      case _                            => obj
+    }
+  }
+
 
   def addNode(obj: Obj, node: Node, level: Int): Obj = {
     val newProps = level match {

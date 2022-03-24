@@ -23,17 +23,15 @@ private[molecule] trait MakeSortingJs extends TreeOps {
     aggrLimit: Option[Int],
     sort: String,
   ): (Int, Tree) = {
-
+    val opt            = attr.last == '$'
     val (sortPos, asc) = sort match {
       case r"a([1-5])$pos" => (pos.toInt, true)
       case r"d([1-5])$pos" => (pos.toInt, false)
     }
-    val opt            = attr.last == '$'
 
     def compareType: Tree = {
       tpeStr match {
-        case "String"       => q"""SortCoordinate($i, $asc, $attr, $opt, "String", $isEnum)"""
-        case "enum"         => q"""SortCoordinate($i, $asc, $attr, $opt, "String", true)"""
+        case "String"       => q"""SortCoordinate($i, $asc, $attr, $opt, "String")"""
         case "ref"          => q"""SortCoordinate($i, $asc, $attr, $opt, "ref")"""
         case "Int" | "Long" => q"""SortCoordinate($i, $asc, $attr, $opt, "Long")"""
         case "Double"       => q"""SortCoordinate($i, $asc, $attr, $opt, "Double")"""
@@ -69,7 +67,7 @@ private[molecule] trait MakeSortingJs extends TreeOps {
           case "valueType"   => q"""SortCoordinate($i, $asc, $attr, $opt, "String")"""
           case "cardinality" => q"""SortCoordinate($i, $asc, $attr, $opt, "String")"""
           case "doc"         => q"""SortCoordinate($i, $asc, $attr, $opt, "String")"""
-          case "unique"      => q"""SortCoordinate($i, $asc, $attr, $opt, "String")"""
+          case "unique"      => q"""SortCoordinate($i, $asc, $attr, $opt, "schema")""" // handle keyword
           case "isComponent" => q"""SortCoordinate($i, $asc, $attr, $opt, "Boolean")"""
           case "noHistory"   => q"""SortCoordinate($i, $asc, $attr, $opt, "Boolean")"""
           case "index"       => q"""SortCoordinate($i, $asc, $attr, $opt, "Boolean")"""
@@ -79,9 +77,11 @@ private[molecule] trait MakeSortingJs extends TreeOps {
       }
     }
 
-    val sortCoordinate = if (aggrFn.isEmpty) {
+    val sortCoordinate = if (isEnum) {
+      q"""SortCoordinate($i, $asc, $attr, $opt, "enum")"""
+    } else if (aggrFn.isEmpty) {
       compareType
-    } else {
+    } else  {
       (aggrFn, aggrLimit) match {
         case ("min" | "max" | "distinct" | "rand" | "sample", Some(limit)) => abort(
           s"Unexpectedly trying to sort aggregate with applied limit. Found: $attr($aggrFn($limit)).")
@@ -142,9 +142,7 @@ private[molecule] trait MakeSortingJs extends TreeOps {
 
     // Order sort coordinates by sort position
     val sortCoordinates = sortCoords.sortBy(_._1).map(_._2)
-    q"""
-      final override protected def sortCoordinates: List[List[SortCoordinate]] = List(List(..$sortCoordinates))
-    """
+    q"final override protected def sortCoordinates: List[List[SortCoordinate]] = List(List(..$sortCoordinates))"
   }
 
 
@@ -152,7 +150,7 @@ private[molecule] trait MakeSortingJs extends TreeOps {
     var level         = 0
     var hasTxMetaData = false
 
-    // Collect sort indexes and comparators on current level
+    // Collect sort position and coordinates on current level
     var curLevel = Seq.empty[(Int, Tree)]
 
     // Accumulate comparator trees for all levels
@@ -161,12 +159,12 @@ private[molecule] trait MakeSortingJs extends TreeOps {
     var i = levels // skip nested indexes in raw output (1 for each level)
     def addSortCoordinate(sort: String, value: Value, attr: String, tpeStr: String, isEnum: Boolean): Unit = {
       if (sort.nonEmpty) {
-        val comparator = value match {
+        val sortCoordinate = value match {
           case Fn(aggrFn, aggrLimit) => getSortCoordinate(i, attr, tpeStr, isEnum, aggrFn, aggrLimit, sort)
           case _                     => getSortCoordinate(i, attr, tpeStr, isEnum, "", None, sort)
         }
         i += 1
-        curLevel = curLevel :+ comparator
+        curLevel = curLevel :+ sortCoordinate
       } else if (attr.last != '_') {
         i += 1
       }
@@ -213,13 +211,118 @@ private[molecule] trait MakeSortingJs extends TreeOps {
         val lastNestedLevel = curLevel :+ sortNestedIndex
         accLevels :+ lastNestedLevel
       }
-      // Sort by sort position on each level and return flattened comparator trees
+      // Sort by sort position on each level and return flattened top level sort coordinates
       accLevels.flatMap(_.sortBy(_._1).map(_._2))
     }
 
-    // Override `compare` in NestedBase
-    q"""
-      final override protected def sortCoordinates: List[List[SortCoordinate]] = List(List(..$sortCoordinates))
-    """
+    q"final override protected def sortCoordinates: List[List[SortCoordinate]] = List(List(..$sortCoordinates))"
   }
+
+
+  def sortCoordinatesOptNested(model: Model, doSort: Boolean): Tree = {
+    if (!doSort) {
+      return q""
+    }
+
+    var hasTxMetaData   = false
+    var firstTxMetaData = false
+    var topIndex        = 0
+    var topLevel        = List.empty[(Int, Tree)]
+    var curLevel        = List.empty[(Int, Tree)]
+    var accLevels       = List.empty[List[(Int, Tree)]]
+    var i               = 0
+
+    def addSortCoordinate(
+      sort: String,
+      value: Value,
+      attr: String,
+      tpeStr: String,
+      isEnum: Boolean,
+      level: Int,
+    ): Unit = {
+      if (sort.nonEmpty) {
+        val sortCoordinate = value match {
+          case Fn(aggrFn, aggrLimit) => getSortCoordinate(i, attr, tpeStr, isEnum, aggrFn, aggrLimit, sort)
+          case _                     => getSortCoordinate(i, attr, tpeStr, isEnum, "", None, sort)
+        }
+        if (level == 0) {
+          topIndex += 1
+          // Save in case we need to add tx meta data in the end
+          topLevel = topLevel :+ sortCoordinate
+        }
+        curLevel = curLevel :+ sortCoordinate
+        i += 1
+      } else if (attr.last != '_') {
+        if (level == 0) {
+          topIndex += 1
+        }
+        i += 1
+      }
+    }
+
+    def addSortCoordinates(elements: Seq[Element], level: Int): Unit = {
+      elements.collect {
+        case Atom(_, attr, tpe, _, value, enumPrefix, _, _, sort) =>
+          addSortCoordinate(sort, value, attr, tpe, enumPrefix.nonEmpty, level)
+
+        case Generic(_, attr, tpe, value, sort) =>
+          addSortCoordinate(sort, value, attr, tpe, isEnum = false, level)
+
+        case Nested(_, elements) =>
+          accLevels = accLevels :+ curLevel
+          curLevel = List.empty[(Int, Tree)]
+          i = 0
+          addSortCoordinates(elements, level + 1)
+
+//          println("===========")
+//          println(curLevel)
+
+        case TxMetaData(txElements) =>
+          accLevels = accLevels :+ curLevel
+
+          hasTxMetaData = true
+          firstTxMetaData = true
+          // Continue on top level
+          i = topIndex + 1
+          curLevel = topLevel
+          addSortCoordinates(txElements, 0)
+
+        case Composite(elements) =>
+          if (firstTxMetaData) {
+            i = topIndex + 1 // skip
+            firstTxMetaData = false
+          }
+          // Composites only allowed in tx meta data, so we can presume that we are on the top level
+          addSortCoordinates(elements, 0)
+      }
+    }
+
+    val sortCoordinates: List[List[Tree]] = {
+      addSortCoordinates(model.elements, 0)
+
+//      println("###############")
+//      println(model)
+//      println("----- 1")
+//      println(curLevel)
+//      println("----- 2")
+//      println(accLevels)
+
+      accLevels = if (hasTxMetaData) {
+        // Add current level data (having tx meta data) as first level
+        curLevel +: accLevels.tail
+      } else {
+        // Add last level
+        accLevels :+ curLevel
+      }
+      // Sort by sort position on each level and return flattened comparator trees
+      accLevels.map(_.sortBy(_._1).map(_._2))
+    }
+
+//    println("----- 3")
+//    println(sortCoordinates)
+
+    // Override `sortCoordinates` in Marshalling
+    q"final override protected def sortCoordinates: List[List[SortCoordinate]] = $sortCoordinates"
+  }
+
 }

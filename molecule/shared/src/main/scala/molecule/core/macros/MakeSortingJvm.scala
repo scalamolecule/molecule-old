@@ -248,7 +248,7 @@ private[molecule] trait MakeSortingJvm extends TreeOps {
     var level         = 0
     var hasTxMetaData = false
 
-    // Collect sort indexes and comparators on current level
+    // Collect sort positions and comparators on current level
     var curLevel = Seq.empty[(Int, Tree)]
 
     // Accumulate comparator trees for all levels
@@ -430,13 +430,13 @@ private[molecule] trait MakeSortingJvm extends TreeOps {
 
         case TxMetaData(txElements) =>
           // Continue on top level
-          i = topIndex + 1 // nested data
+          i = topIndex + 1 // skip nested data
           firstTxMetaData = true
           addOrderings(txElements, 0)
 
         case Composite(elements) =>
           if (firstTxMetaData) {
-            i = topIndex + 1 // nested data
+            i = topIndex + 1 // skip nested data
             firstTxMetaData = false
           }
           // Composites only allowed in tx meta data, so we can presume that we are on the top level

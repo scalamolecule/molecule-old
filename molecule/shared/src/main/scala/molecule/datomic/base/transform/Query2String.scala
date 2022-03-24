@@ -21,20 +21,20 @@ case class Query2String(q: Query) extends Helpers {
   var asN = false
 
   val p: QueryExpr => String = {
-    case Query(find, widh, in, where)                    => pp(find, widh, in, where)
-    case Find(outputs)                                   => ":find  " + outputs.map(p).mkString(" ")
-    case With(variables)                                 => if (variables.isEmpty) "" else ":with  " + variables.map(s).mkString(" ")
-    case in@In(_, _, _)                                  => mkIn(in, false)
-    case Where(clauses)                                  => ":where " + clauses.map(p).mkString(" ")
-    case KW("?", attr, _)                                => s"?$attr"
-    case KW(nsFull, "?", _)                              => s"?$nsFull"
-    case KW(nsFull, attr, _)                             => s":$nsFull/$attr"
-    case AggrExpr(fn, args, v)                           => s"($fn " + args.:+(p(v)).mkString(" ") + ")"
-    case Var("?")                                        => "?"
-    case Var("_")                                        => "_"
-    case Var(eid) if eid matches """\d+"""               => eid
-    case Var(v)                                          => "?" + v
-    case Val(v: Any)                                     => v match {
+    case Query(find, widh, in, where)      => pp(find, widh, in, where)
+    case Find(outputs)                     => ":find  " + outputs.map(p).mkString(" ")
+    case With(variables)                   => if (variables.isEmpty) "" else ":with  " + variables.map(s).mkString(" ")
+    case in@In(_, _, _)                    => mkIn(in, false)
+    case Where(clauses)                    => ":where " + clauses.map(p).mkString(" ")
+    case KW("?", attr, _)                  => s"?$attr"
+    case KW(nsFull, "?", _)                => s"?$nsFull"
+    case KW(nsFull, attr, _)               => s":$nsFull/$attr"
+    case AggrExpr(fn, args, v)             => s"($fn " + args.:+(p(v)).mkString(" ") + ")"
+    case Var("?")                          => "?"
+    case Var("_")                          => "_"
+    case Var(eid) if eid matches """\d+""" => eid
+    case Var(v)                            => "?" + v
+    case Val(v: Any)                       => v match {
       // Order of type checks here is important since JS types match by value
       // See: https://www.scala-js.org/doc/semantics.html
       case v: String if v.startsWith("__d__")        => "#inst \"" + v.drop(5) + "\"" // JS date
@@ -54,49 +54,61 @@ case class Query2String(q: Query) extends Helpers {
       case v: UUID                                   => "#uuid \"" + v.toString + "\""
       case v                                         => "\"" + v.toString + "\""
     }
-    case Pull(e, nsFull, attr, Some(_))                  => s"(pull ?$e [{:$nsFull/$attr [:db/ident]}])"
-    case Pull(e, nsFull, attr, _)                        => s"(pull ?$e [(limit :$nsFull/$attr nil)])"
-    case PullNested(e, nestedAttrs)                      => s"\n        (pull ?$e [\n          ${p(nestedAttrs)}])"
-    case NestedAttrs(1, nsFull, attr, attrSpecs)         =>
+    case Pull(e, nsFull, attr, Some(_))    => s"(pull ?$e [{:$nsFull/$attr [:db/ident]}])"
+    case Pull(e, nsFull, attr, _)          => s"(pull ?$e [(limit :$nsFull/$attr nil)])"
+    case PullNested(e, nestedAttrs)        => s"\n        (pull ?$e [\n          ${p(nestedAttrs)}])"
+
+    case NestedAttrs(1, nsFull, attr, attrSpecs) =>
       val sp = "  " * 6;
       s"""{(:$nsFull/$attr :limit nil) [""" + s"\n$sp${attrSpecs.map(p).mkString(s"\n$sp")}]}"
-    case NestedAttrs(level, nsFull, attr, attrSpecs)     =>
+
+    case NestedAttrs(level, nsFull, attr, attrSpecs) =>
       val sp = "  " * (5 + level);
       s"""{(:$nsFull/$attr :limit nil :default "__none__") [""" + s"\n$sp${attrSpecs.map(p).mkString(s"\n$sp")}]}"
-    case PullAttr(nsFull, attr, true)                    => s"""(:$nsFull/$attr :limit nil :default "__none__")"""
-    case PullAttr(nsFull, attr, _)                       => s"""(:$nsFull/$attr :limit nil)"""
-    case PullEnum(nsFull, attr, true)                    => s"""{(:$nsFull/$attr :limit nil :default "__none__") [:db/ident]}"""
-    case PullEnum(nsFull, attr, _)                       => s"""{(:$nsFull/$attr :limit nil) [:db/ident]}"""
-    case NoVal                                           => ""
-    case DS(name)                                        => "$" + name
-    case DS                                              => "$"
-    case Empty                                           => ""
-    case ImplDS                                          => ""
-    case InVar(binding, _, _)                            => p(binding)
-    case Placeholder(_, _, Var(v), _, _)                 => "?" + v
-    case NoBinding                                       => ""
-    case ScalarBinding(v)                                => p(v)
-    case CollectionBinding(v)                            => "[" + p(v) + " ...]"
-    case TupleBinding(vs)                                => "[ " + vs.map(p).mkString(" ") + " ]"
-    case RelationBinding(vs)                             => "[[ " + vs.map(p).mkString(" ") + " ]]"
+
+    case PullAttr(nsFull, attr, true)    => s"""(:$nsFull/$attr :limit nil :default "__none__")"""
+    case PullAttr(nsFull, attr, _)       => s"""(:$nsFull/$attr :limit nil)"""
+    case PullEnum(nsFull, attr, true)    => s"""{(:$nsFull/$attr :limit nil :default "__none__") [:db/ident]}"""
+    case PullEnum(nsFull, attr, _)       => s"""{(:$nsFull/$attr :limit nil) [:db/ident]}"""
+    case NoVal                           => ""
+    case DS(name)                        => "$" + name
+    case DS                              => "$"
+    case Empty                           => ""
+    case ImplDS                          => ""
+    case InVar(binding, _, _)            => p(binding)
+    case Placeholder(_, _, Var(v), _, _) => "?" + v
+    case NoBinding                       => ""
+    case ScalarBinding(v)                => p(v)
+    case CollectionBinding(v)            => "[" + p(v) + " ...]"
+    case TupleBinding(vs)                => "[ " + vs.map(p).mkString(" ") + " ]"
+    case RelationBinding(vs)             => "[[ " + vs.map(p).mkString(" ") + " ]]"
+
     case DataClause(ds, e, a, v@Val(bi: BigInt), tx, op) =>
       asN = true
       val dc = pp(ds, e, a, v, tx, op);
       asN = false;
       dc
-    case DataClause(ds, e, a, v, tx, op)                 => pp(ds, e, a, v, tx, op)
-    case NotClause(e, a)                                 => s"(not [" + p(e) + " " + p(a) + "])"
-    case NotClauses(cls)                                 => s"(not " + cls.map(p).mkString(" ") + ")"
-    case NotJoinClauses(vars, cls)                       => s"(not-join [" + vars.map(p).mkString(" ") + "]\n          " + cls.map(p).mkString("\n          ") + ")"
-    case FunctClause(fn, ins, outs)                      => ((s"[($fn " + ins.map(p).mkString(" ")).trim + ") " + p(outs)).trim + "]"
-    case Funct(fn, ins, outs)                            => ((s"($fn " + ins.map(p).mkString(" ")).trim + ") " + p(outs)).trim
-    case RuleInvocation(rule, args)                      => s"($rule " + args.map(p).mkString(" ") + ")"
-    case Rule(rule, args, clauses) if clauses.size > 1   =>
+
+    case DataClause(ds, e, a, v, tx, op) => pp(ds, e, a, v, tx, op)
+    case NotClause(e, a)                 => s"(not [" + p(e) + " " + p(a) + "])"
+    case NotClauses(cls)                 => s"(not " + cls.map(p).mkString(" ") + ")"
+
+    case NotJoinClauses(vars, cls) =>
+      s"(not-join [" + vars.map(p).mkString(" ") + "]\n          " + cls.map(p).mkString("\n          ") + ")"
+
+    case FunctClause(fn, ins, outs) =>
+      ((s"[($fn " + ins.map(p).mkString(" ")).trim + ") " + p(outs)).trim + "]"
+
+    case Funct(fn, ins, outs) =>
+      ((s"($fn " + ins.map(p).mkString(" ")).trim + ") " + p(outs)).trim
+
+    case RuleInvocation(rule, args)                    => s"($rule " + args.map(p).mkString(" ") + ")"
+    case Rule(rule, args, clauses) if clauses.size > 1 =>
       asN = true
       val rc = clauses.map(p).mkString("\n   ")
       asN = false
       s"[($rule " + args.map(p).mkString(" ") + ")\n   " + rc + "]"
-    case Rule(name, args, clauses)                       =>
+    case Rule(name, args, clauses)                     =>
       asN = true
       val rc = clauses.map(p).mkString(" ")
       asN = false

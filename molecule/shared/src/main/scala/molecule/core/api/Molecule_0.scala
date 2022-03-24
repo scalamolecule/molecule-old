@@ -109,6 +109,7 @@ abstract class Molecule_0[Obj, Tpl](model: Model, queryData: (Query, String, Opt
     with GetTpls[Obj, Tpl]
     with GetObjs[Obj, Tpl]
     with GetJson[Obj, Tpl]
+
     with ShowInspect[Obj, Tpl]
     with Helpers {
 

@@ -14,6 +14,7 @@ private[molecule] object Convert extends JavaConversions {
     case d: java.util.Date        => d
     case u: java.util.UUID        => u
     case u: java.net.URI          => u
+    case kw: clojure.lang.Keyword => kw.toString
     case bi: clojure.lang.BigInt  => BigInt(bi.toBigInteger)
     case bi: java.math.BigInteger => BigInt(bi)
     case bd: java.math.BigDecimal => BigDecimal(bd)

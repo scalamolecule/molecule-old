@@ -4,13 +4,13 @@ import molecule.datomic.base.transform.Model2Query
 import scala.language.higherKinds
 import scala.reflect.macros.blackbox
 
+
 class MakeMolecule(val c: blackbox.Context) extends MakeBase {
 
   import c.universe._
 
   private lazy val xy = InspectMacro("MakeMolecule", 60, mkError = true)
   private lazy val xx = InspectMacro("MakeMolecule", 60)
-
 
   private[this] final def generateMolecule(dsl: Tree, ObjType: Type, OutTypes: Type*): Tree = {
     val (
@@ -80,10 +80,12 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
           final override def isOptNested: Boolean = true
           final override def refIndexes  : List[List[Int]] = $refIndexes
           final override def tacitIndexes: List[List[Int]] = $tacitIndexes
+          ..${sortCoordinatesOptNested(model, doSort)}
         """
       } else {
         val (topLevelComparisons, orderings) = compareOptNested(model, doSort)
         q"""
+          import molecule.datomic.base.marshalling.sorting.ExtractFlatValues
           final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) =
             ${tplOptNested(obj, refIndexes, tacitIndexes, orderings = orderings)}.asInstanceOf[(..$OutTypes)]
 
@@ -190,8 +192,8 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
           new $outMolecule
         }
       """
-//    if (doSort)
-//      xy(6, obj, tree)
+    //    if (doSort)
+    //      xy(6, obj, tree)
     xx(6, levels, obj, tree)
     tree
   }

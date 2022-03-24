@@ -161,7 +161,6 @@ object SortTxMetaData extends AsyncTestSuite {
           ("a", List(1, 2), "Y"),
           ("b", List(1, 2), "Y"),
         ))
-
         _ <- Ns.str.d2.Refs1.*(Ref1.int1.a1).Tx(Ref3.str3.a1).get.map(_ ==> List(
           ("b", List(1, 2), "X"),
           ("a", List(1, 2), "X"),
