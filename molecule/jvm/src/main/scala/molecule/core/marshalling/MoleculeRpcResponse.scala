@@ -23,8 +23,8 @@ case class MoleculeRpcResponse(interface: String, port: Int) extends BooPicklers
     try {
       val path       = pathStr.split("/").toList
       val args       = Unpickle.apply[ByteBuffer].fromBytes(argsData)
-      val callResult = router.apply(Request[ByteBuffer](path, args))
-      callResult.toEither match {
+      val callResult = router(Request[ByteBuffer](path, args))
+      callResult match {
         case Right(byteBufferResultFuture) => byteBufferResultFuture
           .map { bytes =>
             val dataLength                    = bytes.remaining()

@@ -147,8 +147,7 @@ object SortNested extends AsyncTestSuite {
           (1, Some(1.1)),
           (3, None))))
 
-        //        // Todo: due to what seems like a bug in Datomic, pulling the false value
-        //        // returns None instead of false
+        //        // Todo: a bug in Datomic pulls nil/null instead of the false value
         //        _ <- Ref1.int1.Nss.*(Ns.int.bool$) insert List((7, List(
         //          (1, Some(false)),
         //          (2, Some(true)),

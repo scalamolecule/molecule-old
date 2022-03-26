@@ -44,7 +44,7 @@ object Settings extends SettingsDatomic {
 
   lazy val js: Seq[Def.Setting[_]] = Seq(
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "2.0.0",
+      "org.scala-js" %%% "scalajs-dom" % "2.1.0",
       "io.github.cquiroz" %%% "scala-java-time" % "2.3.0",
       // This creates quite a lot of locales code but is needed on the js side.
       // See https://github.com/cquiroz/scala-java-time/issues/69
@@ -53,7 +53,7 @@ object Settings extends SettingsDatomic {
     //    jsEnv := new JSDOMNodeJSEnv()
     jsEnv := new JSDOMNodeJSEnv(
       JSDOMNodeJSEnv.Config()
-        // for some reason still needed with Scala.js 1.8
+        // for some reason still needed with Scala.js 1.9
         // https://github.com/scala-js/scala-js-js-envs/issues/12
         .withArgs(List("--dns-result-order=ipv4first"))
     )
@@ -74,8 +74,12 @@ object Settings extends SettingsDatomic {
         "org.scalamolecule" %% "datomic-client-api-java-scala" % "1.0.3",
 
         // Akka dependencies for MoleculeRpcResponse
-        "com.typesafe.akka" %% "akka-actor-typed" % "2.6.17",
-        "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.1",
+        "com.typesafe.akka" %% "akka-actor-typed" % "2.6.19",
+        "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.2",
+
+        // Enforce one version to avoid warnings of multiple dependency versions when running tests
+        "org.slf4j" % "slf4j-api" % "1.7.36",
+        "org.slf4j" % "slf4j-nop" % "1.7.36",
       ) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((2, 13)) => Nil
         case _             =>
@@ -90,9 +94,9 @@ object Settings extends SettingsDatomic {
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
       "org.scala-js" %%% "scala-js-macrotask-executor" % "1.0.0",
-      "com.lihaoyi" %%% "utest" % "0.7.10",
+      "com.lihaoyi" %%% "utest" % "0.7.11",
       "io.suzaku" %%% "boopickle" % "1.4.0",
-      "com.github.cornerman" %%% "sloth" % "0.4.0"
+      "com.github.cornerman" %%% "sloth" % "0.6.2"
     )
   )
 
@@ -198,11 +202,11 @@ object Settings extends SettingsDatomic {
     resolvers += Resolver.mavenLocal,
 
     libraryDependencies ++= Seq(
-      "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.1",
-      "com.typesafe.akka" %% "akka-stream" % "2.6.17",
-      "com.typesafe.akka" %% "akka-actor" % "2.6.17",
-      "com.typesafe.akka" %% "akka-actor-typed" % "2.6.17",
-      "ch.megard" %% "akka-http-cors" % "1.1.2",
+      "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.2",
+      "com.typesafe.akka" %% "akka-stream" % "2.6.19",
+      "com.typesafe.akka" %% "akka-actor" % "2.6.19",
+      "com.typesafe.akka" %% "akka-actor-typed" % "2.6.19",
+      "ch.megard" %% "akka-http-cors" % "1.1.3",
 
       // Free, but proprietary Client dev-local dependency needed for testing client/dev-local
       // Please download from https://cognitect.com/dev-tools and install locally per included instructions

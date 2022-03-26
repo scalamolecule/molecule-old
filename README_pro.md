@@ -47,14 +47,14 @@ To enforce using the free version, you can compile molecule with this flag:
 
 To enforce using a specific version, you can compile molecule with one or both of these flags:
 
-`sbt compile -Ddatomic.pro=1.0.6344 -Ddatomic.dev-local=1.0.238`
+`sbt compile -Ddatomic.pro=1.0.6362 -Ddatomic.dev-local=1.0.242`
 
 
 ## STEP 4 - Start transactor
 
 Start Datomic transactor (update path/version number):
 
-    cd <path-to-datomic-downloads>/datomic-pro-1.0.6344
+    cd <path-to-datomic-downloads>/datomic-pro-1.0.6362
     bin/transactor config/samples/dev-transactor-template.properties
 
 While the transactor is running, create a new tab/process in the terminal to run the next steps:

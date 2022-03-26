@@ -8,6 +8,6 @@ import scala.concurrent.Future
 
 trait WebClient extends BooPicklers {
 
-  def moleculeAjax(interface: String, port: Int): Client[ByteBuffer, Future, ClientException] =
-    Client[ByteBuffer, Future, ClientException](MoleculeRpcRequest(interface, port))
+  def moleculeAjax(interface: String, port: Int): ClientCo[ByteBuffer, Future] =
+    Client[ByteBuffer, Future](MoleculeRpcRequest(interface, port))
 }
