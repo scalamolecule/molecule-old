@@ -226,22 +226,26 @@ object ExtractFlatValues {
 
     def sort(nestedRows: jCollection[_]): util.ArrayList[jList[AnyRef]] = {
       val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(nestedRows.size)
-      nestedRows.iterator.next match {
-        case _: jMap[_, _] =>
-          // Isolate values of maps
-          nestedRows.forEach(row =>
-            sortedRows.add(new java.util.ArrayList[AnyRef](row.asInstanceOf[jMap[_, AnyRef]].values))
-          )
-        case _: jList[_]   =>
-          // Use list as is
-          nestedRows.forEach(row =>
-            sortedRows.add(new java.util.ArrayList[AnyRef](row.asInstanceOf[jList[AnyRef]]))
-          )
+      if (nestedRows.size == 0) {
+        sortedRows // (empty array list)
+      } else {
+        nestedRows.iterator.next match {
+          case _: jMap[_, _] =>
+            // Isolate values of maps
+            nestedRows.forEach(row =>
+              sortedRows.add(new java.util.ArrayList[AnyRef](row.asInstanceOf[jMap[_, AnyRef]].values))
+            )
+          case _: jList[_]   =>
+            // Use list as is
+            nestedRows.forEach(row =>
+              sortedRows.add(new java.util.ArrayList[AnyRef](row.asInstanceOf[jList[AnyRef]]))
+            )
+        }
+        if (doSort) {
+          sortedRows.sort(comparator(sortCoordinates(level)))
+        }
+        sortedRows
       }
-      if (doSort) {
-        sortedRows.sort(comparator(sortCoordinates(level)))
-      }
-      sortedRows
     }
 
     (refIndexes.isEmpty, tacitIndexes.isEmpty) match {

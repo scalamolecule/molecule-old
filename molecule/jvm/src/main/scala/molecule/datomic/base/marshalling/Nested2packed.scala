@@ -31,7 +31,7 @@ private[molecule] case class Nested2packed(
 
   private var colIndex = nestedLevels
 
-  def prevEid(level: Int) = level match {
+  def prevEid(level: Int): () => AnyRef = level match {
     case 1 => () => e0
     case 2 => () => e1
     case 3 => () => e2
@@ -41,13 +41,14 @@ private[molecule] case class Nested2packed(
     case 7 => () => e6
   }
 
-  def setCurEid(level: Int) = level match {
+  def setCurEid(level: Int): AnyRef => Unit = level match {
     case 1 => (e: AnyRef) => e1 = e
     case 2 => (e: AnyRef) => e2 = e
     case 3 => (e: AnyRef) => e3 = e
     case 4 => (e: AnyRef) => e4 = e
     case 5 => (e: AnyRef) => e5 = e
     case 6 => (e: AnyRef) => e6 = e
+    case 7 => (_: AnyRef) => // no need for identification on last level
   }
 
   val sb = new StringBuffer()

@@ -71,6 +71,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
 
 
     def mkOptNested = {
+      val sortCoordinates = sortCoordinatesOptNested(model, doSort)
       val transformers = if (isJsPlatform) {
         q"""
           final override def packed2tpl(vs: Iterator[String]): (..$OutTypes) = ${packed2tplNested(typess, obj, txMetas)}
@@ -80,7 +81,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
           final override def isOptNested: Boolean = true
           final override def refIndexes  : List[List[Int]] = $refIndexes
           final override def tacitIndexes: List[List[Int]] = $tacitIndexes
-          ..${sortCoordinatesOptNested(model, doSort)}
+          ..$sortCoordinates
         """
       } else {
         val (topLevelComparisons, orderings) = compareOptNested(model, doSort)
@@ -95,6 +96,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
             ${jsonOptNested(obj, refIndexes, tacitIndexes)}
 
           ..$topLevelComparisons
+          ..$sortCoordinates
         """
       }
 

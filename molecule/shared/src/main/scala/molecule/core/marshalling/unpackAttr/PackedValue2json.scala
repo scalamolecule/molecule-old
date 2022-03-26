@@ -39,8 +39,8 @@ private[molecule] trait PackedValue2json extends TreeOps {
     case "Date"       => q"unpackJsonOneDate(sb, $field, $v)"
     case "UUID"       => q"unpackJsonOneQuoted(sb, $field, $v)"
     case "URI"        => q"unpackJsonOneQuoted(sb, $field, $v)"
-    case "BigInt"     => q"unpackJsonOne(sb, $field, $v)"
-    case "BigDecimal" => q"unpackJsonOne(sb, $field, $v)"
+    case "BigInt"     => q"unpackJsonOneQuoted(sb, $field, $v)"
+    case "BigDecimal" => q"unpackJsonOneQuoted(sb, $field, $v)"
     case "Any"        => q"unpackJsonOneAny(sb, $field, $v, vs)"
     case "enum"       => q"unpackJsonOneQuoted(sb, $field, $v)"
     case "ref"        => q"unpackJsonOne(sb, $field, $v)"
@@ -55,8 +55,8 @@ private[molecule] trait PackedValue2json extends TreeOps {
     case "Date"       => q"unpackJsonOptOneDate(sb, $field, $v)"
     case "UUID"       => q"unpackJsonOptOneQuoted(sb, $field, $v)"
     case "URI"        => q"unpackJsonOptOneQuoted(sb, $field, $v)"
-    case "BigInt"     => q"unpackJsonOptOne(sb, $field, $v)"
-    case "BigDecimal" => q"unpackJsonOptOne(sb, $field, $v)"
+    case "BigInt"     => q"unpackJsonOptOneQuoted(sb, $field, $v)"
+    case "BigDecimal" => q"unpackJsonOptOneQuoted(sb, $field, $v)"
     case "enum"       => q"unpackJsonOptOneQuoted(sb, $field, $v)"
     case "ref"        => q"unpackJsonOptOne(sb, $field, $v)"
   }
@@ -70,8 +70,8 @@ private[molecule] trait PackedValue2json extends TreeOps {
     case "Date"       => q"unpackJsonManyDate(sb, $field, $v, vs, $tabs)"
     case "UUID"       => q"unpackJsonManyQuoted(sb, $field, $v, vs, $tabs)"
     case "URI"        => q"unpackJsonManyQuoted(sb, $field, $v, vs, $tabs)"
-    case "BigInt"     => q"unpackJsonMany(sb, $field, $v, vs, $tabs)"
-    case "BigDecimal" => q"unpackJsonMany(sb, $field, $v, vs, $tabs)"
+    case "BigInt"     => q"unpackJsonManyQuoted(sb, $field, $v, vs, $tabs)"
+    case "BigDecimal" => q"unpackJsonManyQuoted(sb, $field, $v, vs, $tabs)"
     case "enum"       => q"unpackJsonManyQuoted(sb, $field, $v, vs, $tabs)"
     case "ref"        => q"unpackJsonMany(sb, $field, $v, vs, $tabs)"
   }
@@ -85,8 +85,8 @@ private[molecule] trait PackedValue2json extends TreeOps {
     case "Date"       => q"unpackJsonOptManyDate(sb, $field, $v, vs, $tabs)"
     case "UUID"       => q"unpackJsonOptManyQuoted(sb, $field, $v, vs, $tabs)"
     case "URI"        => q"unpackJsonOptManyQuoted(sb, $field, $v, vs, $tabs)"
-    case "BigInt"     => q"unpackJsonOptMany(sb, $field, $v, vs, $tabs)"
-    case "BigDecimal" => q"unpackJsonOptMany(sb, $field, $v, vs, $tabs)"
+    case "BigInt"     => q"unpackJsonOptManyQuoted(sb, $field, $v, vs, $tabs)"
+    case "BigDecimal" => q"unpackJsonOptManyQuoted(sb, $field, $v, vs, $tabs)"
     case "enum"       => q"unpackJsonOptManyQuoted(sb, $field, $v, vs, $tabs)"
     case "ref"        => q"unpackJsonOptMany(sb, $field, $v, vs, $tabs)"
   }
@@ -100,8 +100,8 @@ private[molecule] trait PackedValue2json extends TreeOps {
     case "Date"       => q"unpackJsonMapQuoted(sb, $field, $v, vs, $tabs)"
     case "UUID"       => q"unpackJsonMapQuoted(sb, $field, $v, vs, $tabs)"
     case "URI"        => q"unpackJsonMapQuoted(sb, $field, $v, vs, $tabs)"
-    case "BigInt"     => q"unpackJsonMap(sb, $field, $v, vs, $tabs)"
-    case "BigDecimal" => q"unpackJsonMap(sb, $field, $v, vs, $tabs)"
+    case "BigInt"     => q"unpackJsonMapQuoted(sb, $field, $v, vs, $tabs)"
+    case "BigDecimal" => q"unpackJsonMapQuoted(sb, $field, $v, vs, $tabs)"
   }
 
   def unpackJsonOptMapAttr(field: String, tpe: String, v: Tree, tabs: Int): Tree = tpe match {
@@ -113,8 +113,8 @@ private[molecule] trait PackedValue2json extends TreeOps {
     case "Date"       => q"unpackJsonOptMapQuoted(sb, $field, $v, vs, $tabs)"
     case "UUID"       => q"unpackJsonOptMapQuoted(sb, $field, $v, vs, $tabs)"
     case "URI"        => q"unpackJsonOptMapQuoted(sb, $field, $v, vs, $tabs)"
-    case "BigInt"     => q"unpackJsonOptMap(sb, $field, $v, vs, $tabs)"
-    case "BigDecimal" => q"unpackJsonOptMap(sb, $field, $v, vs, $tabs)"
+    case "BigInt"     => q"unpackJsonOptMapQuoted(sb, $field, $v, vs, $tabs)"
+    case "BigDecimal" => q"unpackJsonOptMapQuoted(sb, $field, $v, vs, $tabs)"
   }
 
   def unpackJsonAggrOneList(field: String, tpe: String, v: Tree, tabs: Int): Tree = tpe match {
@@ -126,8 +126,8 @@ private[molecule] trait PackedValue2json extends TreeOps {
     case "List[Date]"       => q"unpackJsonListQuoted(sb, $field, $v, vs, $tabs)"
     case "List[UUID]"       => q"unpackJsonListQuoted(sb, $field, $v, vs, $tabs)"
     case "List[URI]"        => q"unpackJsonListQuoted(sb, $field, $v, vs, $tabs)"
-    case "List[BigInt]"     => q"unpackJsonList(sb, $field, $v, vs, $tabs)"
-    case "List[BigDecimal]" => q"unpackJsonList(sb, $field, $v, vs, $tabs)"
+    case "List[BigInt]"     => q"unpackJsonListQuoted(sb, $field, $v, vs, $tabs)"
+    case "List[BigDecimal]" => q"unpackJsonListQuoted(sb, $field, $v, vs, $tabs)"
   }
 
   def unpackJsonAggrManyList(field: String, tpe: String, v: Tree, tabs: Int): Tree = tpe match {
@@ -139,8 +139,8 @@ private[molecule] trait PackedValue2json extends TreeOps {
     case "List[Date]"       => q"unpackJsonListSetQuoted(sb, $field, $v, vs, $tabs)"
     case "List[UUID]"       => q"unpackJsonListSetQuoted(sb, $field, $v, vs, $tabs)"
     case "List[URI]"        => q"unpackJsonListSetQuoted(sb, $field, $v, vs, $tabs)"
-    case "List[BigInt]"     => q"unpackJsonListSet(sb, $field, $v, vs, $tabs)"
-    case "List[BigDecimal]" => q"unpackJsonListSet(sb, $field, $v, vs, $tabs)"
+    case "List[BigInt]"     => q"unpackJsonListSetQuoted(sb, $field, $v, vs, $tabs)"
+    case "List[BigDecimal]" => q"unpackJsonListSetQuoted(sb, $field, $v, vs, $tabs)"
   }
 
 
@@ -153,8 +153,8 @@ private[molecule] trait PackedValue2json extends TreeOps {
     case "Set[Date]"       => q"unpackJsonManyDate(sb, $field, $v, vs, $tabs)"
     case "Set[UUID]"       => q"unpackJsonManyQuoted(sb, $field, $v, vs, $tabs)"
     case "Set[URI]"        => q"unpackJsonManyQuoted(sb, $field, $v, vs, $tabs)"
-    case "Set[BigInt]"     => q"unpackJsonMany(sb, $field, $v, vs, $tabs)"
-    case "Set[BigDecimal]" => q"unpackJsonMany(sb, $field, $v, vs, $tabs)"
+    case "Set[BigInt]"     => q"unpackJsonManyQuoted(sb, $field, $v, vs, $tabs)"
+    case "Set[BigDecimal]" => q"unpackJsonManyQuoted(sb, $field, $v, vs, $tabs)"
     case "Set[enum]"       => q"unpackJsonManyQuoted(sb, $field, $v, vs, $tabs)"
   }
 }

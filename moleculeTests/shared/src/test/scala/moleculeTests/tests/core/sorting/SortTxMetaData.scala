@@ -303,7 +303,7 @@ object SortTxMetaData extends AsyncTestSuite {
         // Ref1.int1 ...............................
 
         // asc
-        _ <- Ns.str.Refs1.*?(Ref1.int1.a1.Ref2.enum2.str2.Refs3.*?(Ref3.int3))
+        _ <- Ns.str.a1.Refs1.*?(Ref1.int1.a1.Ref2.enum2.str2.Refs3.*?(Ref3.int3))
           .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
           ("A", List(
             (1, "enum20", "a", List(10, 11)),
@@ -316,7 +316,7 @@ object SortTxMetaData extends AsyncTestSuite {
             (4, "enum20", "d", List(40, 41))),
             ("y1", 333, "y2"), (444, false)),
         ))
-        _ <- Ns.str.Refs1.*(Ref1.int1.a1.Ref2.enum2.str2.Refs3.*(Ref3.int3))
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1.a1.Ref2.enum2.str2.Refs3.*(Ref3.int3))
           .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
           ("A", List(
             (1, "enum20", "a", List(10, 11)),
@@ -328,7 +328,7 @@ object SortTxMetaData extends AsyncTestSuite {
         ))
 
         // desc
-        _ <- Ns.str.Refs1.*?(Ref1.int1.d1.Ref2.enum2.str2.Refs3.*?(Ref3.int3))
+        _ <- Ns.str.a1.Refs1.*?(Ref1.int1.d1.Ref2.enum2.str2.Refs3.*?(Ref3.int3))
           .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
           ("A", List(
             (3, "enum22", "c", Nil),
@@ -341,7 +341,7 @@ object SortTxMetaData extends AsyncTestSuite {
             (4, "enum20", "d", List(40, 41))),
             ("y1", 333, "y2"), (444, false)),
         ))
-        _ <- Ns.str.Refs1.*(Ref1.int1.d1.Ref2.enum2.str2.Refs3.*(Ref3.int3))
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1.d1.Ref2.enum2.str2.Refs3.*(Ref3.int3))
           .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
           ("A", List(
             (2, "enum21", "b", List(20, 21)),
@@ -381,7 +381,7 @@ object SortTxMetaData extends AsyncTestSuite {
         // Ref2.enum2 ...............................
 
         // asc
-        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.enum2.a1.str2.Refs3.*?(Ref3.int3))
+        _ <- Ns.str.a1.Refs1.*?(Ref1.int1.Ref2.enum2.a1.str2.Refs3.*?(Ref3.int3))
           .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
           ("A", List(
             (1, "enum20", "a", List(10, 11)),
@@ -394,7 +394,7 @@ object SortTxMetaData extends AsyncTestSuite {
             (4, "enum20", "d", List(40, 41))),
             ("y1", 333, "y2"), (444, false)),
         ))
-        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.enum2.a1.str2.Refs3.*(Ref3.int3))
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1.Ref2.enum2.a1.str2.Refs3.*(Ref3.int3))
           .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
           ("A", List(
             (1, "enum20", "a", List(10, 11)),
@@ -406,7 +406,7 @@ object SortTxMetaData extends AsyncTestSuite {
         ))
 
         // desc
-        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.enum2.d1.str2.Refs3.*?(Ref3.int3))
+        _ <- Ns.str.a1.Refs1.*?(Ref1.int1.Ref2.enum2.d1.str2.Refs3.*?(Ref3.int3))
           .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
           ("A", List(
             (3, "enum22", "c", Nil),
@@ -419,7 +419,7 @@ object SortTxMetaData extends AsyncTestSuite {
             (4, "enum20", "d", List(40, 41))),
             ("y1", 333, "y2"), (444, false)),
         ))
-        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.enum2.d1.str2.Refs3.*(Ref3.int3))
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1.Ref2.enum2.d1.str2.Refs3.*(Ref3.int3))
           .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
           ("A", List(
             (2, "enum21", "b", List(20, 21)),
@@ -459,7 +459,7 @@ object SortTxMetaData extends AsyncTestSuite {
         // Ref2.str2 ...............................
 
         // asc
-        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.enum2.str2.a1.Refs3.*?(Ref3.int3))
+        _ <- Ns.str.a1.Refs1.*?(Ref1.int1.Ref2.enum2.str2.a1.Refs3.*?(Ref3.int3))
           .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
           ("A", List(
             (1, "enum20", "a", List(10, 11)),
@@ -472,7 +472,7 @@ object SortTxMetaData extends AsyncTestSuite {
             (4, "enum20", "d", List(40, 41))),
             ("y1", 333, "y2"), (444, false)),
         ))
-        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.enum2.str2.a1.Refs3.*(Ref3.int3))
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1.Ref2.enum2.str2.a1.Refs3.*(Ref3.int3))
           .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
           ("A", List(
             (1, "enum20", "a", List(10, 11)),
@@ -484,7 +484,7 @@ object SortTxMetaData extends AsyncTestSuite {
         ))
 
         // desc
-        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.enum2.str2.d1.Refs3.*?(Ref3.int3))
+        _ <- Ns.str.a1.Refs1.*?(Ref1.int1.Ref2.enum2.str2.d1.Refs3.*?(Ref3.int3))
           .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
           ("A", List(
             (3, "enum22", "c", Nil),
@@ -497,7 +497,7 @@ object SortTxMetaData extends AsyncTestSuite {
             (4, "enum20", "d", List(40, 41))),
             ("y1", 333, "y2"), (444, false)),
         ))
-        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.enum2.str2.d1.Refs3.*(Ref3.int3))
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1.Ref2.enum2.str2.d1.Refs3.*(Ref3.int3))
           .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
           ("A", List(
             (2, "enum21", "b", List(20, 21)),
@@ -537,7 +537,7 @@ object SortTxMetaData extends AsyncTestSuite {
         // Ref3.int3 ...............................
 
         // asc
-        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.enum2.str2.Refs3.*?(Ref3.int3.a1))
+        _ <- Ns.str.a1.Refs1.*?(Ref1.int1.Ref2.enum2.str2.Refs3.*?(Ref3.int3.a1))
           .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
           ("A", List(
             (1, "enum20", "a", List(10, 11)),
@@ -550,7 +550,7 @@ object SortTxMetaData extends AsyncTestSuite {
             (4, "enum20", "d", List(40, 41))),
             ("y1", 333, "y2"), (444, false)),
         ))
-        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.enum2.str2.Refs3.*(Ref3.int3.a1))
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1.Ref2.enum2.str2.Refs3.*(Ref3.int3.a1))
           .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
           ("A", List(
             (1, "enum20", "a", List(10, 11)),
@@ -562,7 +562,7 @@ object SortTxMetaData extends AsyncTestSuite {
         ))
 
         // desc
-        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.enum2.str2.Refs3.*?(Ref3.int3.d1))
+        _ <- Ns.str.a1.Refs1.*?(Ref1.int1.Ref2.enum2.str2.Refs3.*?(Ref3.int3.d1))
           .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
           ("A", List(
             (1, "enum20", "a", List(11, 10)),
@@ -575,7 +575,7 @@ object SortTxMetaData extends AsyncTestSuite {
             (4, "enum20", "d", List(41, 40))),
             ("y1", 333, "y2"), (444, false)),
         ))
-        _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.enum2.str2.Refs3.*(Ref3.int3.d1))
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1.Ref2.enum2.str2.Refs3.*(Ref3.int3.d1))
           .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
           ("A", List(
             (1, "enum20", "a", List(11, 10)),

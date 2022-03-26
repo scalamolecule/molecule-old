@@ -46,8 +46,8 @@ object String2json extends JsonBase with Helpers {
       case "Date      " => quotedPair(sb, field, v)
       case "UUID      " => quotedPair(sb, field, v)
       case "URI       " => quotedPair(sb, field, v)
-      case "BigInt    " => pair(sb, field, v)
-      case "BigDecimal" => pair(sb, field, v)
+      case "BigInt    " => quotedPair(sb, field, v)
+      case "BigDecimal" => quotedPair(sb, field, v)
       case "enum      " => quotedPair(sb, field, v) // always single line
       case x            => throw MoleculeException(s"Unexpected unpackJsonOneAny prefix `$x`.")
     }

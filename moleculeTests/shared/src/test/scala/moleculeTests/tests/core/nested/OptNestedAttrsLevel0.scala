@@ -1160,105 +1160,105 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         _ <- Ns.int(8, 9).bigIntMap$.Refs1.*?(Ref1.int1).get.map(_ ==> List((8, Some(Map("a" -> bigInt1)), Nil), (9, None, Nil)))
 
         _ <- Ns.int(1).bigInt.Refs1.*?(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 1,
-             |        "bigInt": "$bigInt1",
-             |        "Refs1": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1,
+            |        "bigInt": "1",
+            |        "Refs1": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- Ns.int(2).bigInts.Refs1.*?(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 2,
-             |        "bigInts": [
-             |          "$bigInt1"
-             |        ],
-             |        "Refs1": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 2,
+            |        "bigInts": [
+            |          "1"
+            |        ],
+            |        "Refs1": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- Ns.int(3).bigIntMap.Refs1.*?(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 3,
-             |        "bigIntMap": {
-             |          "a": "$bigInt1"
-             |        },
-             |        "Refs1": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 3,
+            |        "bigIntMap": {
+            |          "a": "1"
+            |        },
+            |        "Refs1": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- Ns.int(4, 5).bigInt$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 4,
-             |        "bigInt$$": "$bigInt1",
-             |        "Refs1": []
-             |      },
-             |      {
-             |        "int": 5,
-             |        "bigInt$$": null,
-             |        "Refs1": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 4,
+            |        "bigInt$": "1",
+            |        "Refs1": []
+            |      },
+            |      {
+            |        "int": 5,
+            |        "bigInt$": null,
+            |        "Refs1": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- Ns.int(6, 7).bigInts$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 6,
-             |        "bigInts$$": [
-             |          "$bigInt1"
-             |        ],
-             |        "Refs1": []
-             |      },
-             |      {
-             |        "int": 7,
-             |        "bigInts$$": null,
-             |        "Refs1": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 6,
+            |        "bigInts$": [
+            |          "1"
+            |        ],
+            |        "Refs1": []
+            |      },
+            |      {
+            |        "int": 7,
+            |        "bigInts$": null,
+            |        "Refs1": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- Ns.int(8, 9).bigIntMap$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 8,
-             |        "bigIntMap$$": {
-             |          "a": "$bigInt1"
-             |        },
-             |        "Refs1": []
-             |      },
-             |      {
-             |        "int": 9,
-             |        "bigIntMap$$": null,
-             |        "Refs1": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 8,
+            |        "bigIntMap$": {
+            |          "a": "1"
+            |        },
+            |        "Refs1": []
+            |      },
+            |      {
+            |        "int": 9,
+            |        "bigIntMap$": null,
+            |        "Refs1": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
       } yield ()
     }
@@ -1281,105 +1281,105 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         _ <- Ns.int(8, 9).bigDecMap$.Refs1.*?(Ref1.int1).get.map(_ ==> List((8, Some(Map("a" -> bigDec1)), Nil), (9, None, Nil)))
 
         _ <- Ns.int(1).bigDec.Refs1.*?(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 1,
-             |        "bigDec": "$bigDec1",
-             |        "Refs1": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1,
+            |        "bigDec": "1.0",
+            |        "Refs1": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- Ns.int(2).bigDecs.Refs1.*?(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 2,
-             |        "bigDecs": [
-             |          "$bigDec1"
-             |        ],
-             |        "Refs1": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 2,
+            |        "bigDecs": [
+            |          "1.0"
+            |        ],
+            |        "Refs1": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- Ns.int(3).bigDecMap.Refs1.*?(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 3,
-             |        "bigDecMap": {
-             |          "a": "$bigDec1"
-             |        },
-             |        "Refs1": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 3,
+            |        "bigDecMap": {
+            |          "a": "1.0"
+            |        },
+            |        "Refs1": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- Ns.int(4, 5).bigDec$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 4,
-             |        "bigDec$$": "$bigDec1",
-             |        "Refs1": []
-             |      },
-             |      {
-             |        "int": 5,
-             |        "bigDec$$": null,
-             |        "Refs1": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 4,
+            |        "bigDec$": "1.0",
+            |        "Refs1": []
+            |      },
+            |      {
+            |        "int": 5,
+            |        "bigDec$": null,
+            |        "Refs1": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- Ns.int(6, 7).bigDecs$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 6,
-             |        "bigDecs$$": [
-             |          "$bigDec1"
-             |        ],
-             |        "Refs1": []
-             |      },
-             |      {
-             |        "int": 7,
-             |        "bigDecs$$": null,
-             |        "Refs1": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 6,
+            |        "bigDecs$": [
+            |          "1.0"
+            |        ],
+            |        "Refs1": []
+            |      },
+            |      {
+            |        "int": 7,
+            |        "bigDecs$": null,
+            |        "Refs1": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
         _ <- Ns.int(8, 9).bigDecMap$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
-          s"""{
-             |  "data": {
-             |    "Ns": [
-             |      {
-             |        "int": 8,
-             |        "bigDecMap$$": {
-             |          "a": "$bigDec1"
-             |        },
-             |        "Refs1": []
-             |      },
-             |      {
-             |        "int": 9,
-             |        "bigDecMap$$": null,
-             |        "Refs1": []
-             |      }
-             |    ]
-             |  }
-             |}""".stripMargin
+          """{
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 8,
+            |        "bigDecMap$": {
+            |          "a": "1.0"
+            |        },
+            |        "Refs1": []
+            |      },
+            |      {
+            |        "int": 9,
+            |        "bigDecMap$": null,
+            |        "Refs1": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin
         )
       } yield ()
     }

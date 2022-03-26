@@ -171,7 +171,7 @@ object NestedRef extends AsyncTestSuite {
         )
 
         // Flat card many ref allowed in mandatory nested structure
-        _ <- Ns.str.a1.Refs1.*(Ref1.int1.a1.Refs2.int2).get.map(_ ==> List(
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1.Refs2.int2.a1).get.map(_ ==> List(
           ("a", List(
             (1, 11),
             (1, 12),

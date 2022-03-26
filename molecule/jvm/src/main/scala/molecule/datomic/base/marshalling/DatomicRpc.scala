@@ -798,7 +798,8 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
               println(exc)
               exc.getStackTrace.toList.foreach(println)
               println("----")
-              Future.failed[Conn](MoleculeException(exc.getMessage)) }
+              Future.failed[Conn](MoleculeException(exc.getMessage))
+            }
 
         case "free" | "dev" | "pro" =>
           Datomic_Peer.connect(proxy, protocol, dbIdentifier)
