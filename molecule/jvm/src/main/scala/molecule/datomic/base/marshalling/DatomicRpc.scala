@@ -131,7 +131,7 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
         //      log(tacitIndexes.mkString("\n"))
         //      log("-------------------------------")
         rawRows.forEach(row => log(row.toString))
-        log("-------------------------------")
+        //        log("-------------------------------")
         //        sortCoordinates.foreach(level => log(level.mkString("List(\n  ", ",\n  ", ")")))
         log.print()
 
@@ -790,11 +790,15 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
   }
 
   private def getFreshConn(connProxy: ConnProxy): Future[Conn] = connProxy match {
-    case proxy@DatomicPeerProxy(protocol, dbIdentifier, schema, _, _, _, _, _, _) =>
+    case proxy@DatomicPeerProxy(protocol, dbIdentifier, schema, _, _, _, testDbView, _, _) =>
       protocol match {
         case "mem" =>
           Datomic_Peer.recreateDbFromEdn(proxy, schema)
-            .recoverWith { case exc => Future.failed[Conn](MoleculeException(exc.getMessage)) }
+            .recoverWith { case exc =>
+              println(exc)
+              exc.getStackTrace.toList.foreach(println)
+              println("----")
+              Future.failed[Conn](MoleculeException(exc.getMessage)) }
 
         case "free" | "dev" | "pro" =>
           Datomic_Peer.connect(proxy, protocol, dbIdentifier)

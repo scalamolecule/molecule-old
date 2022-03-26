@@ -1,19 +1,17 @@
 package molecule.datomic.base.marshalling
 
-import java.lang.{Long => jLong}
-import java.util.{ArrayList => jArrayList, Collection => jCollection, Comparator => jComparator, Iterator => jIterator, List => jList}
+import java.util.{ArrayList => jArrayList, Collection => jCollection, Iterator => jIterator, List => jList}
 import molecule.core.marshalling.ast.nodes._
 import molecule.datomic.base.marshalling.packers.ResolverFlat
 
-//private[molecule] case class Nested2packed(
-case class Nested2packed(
+private[molecule] case class Nested2packed(
   obj: Obj,
   sortedRows: jCollection[jList[AnyRef]],
   nestedLevels: Int
 ) extends ResolverFlat {
 
-  println(obj)
-  println("--- Nested2packed " + nestedLevels)
+  //  println(obj)
+  //  println("--- Nested2packed " + nestedLevels)
 
   val last                           = sortedRows.size
   val rows: jIterator[jList[AnyRef]] = sortedRows.iterator
@@ -59,8 +57,8 @@ case class Nested2packed(
       return ""
     }
 
-    val flatObj = flattenTxMetaProps(obj)
-    println(flatObj)
+    //    val flatObj = flattenTxMetaProps(obj)
+    //    println(flatObj)
     packRows(flattenTxMetaProps(obj).props)
     sb.toString
   }

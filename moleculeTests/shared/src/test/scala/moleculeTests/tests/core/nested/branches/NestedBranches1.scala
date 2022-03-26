@@ -6,7 +6,6 @@ import moleculeTests.dataModels.core.ref.dsl.Nested._
 import utest._
 import scala.concurrent.Future
 
-
 object NestedBranches1 extends Base {
 
   lazy val tests = Tests {
@@ -25,6 +24,8 @@ object NestedBranches1 extends Base {
 
       for {
         conn <- futConn
+        _ <- Ns0.i0.get // Make sure to recreate db on js side from proxy settings before testing `with`
+
         _ <- {
           var result = Future(())
           trees.foreach { tree =>

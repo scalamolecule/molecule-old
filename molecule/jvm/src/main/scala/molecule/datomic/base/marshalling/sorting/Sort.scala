@@ -7,6 +7,7 @@ import java.util.{Comparator, Date, UUID, Collection => jCollection, List => jLi
 import clojure.lang.{Keyword, BigInt => clBigInt}
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.ast.SortCoordinate
+import java.math.{BigDecimal => jBigDec, BigInteger => jBigInt}
 
 
 case class Sort(
@@ -35,13 +36,13 @@ case class Sort(
     if (opt) {
       val mapComparison = tpe match {
         case "String" =>
-            (m1: jMap[_, _], m2: jMap[_, _]) =>
-              m1.values.iterator.next.asInstanceOf[String].compareTo(m2.values.iterator.next.asInstanceOf[String])
+          (m1: jMap[_, _], m2: jMap[_, _]) =>
+            m1.values.iterator.next.asInstanceOf[String].compareTo(m2.values.iterator.next.asInstanceOf[String])
 
         case "enum" =>
-            (m1: jMap[_, _], m2: jMap[_, _]) =>
-              m1.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.asInstanceOf[Keyword].getName.compareTo(
-                m2.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.asInstanceOf[Keyword].getName)
+          (m1: jMap[_, _], m2: jMap[_, _]) =>
+            m1.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.asInstanceOf[Keyword].getName.compareTo(
+              m2.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.asInstanceOf[Keyword].getName)
 
         case "ref" => (m1: jMap[_, _], m2: jMap[_, _]) =>
           m1.values.iterator.next.asInstanceOf[jMap[_, _]].values.iterator.next.asInstanceOf[jLong].compareTo(
@@ -66,8 +67,10 @@ case class Sort(
           m1.values.iterator.next.asInstanceOf[URI].compareTo(m2.values.iterator.next.asInstanceOf[URI])
 
         case "BigInt" => (m1: jMap[_, _], m2: jMap[_, _]) =>
-          m1.values.iterator.next.asInstanceOf[clBigInt].toBigInteger.compareTo(
-            m2.values.iterator.next.asInstanceOf[clBigInt].toBigInteger)
+          (m1.values.iterator.next, m2.values.iterator.next) match {
+            case (a: clBigInt, b: clBigInt) => a.toBigInteger.compareTo(b.toBigInteger)
+            case (a: jBigInt, b: jBigInt)   => a.compareTo(b)
+          }
 
         case "BigDecimal" => (m1: jMap[_, _], m2: jMap[_, _]) =>
           m1.values.iterator.next.asInstanceOf[jBigDec].compareTo(m2.values.iterator.next.asInstanceOf[jBigDec])
@@ -110,7 +113,10 @@ case class Sort(
           x.get(i).asInstanceOf[URI].compareTo(y.get(i).asInstanceOf[URI])
 
         case "BigInt" => (x: jList[AnyRef], y: jList[AnyRef]) =>
-          x.get(i).asInstanceOf[clBigInt].toBigInteger.compareTo(y.get(i).asInstanceOf[clBigInt].toBigInteger)
+          (x.get(i), y.get(i)) match {
+            case (a: clBigInt, b: clBigInt) => a.toBigInteger.compareTo(b.toBigInteger)
+            case (a: jBigInt, b: jBigInt)   => a.compareTo(b)
+          }
 
         case "BigDecimal" => (x: jList[AnyRef], y: jList[AnyRef]) =>
           x.get(i).asInstanceOf[jBigDec].compareTo(y.get(i).asInstanceOf[jBigDec])

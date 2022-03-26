@@ -81,7 +81,7 @@ private[molecule] trait MakeSortingJs extends TreeOps {
       q"""SortCoordinate($i, $asc, $attr, $opt, "enum")"""
     } else if (aggrFn.isEmpty) {
       compareType
-    } else  {
+    } else {
       (aggrFn, aggrLimit) match {
         case ("min" | "max" | "distinct" | "rand" | "sample", Some(limit)) => abort(
           s"Unexpectedly trying to sort aggregate with applied limit. Found: $attr($aggrFn($limit)).")
@@ -274,8 +274,8 @@ private[molecule] trait MakeSortingJs extends TreeOps {
           i = 0
           addSortCoordinates(elements, level + 1)
 
-//          println("===========")
-//          println(curLevel)
+        //          println("===========")
+        //          println(curLevel)
 
         case TxMetaData(txElements) =>
           accLevels = accLevels :+ curLevel
@@ -300,12 +300,12 @@ private[molecule] trait MakeSortingJs extends TreeOps {
     val sortCoordinates: List[List[Tree]] = {
       addSortCoordinates(model.elements, 0)
 
-//      println("###############")
-//      println(model)
-//      println("----- 1")
-//      println(curLevel)
-//      println("----- 2")
-//      println(accLevels)
+      //      println("###############")
+      //      println(model)
+      //      println("----- 1")
+      //      println(curLevel)
+      //      println("----- 2")
+      //      println(accLevels)
 
       accLevels = if (hasTxMetaData) {
         // Add current level data (having tx meta data) as first level
@@ -318,8 +318,8 @@ private[molecule] trait MakeSortingJs extends TreeOps {
       accLevels.map(_.sortBy(_._1).map(_._2))
     }
 
-//    println("----- 3")
-//    println(sortCoordinates)
+    //    println("----- 3")
+    //    println(sortCoordinates)
 
     // Override `sortCoordinates` in Marshalling
     q"final override protected def sortCoordinates: List[List[SortCoordinate]] = $sortCoordinates"

@@ -502,6 +502,7 @@ object NestedBranches6 extends Base {
 
       for {
         conn <- futConn
+        _ <- Ns0.i0.get // Make sure to recreate db on js side from proxy settings before testing `with`
         _ <- {
           var result = Future(())
           trees.foreach { tree =>

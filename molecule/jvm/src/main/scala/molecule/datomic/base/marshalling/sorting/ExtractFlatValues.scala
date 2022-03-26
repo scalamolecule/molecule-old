@@ -263,25 +263,6 @@ object ExtractFlatValues {
 
           flatValues.iterator
 
-      //      case (true, true, _) =>
-      //        (nestedRows: jCollection[_]) =>
-      //          val flatValues              = new java.util.ArrayList[AnyRef](nestedRows.size * propCount)
-      //          var vs: jCollection[AnyRef] = null
-      //          nestedRows.forEach { row =>
-      //            vs = row.asInstanceOf[jMap[AnyRef, AnyRef]].values
-      //            if (vs.size == propCount) {
-      //              flatValues.addAll(vs)
-      //            }
-      //          }
-      //          println(s"==================== A level: $level, sort: $doSort ")
-      //          nestedRows.forEach(v => println(v))
-      //          println("--------------------")
-      //          flatValues.forEach(v => println(v))
-      //          println("--------------------")
-      //          flatValues.iterator
-
-
-      //      case (true, false, true) =>
       case (true, false) =>
         (nestedRows: jCollection[_]) =>
           //          println(s"==================== B level: $level, sort: $doSort ")
@@ -326,36 +307,6 @@ object ExtractFlatValues {
 
           flatValues.iterator
 
-      //      case (true, false, _) =>
-      //        (nestedRows: jCollection[_]) =>
-      //          val flatValues              = new java.util.ArrayList[AnyRef](nestedRows.size * propCount)
-      //          val nonTacitIndexes         = (0 until propCount).diff(tacitIndexes)
-      //          var testArray               = new Array[AnyRef](propCount)
-      //          var vs: jCollection[AnyRef] = null
-      //          nestedRows.forEach { row =>
-      //            vs = row.asInstanceOf[jMap[AnyRef, AnyRef]].values
-      //            testArray = vs.toArray
-      //            // Skip all values on this level if some tacit value is missing
-      //            val valid: Boolean = tacitIndexes.collectFirst {
-      //              case i if testArray(i) == "__none__" => true
-      //            }.isEmpty
-      //            if (valid) {
-      //              // Get non-tacit values only
-      //              nonTacitIndexes.foreach { j =>
-      //                flatValues.add(testArray(j))
-      //              }
-      //              if (deeper) {
-      //                // add last
-      //                flatValues.add(testArray(vs.size - 1))
-      //              }
-      //            }
-      //          }
-      //          println(s"==================== B level: $level, sort: $doSort ")
-      //          flatValues.forEach(v => println(v))
-      //          println("--------------------")
-      //          flatValues.iterator
-
-      //      case (false, true, true) =>
       case (false, true) =>
         (nestedRows: jCollection[_]) =>
           //          println(s"==================== C level: $level, sort: $doSort ")
@@ -401,41 +352,6 @@ object ExtractFlatValues {
 
           flatValues.iterator
 
-      //      case (false, true, _) =>
-      //        (nestedRows: jCollection[_]) =>
-      //          val flatValues              = new java.util.ArrayList[AnyRef](nestedRows.size * propCount)
-      //          val testList                = new java.util.ArrayList[AnyRef](propCount)
-      //          var vs: jCollection[AnyRef] = null
-      //          nestedRows.forEach { row =>
-      //            vs = row.asInstanceOf[jMap[AnyRef, AnyRef]].values
-      //            testList.clear()
-      //            var i = 0
-      //            def addValues(vs: jCollection[AnyRef]): Unit = vs.forEach {
-      //              case ref: jMap[_, _]  =>
-      //                addValues(ref.asInstanceOf[jMap[AnyRef, AnyRef]].values)
-      //              case "__none__"       =>
-      //                i += 1;
-      //                testList.add("__none__")
-      //              case nested: jList[_] =>
-      //                i += 1;
-      //                testList.add(nested)
-      //              case v                =>
-      //                i += 1;
-      //                testList.add(v)
-      //            }
-      //            addValues(vs)
-      //            //                        println(s"-- 3 ------- $i  $propCount")
-      //            //                        testList.forEach(v => println(v))
-      //            if (i == propCount) {
-      //              flatValues.addAll(testList)
-      //            }
-      //          }
-      //          println(s"==================== C level: $level, sort: $doSort ")
-      //          flatValues.forEach(v => println(v))
-      //          println("--------------------")
-      //          flatValues.iterator
-
-      //      case (false, false, true) =>
       case (false, false) =>
         (nestedRows: jCollection[_]) =>
           //          println(s"==================== D level: $level, sort: $doSort ")
@@ -485,48 +401,6 @@ object ExtractFlatValues {
           //          flatValues.forEach(v => println(v))
 
           flatValues.iterator
-
-      //      case (false, false, _) =>
-      //        (nestedRows: jCollection[_]) =>
-      //          val flatValues              = new java.util.ArrayList[AnyRef](nestedRows.size * propCount)
-      //          val testList                = new java.util.ArrayList[AnyRef](propCount)
-      //          val ok                      = (presentValues: Int) => presentValues == propCount + tacitIndexes.size
-      //          var vs: jCollection[AnyRef] = null
-      //          nestedRows.forEach { row =>
-      //            vs = row.asInstanceOf[jMap[AnyRef, AnyRef]].values
-      //            testList.clear()
-      //            var presentValues = 0
-      //            var i             = 0
-      //            def addValues(vs: jCollection[AnyRef]): Unit = vs.forEach {
-      //              case ref: jMap[_, _]                        =>
-      //                //              println(s"-  -  -  " + ref.asInstanceOf[jMap[AnyRef, AnyRef]].values)
-      //                addValues(ref.asInstanceOf[jMap[AnyRef, AnyRef]].values)
-      //              case "__none__" if tacitIndexes.contains(i) =>
-      //                // tacit value missing
-      //                i += 1
-      //              case _ if tacitIndexes.contains(i)          =>
-      //                // tacit value exists
-      //                i += 1
-      //                presentValues += 1
-      //              case v                                      =>
-      //                i += 1
-      //                presentValues += 1
-      //                testList.add(v)
-      //            }
-      //            addValues(vs)
-      //            val ok1 = ok(presentValues)
-      //            //                        println(s"-- 4 ------- $presentValues  $ok1")
-      //            //                        vs.forEach(v => println(v))
-      //            //                        println("-------")
-      //            //                        testList.forEach(v => println(v))
-      //            if (ok1) {
-      //              flatValues.addAll(testList)
-      //            }
-      //          }
-      //          println(s"==================== D level: $level, sort: $doSort ")
-      //          flatValues.forEach(v => println(v))
-      //          println("--------------------")
-      //          flatValues.iterator
     }
   }
 }
