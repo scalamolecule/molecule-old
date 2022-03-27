@@ -30,7 +30,7 @@ object ApplyDate extends AsyncTestSuite {
 
           // `or`
           _ <- Ns.date.apply(date1 or date2).get.map(_ ==> List(date2, date1))
-          _ <- Ns.date.apply(date1 or date2 or date3).get.map(_.sorted ==> List(date1, date2, date3))
+          _ <- Ns.date.apply(date1 or date2 or date3).a1.get.map(_ ==> List(date1, date2, date3))
 
           // Seq
           _ <- Ns.date.apply().get.map(_ ==> Nil)
@@ -39,9 +39,9 @@ object ApplyDate extends AsyncTestSuite {
           _ <- Ns.date.apply(List(date2)).get.map(_ ==> List(date2))
           _ <- Ns.date.apply(List(date1, date2)).get.map(_ ==> List(date2, date1))
           _ <- Ns.date.apply(List(date1), List(date2)).get.map(_ ==> List(date2, date1))
-          _ <- Ns.date.apply(List(date1, date2), List(date3)).get.map(_.sorted ==> List(date1, date2, date3))
-          _ <- Ns.date.apply(List(date1), List(date2, date3)).get.map(_.sorted ==> List(date1, date2, date3))
-          _ <- Ns.date.apply(List(date1, date2, date3)).get.map(_.sorted ==> List(date1, date2, date3))
+          _ <- Ns.date.apply(List(date1, date2), List(date3)).a1.get.map(_ ==> List(date1, date2, date3))
+          _ <- Ns.date.apply(List(date1), List(date2, date3)).a1.get.map(_ ==> List(date1, date2, date3))
+          _ <- Ns.date.apply(List(date1, date2, date3)).a1.get.map(_ ==> List(date1, date2, date3))
         } yield ()
       }
 

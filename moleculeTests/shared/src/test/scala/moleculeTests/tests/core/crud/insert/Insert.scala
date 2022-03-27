@@ -30,7 +30,7 @@ object Insert extends AsyncTestSuite {
           _ <- Ns.str insert List("f", "g")
 
           // All values inserted
-          _ <- Ns.str.get.map(_.sorted ==> List("a", "b", "c", "d", "e", "f", "g"))
+          _ <- Ns.str.a1.get.map(_ ==> List("a", "b", "c", "d", "e", "f", "g"))
 
 
           _ <- Ns.int.insert(1)
@@ -38,7 +38,7 @@ object Insert extends AsyncTestSuite {
           _ <- Ns.int.insert(List(4))
           _ <- Ns.int.insert(List(5, 1))
           // Unique values coalesced
-          _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3, 4, 5))
+          _ <- Ns.int.a1.get.map(_ ==> List(1, 2, 3, 4, 5))
 
 
           _ <- Ns.long.insert(1L)
@@ -46,7 +46,7 @@ object Insert extends AsyncTestSuite {
           _ <- Ns.long.insert(List(4L))
           _ <- Ns.long.insert(List(5L, 1L))
           // Unique values coalesced
-          _ <- Ns.long.get.map(_.sorted ==> List(1L, 2L, 3L, 4L, 5L))
+          _ <- Ns.long.a1.get.map(_ ==> List(1L, 2L, 3L, 4L, 5L))
 
 
           _ <- Ns.double.insert(1.0)
@@ -54,7 +54,7 @@ object Insert extends AsyncTestSuite {
           _ <- Ns.double.insert(List(4.0))
           _ <- Ns.double.insert(List(5.0, 1.0))
           // Unique values coalesced
-          _ <- Ns.double.get.map(_.sorted ==> List(1.0, 2.0, 3.0, 4.0, 5.0))
+          _ <- Ns.double.a1.get.map(_ ==> List(1.0, 2.0, 3.0, 4.0, 5.0))
 
 
           _ <- Ns.bool.insert(true)
@@ -62,7 +62,7 @@ object Insert extends AsyncTestSuite {
           _ <- Ns.bool.insert(List(true))
           _ <- Ns.bool.insert(List(true, false))
           // Unique values coalesced
-          _ <- Ns.bool.get.map(_.sorted ==> List(false, true))
+          _ <- Ns.bool.a1.get.map(_ ==> List(false, true))
 
 
           _ <- Ns.date.insert(date1)
@@ -70,7 +70,7 @@ object Insert extends AsyncTestSuite {
           _ <- Ns.date.insert(List(date4))
           _ <- Ns.date.insert(List(date5, date1))
           // Unique values coalesced
-          _ <- Ns.date.get.map(_.sorted ==> List(date1, date2, date3, date4, date5))
+          _ <- Ns.date.a1.get.map(_ ==> List(date1, date2, date3, date4, date5))
 
 
           _ <- Ns.uuid.insert(uuid1)
@@ -78,7 +78,7 @@ object Insert extends AsyncTestSuite {
           _ <- Ns.uuid.insert(List(uuid4))
           _ <- Ns.uuid.insert(List(uuid5, uuid1))
           // Unique values coalesced
-          _ <- Ns.uuid.get.map(_.sortBy(_.toString) ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
+          _ <- Ns.uuid.a1.get.map(_.sortBy(_.toString) ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
 
 
           _ <- Ns.uri.insert(uri1)
@@ -86,7 +86,7 @@ object Insert extends AsyncTestSuite {
           _ <- Ns.uri.insert(List(uri4))
           _ <- Ns.uri.insert(List(uri5, uri1))
           // Unique values coalesced
-          _ <- Ns.uri.get.map(_.sorted ==> List(uri1, uri2, uri3, uri4, uri5))
+          _ <- Ns.uri.a1.get.map(_ ==> List(uri1, uri2, uri3, uri4, uri5))
 
 
           _ <- Ns.enumm.insert("enum1")
@@ -94,7 +94,7 @@ object Insert extends AsyncTestSuite {
           _ <- Ns.enumm.insert(List("enum4"))
           _ <- Ns.enumm.insert(List("enum5", "enum1"))
           // Unique values coalesced
-          _ <- Ns.enumm.get.map(_.sorted ==> List(enum1, enum2, enum3, enum4, enum5))
+          _ <- Ns.enumm.a1.get.map(_ ==> List(enum1, enum2, enum3, enum4, enum5))
         } yield ()
       }
 
@@ -194,7 +194,7 @@ object Insert extends AsyncTestSuite {
             ("b", 2, 2L, 2.0, false, date2, uuid2, uri2, "enum2")
           )
 
-          _ <- Ns.str.int.long.double.bool.date.uuid.uri.enumm.get.map(_.sortBy(_._1) ==> List(
+          _ <- Ns.str.a1.int.long.double.bool.date.uuid.uri.enumm.get.map(_.sortBy(_._1) ==> List(
             (" ", 0, 0L, 0.0, false, date0, uuid0, uri0, "enum0"),
             ("a", 1, 1L, 1.0, true, date1, uuid1, uri1, "enum1"),
             ("b", 2, 2L, 2.0, false, date2, uuid2, uri2, "enum2")
@@ -283,7 +283,7 @@ object Insert extends AsyncTestSuite {
             (date2, Set(20L, 21L))
           )
 
-          _ <- Ns.date.longs$.get.map(_.sortBy(_._1) ==> List(
+          _ <- Ns.date.a1.longs$.get.map(_ ==> List(
             (date1, None),
             (date2, Some(Set(20L, 21L))),
           ))

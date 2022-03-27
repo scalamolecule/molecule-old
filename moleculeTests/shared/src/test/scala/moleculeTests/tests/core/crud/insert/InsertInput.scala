@@ -21,7 +21,7 @@ object InsertInput extends AsyncTestSuite {
         _ <- insertStr("b")
         _ <- insertStr("c")
 
-        _ <- Ns.str.get.map(_.sorted ==> List("a", "b", "c"))
+        _ <- Ns.str.a1.get.map(_ ==> List("a", "b", "c"))
 
 
         insertAll = Ns.str.int.long.double.bool.date.uuid.uri.enumm.insert

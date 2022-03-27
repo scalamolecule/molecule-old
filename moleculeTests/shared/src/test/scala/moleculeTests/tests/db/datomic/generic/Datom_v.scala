@@ -25,7 +25,7 @@ object Datom_v extends AsyncTestSuite {
 
         e2 <- Ns.double.bigDec.insert(double11, bigDec11).map(_.eid)
 
-        _ <- Ns(e1).a.v.get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns(e1).a.a1.v.get.map(_ ==> List(
           (":Ns/bigDec", bigDec1),
           (":Ns/bigInt", bigInt1),
           (":Ns/bool", bool1),
@@ -42,7 +42,7 @@ object Datom_v extends AsyncTestSuite {
           // (":Ns/enum", 17592186045418L),
         ))
 
-        _ <- Ns(e2).a.v.get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns(e2).a.a1.v.get.map(_ ==> List(
           (":Ns/bigDec", bigDec11),
           (":Ns/double", double11),
         ))
@@ -297,23 +297,23 @@ object Datom_v extends AsyncTestSuite {
         ))
 
         // Int/Long/BigInt
-        _ <- Ns(e).a.v("a@1").get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns(e).a.a1.v("a@1").get.map(_ ==> List(
           (":Ns/bigIntMap", "a@1"),
           (":Ns/intMap", "a@1"),
           (":Ns/longMap", "a@1")
         ))
-        _ <- Ns(e).a.v("b@2").get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns(e).a.a1.v("b@2").get.map(_ ==> List(
           (":Ns/bigIntMap", "b@2"),
           (":Ns/intMap", "b@2"),
           (":Ns/longMap", "b@2")
         ))
 
         // Double/BigDecimal
-        _ <- Ns(e).a.v("a@1.0").get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns(e).a.a1.v("a@1.0").get.map(_ ==> List(
           (":Ns/bigDecMap", "a@1.0"),
           (":Ns/doubleMap", "a@1.0")
         ))
-        _ <- Ns(e).a.v("b@1.1").get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns(e).a.a1.v("b@1.1").get.map(_ ==> List(
           (":Ns/bigDecMap", "b@1.1"),
           (":Ns/doubleMap", "b@1.1")
         ))

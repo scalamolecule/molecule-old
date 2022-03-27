@@ -117,7 +117,7 @@ object InsertRelated extends AsyncTestSuite {
           ("b", None, 2)
         )
 
-        _ <- Ns.str.Ref1.str1$.Ref2.int2.get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns.str.a1.Ref1.str1$.Ref2.int2.get.map(_ ==> List(
           ("a", Some("aa"), 1),
           ("b", None, 2),
         ))

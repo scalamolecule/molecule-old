@@ -20,13 +20,13 @@ object GetWith extends AsyncTestSuite {
         _ <- Ns.int.getWith(Ns.str("b").int(2).getSaveStmts).map(_ ==> List(1, 2))
         _ <- Ns.str.getWith(Ns.str("b").int(2).getSaveStmts).map(_ ==> List("a", "b"))
 
-        _ <- Ns.str$.int.getWith(
+        _ <- Ns.str$.int.a1.getWith(
           Ns.int(2).getSaveStmts
-        ).map(_.sortBy(_._2) ==> List((Some("a"), 1), (None, 2)))
+        ).map(_ ==> List((Some("a"), 1), (None, 2)))
 
-        _ <- Ns.str.int.getWith(
+        _ <- Ns.str.int.a1.getWith(
           Ns.str("b").int(2).getSaveStmts
-        ).map(_.sortBy(_._2) ==> List(("a", 1), ("b", 2)))
+        ).map(_ ==> List(("a", 1), ("b", 2)))
 
         // Current state unchanged
         _ <- Ns.str.int.get.map(_ ==> List(("a", 1)))
@@ -46,20 +46,20 @@ object GetWith extends AsyncTestSuite {
           ))
         ).map(_ ==> List("a", "b"))
 
-        _ <- Ns.str$.int.getWith(
+        _ <- Ns.str$.int.a1.getWith(
           Ns.int.getInsertStmts(2, 3)
-        ).map(_.sortBy(_._2) ==> List(
+        ).map(_ ==> List(
           (Some("a"), 1),
           (None, 2),
           (None, 3)
         ))
 
-        _ <- Ns.str$.int.getWith(
+        _ <- Ns.str$.int.a1.getWith(
           Ns.str$.int.getInsertStmts(Seq(
             (Some("b"), 2),
             (None, 3)
           ))
-        ).map(_.sortBy(_._2) ==> List(
+        ).map(_ ==> List(
           (Some("a"), 1),
           (Some("b"), 2),
           (None, 3)
@@ -92,7 +92,7 @@ object GetWith extends AsyncTestSuite {
         eid2 <- Ns.str("b").int(2).save.map(_.eid)
 
         // Current state
-        _ <- Ns.str.int.get.map(_.sortBy(_._2) ==> List(
+        _ <- Ns.str.int.a1.get.map(_ ==> List(
           ("a", 1),
           ("b", 2)
         ))
@@ -103,7 +103,7 @@ object GetWith extends AsyncTestSuite {
         ))
 
         // Live state is unchanged
-        _ <- Ns.str.int.get.map(_.sortBy(_._2) ==> List(
+        _ <- Ns.str.int.a1.get.map(_ ==> List(
           ("a", 1),
           ("b", 2)
         ))
@@ -148,9 +148,9 @@ object GetWith extends AsyncTestSuite {
         // Live value intact
         _ <- Ns.str.int.get.map(_ ==> List(("Fred", 42)))
 
-        _ <- Ns.str.int.getWith(
+        _ <- Ns.str.a1.int.getWith(
           Ns.str("John").int(44).getSaveStmts
-        ).map(_.sorted ==> List(
+        ).map(_ ==> List(
           ("Fred", 42), // live value
           ("John", 44) // insertion worked
         ))
@@ -158,14 +158,14 @@ object GetWith extends AsyncTestSuite {
         // Live value intact
         _ <- Ns.str.int.get.map(_ ==> List(("Fred", 42)))
 
-        _ <- Ns.str.int.getWith(
+        _ <- Ns.str.a1.int.getWith(
           Ns.str("John").int(44).getSaveStmts,
           Ns.str.int getInsertStmts List(
             ("Lisa", 23),
             ("Pete", 24)
           ),
           Ns(fred).int(43).getUpdateStmts
-        ).map(_.sorted ==> List(
+        ).map(_ ==> List(
           ("Fred", 43), // Updated
           ("John", 44), // Saved
           ("Lisa", 23), // Inserted
@@ -176,11 +176,11 @@ object GetWith extends AsyncTestSuite {
         insertMembers = Ns.str.int getInsertStmts List(("Lisa", 23), ("Pete", 24))
         updateFred = Ns(fred).int(43).getUpdateStmts
 
-        _ <- Ns.str.int.getWith(
+        _ <- Ns.str.a1.int.getWith(
           saveJohn,
           insertMembers,
           updateFred
-        ).map(_.sorted ==> List(
+        ).map(_ ==> List(
           ("Fred", 43), // Updated
           ("John", 44), // Saved
           ("Lisa", 23), // Inserted

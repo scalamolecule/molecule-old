@@ -13,7 +13,7 @@ object Input3examples extends AsyncTestSuite {
   lazy val tests = Tests {
 
     "6 ways to apply input to arity-3 input molecule" - core { implicit conn =>
-      val inputMolecule = m(Ns.str.int_(?).long_(?).double_(?))
+      val inputMolecule = m(Ns.str.a1.int_(?).long_(?).double_(?))
       for {
         _ <- Ns.str.int.long.double insert List(
           ("Ann", 37, 5L, 1.0),
@@ -29,30 +29,30 @@ object Input3examples extends AsyncTestSuite {
 
         // One or more triples
         _ <- inputMolecule((37, 5L, 1.0)).get.map(_ ==> List("Ann"))
-        _ <- inputMolecule((37, 5L, 1.0), (28, 5L, 1.0)).get.map(_.sorted ==> List("Ann", "Ben"))
+        _ <- inputMolecule((37, 5L, 1.0), (28, 5L, 1.0)).get.map(_ ==> List("Ann", "Ben"))
 
         // One or more logical triples
-        _ <- inputMolecule((37 and 5L and 1.0) or (28 and 4L and 1.0)).get.map(_.sorted ==> List("Ann", "Joe"))
-        _ <- inputMolecule((37 and 5L and 1.0) or (28 and 4L and 1.0) or (28 and 3L and 2.0)).get.map(_.sorted ==> List("Ann", "Joe", "Liz"))
+        _ <- inputMolecule((37 and 5L and 1.0) or (28 and 4L and 1.0)).get.map(_ ==> List("Ann", "Joe"))
+        _ <- inputMolecule((37 and 5L and 1.0) or (28 and 4L and 1.0) or (28 and 3L and 2.0)).get.map(_ ==> List("Ann", "Joe", "Liz"))
 
         // List of triples
         _ <- inputMolecule(Seq((37, 5L, 1.0))).get.map(_ ==> List("Ann"))
-        _ <- inputMolecule(Seq((37, 5L, 1.0), (28, 5L, 1.0))).get.map(_.sorted ==> List("Ann", "Ben"))
+        _ <- inputMolecule(Seq((37, 5L, 1.0), (28, 5L, 1.0))).get.map(_ ==> List("Ann", "Ben"))
 
 
         // 3 groups of input, each group matches an input attribute ......................
 
         _ <- inputMolecule(Seq(37), Seq(5L), Seq(1.0)).get.map(_ ==> List("Ann"))
 
-        _ <- inputMolecule(Seq(37, 28), Seq(5L), Seq(1.0)).get.map(_.sorted ==> List("Ann", "Ben"))
-        _ <- inputMolecule(Seq(37), Seq(5L, 4L), Seq(1.0)).get.map(_.sorted ==> List("Ann"))
-        _ <- inputMolecule(Seq(37), Seq(5L), Seq(1.0, 2.0)).get.map(_.sorted ==> List("Ann"))
+        _ <- inputMolecule(Seq(37, 28), Seq(5L), Seq(1.0)).get.map(_ ==> List("Ann", "Ben"))
+        _ <- inputMolecule(Seq(37), Seq(5L, 4L), Seq(1.0)).get.map(_ ==> List("Ann"))
+        _ <- inputMolecule(Seq(37), Seq(5L), Seq(1.0, 2.0)).get.map(_ ==> List("Ann"))
 
-        _ <- inputMolecule(Seq(37, 28), Seq(5L, 4L), Seq(1.0)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
-        _ <- inputMolecule(Seq(37, 28), Seq(5L), Seq(1.0, 2.0)).get.map(_.sorted ==> List("Ann", "Ben"))
-        _ <- inputMolecule(Seq(28), Seq(5L, 4L), Seq(1.0, 2.0)).get.map(_.sorted ==> List("Ben", "Joe"))
+        _ <- inputMolecule(Seq(37, 28), Seq(5L, 4L), Seq(1.0)).get.map(_ ==> List("Ann", "Ben", "Joe"))
+        _ <- inputMolecule(Seq(37, 28), Seq(5L), Seq(1.0, 2.0)).get.map(_ ==> List("Ann", "Ben"))
+        _ <- inputMolecule(Seq(28), Seq(5L, 4L), Seq(1.0, 2.0)).get.map(_ ==> List("Ben", "Joe"))
 
-        _ <- inputMolecule(Seq(37, 28), Seq(5L, 4L), Seq(1.0, 2.0)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
+        _ <- inputMolecule(Seq(37, 28), Seq(5L, 4L), Seq(1.0, 2.0)).get.map(_ ==> List("Ann", "Ben", "Joe"))
 
         // Nil as any input returns Nil
         _ <- inputMolecule(Seq(37), Seq(5L), Nil).get.map(_ ==> Nil)
@@ -64,17 +64,17 @@ object Input3examples extends AsyncTestSuite {
         _ <- inputMolecule(37 and 5L and 1.0).get.map(_ ==> List("Ann"))
 
         // 1 group with 2 values
-        _ <- inputMolecule((37 or 28) and 5L and 1.0).get.map(_.sorted ==> List("Ann", "Ben"))
-        _ <- inputMolecule(37 and (5L or 4L) and 1.0).get.map(_.sorted ==> List("Ann"))
-        _ <- inputMolecule(37 and 5L and (1.0 or 2.0)).get.map(_.sorted ==> List("Ann"))
+        _ <- inputMolecule((37 or 28) and 5L and 1.0).get.map(_ ==> List("Ann", "Ben"))
+        _ <- inputMolecule(37 and (5L or 4L) and 1.0).get.map(_ ==> List("Ann"))
+        _ <- inputMolecule(37 and 5L and (1.0 or 2.0)).get.map(_ ==> List("Ann"))
 
         // 2 groups with 2 values
-        _ <- inputMolecule((37 or 28) and (5L or 4L) and 1.0).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
-        _ <- inputMolecule((37 or 28) and 5L and (1.0 or 2.0)).get.map(_.sorted ==> List("Ann", "Ben"))
-        _ <- inputMolecule(37 and (5L or 4L) and (1.0 or 2.0)).get.map(_.sorted ==> List("Ann"))
+        _ <- inputMolecule((37 or 28) and (5L or 4L) and 1.0).get.map(_ ==> List("Ann", "Ben", "Joe"))
+        _ <- inputMolecule((37 or 28) and 5L and (1.0 or 2.0)).get.map(_ ==> List("Ann", "Ben"))
+        _ <- inputMolecule(37 and (5L or 4L) and (1.0 or 2.0)).get.map(_ ==> List("Ann"))
 
         // 3 groups with 2 values
-        _ <- inputMolecule((37 or 28) and (5L or 4L) and (1.0 or 2.0)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
+        _ <- inputMolecule((37 or 28) and (5L or 4L) and (1.0 or 2.0)).get.map(_ ==> List("Ann", "Ben", "Joe"))
       } yield ()
     }
 

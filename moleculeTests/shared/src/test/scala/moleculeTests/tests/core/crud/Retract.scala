@@ -18,7 +18,7 @@ object Retract extends AsyncTestSuite {
           (2, "b")
         ) map(_.eid)
 
-        _ <- Ns.int.str.get.map(_.sorted ==> List(
+        _ <- Ns.int.a1.str.get.map(_ ==> List(
           (1, "a"),
           (2, "b")
         ))
@@ -65,11 +65,11 @@ object Retract extends AsyncTestSuite {
             (2, 20)
           ) map(_.eid)
 
-          _ <- Ns.int.RefSub1.int1.get.map(_.sorted ==> List(
+          _ <- Ns.int.a1.RefSub1.int1.get.map(_ ==> List(
             (1, 10),
             (2, 20)
           ))
-          _ <- Ref1.int1.get.map(_.sorted ==> List(10, 20))
+          _ <- Ref1.int1.a1.get.map(_ ==> List(10, 20))
 
           _ <- e1.retract
 
@@ -88,11 +88,11 @@ object Retract extends AsyncTestSuite {
             (2, Seq(20, 21))
           )).map(_.eid)
 
-          _ <- m(Ns.int.RefsSub1 * Ref1.int1).get.map(_.sortBy(_._1) ==> List(
+          _ <- m(Ns.int.a1.RefsSub1 * Ref1.int1).get.map(_ ==> List(
             (1, Seq(10, 11)),
             (2, Seq(20, 21))
           ))
-          _ <- Ref1.int1.get.map(_.sorted ==> List(10, 11, 20, 21))
+          _ <- Ref1.int1.a1.get.map(_ ==> List(10, 11, 20, 21))
 
           _ <- e1.retract
 
@@ -123,8 +123,8 @@ object Retract extends AsyncTestSuite {
               (20, Seq(200, 201)),
               (21, Seq(210, 211))))
           ))
-          _ <- Ref1.int1.get.map(_.sorted ==> List(10, 11, 20, 21))
-          _ <- Ref2.int2.get.map(_.sorted ==> List(100, 101, 110, 111, 200, 201, 210, 211))
+          _ <- Ref1.int1.a1.get.map(_ ==> List(10, 11, 20, 21))
+          _ <- Ref2.int2.a1.get.map(_ ==> List(100, 101, 110, 111, 200, 201, 210, 211))
 
           _ <- e1.retract
 
@@ -133,8 +133,8 @@ object Retract extends AsyncTestSuite {
               (20, Seq(200, 201)),
               (21, Seq(210, 211))))
           ))
-          _ <- Ref1.int1.get.map(_.sorted ==> List(20, 21))
-          _ <- Ref2.int2.get.map(_.sorted ==> List(200, 201, 210, 211))
+          _ <- Ref1.int1.a1.get.map(_ ==> List(20, 21))
+          _ <- Ref2.int2.a1.get.map(_ ==> List(200, 201, 210, 211))
         } yield ()
       }
     }

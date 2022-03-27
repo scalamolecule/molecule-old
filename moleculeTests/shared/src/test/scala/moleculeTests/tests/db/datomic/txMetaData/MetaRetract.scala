@@ -141,7 +141,7 @@ object MetaRetract extends AsyncTestSuite {
 //        } else {
 //        _ <-  for {
             // History with transaction data
-            _ <- Ns.int.tx.op.Tx(Ref2.str2).getHistory.map(_.sortBy(r => (r._2, r._1, r._3)) ==> List(
+            _ <- Ns.int.a2.tx.a1.op.a3.Tx(Ref2.str2).getHistory.map(_ ==> List(
               (1, tx1, true, "a"),
               (2, tx1, true, "a"),
               (3, tx1, true, "a"),
@@ -152,7 +152,7 @@ object MetaRetract extends AsyncTestSuite {
             ))
 
             // Entities and int values that were retracted with tx meta data "b"
-            _ <- Ns.e.int.op(false).Tx(Ref2.str2("b")).getHistory.map(_.sortBy(r => (r._2, r._1, r._3)) ==> List(
+            _ <- Ns.e.a1.int.op(false).Tx(Ref2.str2("b")).getHistory.map(_ ==> List(
               (e1, 1, false, "b"),
               (e2, 2, false, "b")
             ))
@@ -216,7 +216,7 @@ object MetaRetract extends AsyncTestSuite {
 //        } else {
 //          for {
             // History with transaction data
-            _ <- Ns.int.tx.op.Tx(Ns.str.Ref1.int1).getHistory.map(_.sortBy(r => (r._2, r._1, r._3)) ==> List(
+            _ <- Ns.int.a2.tx.a1.op.a3.Tx(Ns.str.Ref1.int1).getHistory.map(_ ==> List(
               (1, tx1, true, "a", 7),
               (2, tx1, true, "a", 7),
               (3, tx1, true, "a", 7),
@@ -227,8 +227,7 @@ object MetaRetract extends AsyncTestSuite {
             ))
 
             // Entities and int values that was retracted in tx "b"
-            _ <- Ns.e.int.op(false).Tx(Ns.str("b").Ref1.int1(8)).getHistory
-              .map(_.sortBy(r => (r._2, r._1, r._3)) ==> List(
+            _ <- Ns.e.a1.int.op(false).Tx(Ns.str("b").Ref1.int1(8)).getHistory.map(_ ==> List(
                 (e1, 1, false, "b", 8),
                 (e2, 2, false, "b", 8)
               ))
@@ -239,7 +238,7 @@ object MetaRetract extends AsyncTestSuite {
             // OBS: Note how referenced tx meta data is not asserted directly with the tx entity:
             _ <- Ns.e.int.op(false).Tx(Ref1.int1(8)).getHistory.map(_ ==> Nil)
             // While Ns.str is:
-            _ <- Ns.e.int.op(false).Tx(Ns.str("b")).getHistory.map(_.sortBy(_._2) ==> List(
+            _ <- Ns.e.a1.int.op(false).Tx(Ns.str("b")).getHistory.map(_ ==> List(
               (e1, 1, false, "b"),
               (e2, 2, false, "b")
             ))

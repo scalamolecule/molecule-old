@@ -344,37 +344,37 @@ object ApplyLong extends AsyncTestSuite {
 
         // Mandatory
 
-        _ <- Ns.int.long(1).get.map(_.sortBy(_._1) ==> res1)
-        _ <- Ns.int.long.not(2).get.map(_.sortBy(_._1) ==> res1)
-        _ <- Ns.int.long.<(2).get.map(_.sortBy(_._1) ==> res1)
-        _ <- Ns.int.long.>(1).get.map(_ ==> res2)
-        _ <- Ns.int.long.>=(2).get.map(_ ==> res2)
-        _ <- Ns.int.long.<=(1).get.map(_.sortBy(_._1) ==> res1)
+        _ <- Ns.int.a1.long(1).get.map(_ ==> res1)
+        _ <- Ns.int.a1.long.not(2).get.map(_ ==> res1)
+        _ <- Ns.int.a1.long.<(2).get.map(_ ==> res1)
+        _ <- Ns.int.a1.long.>(1).get.map(_ ==> res2)
+        _ <- Ns.int.a1.long.>=(2).get.map(_ ==> res2)
+        _ <- Ns.int.a1.long.<=(1).get.map(_ ==> res1)
 
 
-        _ <- Ns.int.long(int1).get.map(_.sortBy(_._1) ==> res1)
-        _ <- Ns.int.long.not(int2).get.map(_.sortBy(_._1) ==> res1)
-        _ <- Ns.int.long.<(int2).get.map(_.sortBy(_._1) ==> res1)
-        _ <- Ns.int.long.>(int1).get.map(_ ==> res2)
-        _ <- Ns.int.long.>=(int2).get.map(_ ==> res2)
-        _ <- Ns.int.long.<=(int1).get.map(_.sortBy(_._1) ==> res1)
+        _ <- Ns.int.a1.long(int1).get.map(_ ==> res1)
+        _ <- Ns.int.a1.long.not(int2).get.map(_ ==> res1)
+        _ <- Ns.int.a1.long.<(int2).get.map(_ ==> res1)
+        _ <- Ns.int.a1.long.>(int1).get.map(_ ==> res2)
+        _ <- Ns.int.a1.long.>=(int2).get.map(_ ==> res2)
+        _ <- Ns.int.a1.long.<=(int1).get.map(_ ==> res1)
 
         // Tacit
 
-        _ <- Ns.int.long_(1).get.map(_.sorted ==> res1t)
-        _ <- Ns.int.long_.not(2).get.map(_.sorted ==> res1t)
-        _ <- Ns.int.long_.<(2).get.map(_.sorted ==> res1t)
-        _ <- Ns.int.long_.>(1).get.map(_ ==> res2t)
-        _ <- Ns.int.long_.>=(2).get.map(_ ==> res2t)
-        _ <- Ns.int.long_.<=(1).get.map(_.sorted ==> res1t)
+        _ <- Ns.int.a1.long_(1).get.map(_ ==> res1t)
+        _ <- Ns.int.a1.long_.not(2).get.map(_ ==> res1t)
+        _ <- Ns.int.a1.long_.<(2).get.map(_ ==> res1t)
+        _ <- Ns.int.a1.long_.>(1).get.map(_ ==> res2t)
+        _ <- Ns.int.a1.long_.>=(2).get.map(_ ==> res2t)
+        _ <- Ns.int.a1.long_.<=(1).get.map(_ ==> res1t)
 
 
-        _ <- Ns.int.long_(int1).get.map(_.sorted ==> res1t)
-        _ <- Ns.int.long_.not(int2).get.map(_.sorted ==> res1t)
-        _ <- Ns.int.long_.<(int2).get.map(_.sorted ==> res1t)
-        _ <- Ns.int.long_.>(int1).get.map(_ ==> res2t)
-        _ <- Ns.int.long_.>=(int2).get.map(_ ==> res2t)
-        _ <- Ns.int.long_.<=(int1).get.map(_.sorted ==> res1t)
+        _ <- Ns.int.a1.long_(int1).get.map(_ ==> res1t)
+        _ <- Ns.int.a1.long_.not(int2).get.map(_ ==> res1t)
+        _ <- Ns.int.a1.long_.<(int2).get.map(_ ==> res1t)
+        _ <- Ns.int.a1.long_.>(int1).get.map(_ ==> res2t)
+        _ <- Ns.int.a1.long_.>=(int2).get.map(_ ==> res2t)
+        _ <- Ns.int.a1.long_.<=(int1).get.map(_ ==> res1t)
       } yield ()
     }
 
@@ -398,37 +398,37 @@ object ApplyLong extends AsyncTestSuite {
 
         // Mandatory
 
-        _ <- Ns.int.longs(1).get.map(_.sortBy(_._1) ==> res1)
-        _ <- Ns.int.longs.not(2).get.map(_.sortBy(_._1) ==> res1)
-        _ <- Ns.int.longs.<(2).get.map(_.sortBy(_._1) ==> res1)
-        _ <- Ns.int.longs.>(1).get.map(_ ==> res2)
-        _ <- Ns.int.longs.>=(2).get.map(_ ==> res2)
-        _ <- Ns.int.longs.<=(1).get.map(_.sortBy(_._1) ==> res1)
+        _ <- Ns.int.a1.longs(1).get.map(_ ==> res1)
+        _ <- Ns.int.a1.longs.not(2).get.map(_ ==> res1)
+        _ <- Ns.int.a1.longs.<(2).get.map(_ ==> res1)
+        _ <- Ns.int.a1.longs.>(1).get.map(_ ==> res2)
+        _ <- Ns.int.a1.longs.>=(2).get.map(_ ==> res2)
+        _ <- Ns.int.a1.longs.<=(1).get.map(_ ==> res1)
 
 
-        _ <- Ns.int.longs(int1).get.map(_.sortBy(_._1) ==> res1)
-        _ <- Ns.int.longs.not(int2).get.map(_.sortBy(_._1) ==> res1)
-        _ <- Ns.int.longs.<(int2).get.map(_.sortBy(_._1) ==> res1)
-        _ <- Ns.int.longs.>(int1).get.map(_ ==> res2)
-        _ <- Ns.int.longs.>=(int2).get.map(_ ==> res2)
-        _ <- Ns.int.longs.<=(int1).get.map(_.sortBy(_._1) ==> res1)
+        _ <- Ns.int.a1.longs(int1).get.map(_ ==> res1)
+        _ <- Ns.int.a1.longs.not(int2).get.map(_ ==> res1)
+        _ <- Ns.int.a1.longs.<(int2).get.map(_ ==> res1)
+        _ <- Ns.int.a1.longs.>(int1).get.map(_ ==> res2)
+        _ <- Ns.int.a1.longs.>=(int2).get.map(_ ==> res2)
+        _ <- Ns.int.a1.longs.<=(int1).get.map(_ ==> res1)
 
         // Tacit
 
-        _ <- Ns.int.longs_(1).get.map(_.sorted ==> res1t)
-        _ <- Ns.int.longs_.not(2).get.map(_.sorted ==> res1t)
-        _ <- Ns.int.longs_.<(2).get.map(_.sorted ==> res1t)
-        _ <- Ns.int.longs_.>(1).get.map(_ ==> res2t)
-        _ <- Ns.int.longs_.>=(2).get.map(_ ==> res2t)
-        _ <- Ns.int.longs_.<=(1).get.map(_.sorted ==> res1t)
+        _ <- Ns.int.a1.longs_(1).get.map(_ ==> res1t)
+        _ <- Ns.int.a1.longs_.not(2).get.map(_ ==> res1t)
+        _ <- Ns.int.a1.longs_.<(2).get.map(_ ==> res1t)
+        _ <- Ns.int.a1.longs_.>(1).get.map(_ ==> res2t)
+        _ <- Ns.int.a1.longs_.>=(2).get.map(_ ==> res2t)
+        _ <- Ns.int.a1.longs_.<=(1).get.map(_ ==> res1t)
 
 
-        _ <- Ns.int.longs_(int1).get.map(_.sorted ==> res1t)
-        _ <- Ns.int.longs_.not(int2).get.map(_.sorted ==> res1t)
-        _ <- Ns.int.longs_.<(int2).get.map(_.sorted ==> res1t)
-        _ <- Ns.int.longs_.>(int1).get.map(_ ==> res2t)
-        _ <- Ns.int.longs_.>=(int2).get.map(_ ==> res2t)
-        _ <- Ns.int.longs_.<=(int1).get.map(_.sorted ==> res1t)
+        _ <- Ns.int.a1.longs_(int1).get.map(_ ==> res1t)
+        _ <- Ns.int.a1.longs_.not(int2).get.map(_ ==> res1t)
+        _ <- Ns.int.a1.longs_.<(int2).get.map(_ ==> res1t)
+        _ <- Ns.int.a1.longs_.>(int1).get.map(_ ==> res2t)
+        _ <- Ns.int.a1.longs_.>=(int2).get.map(_ ==> res2t)
+        _ <- Ns.int.a1.longs_.<=(int1).get.map(_ ==> res1t)
       } yield ()
     }
   }

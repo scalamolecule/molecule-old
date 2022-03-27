@@ -21,7 +21,7 @@ object OneSelf extends AsyncTestSuite {
         List(adam, lisa) <- Person.name("Adam").Spouse.name("Lisa").save.map(_.eids)
 
         // Reference is bidirectional - both point to each other
-        _ <- Person.name.Spouse.name.get.map(_.sorted ==> List(
+        _ <- Person.name.a1.Spouse.name.get.map(_ ==> List(
           ("Adam", "Lisa"),
           // Reverse reference:
           ("Lisa", "Adam")
@@ -43,7 +43,7 @@ object OneSelf extends AsyncTestSuite {
         // Save Adam with bidirectional ref to existing  Lisa
         adam <- Person.name("Adam").spouse(lisa).save.map(_.eid)
 
-        _ <- Person.name.Spouse.name.get.map(_.sorted ==> List(
+        _ <- Person.name.a1.Spouse.name.get.map(_ ==> List(
           ("Adam", "Lisa"),
           ("Lisa", "Adam")
         ))
@@ -67,7 +67,7 @@ object OneSelf extends AsyncTestSuite {
         )
 
         // Bidirectional references have been inserted
-        _ <- Person.name.Spouse.name.get.map(_.sorted ==> List(
+        _ <- Person.name.a1.Spouse.name.get.map(_ ==> List(
           ("Adam", "Lisa"),
           ("John", "Nina"),
           // Reverse references:
@@ -88,7 +88,7 @@ object OneSelf extends AsyncTestSuite {
         )
 
         // Bidirectional references have been inserted
-        _ <- Person.name.Spouse.name.get.map(_.sorted ==> List(
+        _ <- Person.name.a1.Spouse.name.get.map(_ ==> List(
           ("Adam", "Lisa"),
           ("John", "Nina"),
           ("Lisa", "Adam"),
@@ -107,7 +107,7 @@ object OneSelf extends AsyncTestSuite {
           // Update Adam with creation of Lisa and bidirectional reference between Adam and Lisa
           _ <- Person(adam).Spouse.name("Lisa").update
 
-          _ <- Person.name.Spouse.name.get.map(_.sorted ==> List(
+          _ <- Person.name.a1.Spouse.name.get.map(_ ==> List(
             ("Adam", "Lisa"),
             ("Lisa", "Adam")
           ))
@@ -119,7 +119,7 @@ object OneSelf extends AsyncTestSuite {
           List(adam, lisa) <- Person.name("Adam").Spouse.name("Lisa").save.map(_.eids)
 
           // Bidirectional references created
-          _ <- Person.name.Spouse.name.get.map(_.sorted ==> List(
+          _ <- Person.name.a1.Spouse.name.get.map(_ ==> List(
             ("Adam", "Lisa"),
             ("Lisa", "Adam")
           ))
@@ -128,7 +128,7 @@ object OneSelf extends AsyncTestSuite {
           _ <- Person(adam).Spouse.name("Nina").update
 
           // Bidirectional references to Lisa have been replaced with refs to/from Nina
-          _ <- Person.name.Spouse.name.get.map(_.sorted ==> List(
+          _ <- Person.name.a1.Spouse.name.get.map(_ ==> List(
             ("Adam", "Nina"),
             ("Nina", "Adam")
           ))
@@ -148,7 +148,7 @@ object OneSelf extends AsyncTestSuite {
           // Update Adam with creation of bidirectional reference to existing Lisa
           _ <- Person(adam).spouse(lisa).update
 
-          _ <- Person.name.Spouse.name.get.map(_.sorted ==> List(
+          _ <- Person.name.a1.Spouse.name.get.map(_ ==> List(
             ("Adam", "Lisa"),
             ("Lisa", "Adam")
           ))
@@ -166,7 +166,7 @@ object OneSelf extends AsyncTestSuite {
           List(adam, lisa) <- Person.name("Adam").Spouse.name("Lisa").save.map(_.eids)
 
           // Bidirectional references created
-          _ <- Person.name.Spouse.name.get.map(_.sorted ==> List(
+          _ <- Person.name.a1.Spouse.name.get.map(_ ==> List(
             ("Adam", "Lisa"),
             ("Lisa", "Adam")
           ))
@@ -176,7 +176,7 @@ object OneSelf extends AsyncTestSuite {
           _ <- Person(adam).spouse(nina).update
 
           // Bidirectional references to Lisa have been replaced with refs to/from Nina
-          _ <- Person.name.Spouse.name.get.map(_.sorted ==> List(
+          _ <- Person.name.a1.Spouse.name.get.map(_ ==> List(
             ("Adam", "Nina"),
             ("Nina", "Adam")
           ))
@@ -190,7 +190,7 @@ object OneSelf extends AsyncTestSuite {
         List(adam, lisa) <- Person.name("Adam").Spouse.name("Lisa").save.map(_.eids)
 
         // Bidirectional references created
-        _ <- Person.name.Spouse.name.get.map(_.sorted ==> List(
+        _ <- Person.name.a1.Spouse.name.get.map(_ ==> List(
           ("Adam", "Lisa"),
           ("Lisa", "Adam")
         ))
@@ -199,7 +199,7 @@ object OneSelf extends AsyncTestSuite {
         _ <- Person(adam).spouse().update
 
         // Bidirectional references retracted
-        _ <- Person.name.Spouse.name.get.map(_.sorted ==> List())
+        _ <- Person.name.a1.Spouse.name.get.map(_ ==> List())
       } yield ()
     }
 
@@ -213,7 +213,7 @@ object OneSelf extends AsyncTestSuite {
         _ <- Person(adam).Spouse.name.get.map(_ ==> List("Lisa"))
         _ <- Person(lisa).Spouse.name.get.map(_ ==> List("Adam"))
 
-        _ <- Person.name.Spouse.name.get.map(_.sorted ==> List(
+        _ <- Person.name.a1.Spouse.name.get.map(_ ==> List(
           ("Adam", "Lisa"),
           ("Lisa", "Adam")
         ))
@@ -225,7 +225,7 @@ object OneSelf extends AsyncTestSuite {
         _ <- Person.name.get.map(_ ==> List("Lisa"))
         _ <- Person(adam).Spouse.name.get.map(_ ==> List())
         _ <- Person(lisa).Spouse.name.get.map(_ ==> List())
-        _ <- Person.name.Spouse.name.get.map(_.sorted ==> List())
+        _ <- Person.name.a1.Spouse.name.get.map(_ ==> List())
       } yield ()
     }
   }

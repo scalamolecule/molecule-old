@@ -32,11 +32,11 @@ object CompositeArities extends AsyncTestSuite {
         ))
 
         // Queries via each namespace
-        _ <- m(Ref2.int2).get.map(_.sorted ==> Seq(1, 2))
-        _ <- m(Ns.int).get.map(_.sorted ==> Seq(11, 22))
+        _ <- Ref2.int2.a1.get.map(_ ==> Seq(1, 2))
+        _ <- Ns.int.a1.get.map(_ ==> Seq(11, 22))
 
         // Composite query
-        _ <- m(Ref2.int2 + Ns.int).get.map(_.sorted ==> Seq(
+        _ <- (Ref2.int2.a1 + Ns.int).get.map(_ ==> Seq(
           (1, 11),
           (2, 22)
         ))
@@ -67,17 +67,17 @@ object CompositeArities extends AsyncTestSuite {
         ))
 
         // Queries via each namespace
-        _ <- m(Ref2.int2).get.map(_.sorted ==> Seq(
+        _ <- Ref2.int2.a1.get.map(_ ==> Seq(
           1,
           2
         ))
-        _ <- m(Ns.int.str).get.map(_.sorted ==> Seq(
+        _ <- Ns.int.a1.str.get.map(_ ==> Seq(
           (11, "aa"),
           (22, "bb")
         ))
 
         // Composite query
-        _ <- m(Ref2.int2 + Ns.int.str).get.map(_.sorted ==> Seq(
+        _ <- (Ref2.int2.a1 + Ns.int.str).get.map(_ ==> Seq(
           (1, (11, "aa")),
           (2, (22, "bb"))
         ))
@@ -108,17 +108,17 @@ object CompositeArities extends AsyncTestSuite {
         ))
 
         // Queries via each namespace
-        _ <- m(Ref2.int2.str2).get.map(_.sorted ==> Seq(
+        _ <- Ref2.int2.a1.str2.get.map(_ ==> Seq(
           (1, "a"),
           (2, "b")
         ))
-        _ <- m(Ns.int).get.map(_.sorted ==> Seq(
+        _ <- Ns.int.a1.get.map(_ ==> Seq(
           11,
           22
         ))
 
         // Composite query
-        _ <- m(Ref2.int2.str2 + Ns.int).get.map(_.sorted ==> Seq(
+        _ <- (Ref2.int2.str2 + Ns.int.a1).get.map(_ ==> Seq(
           ((1, "a"), 11),
           ((2, "b"), 22)
         ))
@@ -150,17 +150,17 @@ object CompositeArities extends AsyncTestSuite {
         ))
 
         // Queries via each namespace
-        _ <- Ref2.int2.str2.get.map(_.sorted ==> List(
+        _ <- Ref2.int2.a1.str2.get.map(_ ==> List(
           (1, "a"),
           (2, "b")
         ))
-        _ <- Ns.str.int.get.map(_.sorted ==> List(
+        _ <- Ns.str.int.a1.get.map(_ ==> List(
           ("aa", 11),
           ("bb", 22)
         ))
 
         // Composite query
-        _ <- m(Ref2.int2.str2 + Ns.str.int).get.map(_.sorted ==> List(
+        _ <- (Ref2.int2.a1.str2 + Ns.str.int).get.map(_ ==> List(
           ((1, "a"), ("aa", 11)),
           ((2, "b"), ("bb", 22))
         ))
@@ -200,24 +200,24 @@ object CompositeArities extends AsyncTestSuite {
         ))
 
         // Queries via one namespace
-        _ <- Ref2.int2.str2.get.map(_.sorted ==> List(
+        _ <- Ref2.int2.a1.str2.get.map(_ ==> List(
           (1, "a"),
           (2, "b")
         ))
         // .. including transaction meta data
         // Note how transaction meta data is fetched for all entities ("rows") saved in the same transaction
-        _ <- Ref2.int2.str2.Tx(Ns.str).get.map(_.sorted ==> List(
+        _ <- Ref2.int2.a1.str2.Tx(Ns.str).get.map(_ ==> List(
           (1, "a", "Tx meta data"),
           (2, "b", "Tx meta data")
         ))
 
         // Queries via other namespace
-        _ <- Ref1.str1.int1.get.map(_.sorted ==> List(
+        _ <- Ref1.str1.int1.a1.get.map(_ ==> List(
           ("aa", 11),
           ("bb", 22)
         ))
         // .. including transaction meta data
-        _ <- Ref1.str1.int1.Tx(Ns.str).get.map(_.sorted ==> List(
+        _ <- Ref1.str1.int1.a1.Tx(Ns.str).get.map(_ ==> List(
           ("aa", 11, "Tx meta data"),
           ("bb", 22, "Tx meta data")
         ))
@@ -228,12 +228,12 @@ object CompositeArities extends AsyncTestSuite {
 
 
         // Composite query
-        _ <- m(Ref2.int2.str2 + Ref1.str1.int1).get.map(_.sorted ==> List(
+        _ <- (Ref2.int2.a1.str2 + Ref1.str1.int1).get.map(_ ==> List(
           ((1, "a"), ("aa", 11)),
           ((2, "b"), ("bb", 22))
         ))
         // .. including transaction meta data
-        _ <- m(Ref2.int2.str2 + Ref1.str1.int1.Tx(Ns.str)).get.map(_.sorted ==> List(
+        _ <- (Ref2.int2.a1.str2 + Ref1.str1.int1.Tx(Ns.str)).get.map(_ ==> List(
           ((1, "a"), ("aa", 11, "Tx meta data")),
           ((2, "b"), ("bb", 22, "Tx meta data"))
         ))

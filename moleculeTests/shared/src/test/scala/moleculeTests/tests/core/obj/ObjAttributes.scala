@@ -128,8 +128,8 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
         _ <- Ns.int.ref1$ insert List((12, None), (12, Some(refId)))
 
 
-        _ <- Ns.int(1).str$.getObjs.map { oo =>
-          val List(o1, o2) = oo.sortBy(_.str$.toString)
+        _ <- Ns.int(1).str$.a1.getObjs.map { oo =>
+          val List(o1, o2) = oo
           o1.int ==> 1
           o1.str$ ==> None
           o2.int ==> 1
@@ -141,8 +141,8 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
           o.str ==> "a"
         }
 
-        _ <- Ns.long(2L).int$.getObjs.map { oo =>
-          val List(o1, o2) = oo.sortBy(_.int$.toString)
+        _ <- Ns.long(2L).int$.a1.getObjs.map { oo =>
+          val List(o1, o2) = oo
           o1.long ==> 2L
           o1.int$ ==> None
           o2.long ==> 2L
@@ -154,8 +154,8 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
           o.int ==> 20
         }
 
-        _ <- Ns.int(3).long$.getObjs.map { oo =>
-          val List(o1, o2) = oo.sortBy(_.long$.toString)
+        _ <- Ns.int(3).long$.a1.getObjs.map { oo =>
+          val List(o1, o2) = oo
           o1.int ==> 3
           o1.long$ ==> None
           o2.int ==> 3
@@ -167,8 +167,8 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
           o.long ==> 1L
         }
 
-        _ <- Ns.int(4).double$.getObjs.map { oo =>
-          val List(o1, o2) = oo.sortBy(_.double$.toString)
+        _ <- Ns.int(4).double$.a1.getObjs.map { oo =>
+          val List(o1, o2) = oo
           o1.int ==> 4
           o1.double$ ==> None
           o2.int ==> 4
@@ -180,8 +180,8 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
           o.double ==> 1.1
         }
 
-        _ <- Ns.int(5).bool$.getObjs.map { oo =>
-          val List(o1, o2) = oo.sortBy(_.bool$.toString)
+        _ <- Ns.int(5).bool$.a1.getObjs.map { oo =>
+          val List(o1, o2) = oo
           o1.int ==> 5
           o1.bool$ ==> None
           o2.int ==> 5
@@ -193,8 +193,8 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
           o.bool ==> true
         }
 
-        _ <- Ns.int(6).date$.getObjs.map { oo =>
-          val List(o1, o2) = oo.sortBy(_.date$.toString)
+        _ <- Ns.int(6).date$.a1.getObjs.map { oo =>
+          val List(o1, o2) = oo
           o1.int ==> 6
           o1.date$ ==> None
           o2.int ==> 6
@@ -206,8 +206,8 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
           o.date ==> date1
         }
 
-        _ <- Ns.int(7).uuid$.getObjs.map { oo =>
-          val List(o1, o2) = oo.sortBy(_.uuid$.toString)
+        _ <- Ns.int(7).uuid$.a1.getObjs.map { oo =>
+          val List(o1, o2) = oo
           o1.int ==> 7
           o1.uuid$ ==> None
           o2.int ==> 7
@@ -219,8 +219,8 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
           o.uuid ==> uuid1
         }
 
-        _ <- Ns.int(8).uri$.getObjs.map { oo =>
-          val List(o1, o2) = oo.sortBy(_.uri$.toString)
+        _ <- Ns.int(8).uri$.a1.getObjs.map { oo =>
+          val List(o1, o2) = oo
           o1.int ==> 8
           o1.uri$ ==> None
           o2.int ==> 8
@@ -232,8 +232,8 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
           o.uri ==> uri1
         }
 
-        _ <- Ns.int(9).bigInt$.getObjs.map { oo =>
-          val List(o1, o2) = oo.sortBy(_.bigInt$.toString)
+        _ <- Ns.int(9).bigInt$.a1.getObjs.map { oo =>
+          val List(o1, o2) = oo
           o1.int ==> 9
           o1.bigInt$ ==> None
           o2.int ==> 9
@@ -245,8 +245,8 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
           o.bigInt ==> bigInt1
         }
 
-        _ <- Ns.int(10).bigDec$.getObjs.map { oo =>
-          val List(o1, o2) = oo.sortBy(_.bigDec$.toString)
+        _ <- Ns.int(10).bigDec$.a1.getObjs.map { oo =>
+          val List(o1, o2) = oo
           o1.int ==> 10
           o1.bigDec$ ==> None
           o2.int ==> 10
@@ -258,8 +258,8 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
           o.bigDec ==> bigDec1
         }
 
-        _ <- Ns.int(11).enumm$.getObjs.map { oo =>
-          val List(o1, o2) = oo.sortBy(_.enumm$.toString)
+        _ <- Ns.int(11).enumm$.a1.getObjs.map { oo =>
+          val List(o1, o2) = oo
           o1.int ==> 11
           o1.enumm$ ==> None
           o2.int ==> 11
@@ -271,8 +271,8 @@ object ObjAttributes extends AsyncTestSuite with Helpers {
           o.enumm ==> enum1
         }
 
-        _ <- Ns.int(12).ref1$.getObjs.map { oo =>
-          val List(o1, o2) = oo.sortBy(_.ref1$.toString)
+        _ <- Ns.int(12).ref1$.a1.getObjs.map { oo =>
+          val List(o1, o2) = oo
           o1.int ==> 12
           o1.ref1$ ==> None
           o2.int ==> 12

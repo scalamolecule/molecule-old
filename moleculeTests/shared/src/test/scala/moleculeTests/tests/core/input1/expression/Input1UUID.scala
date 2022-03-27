@@ -40,42 +40,42 @@ object Input1UUID extends AsyncTestSuite {
       "Mandatory" - {
 
         "Eq" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid(?))
+          val inputMolecule = m(Ns.uuid(?).a1)
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> Nil)
 
             _ <- inputMolecule(List(uuid1)).get.map(_ ==> List(uuid1))
             _ <- inputMolecule(List(uuid1, uuid1)).get.map(_ ==> List(uuid1))
-            _ <- inputMolecule(List(uuid1, uuid2)).get.map(_.sorted ==> List(uuid1, uuid2))
+            _ <- inputMolecule(List(uuid1, uuid2)).get.map(_ ==> List(uuid1, uuid2))
 
             // Varargs
             _ <- inputMolecule(uuid1).get.map(_ ==> List(uuid1))
-            _ <- inputMolecule(uuid1, uuid2).get.map(_.sorted ==> List(uuid1, uuid2))
+            _ <- inputMolecule(uuid1, uuid2).get.map(_ ==> List(uuid1, uuid2))
 
             // `or`
-            _ <- inputMolecule(uuid1 or uuid2).get.map(_.sorted ==> List(uuid1, uuid2))
+            _ <- inputMolecule(uuid1 or uuid2).get.map(_ ==> List(uuid1, uuid2))
           } yield ()
         }
 
         "not" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid.not(?))
+          val inputMolecule = m(Ns.uuid.not(?).a1)
           for {
             _ <- oneData
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(uuid1, uuid2, uuid3))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(uuid1, uuid2, uuid3))
 
-            _ <- inputMolecule(List(uuid1)).get.map(_.sorted ==> List(uuid2, uuid3))
-            _ <- inputMolecule(List(uuid1, uuid1)).get.map(_.sorted ==> List(uuid2, uuid3))
-            _ <- inputMolecule(List(uuid1, uuid2)).get.map(_.sorted ==> List(uuid3))
+            _ <- inputMolecule(List(uuid1)).get.map(_ ==> List(uuid2, uuid3))
+            _ <- inputMolecule(List(uuid1, uuid1)).get.map(_ ==> List(uuid2, uuid3))
+            _ <- inputMolecule(List(uuid1, uuid2)).get.map(_ ==> List(uuid3))
           } yield ()
         }
 
         ">" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid.>(?))
+          val inputMolecule = m(Ns.uuid.>(?).a1)
           for {
             _ <- oneData
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(uuid1, uuid2, uuid3))
-            _ <- inputMolecule(List(uuid2)).get.map(_.sorted ==> List(uuid3))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(uuid1, uuid2, uuid3))
+            _ <- inputMolecule(List(uuid2)).get.map(_ ==> List(uuid3))
             _ <- inputMolecule(List(uuid2, uuid3)).get.recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
@@ -83,11 +83,11 @@ object Input1UUID extends AsyncTestSuite {
         }
 
         ">=" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid.>=(?))
+          val inputMolecule = m(Ns.uuid.>=(?).a1)
           for {
             _ <- oneData
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(uuid1, uuid2, uuid3))
-            _ <- inputMolecule(List(uuid2)).get.map(_.sorted ==> List(uuid2, uuid3))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(uuid1, uuid2, uuid3))
+            _ <- inputMolecule(List(uuid2)).get.map(_ ==> List(uuid2, uuid3))
             _ <- inputMolecule(List(uuid2, uuid3)).get.recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
@@ -95,10 +95,10 @@ object Input1UUID extends AsyncTestSuite {
         }
 
         "<" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid.<(?))
+          val inputMolecule = m(Ns.uuid.<(?).a1)
           for {
             _ <- oneData
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(uuid1, uuid2, uuid3))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(uuid1, uuid2, uuid3))
             _ <- inputMolecule(List(uuid2)).get.map(_ ==> List(uuid1))
             _ <- inputMolecule(List(uuid2, uuid3)).get.recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
@@ -107,11 +107,11 @@ object Input1UUID extends AsyncTestSuite {
         }
 
         "<=" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid.<=(?))
+          val inputMolecule = m(Ns.uuid.<=(?).a1)
           for {
             _ <- oneData
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(uuid1, uuid2, uuid3))
-            _ <- inputMolecule(List(uuid2)).get.map(_.sorted ==> List(uuid1, uuid2))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(uuid1, uuid2, uuid3))
+            _ <- inputMolecule(List(uuid2)).get.map(_ ==> List(uuid1, uuid2))
             _ <- inputMolecule(List(uuid2, uuid3)).get.recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
@@ -123,33 +123,33 @@ object Input1UUID extends AsyncTestSuite {
       "Tacit" - {
 
         "Eq" - core { implicit conn =>
-          val inputMolecule = m(Ns.str.uuid_(?))
+          val inputMolecule = m(Ns.str.a1.uuid_(?))
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(str4))
             _ <- inputMolecule(List(uuid1)).get.map(_ ==> List(str1))
             _ <- inputMolecule(List(uuid1, uuid1)).get.map(_ ==> List(str1))
-            _ <- inputMolecule(List(uuid1, uuid2)).get.map(_.sorted ==> List(str1, str2))
+            _ <- inputMolecule(List(uuid1, uuid2)).get.map(_ ==> List(str1, str2))
           } yield ()
         }
 
         "not" - core { implicit conn =>
-          val inputMolecule = m(Ns.str.uuid_.not(?))
+          val inputMolecule = m(Ns.str.a1.uuid_.not(?))
           for {
             _ <- oneData
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
-            _ <- inputMolecule(List(uuid1)).get.map(_.sorted ==> List(str2, str3))
-            _ <- inputMolecule(List(uuid1, uuid1)).get.map(_.sorted ==> List(str2, str3))
-            _ <- inputMolecule(List(uuid1, uuid2)).get.map(_.sorted ==> List(str3))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
+            _ <- inputMolecule(List(uuid1)).get.map(_ ==> List(str2, str3))
+            _ <- inputMolecule(List(uuid1, uuid1)).get.map(_ ==> List(str2, str3))
+            _ <- inputMolecule(List(uuid1, uuid2)).get.map(_ ==> List(str3))
           } yield ()
         }
 
         ">" - core { implicit conn =>
-          val inputMolecule = m(Ns.str.uuid_.>(?))
+          val inputMolecule = m(Ns.str.a1.uuid_.>(?))
           for {
             _ <- oneData
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
-            _ <- inputMolecule(List(uuid2)).get.map(_.sorted ==> List(str3))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
+            _ <- inputMolecule(List(uuid2)).get.map(_ ==> List(str3))
             _ <- inputMolecule(List(uuid2, uuid3)).get.recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
@@ -157,11 +157,11 @@ object Input1UUID extends AsyncTestSuite {
         }
 
         ">=" - core { implicit conn =>
-          val inputMolecule = m(Ns.str.uuid_.>=(?))
+          val inputMolecule = m(Ns.str.a1.uuid_.>=(?))
           for {
             _ <- oneData
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
-            _ <- inputMolecule(List(uuid2)).get.map(_.sorted ==> List(str2, str3))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
+            _ <- inputMolecule(List(uuid2)).get.map(_ ==> List(str2, str3))
             _ <- inputMolecule(List(uuid2, uuid3)).get.recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
@@ -169,10 +169,10 @@ object Input1UUID extends AsyncTestSuite {
         }
 
         "<" - core { implicit conn =>
-          val inputMolecule = m(Ns.str.uuid_.<(?))
+          val inputMolecule = m(Ns.str.a1.uuid_.<(?))
           for {
             _ <- oneData
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
             _ <- inputMolecule(List(uuid2)).get.map(_ ==> List(str1))
             _ <- inputMolecule(List(uuid2, uuid3)).get.recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
@@ -181,11 +181,11 @@ object Input1UUID extends AsyncTestSuite {
         }
 
         "<=" - core { implicit conn =>
-          val inputMolecule = m(Ns.str.uuid_.<=(?))
+          val inputMolecule = m(Ns.str.a1.uuid_.<=(?))
           for {
             _ <- oneData
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
-            _ <- inputMolecule(List(uuid2)).get.map(_.sorted ==> List(str1, str2))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
+            _ <- inputMolecule(List(uuid2)).get.map(_ ==> List(str1, str2))
             _ <- inputMolecule(List(uuid2, uuid3)).get.recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
             }
@@ -200,7 +200,7 @@ object Input1UUID extends AsyncTestSuite {
       "Mandatory" - {
 
         "Eq" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid.uuids(?))
+          val inputMolecule = m(Ns.uuid.a1.uuids(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> Nil)
@@ -261,7 +261,7 @@ object Input1UUID extends AsyncTestSuite {
         }
 
         "not" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid.uuids.not(?))
+          val inputMolecule = m(Ns.uuid.a1.uuids.not(?))
           val all           = List(
             (uuid1, Set(uuid1, uuid2, uuid3)),
             (uuid2, Set(uuid2, uuid3, uuid4)),
@@ -350,7 +350,7 @@ object Input1UUID extends AsyncTestSuite {
         }
 
         ">" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid.uuids.>(?))
+          val inputMolecule = m(Ns.uuid.a1.uuids.>(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_.sortBy(_._1.toString) ==> List((uuid1, Set(uuid1, uuid2)), (uuid2, Set(uuid3, uuid2)), (uuid3, Set(uuid4, uuid3)), (uuid4, Set(uuid4, uuid5)), (uuid5, Set(uuid4, uuid6, uuid5))))
@@ -370,7 +370,7 @@ object Input1UUID extends AsyncTestSuite {
         }
 
         ">=" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid.uuids.>=(?))
+          val inputMolecule = m(Ns.uuid.a1.uuids.>=(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_.sortBy(_._1.toString) ==> List((uuid1, Set(uuid1, uuid2)), (uuid2, Set(uuid3, uuid2)), (uuid3, Set(uuid4, uuid3)), (uuid4, Set(uuid4, uuid5)), (uuid5, Set(uuid4, uuid6, uuid5))))
@@ -390,7 +390,7 @@ object Input1UUID extends AsyncTestSuite {
         }
 
         "<" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid.uuids.<(?))
+          val inputMolecule = m(Ns.uuid.a1.uuids.<(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_.sortBy(_._1.toString) ==> List((uuid1, Set(uuid1, uuid2)), (uuid2, Set(uuid3, uuid2)), (uuid3, Set(uuid4, uuid3)), (uuid4, Set(uuid4, uuid5)), (uuid5, Set(uuid4, uuid6, uuid5))))
@@ -409,7 +409,7 @@ object Input1UUID extends AsyncTestSuite {
         }
 
         "<=" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid.uuids.<=(?))
+          val inputMolecule = m(Ns.uuid.a1.uuids.<=(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_.sortBy(_._1.toString) ==> List((uuid1, Set(uuid1, uuid2)), (uuid2, Set(uuid3, uuid2)), (uuid3, Set(uuid4, uuid3)), (uuid4, Set(uuid4, uuid5)), (uuid5, Set(uuid4, uuid6, uuid5))))
@@ -589,7 +589,7 @@ object Input1UUID extends AsyncTestSuite {
       "Tacit" - {
 
         "Eq" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid.uuids_(?))
+          val inputMolecule = m(Ns.uuid.a1.uuids_(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List(uuid6))
@@ -599,33 +599,33 @@ object Input1UUID extends AsyncTestSuite {
             // Values of 1 Set match values of 1 card-many attribute at a time
 
             _ <- inputMolecule(List(Set(uuid1))).get.map(_ ==> List(uuid1))
-            _ <- inputMolecule(List(Set(uuid2))).get.map(_.sorted ==> List(uuid1, uuid2))
-            _ <- inputMolecule(List(Set(uuid3))).get.map(_.sorted ==> List(uuid2, uuid3))
+            _ <- inputMolecule(List(Set(uuid2))).get.map(_ ==> List(uuid1, uuid2))
+            _ <- inputMolecule(List(Set(uuid3))).get.map(_ ==> List(uuid2, uuid3))
 
             _ <- inputMolecule(List(Set(uuid1, uuid1))).get.map(_ ==> List(uuid1))
             _ <- inputMolecule(List(Set(uuid1, uuid2))).get.map(_ ==> List(uuid1))
             _ <- inputMolecule(List(Set(uuid1, uuid3))).get.map(_ ==> Nil)
             _ <- inputMolecule(List(Set(uuid2, uuid3))).get.map(_ ==> List(uuid2))
-            _ <- inputMolecule(List(Set(uuid4, uuid5))).get.map(_.sorted ==> List(uuid4, uuid5))
+            _ <- inputMolecule(List(Set(uuid4, uuid5))).get.map(_ ==> List(uuid4, uuid5))
 
 
             // Values of each Set matches values of 1 card-many attributes respectively
 
             _ <- inputMolecule(List(Set(uuid1, uuid2), Set[UUID]())).get.map(_ ==> List(uuid1))
             _ <- inputMolecule(List(Set(uuid1), Set(uuid1))).get.map(_ ==> List(uuid1))
-            _ <- inputMolecule(List(Set(uuid1), Set(uuid2))).get.map(_.sorted ==> List(uuid1, uuid2))
-            _ <- inputMolecule(List(Set(uuid1), Set(uuid3))).get.map(_.sorted ==> List(uuid1, uuid2, uuid3))
+            _ <- inputMolecule(List(Set(uuid1), Set(uuid2))).get.map(_ ==> List(uuid1, uuid2))
+            _ <- inputMolecule(List(Set(uuid1), Set(uuid3))).get.map(_ ==> List(uuid1, uuid2, uuid3))
 
-            _ <- inputMolecule(List(Set(uuid1, uuid2), Set(uuid3))).get.map(_.sorted ==> List(uuid1, uuid2, uuid3))
-            _ <- inputMolecule(List(Set(uuid1), Set(uuid2, uuid3))).get.map(_.sorted ==> List(uuid1, uuid2))
-            _ <- inputMolecule(List(Set(uuid1), Set(uuid2), Set(uuid3))).get.map(_.sorted ==> List(uuid1, uuid2, uuid3))
+            _ <- inputMolecule(List(Set(uuid1, uuid2), Set(uuid3))).get.map(_ ==> List(uuid1, uuid2, uuid3))
+            _ <- inputMolecule(List(Set(uuid1), Set(uuid2, uuid3))).get.map(_ ==> List(uuid1, uuid2))
+            _ <- inputMolecule(List(Set(uuid1), Set(uuid2), Set(uuid3))).get.map(_ ==> List(uuid1, uuid2, uuid3))
 
-            _ <- inputMolecule(List(Set(uuid1, uuid2), Set(uuid3, uuid4))).get.map(_.sorted ==> List(uuid1, uuid3))
+            _ <- inputMolecule(List(Set(uuid1, uuid2), Set(uuid3, uuid4))).get.map(_ ==> List(uuid1, uuid3))
           } yield ()
         }
 
         "not" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid.uuids_.not(?))
+          val inputMolecule = m(Ns.uuid.a1.uuids_.not(?))
           for {
             _ <- Ns.uuid.uuids insert List(
               (uuid1, Set(uuid1, uuid2, uuid3)),
@@ -633,8 +633,8 @@ object Input1UUID extends AsyncTestSuite {
               (uuid3, Set(uuid3, uuid4, uuid5))
             )
 
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(uuid1, uuid2, uuid3))
-            _ <- inputMolecule(Set[UUID]()).get.map(_.sorted ==> List(uuid1, uuid2, uuid3))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(uuid1, uuid2, uuid3))
+            _ <- inputMolecule(Set[UUID]()).get.map(_ ==> List(uuid1, uuid2, uuid3))
 
             // Vararg/List(args*) syntax/semantics not available for card-many attributes of input molecules
             // inputMolecule(uuid1).get.map(_ ==> ...)
@@ -642,9 +642,9 @@ object Input1UUID extends AsyncTestSuite {
 
             // Set semantics omit the whole set with one or more matching values
 
-            _ <- inputMolecule(Set(uuid1)).get.map(_.sorted ==> List(uuid2, uuid3))
+            _ <- inputMolecule(Set(uuid1)).get.map(_ ==> List(uuid2, uuid3))
             // Same as
-            _ <- inputMolecule(List(Set(uuid1))).get.map(_.sorted ==> List(uuid2, uuid3))
+            _ <- inputMolecule(List(Set(uuid1))).get.map(_ ==> List(uuid2, uuid3))
 
             _ <- inputMolecule(Set(uuid2)).get.map(_ ==> List(uuid3))
             _ <- inputMolecule(Set(uuid3)).get.map(_ ==> Nil) // uuid3 match all
@@ -652,15 +652,15 @@ object Input1UUID extends AsyncTestSuite {
 
             _ <- inputMolecule(Set(uuid1), Set(uuid2)).get.map(_ ==> List(uuid3))
             // Multiple values in a Set matches matches set-wise
-            _ <- inputMolecule(Set(uuid1, uuid2)).get.map(_.sorted ==> List(uuid2, uuid3))
+            _ <- inputMolecule(Set(uuid1, uuid2)).get.map(_ ==> List(uuid2, uuid3))
 
             _ <- inputMolecule(Set(uuid1), Set(uuid3)).get.map(_ ==> Nil) // uuid3 match all
-            _ <- inputMolecule(Set(uuid1, uuid3)).get.map(_.sorted ==> List(uuid2, uuid3))
+            _ <- inputMolecule(Set(uuid1, uuid3)).get.map(_ ==> List(uuid2, uuid3))
 
             _ <- inputMolecule(Set(uuid1), Set(uuid2), Set(uuid3)).get.map(_ ==> Nil) // uuid3 match all
-            _ <- inputMolecule(Set(uuid1, uuid2, uuid3)).get.map(_.sorted ==> List(uuid2, uuid3))
+            _ <- inputMolecule(Set(uuid1, uuid2, uuid3)).get.map(_ ==> List(uuid2, uuid3))
 
-            _ <- inputMolecule(Set(uuid1, uuid2), Set(uuid1)).get.map(_.sorted ==> List(uuid2, uuid3))
+            _ <- inputMolecule(Set(uuid1, uuid2), Set(uuid1)).get.map(_ ==> List(uuid2, uuid3))
             _ <- inputMolecule(Set(uuid1, uuid2), Set(uuid2)).get.map(_ ==> List(uuid3))
             _ <- inputMolecule(Set(uuid1, uuid2), Set(uuid3)).get.map(_ ==> Nil)
             _ <- inputMolecule(Set(uuid1, uuid2), Set(uuid4)).get.map(_ ==> Nil)
@@ -672,14 +672,14 @@ object Input1UUID extends AsyncTestSuite {
         }
 
         ">" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid.uuids_.>(?))
+          val inputMolecule = m(Ns.uuid.a1.uuids_.>(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
-            _ <- inputMolecule(List(Set[UUID]())).get.map(_.sorted ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
+            _ <- inputMolecule(List(Set[UUID]())).get.map(_ ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
 
             // (uuid3, uuid4), (uuid4, uuid5), (uuid4, uuid5, uuid6)
-            _ <- inputMolecule(List(Set(uuid2))).get.map(_.sorted ==> List(uuid2, uuid3, uuid4, uuid5))
+            _ <- inputMolecule(List(Set(uuid2))).get.map(_ ==> List(uuid2, uuid3, uuid4, uuid5))
 
             _ <- inputMolecule(List(Set(uuid2, uuid3))).get.recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
@@ -692,14 +692,14 @@ object Input1UUID extends AsyncTestSuite {
         }
 
         ">=" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid.uuids_.>=(?))
+          val inputMolecule = m(Ns.uuid.a1.uuids_.>=(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
-            _ <- inputMolecule(List(Set[UUID]())).get.map(_.sorted ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
+            _ <- inputMolecule(List(Set[UUID]())).get.map(_ ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
 
             // (uuid2, uuid4), (uuid3, uuid4), (uuid4, uuid5), (uuid4, uuid5, uuid6)
-            _ <- inputMolecule(List(Set(uuid2))).get.map(_.sorted ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
+            _ <- inputMolecule(List(Set(uuid2))).get.map(_ ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
 
             _ <- inputMolecule(List(Set(uuid2, uuid3))).get.recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."
@@ -712,11 +712,11 @@ object Input1UUID extends AsyncTestSuite {
         }
 
         "<" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid.uuids_.<(?))
+          val inputMolecule = m(Ns.uuid.a1.uuids_.<(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
-            _ <- inputMolecule(List(Set[UUID]())).get.map(_.sorted ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
+            _ <- inputMolecule(List(Set[UUID]())).get.map(_ ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
 
             _ <- inputMolecule(List(Set(uuid2))).get.map(_ ==> List(uuid1))
 
@@ -731,13 +731,13 @@ object Input1UUID extends AsyncTestSuite {
         }
 
         "<=" - core { implicit conn =>
-          val inputMolecule = m(Ns.uuid.uuids_.<=(?))
+          val inputMolecule = m(Ns.uuid.a1.uuids_.<=(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
-            _ <- inputMolecule(List(Set[UUID]())).get.map(_.sorted ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
+            _ <- inputMolecule(List(Set[UUID]())).get.map(_ ==> List(uuid1, uuid2, uuid3, uuid4, uuid5))
 
-            _ <- inputMolecule(List(Set(uuid2))).get.map(_.sorted ==> List(uuid1, uuid2))
+            _ <- inputMolecule(List(Set(uuid2))).get.map(_ ==> List(uuid1, uuid2))
 
             _ <- inputMolecule(List(Set(uuid2, uuid3))).get.recover { case MoleculeException(err, _) =>
               err ==> "Can't apply multiple values to comparison function."

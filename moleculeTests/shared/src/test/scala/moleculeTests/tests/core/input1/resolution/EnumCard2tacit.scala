@@ -26,7 +26,7 @@ object EnumCard2tacit extends AsyncTestSuite {
     import molecule.core.util.Executor._
 
     "Eq" - core { implicit conn =>
-      val inputMolecule = m(Ns.enumm.enums_(?))
+      val inputMolecule = m(Ns.enumm.a1.enums_(?))
       for {
         _ <- manyData
         _ <- Ns.enumm.enums$(None).get.map(_ ==> List(("enum6", None)))
@@ -48,32 +48,32 @@ object EnumCard2tacit extends AsyncTestSuite {
         // Values of 1 Set match values of 1 card-many attribute at a time
 
         _ <- inputMolecule(List(Set(enum1))).get.map(_ ==> List(enum1))
-        _ <- inputMolecule(List(Set(enum2))).get.map(_.sorted ==> List(enum1, enum2))
-        _ <- inputMolecule(List(Set(enum3))).get.map(_.sorted ==> List(enum2, enum3))
+        _ <- inputMolecule(List(Set(enum2))).get.map(_ ==> List(enum1, enum2))
+        _ <- inputMolecule(List(Set(enum3))).get.map(_ ==> List(enum2, enum3))
 
         _ <- inputMolecule(List(Set(enum1, enum1))).get.map(_ ==> List(enum1))
         _ <- inputMolecule(List(Set(enum1, enum2))).get.map(_ ==> List(enum1))
         _ <- inputMolecule(List(Set(enum1, enum3))).get.map(_ ==> Nil)
         _ <- inputMolecule(List(Set(enum2, enum3))).get.map(_ ==> List(enum2))
-        _ <- inputMolecule(List(Set(enum4, enum5))).get.map(_.sorted ==> List(enum4, enum5))
+        _ <- inputMolecule(List(Set(enum4, enum5))).get.map(_ ==> List(enum4, enum5))
 
         // Values of each Set matches values of 1 card-many attributes respectively
 
         _ <- inputMolecule(List(Set(enum1, enum2), Set[String]())).get.map(_ ==> List(enum1))
         _ <- inputMolecule(List(Set(enum1), Set(enum1))).get.map(_ ==> List(enum1))
-        _ <- inputMolecule(List(Set(enum1), Set(enum2))).get.map(_.sorted ==> List(enum1, enum2))
-        _ <- inputMolecule(List(Set(enum1), Set(enum3))).get.map(_.sorted ==> List(enum1, enum2, enum3))
+        _ <- inputMolecule(List(Set(enum1), Set(enum2))).get.map(_ ==> List(enum1, enum2))
+        _ <- inputMolecule(List(Set(enum1), Set(enum3))).get.map(_ ==> List(enum1, enum2, enum3))
 
-        _ <- inputMolecule(List(Set(enum1, enum2), Set(enum3))).get.map(_.sorted ==> List(enum1, enum2, enum3))
-        _ <- inputMolecule(List(Set(enum1), Set(enum2, enum3))).get.map(_.sorted ==> List(enum1, enum2))
-        _ <- inputMolecule(List(Set(enum1), Set(enum2), Set(enum3))).get.map(_.sorted ==> List(enum1, enum2, enum3))
+        _ <- inputMolecule(List(Set(enum1, enum2), Set(enum3))).get.map(_ ==> List(enum1, enum2, enum3))
+        _ <- inputMolecule(List(Set(enum1), Set(enum2, enum3))).get.map(_ ==> List(enum1, enum2))
+        _ <- inputMolecule(List(Set(enum1), Set(enum2), Set(enum3))).get.map(_ ==> List(enum1, enum2, enum3))
 
-        _ <- inputMolecule(List(Set(enum1, enum2), Set(enum3, enum4))).get.map(_.sorted ==> List(enum1, enum3))
+        _ <- inputMolecule(List(Set(enum1, enum2), Set(enum3, enum4))).get.map(_ ==> List(enum1, enum3))
       } yield ()
     }
 
     "not" - core { implicit conn =>
-      val inputMolecule = m(Ns.enumm.enums_.not(?))
+      val inputMolecule = m(Ns.enumm.a1.enums_.not(?))
       for {
         _ <- Ns.enumm.enums insert List(
           (enum1, Set(enum1, enum2, enum3)),
@@ -81,18 +81,18 @@ object EnumCard2tacit extends AsyncTestSuite {
           (enum3, Set(enum3, enum4, enum5))
         )
 
-        _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3))
-        _ <- inputMolecule(List(Set[String]())).get.map(_.sorted ==> List(enum1, enum2, enum3))
-        _ <- inputMolecule(List(Set(enum1))).get.map(_.sorted ==> List(enum2, enum3))
+        _ <- inputMolecule(Nil).get.map(_ ==> List(enum1, enum2, enum3))
+        _ <- inputMolecule(List(Set[String]())).get.map(_ ==> List(enum1, enum2, enum3))
+        _ <- inputMolecule(List(Set(enum1))).get.map(_ ==> List(enum2, enum3))
 
         _ <- inputMolecule(List(Set(enum2))).get.map(_ ==> List(enum3))
         _ <- inputMolecule(List(Set(enum3))).get.map(_ ==> Nil)
 
-        _ <- inputMolecule(List(Set(enum1, enum2))).get.map(_.sorted ==> List(enum2, enum3))
-        _ <- inputMolecule(List(Set(enum1, enum3))).get.map(_.sorted ==> List(enum2, enum3))
+        _ <- inputMolecule(List(Set(enum1, enum2))).get.map(_ ==> List(enum2, enum3))
+        _ <- inputMolecule(List(Set(enum1, enum3))).get.map(_ ==> List(enum2, enum3))
         _ <- inputMolecule(List(Set(enum2, enum3))).get.map(_ ==> List(enum3))
 
-        _ <- inputMolecule(List(Set(enum1), Set(enum1))).get.map(_.sorted ==> List(enum2, enum3))
+        _ <- inputMolecule(List(Set(enum1), Set(enum1))).get.map(_ ==> List(enum2, enum3))
         _ <- inputMolecule(List(Set(enum1), Set(enum2))).get.map(_ ==> List(enum3))
         _ <- inputMolecule(List(Set(enum1), Set(enum3))).get.map(_ ==> Nil)
         _ <- inputMolecule(List(Set(enum1), Set(enum4))).get.map(_ ==> Nil)
@@ -104,14 +104,14 @@ object EnumCard2tacit extends AsyncTestSuite {
     }
 
     ">" - core { implicit conn =>
-      val inputMolecule = m(Ns.enumm.enums_.>(?))
+      val inputMolecule = m(Ns.enumm.a1.enums_.>(?))
       for {
         _ <- manyData
-        _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3, enum4, enum5))
-        _ <- inputMolecule(List(Set[String]())).get.map(_.sorted ==> List(enum1, enum2, enum3, enum4, enum5))
+        _ <- inputMolecule(Nil).get.map(_ ==> List(enum1, enum2, enum3, enum4, enum5))
+        _ <- inputMolecule(List(Set[String]())).get.map(_ ==> List(enum1, enum2, enum3, enum4, enum5))
 
         // (enum3, enum4), (enum4, enum5), (enum4, enum5, enum6)
-        _ <- inputMolecule(List(Set(enum2))).get.map(_.sorted ==> List(enum2, enum3, enum4, enum5))
+        _ <- inputMolecule(List(Set(enum2))).get.map(_ ==> List(enum2, enum3, enum4, enum5))
 
         _ <- inputMolecule(List(Set(enum2, enum3))).get.recover { case MoleculeException(err, _) =>
           err ==> "Can't apply multiple values to comparison function."
@@ -124,14 +124,14 @@ object EnumCard2tacit extends AsyncTestSuite {
     }
 
     ">=" - core { implicit conn =>
-      val inputMolecule = m(Ns.enumm.enums_.>=(?))
+      val inputMolecule = m(Ns.enumm.a1.enums_.>=(?))
       for {
         _ <- manyData
-        _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3, enum4, enum5))
-        _ <- inputMolecule(List(Set[String]())).get.map(_.sorted ==> List(enum1, enum2, enum3, enum4, enum5))
+        _ <- inputMolecule(Nil).get.map(_ ==> List(enum1, enum2, enum3, enum4, enum5))
+        _ <- inputMolecule(List(Set[String]())).get.map(_ ==> List(enum1, enum2, enum3, enum4, enum5))
 
         // (enum2, enum4), (enum3, enum4), (enum4, enum5), (enum4, enum5, enum6)
-        _ <- inputMolecule(List(Set(enum2))).get.map(_.sorted ==> List(enum1, enum2, enum3, enum4, enum5))
+        _ <- inputMolecule(List(Set(enum2))).get.map(_ ==> List(enum1, enum2, enum3, enum4, enum5))
 
         _ <- inputMolecule(List(Set(enum2, enum3))).get.recover { case MoleculeException(err, _) =>
           err ==> "Can't apply multiple values to comparison function."
@@ -144,11 +144,11 @@ object EnumCard2tacit extends AsyncTestSuite {
     }
 
     "<" - core { implicit conn =>
-      val inputMolecule = m(Ns.enumm.enums_.<(?))
+      val inputMolecule = m(Ns.enumm.a1.enums_.<(?))
       for {
         _ <- manyData
-        _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3, enum4, enum5))
-        _ <- inputMolecule(List(Set[String]())).get.map(_.sorted ==> List(enum1, enum2, enum3, enum4, enum5))
+        _ <- inputMolecule(Nil).get.map(_ ==> List(enum1, enum2, enum3, enum4, enum5))
+        _ <- inputMolecule(List(Set[String]())).get.map(_ ==> List(enum1, enum2, enum3, enum4, enum5))
 
         _ <- inputMolecule(List(Set(enum2))).get.map(_ ==> List(enum1))
 
@@ -163,13 +163,13 @@ object EnumCard2tacit extends AsyncTestSuite {
     }
 
     "<=" - core { implicit conn =>
-      val inputMolecule = m(Ns.enumm.enums_.<=(?))
+      val inputMolecule = m(Ns.enumm.a1.enums_.<=(?))
       for {
         _ <- manyData
-        _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3, enum4, enum5))
-        _ <- inputMolecule(List(Set[String]())).get.map(_.sorted ==> List(enum1, enum2, enum3, enum4, enum5))
+        _ <- inputMolecule(Nil).get.map(_ ==> List(enum1, enum2, enum3, enum4, enum5))
+        _ <- inputMolecule(List(Set[String]())).get.map(_ ==> List(enum1, enum2, enum3, enum4, enum5))
 
-        _ <- inputMolecule(List(Set(enum2))).get.map(_.sorted ==> List(enum1, enum2))
+        _ <- inputMolecule(List(Set(enum2))).get.map(_ ==> List(enum1, enum2))
 
         _ <- inputMolecule(List(Set(enum2, enum3))).get.recover { case MoleculeException(err, _) =>
           err ==> "Can't apply multiple values to comparison function."

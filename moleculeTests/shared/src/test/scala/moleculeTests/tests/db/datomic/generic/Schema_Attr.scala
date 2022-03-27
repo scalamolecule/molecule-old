@@ -54,12 +54,12 @@ object Schema_Attr extends AsyncTestSuite {
         _ <- Schema.a.not(":Ns/str").get.map(_.size ==> attrCount - 1)
         _ <- Schema.a.not(":Ns/str", ":Ns/int").get.map(_.size ==> attrCount - 2)
 
-        _ <- Schema.a_(":Ns/str").ns.get.map(_.sorted ==> List("Ns"))
-        _ <- Schema.a_(":Ns/str", ":Ref1/str1").ns.get.map(_.sorted ==> List("Ns", "Ref1"))
+        _ <- Schema.a_(":Ns/str").ns.a1.get.map(_ ==> List("Ns"))
+        _ <- Schema.a_(":Ns/str", ":Ref1/str1").ns.a1.get.map(_ ==> List("Ns", "Ref1"))
 
         // Negate tacit ident value
         // Note though that since other attributes than `str` exist, the namespace is still returned
-        _ <- Schema.a_.not(":Ref2/int2").ns.get.map(_.sorted ==> List("Ns", "Ref1", "Ref2", "Ref3", "Ref4"))
+        _ <- Schema.a_.not(":Ref2/int2").ns.a1.get.map(_ ==> List("Ns", "Ref1", "Ref2", "Ref3", "Ref4"))
 
         // If we exclude all attributes in a namespace, it won't be returned
         _ <- Schema.a_.not(
@@ -70,7 +70,7 @@ object Schema_Attr extends AsyncTestSuite {
           ":Ref2/ints2",
           ":Ref2/ref3",
           ":Ref2/refs3",
-        ).ns.get.map(_.sorted ==> List("Ns", "Ref1", "Ref3", "Ref4"))
+        ).ns.a1.get.map(_ ==> List("Ns", "Ref1", "Ref3", "Ref4"))
 
       } yield ()
     }
@@ -101,27 +101,27 @@ object Schema_Attr extends AsyncTestSuite {
         _ <- Schema.nsFull("Ref1").get.map(_ ==> List("Ref1"))
         _ <- Schema.nsFull("Ref1", "Ref2").get.map(_ ==> List("Ref2", "Ref1"))
 
-        _ <- Schema.nsFull.not("Ref1").get.map(_.sorted ==> List("Ns", "Ref2", "Ref3", "Ref4"))
-        _ <- Schema.nsFull.not("Ref1", "Ref2").get.map(_.sorted ==> List("Ns", "Ref3", "Ref4"))
+        _ <- Schema.nsFull.not("Ref1").a1.get.map(_ ==> List("Ns", "Ref2", "Ref3", "Ref4"))
+        _ <- Schema.nsFull.not("Ref1", "Ref2").a1.get.map(_ ==> List("Ns", "Ref3", "Ref4"))
 
         // Since all attributes have a namespace, a tacit `nsFull_` makes no difference
         _ <- Schema.nsFull_.attr.get.map(_.size ==> attrCount)
 
         // We can though filter by one or more tacit namespace names
-        _ <- Schema.nsFull_("Ref1").attr.get.map(_.sorted ==> List(
+        _ <- Schema.nsFull_("Ref1").attr.a1.get.map(_ ==> List(
           "enum1", "enums1", "int1", "intMap1", "ints1", "nss",
           "ref2", "refSub2", "refs2", "refsSub2", "str1", "strs1"
         ))
 
         // Attributes in namespace "Ref1" or "Ref2"
-        _ <- Schema.nsFull_("Ref1", "Ref2").attr.get.map(_.sorted ==> List(
+        _ <- Schema.nsFull_("Ref1", "Ref2").attr.a1.get.map(_ ==> List(
           "enum1", "enum2", "enums1", "int1", "int2", "intMap1", "ints1",
           "ints2", "nss", "ref2", "ref3", "refSub2", "refs2", "refs3", "refsSub2",
           "str1", "str2", "strs1", "strs2"
         ))
 
         // Negate tacit namespace name
-        _ <- Schema.nsFull_.not("Ns").attr.get.map(_.sorted ==> List(
+        _ <- Schema.nsFull_.not("Ns").attr.a1.get.map(_ ==> List(
           "enum1", "enum2", "enums1",
           "int1", "int2", "int3", "int4", "intMap1",
           "ints1", "ints2",
@@ -131,7 +131,7 @@ object Schema_Attr extends AsyncTestSuite {
           "str1", "str2", "str3", "str4",
           "strs1", "strs2"
         ))
-        _ <- Schema.nsFull_.not("Ns", "Ref2").attr.get.map(_.sorted ==> List(
+        _ <- Schema.nsFull_.not("Ns", "Ref2").attr.a1.get.map(_ ==> List(
           "enum1", "enums1",
           "int1", "int3", "int4", "intMap1",
           "ints1",
@@ -147,23 +147,23 @@ object Schema_Attr extends AsyncTestSuite {
 
     "ns" - core { implicit conn =>
       for {
-        _ <- Schema.ns.get.map(_ ==> List("Ns", "Ref4", "Ref2", "Ref3", "Ref1"))
+        _ <- Schema.ns.a1.get.map(_ ==> List("Ns", "Ref4", "Ref2", "Ref3", "Ref1"))
 
         _ <- Schema.ns(count).get.map(_.head ==> 5)
 
         _ <- Schema.ns("Ref1").get.map(_ ==> List("Ref1"))
         _ <- Schema.ns("Ref1", "Ref2").get.map(_ ==> List("Ref2", "Ref1"))
 
-        _ <- Schema.ns.not("Ref1").get.map(_.sorted ==> List("Ns", "Ref2", "Ref3", "Ref4"))
-        _ <- Schema.ns.not("Ref1", "Ref2").get.map(_.sorted ==> List("Ns", "Ref3", "Ref4"))
+        _ <- Schema.ns.not("Ref1").a1.get.map(_ ==> List("Ns", "Ref2", "Ref3", "Ref4"))
+        _ <- Schema.ns.not("Ref1", "Ref2").a1.get.map(_ ==> List("Ns", "Ref3", "Ref4"))
 
-        _ <- Schema.ns_("Ref1").attr.get.map(_.sorted ==> List(
+        _ <- Schema.ns_("Ref1").attr.a1.get.map(_ ==> List(
           "enum1", "enums1", "int1", "intMap1", "ints1", "nss",
           "ref2", "refSub2", "refs2", "refsSub2", "str1", "strs1"
         ))
 
         // Attributes in namespace "Ref1" or "Ref2"
-        _ <- Schema.ns_("Ref1", "Ref2").attr.get.map(_.sorted ==> List(
+        _ <- Schema.ns_("Ref1", "Ref2").attr.a1.get.map(_ ==> List(
           "enum1", "enum2", "enums1",
           "int1", "int2", "intMap1",
           "ints1", "ints2",
@@ -175,7 +175,7 @@ object Schema_Attr extends AsyncTestSuite {
         ))
 
         // Negate tacit namespace name
-        _ <- Schema.ns_.not("Ns").attr.get.map(_.sorted ==> List(
+        _ <- Schema.ns_.not("Ns").attr.a1.get.map(_ ==> List(
           "enum1", "enum2", "enums1",
           "int1", "int2", "int3", "int4", "intMap1",
           "ints1", "ints2",
@@ -185,7 +185,7 @@ object Schema_Attr extends AsyncTestSuite {
           "str1", "str2", "str3", "str4",
           "strs1", "strs2"
         ))
-        _ <- Schema.ns_.not("Ns", "Ref2").attr.get.map(_.sorted ==> List(
+        _ <- Schema.ns_.not("Ns", "Ref2").attr.a1.get.map(_ ==> List(
           "enum1", "enums1",
           "int1", "int3", "int4", "intMap1",
           "ints1",
@@ -211,12 +211,12 @@ object Schema_Attr extends AsyncTestSuite {
         _ <- Schema.attr.not("str").get.map(_.size ==> attrCount - 1)
         _ <- Schema.attr.not("str", "int").get.map(_.size ==> attrCount - 2)
 
-        _ <- Schema.attr_("str").ns.get.map(_.sorted ==> List("Ns"))
-        _ <- Schema.attr_("str", "str1").ns.get.map(_.sorted ==> List("Ns", "Ref1"))
+        _ <- Schema.attr_("str").ns.a1.get.map(_ ==> List("Ns"))
+        _ <- Schema.attr_("str", "str1").ns.a1.get.map(_ ==> List("Ns", "Ref1"))
 
         // Negate tacit attribute name
         // Note though that since other attributes than `str` exist, the namespace is still returned
-        _ <- Schema.attr_.not("int2").ns.get.map(_.sorted ==> List("Ns", "Ref1", "Ref2", "Ref3", "Ref4"))
+        _ <- Schema.attr_.not("int2").ns.a1.get.map(_ ==> List("Ns", "Ref1", "Ref2", "Ref3", "Ref4"))
 
         // If we exclude all attributes in a namespace, it won't be returned
         _ <- Schema.attr_.not(
@@ -227,7 +227,7 @@ object Schema_Attr extends AsyncTestSuite {
           "ints2",
           "ref3",
           "refs3",
-        ).ns.get.map(_.sorted ==> List("Ns", "Ref1", "Ref3", "Ref4"))
+        ).ns.a1.get.map(_ ==> List("Ns", "Ref1", "Ref3", "Ref4"))
       } yield ()
     }
 
@@ -245,7 +245,7 @@ object Schema_Attr extends AsyncTestSuite {
         ))
 
         // Attribute/enum values in namespace `ref2`
-        _ <- Schema.ns_("Ref2").attr.enumm.get.map(_.sorted ==> List(
+        _ <- Schema.ns_("Ref2").attr.enumm.a1.get.map(_ ==> List(
           ("enum2", "enum20"),
           ("enum2", "enum21"),
           ("enum2", "enum22"),
@@ -264,7 +264,7 @@ object Schema_Attr extends AsyncTestSuite {
         ))
 
         // Enums of a specific attribute
-        _ <- Schema.a_(":Ns/enumm").enumm.get.map(_.sorted ==> List(
+        _ <- Schema.a_(":Ns/enumm").enumm.a1.get.map(_ ==> List(
           "enum0", "enum1", "enum2", "enum3", "enum4",
           "enum5", "enum6", "enum7", "enum8", "enum9"
         ))
@@ -274,7 +274,7 @@ object Schema_Attr extends AsyncTestSuite {
           (":Ns/enumm", "enum0")
         ))
 
-        _ <- Schema.a.enumm("enum0", "enum1").get.map(_.sortBy(r => (r._1, r._2)) ==> List(
+        _ <- Schema.a.a1.enumm("enum0", "enum1").a2.get.map(_ ==> List(
           (":Ns/enumm", "enum0"),
           (":Ns/enumm", "enum1"),
           (":Ns/enums", "enum0"),
@@ -302,13 +302,13 @@ object Schema_Attr extends AsyncTestSuite {
         ))
 
         // Attributes with some enum value
-        _ <- Schema.a.enumm_("enum0").get.map(_.sorted ==> List(
+        _ <- Schema.a.a1.enumm_("enum0").get.map(_ ==> List(
           ":Ns/enumm", ":Ns/enums"))
-        _ <- Schema.a.enumm_("enum0", "enum1").get.map(_.sorted ==> List(
+        _ <- Schema.a.a1.enumm_("enum0", "enum1").get.map(_ ==> List(
           ":Ns/enumm", ":Ns/enums"))
 
         // Excluding one enum value will still match the other values
-        _ <- Schema.a.enumm_.not("enum0").get.map(_.sorted ==> List(
+        _ <- Schema.a.a1.enumm_.not("enum0").get.map(_ ==> List(
           ":Ns/enumm",
           ":Ns/enums",
           ":Ref1/enum1",
@@ -317,7 +317,7 @@ object Schema_Attr extends AsyncTestSuite {
         ))
 
         // If we exclude all enum values of an attribute it won't be returned
-        _ <- Schema.a.enumm_.not("enum10", "enum11", "enum12").get.map(_.sorted ==> List(
+        _ <- Schema.a.a1.enumm_.not("enum10", "enum11", "enum12").get.map(_ ==> List(
           ":Ns/enumm",
           ":Ns/enums",
           ":Ref2/enum2",
@@ -333,7 +333,7 @@ object Schema_Attr extends AsyncTestSuite {
         // - `Integer` are internally saved as type `long` in Datomic
         // Molecule transparently converts back and forth so that application code only have to consider the Scala type.
 
-        _ <- Schema.valueType.get.map(_.sorted ==> List(
+        _ <- Schema.valueType.a1.get.map(_ ==> List(
           "bigdec",
           "bigint",
           "boolean",
@@ -357,7 +357,7 @@ object Schema_Attr extends AsyncTestSuite {
         _ <- Schema.valueType("string").get.map(_ ==> List("string"))
         _ <- Schema.valueType("string", "long").get.map(_ ==> List("string", "long"))
 
-        _ <- Schema.valueType.not("instant").get.map(_.sorted ==> List(
+        _ <- Schema.valueType.not("instant").a1.get.map(_ ==> List(
           "bigdec",
           "bigint",
           "boolean",
@@ -368,7 +368,7 @@ object Schema_Attr extends AsyncTestSuite {
           "uri",
           "uuid",
         ))
-        _ <- Schema.valueType.not("instant", "boolean").get.map(_.sorted ==> List(
+        _ <- Schema.valueType.not("instant", "boolean").a1.get.map(_ ==> List(
           "bigdec",
           "bigint",
           "double",
@@ -380,22 +380,22 @@ object Schema_Attr extends AsyncTestSuite {
         ))
 
         // We can though filter by one or more tacit value types
-        _ <- Schema.valueType_("string").ns.get.map(_.sorted ==> List(
+        _ <- Schema.valueType_("string").ns.a1.get.map(_ ==> List(
           "Ns", "Ref1", "Ref2", "Ref3", "Ref4"))
         // Only namespace `ns` has attributes of type Boolean
-        _ <- Schema.valueType_("boolean").ns.get.map(_.sorted ==> List("Ns"))
+        _ <- Schema.valueType_("boolean").ns.a1.get.map(_ ==> List("Ns"))
 
         // Namespaces with attributes of type string or long
-        _ <- Schema.valueType_("string", "long").ns.get.map(_.sorted ==> List(
+        _ <- Schema.valueType_("string", "long").ns.a1.get.map(_ ==> List(
           "Ns", "Ref1", "Ref2", "Ref3", "Ref4"))
 
         // Negate tacit attribute type
         // Note though that since other attributes have other types, the namespace is still returned
-        _ <- Schema.valueType_.not("string").ns.get.map(_.sorted ==> List(
+        _ <- Schema.valueType_.not("string").ns.a1.get.map(_ ==> List(
           "Ns", "Ref1", "Ref2", "Ref3", "Ref4"))
 
         // If we exclude all attribute types in a namespace, it won't be returned
-        _ <- Schema.valueType_.not("string", "long", "ref").ns.get.map(_.sorted ==> List("Ns"))
+        _ <- Schema.valueType_.not("string", "long", "ref").ns.a1.get.map(_ ==> List("Ns"))
 
       } yield ()
     }

@@ -17,8 +17,8 @@ trait AsyncTestSuite extends TestSuite with CoreData
   lazy val useFree     : Boolean = useFree_
 
   lazy val system: System = {
-//    SystemPeer
-    SystemDevLocal
+    SystemPeer
+//    SystemDevLocal
 
     // Since we run asynchronous tests and can't recreate databases against the Peer Server,
     // we can only test reliably by restarting the Peer Server and test a single test at a time.

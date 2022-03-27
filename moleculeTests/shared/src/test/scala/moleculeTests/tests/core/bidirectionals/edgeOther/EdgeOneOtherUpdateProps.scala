@@ -283,13 +283,11 @@ object EdgeOneOtherUpdateProps extends AsyncTestSuite {
 
           // replace
           _ <- Favorite(annRex).inCommon.replace(humor -> sporty).update
-          _ <- Person.name_("Ann").Favorite.Animal.name._Favorite.InCommon.*(Quality.name).get.map(
-            _.map(p => (p._1, p._2.sorted)) ==> List(("Rex", Seq("Sporty", "Waiting ability")))
-          )
+          _ <- Person.name_("Ann").Favorite.Animal.name._Favorite.InCommon.*(Quality.name.a1).get
+            .map(_ ==> List(("Rex", Seq("Sporty", "Waiting ability"))))
 
-          _ <- Animal.name_("Rex").Favorite.Person.name._Favorite.InCommon.*(Quality.name).get.map(
-            _.map(p => (p._1, p._2.sorted)) ==> List(("Ann", Seq("Sporty", "Waiting ability")))
-          )
+          _ <- Animal.name_("Rex").Favorite.Person.name._Favorite.InCommon.*(Quality.name).get
+            .map(_ ==> List(("Ann", Seq("Sporty", "Waiting ability"))))
 
           // remove
           _ <- Favorite(annRex).inCommon.retract(patience).update
@@ -298,23 +296,19 @@ object EdgeOneOtherUpdateProps extends AsyncTestSuite {
 
           // add
           _ <- Favorite(annRex).inCommon.assert(patience).update
-          _ <- Person.name_("Ann").Favorite.Animal.name._Favorite.InCommon.*(Quality.name).get.map(
-            _.map(p => (p._1, p._2.sorted)) ==> List(("Rex", Seq("Sporty", "Waiting ability")))
-          )
+          _ <- Person.name_("Ann").Favorite.Animal.name._Favorite.InCommon.*(Quality.name.a1).get
+            .map(_ ==> List(("Rex", Seq("Sporty", "Waiting ability"))))
 
-          _ <- Animal.name_("Rex").Favorite.Person.name._Favorite.InCommon.*(Quality.name).get.map(
-            _.map(p => (p._1, p._2.sorted)) ==> List(("Ann", Seq("Sporty", "Waiting ability")))
-          )
+          _ <- Animal.name_("Rex").Favorite.Person.name._Favorite.InCommon.*(Quality.name.a1).get
+            .map(_ ==> List(("Ann", Seq("Sporty", "Waiting ability"))))
 
           // Apply new values
           _ <- Favorite(annRex).inCommon(sporty, humor).update
-          _ <- Person.name_("Ann").Favorite.Animal.name._Favorite.InCommon.*(Quality.name).get.map(
-            _.map(p => (p._1, p._2.sorted)) ==> List(("Rex", Seq("Funny", "Sporty")))
-          )
+          _ <- Person.name_("Ann").Favorite.Animal.name._Favorite.InCommon.*(Quality.name.a1).get
+            .map(_ ==> List(("Rex", Seq("Funny", "Sporty"))))
 
-          _ <- Animal.name_("Rex").Favorite.Person.name._Favorite.InCommon.*(Quality.name).get.map(
-            _.map(p => (p._1, p._2.sorted)) ==> List(("Ann", Seq("Funny", "Sporty")))
-          )
+          _ <- Animal.name_("Rex").Favorite.Person.name._Favorite.InCommon.*(Quality.name.a1).get
+            .map(_ ==> List(("Ann", Seq("Funny", "Sporty"))))
 
           // Retract all references
           _ <- Favorite(annRex).inCommon().update

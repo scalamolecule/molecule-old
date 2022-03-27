@@ -25,25 +25,25 @@ object Index_EAVT extends Base {
         ((tx1, e1, t1, d1, tx2, t2, d2, tx3, t3, d3), _, _, _) <- testData
 
         // EAVT datom values of entity e1
-        _ <- EAVT(e1).e.a.v.t.get.map(_.sortBy(_._4) ==> List(
+        _ <- EAVT(e1).e.a.v.t.a1.get.map(_ ==> List(
           (e1, ":Ns/str", "b", t2),
           (e1, ":Ns/int", 2, t3),
         ))
 
         // Freely order generic attributes as you like
-        _ <- EAVT(e1).t.v.e.a.get.map(_.sortBy(_._1) ==> List(
+        _ <- EAVT(e1).t.a1.v.e.a.get.map(_ ==> List(
           (t2, "b", e1, ":Ns/str"),
           (t3, 2, e1, ":Ns/int")
         ))
 
         // No need to return the entity id that we filter by
-        _ <- EAVT(e1).a.v.t.get.map(_.sortBy(_._3) ==> List(
+        _ <- EAVT(e1).a.v.t.a1.get.map(_ ==> List(
           (":Ns/str", "b", t2),
           (":Ns/int", 2, t3)
         ))
 
         // Attributes of entity e1
-        _ <- EAVT(e1).a.get.map(_.sorted ==> List(":Ns/int", ":Ns/str"))
+        _ <- EAVT(e1).a.a1.get.map(_ ==> List(":Ns/int", ":Ns/str"))
 
         // Values of e1
         _ <- EAVT(e1).v.get.map(_ ==> List("b", 2))
@@ -76,7 +76,7 @@ object Index_EAVT extends Base {
           // NOTE that retracted datoms take precedence for the same EAV values, meaning that
           // the transaction value is sorted after the operation (so he index seems actually sorted by
           // all 5 datom elements EAVOpT and not only EAVT)
-          _ <- EAVT(e1).e.a.v.t.op.getHistory.map(_.sortBy(p => (p._2, p._4, p._5)) ==> List(
+          _ <- EAVT(e1).e.a.a1.v.t.a2.op.a3.getHistory.map(_ ==> List(
             (e1, ":Ns/int", 1, t1, true),
             (e1, ":Ns/int", 1, t3, false),
             (e1, ":Ns/int", 2, t3, true),
@@ -89,7 +89,7 @@ object Index_EAVT extends Base {
           // or
           // "What values has attribute :Ns/int of entity e1 had over time?"
           // - 1 was asserted in transaction t1, retracted in t3, and new value 2 asserted in t3
-          _ <- EAVT(e1, ":Ns/int").e.a.v.t.op.getHistory.map(_.sortBy(p => (p._4, p._5)) ==> List(
+          _ <- EAVT(e1, ":Ns/int").e.a.v.t.a1.op.a2.getHistory.map(_ ==> List(
             (e1, ":Ns/int", 1, t1, true),
             (e1, ":Ns/int", 1, t3, false),
             (e1, ":Ns/int", 2, t3, true),
@@ -99,7 +99,7 @@ object Index_EAVT extends Base {
           // or
           // "What happened to entity e1's attribute :Ns/int value 1?"
           // - 1 was asserted in transaction t1 and then retracted in t3
-          _ <- EAVT(e1, ":Ns/int", 1).e.a.v.t.op.getHistory.map(_.sortBy(p => (p._4, p._5)) ==> List(
+          _ <- EAVT(e1, ":Ns/int", 1).e.a.v.t.a1.op.a2.getHistory.map(_ ==> List(
             (e1, ":Ns/int", 1, t1, true),
             (e1, ":Ns/int", 1, t3, false),
           ))

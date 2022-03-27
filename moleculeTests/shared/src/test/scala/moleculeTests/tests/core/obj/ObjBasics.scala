@@ -54,16 +54,7 @@ object ObjBasics extends AsyncTestSuite with Helpers {
           (3, None, None),
         )
 
-        // third row not returned since `str` is tacitly required
-        // (free/pro output sorted differently)
-        _ <- Ns.int.str_.bool$.getObjs.collect {
-          case List(o2, o1) if useFree =>
-            o1.int ==> 1
-            o1.bool$ ==> Some(true)
-
-            o2.int ==> 2
-            o2.bool$ ==> None
-
+        _ <- Ns.int.a1.str_.bool$.getObjs.collect {
           case List(o1, o2) =>
             o1.int ==> 1
             o1.bool$ ==> Some(true)

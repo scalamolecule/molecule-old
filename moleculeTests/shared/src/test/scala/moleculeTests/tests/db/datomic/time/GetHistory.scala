@@ -50,7 +50,7 @@ object GetHistory extends AsyncTestSuite {
     import molecule.core.util.Executor._
 
     "1 entity, 1 attr" - core { implicit conn =>
-      val genericInputMolecule = m(Ns(?).str.t.op)
+      val genericInputMolecule = m(Ns(?).str.t.a1.op.a2)
       for {
         (tx1, e1, t1, tx2, t2, tx3, t3, tx4, e2, t4, tx5, t5) <- data
 
@@ -59,27 +59,27 @@ object GetHistory extends AsyncTestSuite {
         _ <- Ns(e1).int.op_(false).get.map(_ ==> List())
 
         // str updated at t2
-        _ <- Ns(e1).str.t.op.getHistory.map(_.sortBy(t => (t._2, t._3)) ==> List(
+        _ <- Ns(e1).str.t.a1.op.a2.getHistory.map(_ ==> List(
           ("a", t1, true), // "a" asserted
           ("a", t2, false), // "a" retracted
           ("b", t2, true) // "b" asserted
         ))
 
-        _ <- genericInputMolecule(e1).getHistory.map(_.sortBy(t => (t._2, t._3)) ==> List(
+        _ <- genericInputMolecule(e1).getHistory.map(_ ==> List(
           ("a", t1, true), // "a" asserted
           ("a", t2, false), // "a" retracted
           ("b", t2, true) // "b" asserted
         ))
 
         // int updated at t3
-        _ <- Ns(e1).int.t.op.getHistory.map(_.sortBy(t => (t._2, t._3)) ==> List(
+        _ <- Ns(e1).int.t.a1.op.a2.getHistory.map(_ ==> List(
           (1, t1, true), // 1 asserted
           (1, t3, false), // 1 retracted
           (2, t3, true) // 2 asserted
         ))
 
         // int history with entity
-        _ <- Ns.e.int.t.op.getHistory.map(_.sortBy(t => (t._2, t._3, t._4)) ==> List(
+        _ <- Ns.e.a1.int.t.a2.op.a3.getHistory.map(_ ==> List(
           // e1
           (e1, 1, t1, true),
           (e1, 1, t3, false),
@@ -111,7 +111,7 @@ object GetHistory extends AsyncTestSuite {
         // To illustrate, let's revisit the str datoms:
 
         // str updated at t2
-        _ <- Ns(e1).str.t.op.getHistory.map(_.sortBy(t => (t._2, t._3)) ==> List(
+        _ <- Ns(e1).str.t.a1.op.a2.getHistory.map(_ ==> List(
           ("a", t1, true), // "a" asserted
           ("a", t2, false), // "a" retracted
           ("b", t2, true) // "b" asserted
@@ -119,7 +119,7 @@ object GetHistory extends AsyncTestSuite {
 
         // Adding the int attribute will cause its historic values 1 and 2 to repeatedly
         // be unified with each str value from above so that we get 3 x 2 datoms:
-        _ <- Ns(e1).str.t.op.int.getHistory.map(_.sortBy(t => (t._2, t._3, t._4)) ==> List(
+        _ <- Ns(e1).str.t.a1.op.a2.int.a3.getHistory.map(_ ==> List(
           ("a", t1, true, 1),
           ("a", t1, true, 2),
 
@@ -131,7 +131,7 @@ object GetHistory extends AsyncTestSuite {
         ))
 
         // Without a given entity, this approach quickly explodes and becomes useless:
-        _ <- Ns.str.t.op.int.getHistory.map(_.sortBy(t => (t._2, t._3, t._4)) ==> List(
+        _ <- Ns.str.t.a1.op.a2.int.a3.getHistory.map(_ ==> List(
           ("a", t1, true, 1),
           ("a", t1, true, 2),
 
@@ -148,7 +148,7 @@ object GetHistory extends AsyncTestSuite {
 
         // Additional attributes are better used to filter the result
         // "str operations on enties having had an int value 1"
-        _ <- Ns.str.t.op.int(1).getHistory.map(_.sortBy(t => (t._2, t._3, t._4)) ==> List(
+        _ <- Ns.str.t.a1.op.a2.int(1).getHistory.map(_ ==> List(
           ("a", t1, true, 1),
           ("a", t2, false, 1),
           ("b", t2, true, 1)
@@ -156,7 +156,7 @@ object GetHistory extends AsyncTestSuite {
 
         // ..and even better as tacit attributes
         // "str operations on entities having had an int value of 1"
-        _ <- Ns.str.t.op.int_(1).getHistory.map(_.sortBy(t => (t._2, t._3)) ==> List(
+        _ <- Ns.str.t.a1.op.a2.int_(1).getHistory.map(_ ==> List(
           ("a", t1, true),
           ("a", t2, false),
           ("b", t2, true)
@@ -164,7 +164,7 @@ object GetHistory extends AsyncTestSuite {
 
         // Giving the int value 5 we get to the second entity
         // "str operations on entities having had an int value of 5"
-        _ <- Ns.str.t.op.int_(5).getHistory.map(_.sortBy(t => (t._2, t._3)) ==> List(
+        _ <- Ns.str.t.a1.op.a2.int_(5).getHistory.map(_ ==> List(
           ("x", t4, true)
         ))
 
@@ -174,14 +174,14 @@ object GetHistory extends AsyncTestSuite {
 
         // Reversing the attributes we get to the first entity via a or b:
         // "int operations on entities having had an int value of a"
-        _ <- Ns.int.t.op.str_("a").getHistory.map(_.sortBy(t => (t._2, t._3)) ==> List(
+        _ <- Ns.int.t.a1.op.a2.str_("a").getHistory.map(_ ==> List(
           (1, t1, true),
           (1, t3, false),
           (2, t3, true)
         ))
 
         // "int operations on entities having had a str value of b"
-        _ <- Ns.int.t.op.str_("b").getHistory.map(_.sortBy(t => (t._2, t._3)) ==> List(
+        _ <- Ns.int.t.a1.op.a2.str_("b").getHistory.map(_ ==> List(
           (1, t1, true),
           (1, t3, false),
           (2, t3, true)
@@ -189,7 +189,7 @@ object GetHistory extends AsyncTestSuite {
 
         // Getting historic operations on second entity via str value x
         // "int operations on entities having had a str value of x"
-        _ <- Ns.int.t.op.str_("x").getHistory.map(_.sortBy(t => (t._2, t._3)) ==> List(
+        _ <- Ns.int.t.a1.op.a2.str_("x").getHistory.map(_ ==> List(
           (4, t4, true),
           (4, t5, false),
           (5, t5, true)
@@ -197,7 +197,7 @@ object GetHistory extends AsyncTestSuite {
 
         // Order of attributes is free.
         // All generic attributes always relate to the previous domain attribute (`int` here)
-        _ <- Ns.str_("x").int.t.op.getHistory.map(_.sortBy(t => (t._2, t._3)) ==> List(
+        _ <- Ns.str_("x").int.t.a1.op.a2.getHistory.map(_ ==> List(
           (4, t4, true),
           (4, t5, false),
           (5, t5, true)
@@ -213,7 +213,7 @@ object GetHistory extends AsyncTestSuite {
         // We _can_ combine multiple attrs with generic attributes in a history
         // query but then two individual attribute history "timelines" of changes
         // are unified which is quite little use:
-        _ <- Ns(e1).str.t.op.int.t.op.getHistory.map(_.sortBy(t => (t._2, t._1, t._5, t._6)) ==> List(
+        _ <- Ns(e1).str.a2.t.a1.op.int.t.a3.op.a4.getHistory.map(_ ==> List(
           ("a", t1, true, 1, t1, true),
           ("a", t1, true, 1, t3, false),
           ("a", t1, true, 2, t3, true),
@@ -236,7 +236,7 @@ object GetHistory extends AsyncTestSuite {
         // as a molecule we can also look for _any_ attribute involved in an entity's history:
 
         // All attribute assertions/retractions of entity e1
-        _ <- Ns(e1).a.v.t.op.getHistory.map(_.sortBy(t => (t._1, t._3, t._4)) ==> List(
+        _ <- Ns(e1).a.a1.v.t.a2.op.a3.getHistory.map(_ ==> List(
           (":Ns/int", 1, t1, true),
           (":Ns/int", 1, t3, false),
           (":Ns/int", 2, t3, true),
@@ -246,7 +246,7 @@ object GetHistory extends AsyncTestSuite {
         ))
 
         // All attribute assertions of entity e1
-        _ <- Ns(e1).a.v.t.op(true).getHistory.map(_.sortBy(t => (t._1, t._3, t._4)) ==> List(
+        _ <- Ns(e1).a.a1.v.t.a2.op(true).getHistory.map(_ ==> List(
           (":Ns/int", 1, t1, true),
           (":Ns/int", 2, t3, true),
           (":Ns/str", "a", t1, true),
@@ -254,13 +254,13 @@ object GetHistory extends AsyncTestSuite {
         ))
 
         // All attribute retractions of entity e1
-        _ <- Ns(e1).a.v.t.op(false).getHistory.map(_.sortBy(t => (t._1, t._3, t._4)) ==> List(
+        _ <- Ns(e1).a.a1.v.t.a2.op(false).getHistory.map(_ ==> List(
           (":Ns/int", 1, t3, false),
           (":Ns/str", "a", t2, false),
         ))
 
         // All attribute assertions/retractions of entity e1 at t2
-        _ <- Ns(e1).a.v.t(t2).op.getHistory.map(_.sortBy(t => t._4) ==> List(
+        _ <- Ns(e1).a.v.t(t2).op.a1.getHistory.map(_ ==> List(
           // str value was updated from "a" to "b"
           (":Ns/str", "a", t2, false),
           (":Ns/str", "b", t2, true)
@@ -279,7 +279,7 @@ object GetHistory extends AsyncTestSuite {
         ))
 
         // All attribute assertions with value "a" of entity e1
-        _ <- Ns(e1).a.v("a").t.op.getHistory.map(_.sortBy(_._3) ==> List(
+        _ <- Ns(e1).a.v("a").t.a1.op.getHistory.map(_ ==> List(
           (":Ns/str", "a", t1, true),
           (":Ns/str", "a", t2, false)
         ))
@@ -302,7 +302,7 @@ object GetHistory extends AsyncTestSuite {
         (tx1, e1, t1, tx2, t2, tx3, t3, tx4, e2, t4, tx5, t5) <- data
 
         // Entities with retractions
-        _ <- Ns.e.a.v.t.op_(false).getHistory.map(_.sortBy(_._4) ==> List(
+        _ <- Ns.e.a.v.t.a1.op_(false).getHistory.map(_ ==> List(
           (e1, ":Ns/str", "a", t2),
           (e1, ":Ns/int", 1, t3),
           (e2, ":Ns/int", 4, t5)
@@ -313,7 +313,7 @@ object GetHistory extends AsyncTestSuite {
         date3 = tx3.txInstant
         date5 = tx5.txInstant
 
-        _ <- Ns.e.a.v.txInstant.op_(false).getHistory.map(_.sortBy(t => (t._2, t._4)) ==> List(
+        _ <- Ns.e.a.a1.v.txInstant.a2.op_(false).getHistory.map(_ ==> List(
           (e1, ":Ns/int", 1, date3),
           (e2, ":Ns/int", 4, date5),
           (e1, ":Ns/str", "a", date2)
@@ -321,14 +321,14 @@ object GetHistory extends AsyncTestSuite {
 
         // Entities involved in transaction t2
         // Note how the transaction itself is included
-        _ <- Ns.e.a.v.t_(t2).op.getHistory.map(_.sortBy(_._4) ==> List(
+        _ <- Ns.e.a.v.t_(t2).op.a1.getHistory.map(_ ==> List(
           (e1, ":Ns/str", "a", false),
           (e1, ":Ns/str", "b", true)
         ))
 
         // Using transaction date
         // Entities involved in transaction as of date2
-        _ <- Ns.e.a.v.txInstant_(date2).op.getHistory.map(_.sortBy(_._4) ==> List(
+        _ <- Ns.e.a.v.txInstant_(date2).op.a1.getHistory.map(_ ==> List(
           (e1, ":Ns/str", "a", false),
           (e1, ":Ns/str", "b", true)
         ))

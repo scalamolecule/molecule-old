@@ -103,7 +103,7 @@ object EdgeOneSelfInsert extends AsyncTestSuite {
           _ <- Person.name.loves.insert("Ann", benLovesAnn)
 
           // Ann loves Ben and Ben loves Ann - that is 70% love
-          _ <- Person.name.Loves.weight.Person.name.get.map(_.sorted ==> List(
+          _ <- Person.name.a1.Loves.weight.Person.name.get.map(_ ==> List(
             ("Ann", 7, "Ben"),
             ("Ben", 7, "Ann")
           ))

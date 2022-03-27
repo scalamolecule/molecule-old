@@ -38,21 +38,21 @@ object TestDbWith extends AsyncTestSuite {
 
         // Update
         _ <- Ns(e1).int(0).update
-        _ <- Ns.int.get.map(_.sorted ==> List(0, 2, 3, 4))
+        _ <- Ns.int.a1.get.map(_ ==> List(0, 2, 3, 4))
 
         // Retract
         _ <- e2.retract
-        _ <- Ns.int.get.map(_.sorted ==> List(0, 3, 4))
+        _ <- Ns.int.a1.get.map(_ ==> List(0, 3, 4))
 
         // Save
         _ <- Ns.int(5).save
-        _ <- Ns.int.get.map(_.sorted ==> List(0, 3, 4, 5))
+        _ <- Ns.int.a1.get.map(_ ==> List(0, 3, 4, 5))
 
         // Discard test db and go back to live db
         _ = conn.useLiveDb()
 
         // Current live state is correctly unchanged
-        _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
+        _ <- Ns.int.a1.get.map(_ ==> List(1, 2, 3))
       } yield ()
     }
 
@@ -63,7 +63,7 @@ object TestDbWith extends AsyncTestSuite {
         (e1, e2, e3) <- data
 
         // Current live state
-        _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
+        _ <- Ns.int.a1.get.map(_ ==> List(1, 2, 3))
 
         // Apply multiple transaction statements to get a
         // test db in a certain state
@@ -82,26 +82,26 @@ object TestDbWith extends AsyncTestSuite {
         )
 
         // Adjusted test state to work on
-        _ <- Ns.int.get.map(_.sorted ==> List(0, 3, 4, 5, 6))
+        _ <- Ns.int.a1.get.map(_ ==> List(0, 3, 4, 5, 6))
 
 
         // 3 -> 7
         _ <- Ns(e3).int(7).update
 
         // Updated test state
-        _ <- Ns.int.get.map(_.sorted ==> List(0, 4, 5, 6, 7))
+        _ <- Ns.int.a1.get.map(_ ==> List(0, 4, 5, 6, 7))
 
         // add 8
         _ <- Ns.int(8).save
-        _ <- Ns.int.get.map(_.sorted ==> List(0, 4, 5, 6, 7, 8))
+        _ <- Ns.int.a1.get.map(_ ==> List(0, 4, 5, 6, 7, 8))
 
         // remove entity 1 (value 0)
         _ <- Ns(e1).int().update
-        _ <- Ns.int.get.map(_.sorted ==> List(4, 5, 6, 7, 8))
+        _ <- Ns.int.a1.get.map(_ ==> List(4, 5, 6, 7, 8))
 
         // retract entity 3 (value 7)
         _ <- e3.retract
-        _ <- Ns.int.get.map(_.sorted ==> List(4, 5, 6, 8))
+        _ <- Ns.int.a1.get.map(_ ==> List(4, 5, 6, 8))
 
         // Etc...
 
@@ -109,7 +109,7 @@ object TestDbWith extends AsyncTestSuite {
         _ = conn.useLiveDb()
 
         // Current live state is correctly unchanged
-        _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
+        _ <- Ns.int.a1.get.map(_ ==> List(1, 2, 3))
       } yield ()
     }
 
@@ -120,7 +120,7 @@ object TestDbWith extends AsyncTestSuite {
         (e1, e2, e3) <- data
 
         // Current live state
-        _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
+        _ <- Ns.int.a1.get.map(_ ==> List(1, 2, 3))
 
         save = Ns.int(4).getSaveStmts
         insert = Ns.int getInsertStmts List(5, 6)
@@ -138,23 +138,23 @@ object TestDbWith extends AsyncTestSuite {
         )
 
         // Adjusted test state to work on
-        _ <- Ns.int.get.map(_.sorted ==> List(0, 3, 4, 5, 6))
+        _ <- Ns.int.a1.get.map(_ ==> List(0, 3, 4, 5, 6))
 
         // 3 -> 7
         _ <- Ns(e3).int(7).update
-        _ <- Ns.int.get.map(_.sorted ==> List(0, 4, 5, 6, 7))
+        _ <- Ns.int.a1.get.map(_ ==> List(0, 4, 5, 6, 7))
 
         // add 8
         _ <- Ns.int(8).save
-        _ <- Ns.int.get.map(_.sorted ==> List(0, 4, 5, 6, 7, 8))
+        _ <- Ns.int.a1.get.map(_ ==> List(0, 4, 5, 6, 7, 8))
 
         // remove entity 1 (value 0)
         _ <- Ns(e1).int().update
-        _ <- Ns.int.get.map(_.sorted ==> List(4, 5, 6, 7, 8))
+        _ <- Ns.int.a1.get.map(_ ==> List(4, 5, 6, 7, 8))
 
         // retract entity 3 (value 7)
         _ <- e3.retract
-        _ <- Ns.int.get.map(_.sorted ==> List(4, 5, 6, 8))
+        _ <- Ns.int.a1.get.map(_ ==> List(4, 5, 6, 8))
 
         // Etc...
 
@@ -162,7 +162,7 @@ object TestDbWith extends AsyncTestSuite {
         _ = conn.useLiveDb()
 
         // Current live state is correctly unchanged
-        _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
+        _ <- Ns.int.a1.get.map(_ ==> List(1, 2, 3))
       } yield ()
     }
 

@@ -46,7 +46,7 @@ object Input2syntax extends AsyncTestSuite {
 
     "Card one + one" - {
 
-      val personOfAgeAndStatus = m(Ns.str.int_(?).long_(?))
+      val personOfAgeAndStatus = m(Ns.str.a1.int_(?).long_(?))
       "Pairs" - core { implicit conn =>
         for {
           _ <- manyData
@@ -61,14 +61,14 @@ object Input2syntax extends AsyncTestSuite {
           _ <- personOfAgeAndStatus(Seq((37, 5L))).get.map(_ ==> List("Ann"))
 
           // 2 pairs
-          _ <- personOfAgeAndStatus((37, 5L), (28, 5L)).get.map(_.sorted ==> List("Ann", "Ben"))
-          _ <- personOfAgeAndStatus(Seq((37, 5L), (28, 5L))).get.map(_.sorted ==> List("Ann", "Ben"))
-          _ <- personOfAgeAndStatus((37 and 5L) or (28 and 5L)).get.map(_.sorted ==> List("Ann", "Ben"))
+          _ <- personOfAgeAndStatus((37, 5L), (28, 5L)).get.map(_ ==> List("Ann", "Ben"))
+          _ <- personOfAgeAndStatus(Seq((37, 5L), (28, 5L))).get.map(_ ==> List("Ann", "Ben"))
+          _ <- personOfAgeAndStatus((37 and 5L) or (28 and 5L)).get.map(_ ==> List("Ann", "Ben"))
 
           // 3 pairs
-          _ <- personOfAgeAndStatus((37, 5L), (28, 5L), (28, 4L)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
-          _ <- personOfAgeAndStatus(Seq((37, 5L), (28, 5L), (28, 4L))).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
-          _ <- personOfAgeAndStatus((37 and 5L) or (28 and 5L) or (28 and 4L)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
+          _ <- personOfAgeAndStatus((37, 5L), (28, 5L), (28, 4L)).get.map(_ ==> List("Ann", "Ben", "Joe"))
+          _ <- personOfAgeAndStatus(Seq((37, 5L), (28, 5L), (28, 4L))).get.map(_ ==> List("Ann", "Ben", "Joe"))
+          _ <- personOfAgeAndStatus((37 and 5L) or (28 and 5L) or (28 and 4L)).get.map(_ ==> List("Ann", "Ben", "Joe"))
 
           // etc..
         } yield ()
@@ -86,12 +86,12 @@ object Input2syntax extends AsyncTestSuite {
           _ <- personOfAgeAndStatus(28 and (5L or 4L or 3L)).get.map(_ ==> List("Ben", "Liz", "Joe"))
 
           _ <- personOfAgeAndStatus(37 and 5L).get.map(_ ==> List("Ann"))
-          _ <- personOfAgeAndStatus((37 or 28) and 5L).get.map(_.sorted ==> List("Ann", "Ben"))
-          _ <- personOfAgeAndStatus((37 or 28) and 4L).get.map(_.sorted ==> List("Joe"))
-          _ <- personOfAgeAndStatus((37 or 28) and 3L).get.map(_.sorted ==> List("Liz"))
+          _ <- personOfAgeAndStatus((37 or 28) and 5L).get.map(_ ==> List("Ann", "Ben"))
+          _ <- personOfAgeAndStatus((37 or 28) and 4L).get.map(_ ==> List("Joe"))
+          _ <- personOfAgeAndStatus((37 or 28) and 3L).get.map(_ ==> List("Liz"))
 
-          _ <- personOfAgeAndStatus((37 or 28) and (5L or 4L)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
-          _ <- personOfAgeAndStatus((37 or 28) and (5L or 4L or 3L)).get.map(_.sorted ==> List("Ann", "Ben", "Joe", "Liz"))
+          _ <- personOfAgeAndStatus((37 or 28) and (5L or 4L)).get.map(_ ==> List("Ann", "Ben", "Joe"))
+          _ <- personOfAgeAndStatus((37 or 28) and (5L or 4L or 3L)).get.map(_ ==> List("Ann", "Ben", "Joe", "Liz"))
 
 
           // 2 lists of values, respectively matching each input attribute
@@ -101,12 +101,12 @@ object Input2syntax extends AsyncTestSuite {
           _ <- personOfAgeAndStatus(Seq(28), Seq(5L, 4L, 3L)).get.map(_ ==> List("Ben", "Liz", "Joe"))
 
           _ <- personOfAgeAndStatus(Seq(37), Seq(5L)).get.map(_ ==> List("Ann"))
-          _ <- personOfAgeAndStatus(Seq(37, 28), Seq(5L)).get.map(_.sorted ==> List("Ann", "Ben"))
-          _ <- personOfAgeAndStatus(Seq(37, 28), Seq(4L)).get.map(_.sorted ==> List("Joe"))
-          _ <- personOfAgeAndStatus(Seq(37, 28), Seq(3L)).get.map(_.sorted ==> List("Liz"))
+          _ <- personOfAgeAndStatus(Seq(37, 28), Seq(5L)).get.map(_ ==> List("Ann", "Ben"))
+          _ <- personOfAgeAndStatus(Seq(37, 28), Seq(4L)).get.map(_ ==> List("Joe"))
+          _ <- personOfAgeAndStatus(Seq(37, 28), Seq(3L)).get.map(_ ==> List("Liz"))
 
-          _ <- personOfAgeAndStatus(Seq(37, 28), Seq(5L, 4L)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
-          _ <- personOfAgeAndStatus(Seq(37, 28), Seq(5L, 4L, 3L)).get.map(_.sorted ==> List("Ann", "Ben", "Joe", "Liz"))
+          _ <- personOfAgeAndStatus(Seq(37, 28), Seq(5L, 4L)).get.map(_ ==> List("Ann", "Ben", "Joe"))
+          _ <- personOfAgeAndStatus(Seq(37, 28), Seq(5L, 4L, 3L)).get.map(_ ==> List("Ann", "Ben", "Joe", "Liz"))
 
 
           // No input returns Nil
@@ -132,14 +132,14 @@ object Input2syntax extends AsyncTestSuite {
           // --------
           // 37-5 Ann
           // 28-5 Ben
-          _ <- personOfAgeAndStatus(Seq(37, 28), Seq(5L)).get.map(_.sorted ==> List("Ann", "Ben"))
-          _ <- personOfAgeAndStatus((37 or 28) and 5L).get.map(_.sorted ==> List("Ann", "Ben"))
+          _ <- personOfAgeAndStatus(Seq(37, 28), Seq(5L)).get.map(_ ==> List("Ann", "Ben"))
+          _ <- personOfAgeAndStatus((37 or 28) and 5L).get.map(_ ==> List("Ann", "Ben"))
 
           // 1 + 2
           // --------
           // 28-5 Ben
           // 28-4 Joe
-          _ <- personOfAgeAndStatus(Seq(28), Seq(5L, 4L)).get.map(_.sorted ==> List("Ben", "Joe"))
+          _ <- personOfAgeAndStatus(Seq(28), Seq(5L, 4L)).get.map(_ ==> List("Ben", "Joe"))
           _ <- personOfAgeAndStatus(28 and (5L or 4L)).get.map(_ ==> List("Ben", "Joe"))
 
           // 2 + 2
@@ -148,8 +148,8 @@ object Input2syntax extends AsyncTestSuite {
           // 37-4
           // 28-5 Ben
           // 28-4 Joe
-          _ <- personOfAgeAndStatus(Seq(37, 28), Seq(5L, 4L)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
-          _ <- personOfAgeAndStatus((37 or 28) and (5L or 4L)).get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
+          _ <- personOfAgeAndStatus(Seq(37, 28), Seq(5L, 4L)).get.map(_ ==> List("Ann", "Ben", "Joe"))
+          _ <- personOfAgeAndStatus((37 or 28) and (5L or 4L)).get.map(_ ==> List("Ann", "Ben", "Joe"))
 
           // 2 + 3
           // --------
@@ -159,8 +159,8 @@ object Input2syntax extends AsyncTestSuite {
           // 28-5 Ben
           // 28-4 Joe
           // 28-3 Liz
-          _ <- personOfAgeAndStatus(Seq(37, 28), Seq(5L, 4L, 3L)).get.map(_.sorted ==> List("Ann", "Ben", "Joe", "Liz"))
-          _ <- personOfAgeAndStatus((37 or 28) and (5L or 4L or 3L)).get.map(_.sorted ==> List("Ann", "Ben", "Joe", "Liz"))
+          _ <- personOfAgeAndStatus(Seq(37, 28), Seq(5L, 4L, 3L)).get.map(_ ==> List("Ann", "Ben", "Joe", "Liz"))
+          _ <- personOfAgeAndStatus((37 or 28) and (5L or 4L or 3L)).get.map(_ ==> List("Ann", "Ben", "Joe", "Liz"))
 
 
           // No input returns Nil

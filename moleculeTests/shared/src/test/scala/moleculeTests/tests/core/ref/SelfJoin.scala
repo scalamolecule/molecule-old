@@ -258,8 +258,8 @@ object SelfJoin extends AsyncTestSuite {
         // shouldn't be unified. Say for instance that we want to know the names
         // of 23-/25-year-olds sharing a beverage preference:
 
-        _ <- Person.age_(23).name.Likes.beverage._Person.Self
-          .age_(25).name.Likes.beverage_(unify).get.map(_.sorted ==> List(
+        _ <- Person.age_(23).name.a1.Likes.beverage.a2._Person.Self
+          .age_(25).name.Likes.beverage_(unify).get.map(_ ==> List(
           ("Joe", "Coffee", "Ben"),
           ("Liz", "Coffee", "Ben"),
           ("Liz", "Tea", "Ben")
@@ -267,51 +267,51 @@ object SelfJoin extends AsyncTestSuite {
         // Now we also fetch the name of beverage which is not being unified between the two entities.
 
         // Let's add the ratings too
-        _ <- Person.age_(23).name.Likes.rating.beverage._Person.Self
-          .age_(25).name.Likes.beverage_(unify).rating.get.map(_.sorted ==> List(
+        _ <- Person.age_(23).name.a1.Likes.rating.d2.beverage._Person.Self
+          .age_(25).name.Likes.beverage_(unify).rating.get.map(_ ==> List(
           ("Joe", 3, "Coffee", "Ben", 2),
           ("Liz", 1, "Coffee", "Ben", 2),
           ("Liz", 3, "Tea", "Ben", 3)
         ))
 
         // We can arrange the attributes in the previous molecule in other orders too:
-        _ <- Person.age_(23).name.Likes.rating.beverage._Person.Self
-          .age_(25).name.Likes.rating.beverage_(unify).get.map(_.sorted ==> List(
+        _ <- Person.age_(23).name.a1.Likes.rating.d2.beverage._Person.Self
+          .age_(25).name.Likes.rating.beverage_(unify).get.map(_ ==> List(
           ("Joe", 3, "Coffee", "Ben", 2),
           ("Liz", 1, "Coffee", "Ben", 2),
           ("Liz", 3, "Tea", "Ben", 3)
         ))
         // or
-        _ <- Person.age_(23).name.Likes.beverage.rating._Person.Self
-          .age_(25).name.Likes.beverage_(unify).rating.get.map(_.sorted ==> List(
+        _ <- Person.age_(23).name.a1.Likes.beverage.rating.d2._Person.Self
+          .age_(25).name.Likes.beverage_(unify).rating.get.map(_ ==> List(
           ("Joe", "Coffee", 3, "Ben", 2),
           ("Liz", "Coffee", 1, "Ben", 2),
           ("Liz", "Tea", 3, "Ben", 3)
         ))
         // or
-        _ <- Person.age_(23).name.Likes.beverage.rating._Person.Self
-          .age_(25).name.Likes.rating.beverage_(unify).get.map(_.sorted ==> List(
+        _ <- Person.age_(23).name.a1.Likes.beverage.rating.d2._Person.Self
+          .age_(25).name.Likes.rating.beverage_(unify).get.map(_ ==> List(
           ("Joe", "Coffee", 3, "Ben", 2),
           ("Liz", "Coffee", 1, "Ben", 2),
           ("Liz", "Tea", 3, "Ben", 3)
         ))
 
         // Only higher rated beverages
-        _ <- Person.age_(23).name.Likes.rating.>(1).beverage._Person.Self
-          .age_(25).name.Likes.rating.>(1).beverage_(unify).get.map(_.sorted ==> List(
+        _ <- Person.age_(23).name.a1.Likes.rating.>(1).beverage._Person.Self
+          .age_(25).name.Likes.rating.>(1).beverage_(unify).get.map(_ ==> List(
           ("Joe", 3, "Coffee", "Ben", 2),
           ("Liz", 3, "Tea", "Ben", 3)
         ))
 
         // Only highest rated beverages
         _ <- Person.age_(23).name.Likes.rating(3).beverage._Person.Self
-          .age_(25).name.Likes.rating(3).beverage_(unify).get.map(_.sorted ==> List(
+          .age_(25).name.Likes.rating(3).beverage_(unify).get.map(_ ==> List(
           ("Liz", 3, "Tea", "Ben", 3)
         ))
 
         // Common beverage of 23-year-old with low rating and 25-year-old with high rating
         _ <- Person.age_(23).name.Likes.rating(1).beverage._Person.Self
-          .age_(25).name.Likes.rating(2).beverage_(unify).get.map(_.sorted ==> List(
+          .age_(25).name.Likes.rating(2).beverage_(unify).get.map(_ ==> List(
           ("Liz", 1, "Coffee", "Ben", 2)
         ))
 
@@ -324,8 +324,8 @@ object SelfJoin extends AsyncTestSuite {
           .age_(25).name.Likes.beverage_("Coffee").get.map(_ ==> List(("Liz", "Ben")))
 
         // Any pair of young persons drinking respectively Tea and Coffee?
-        _ <- Person.age_.<(24).name.Likes.beverage_("Tea")._Person.Self
-          .age_.<(24).name.Likes.beverage_("Coffee").get.map(_ ==> List(
+        _ <- Person.age_.<(24).name.a1.Likes.beverage_("Tea")._Person.Self
+          .age_.<(24).name.a2.Likes.beverage_("Coffee").get.map(_ ==> List(
           ("Liz", "Joe"),
           ("Liz", "Liz")
         ))

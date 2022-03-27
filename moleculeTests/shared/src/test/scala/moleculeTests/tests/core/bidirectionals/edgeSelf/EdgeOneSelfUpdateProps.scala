@@ -91,14 +91,14 @@ object EdgeOneSelfUpdateProps extends AsyncTestSuite {
           // Instead update the edge entity itself:
 
           // Current weight value
-          _ <- Person.name("Ann" or "Ben").Loves.weight.get.map(_.sortBy(_._1) ==> List(
+          _ <- Person.name("Ann" or "Ben").a1.Loves.weight.get.map(_ ==> List(
             ("Ann", 7),
             ("Ben", 7)
           ))
 
           // Apply new value
           _ <- Loves(annBen).weight(2).update
-          _ <- Person.name("Ann" or "Ben").Loves.weight.get.map(_.sortBy(_._1) ==> List(
+          _ <- Person.name("Ann" or "Ben").a1.Loves.weight.get.map(_ ==> List(
             ("Ann", 2),
             ("Ben", 2)
           ))
@@ -114,14 +114,14 @@ object EdgeOneSelfUpdateProps extends AsyncTestSuite {
           Seq(love, patience, humor, ann, annBen) <- testData
 
           // Current howWeMet enum value
-          _ <- Person.name("Ann" or "Ben").Loves.howWeMet.get.map(_.sortBy(_._1) ==> List(
+          _ <- Person.name("Ann" or "Ben").a1.Loves.howWeMet.get.map(_ ==> List(
             ("Ann", "atWork"),
             ("Ben", "atWork")
           ))
 
           // Apply new enum value
           _ <- Loves(annBen).howWeMet("throughFriend").update
-          _ <- Person.name("Ann" or "Ben").Loves.howWeMet.get.map(_.sortBy(_._1) ==> List(
+          _ <- Person.name("Ann" or "Ben").a1.Loves.howWeMet.get.map(_ ==> List(
             ("Ann", "throughFriend"),
             ("Ben", "throughFriend")
           ))
@@ -137,7 +137,7 @@ object EdgeOneSelfUpdateProps extends AsyncTestSuite {
           Seq(love, patience, humor, ann, annBen) <- testData
 
           // Current value
-          _ <- Person.name("Ann" or "Ben").Loves.CoreQuality.name.get.map(_.sortBy(_._1) ==> List(
+          _ <- Person.name("Ann" or "Ben").a1.Loves.CoreQuality.name.get.map(_ ==> List(
             ("Ann", "Love"),
             ("Ben", "Love")
           ))
@@ -155,7 +155,7 @@ object EdgeOneSelfUpdateProps extends AsyncTestSuite {
           _ <- Quality(love).name("Compassion").update
 
           // Same reference, new value
-          _ <- Person.name("Ann" or "Ben").Loves.CoreQuality.name.get.map(_.sortBy(_._1) ==> List(
+          _ <- Person.name("Ann" or "Ben").a1.Loves.CoreQuality.name.get.map(_ ==> List(
             ("Ann", "Compassion"),
             ("Ben", "Compassion")
           ))
@@ -167,7 +167,7 @@ object EdgeOneSelfUpdateProps extends AsyncTestSuite {
           _ <- Loves(annBen).coreQuality(trust).update
 
           // New reference/value
-          _ <- Person.name("Ann" or "Ben").Loves.CoreQuality.name.get.map(_.sortBy(_._1) ==> List(
+          _ <- Person.name("Ann" or "Ben").a1.Loves.CoreQuality.name.get.map(_ ==> List(
             ("Ann", "Trust"),
             ("Ben", "Trust")
           ))
@@ -183,40 +183,40 @@ object EdgeOneSelfUpdateProps extends AsyncTestSuite {
     "Card-many" - {
 
       "values" - bidirectional { implicit conn =>
-        val commonInterestsOf = m(Person.name(?).Loves.commonInterests)
+        val commonInterestsOf = m(Person.name(?).a1.Loves.commonInterests)
         for {
           Seq(love, patience, humor, ann, annBen) <- testData
 
           // Current values
-          _ <- commonInterestsOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonInterestsOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("Food", "Walking", "Travelling")),
             ("Ben", Set("Food", "Walking", "Travelling"))
           ))
 
           // Replace
           _ <- Loves(annBen).commonInterests.replace("Food" -> "Cuisine").update
-          _ <- commonInterestsOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonInterestsOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("Cuisine", "Walking", "Travelling")),
             ("Ben", Set("Cuisine", "Walking", "Travelling"))
           ))
 
           // Remove
           _ <- Loves(annBen).commonInterests.retract("Travelling").update
-          _ <- commonInterestsOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonInterestsOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("Cuisine", "Walking")),
             ("Ben", Set("Cuisine", "Walking"))
           ))
 
           // Add
           _ <- Loves(annBen).commonInterests.assert("Meditating").update
-          _ <- commonInterestsOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonInterestsOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("Cuisine", "Walking", "Meditating")),
             ("Ben", Set("Cuisine", "Walking", "Meditating"))
           ))
 
           // Apply new values
           _ <- Loves(annBen).commonInterests("Running", "Cycling").update
-          _ <- commonInterestsOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonInterestsOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("Running", "Cycling")),
             ("Ben", Set("Running", "Cycling"))
           ))
@@ -228,40 +228,40 @@ object EdgeOneSelfUpdateProps extends AsyncTestSuite {
       }
 
       "enums" - bidirectional { implicit conn =>
-        val commonLicencesOf = m(Person.name(?).Loves.commonLicences)
+        val commonLicencesOf = m(Person.name(?).a1.Loves.commonLicences)
         for {
           Seq(love, patience, humor, ann, annBen) <- testData
 
           // Current enum values
-          _ <- commonLicencesOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonLicencesOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("climbing", "flying")),
             ("Ben", Set("climbing", "flying"))
           ))
 
           // Replace
           _ <- Loves(annBen).commonLicences.replace("flying" -> "diving").update
-          _ <- commonLicencesOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonLicencesOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("climbing", "diving")),
             ("Ben", Set("climbing", "diving"))
           ))
 
           // Remove
           _ <- Loves(annBen).commonLicences.retract("climbing").update
-          _ <- commonLicencesOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonLicencesOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("diving")),
             ("Ben", Set("diving"))
           ))
 
           // Add
           _ <- Loves(annBen).commonLicences.assert("parachuting").update
-          _ <- commonLicencesOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonLicencesOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("diving", "parachuting")),
             ("Ben", Set("diving", "parachuting"))
           ))
 
           // Apply new values
           _ <- Loves(annBen).commonLicences("climbing", "flying").update
-          _ <- commonLicencesOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonLicencesOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("climbing", "flying")),
             ("Ben", Set("climbing", "flying"))
           ))
@@ -273,12 +273,12 @@ object EdgeOneSelfUpdateProps extends AsyncTestSuite {
       }
 
       "refs" - bidirectional { implicit conn =>
-        val inCommonOf = m(Person.name(?).Loves.InCommon.*(Quality.name))
+        val inCommonOf = m(Person.name(?).a1.Loves.InCommon.*(Quality.name.a1))
         for {
           Seq(love, patience, humor, ann, annBen) <- testData
 
           // Current value
-          _ <- inCommonOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- inCommonOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", List("Patience", "Humor")),
             ("Ben", List("Patience", "Humor"))
           ))
@@ -291,7 +291,7 @@ object EdgeOneSelfUpdateProps extends AsyncTestSuite {
           _ <- Quality(humor).name("Funny").update
 
           // Same references, new value(s)
-          _ <- inCommonOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- inCommonOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", List("Waiting ability", "Funny")),
             ("Ben", List("Waiting ability", "Funny"))
           ))
@@ -303,31 +303,28 @@ object EdgeOneSelfUpdateProps extends AsyncTestSuite {
 
           // replace
           _ <- Loves(annBen).inCommon.replace(humor -> sporty).update
-          _ <- inCommonOf("Ann" or "Ben").get.map(
-            _.map(p => (p._1, p._2.sorted)).sortBy(_._1) ==> List(
+          _ <- inCommonOf("Ann" or "Ben").get.map(_ ==> List(
               ("Ann", List("Sporty", "Waiting ability")),
               ("Ben", List("Sporty", "Waiting ability"))
             ))
 
           // remove
           _ <- Loves(annBen).inCommon.retract(patience).update
-          _ <- inCommonOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- inCommonOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", List("Sporty")),
             ("Ben", List("Sporty"))
           ))
 
           // add
           _ <- Loves(annBen).inCommon.assert(patience).update
-          _ <- inCommonOf("Ann" or "Ben").get.map(
-            _.map(p => (p._1, p._2.sorted)).sortBy(_._1) ==> List(
+          _ <- inCommonOf("Ann" or "Ben").get.map(_ ==> List(
               ("Ann", List("Sporty", "Waiting ability")),
               ("Ben", List("Sporty", "Waiting ability"))
             ))
 
           // Apply new values
           _ <- Loves(annBen).inCommon(sporty, humor).update
-          _ <- inCommonOf("Ann" or "Ben").get.map(
-            _.map(p => (p._1, p._2.sorted)).sortBy(_._1) ==> List(
+          _ <- inCommonOf("Ann" or "Ben").get.map(_ ==> List(
               ("Ann", List("Funny", "Sporty")),
               ("Ben", List("Funny", "Sporty"))
             ))
@@ -342,40 +339,40 @@ object EdgeOneSelfUpdateProps extends AsyncTestSuite {
 
 
     "Map" - bidirectional { implicit conn =>
-      val commonScoresOf = m(Person.name(?).Loves.commonScores)
+      val commonScoresOf = m(Person.name(?).a1.Loves.commonScores)
       for {
         Seq(love, patience, humor, ann, annBen) <- testData
 
         // Current values
-        _ <- commonScoresOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+        _ <- commonScoresOf("Ann" or "Ben").get.map(_ ==> List(
           ("Ann", Map("baseball" -> 9, "golf" -> 7)),
           ("Ben", Map("baseball" -> 9, "golf" -> 7))
         ))
 
         // Replace values by key
         _ <- Loves(annBen).commonScores.replace("baseball" -> 8, "golf" -> 6).update
-        _ <- commonScoresOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+        _ <- commonScoresOf("Ann" or "Ben").get.map(_ ==> List(
           ("Ann", Map("baseball" -> 8, "golf" -> 6)),
           ("Ben", Map("baseball" -> 8, "golf" -> 6))
         ))
 
         // Remove by key
         _ <- Loves(annBen).commonScores.retract("golf").update
-        _ <- commonScoresOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+        _ <- commonScoresOf("Ann" or "Ben").get.map(_ ==> List(
           ("Ann", Map("baseball" -> 8)),
           ("Ben", Map("baseball" -> 8))
         ))
 
         // Add
         _ <- Loves(annBen).commonScores.assert("parachuting" -> 4).update
-        _ <- commonScoresOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+        _ <- commonScoresOf("Ann" or "Ben").get.map(_ ==> List(
           ("Ann", Map("baseball" -> 8, "parachuting" -> 4)),
           ("Ben", Map("baseball" -> 8, "parachuting" -> 4))
         ))
 
         // Apply new values (replacing all current values!)
         _ <- Loves(annBen).commonScores("volleyball" -> 4, "handball" -> 5).update
-        _ <- commonScoresOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+        _ <- commonScoresOf("Ann" or "Ben").get.map(_ ==> List(
           ("Ann", Map("volleyball" -> 4, "handball" -> 5)),
           ("Ben", Map("volleyball" -> 4, "handball" -> 5))
         ))

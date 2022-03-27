@@ -34,7 +34,7 @@ object EdgeManySelfSave extends AsyncTestSuite {
           _ <- Person.name("Ann").Knows.weight(7).Person.name("Ben").save
 
           // Ann and Ben know each other with a weight of 7
-          _ <- Person.name.Knows.weight.Person.name.get.map(_.sorted ==> List(
+          _ <- Person.name.a1.Knows.weight.Person.name.get.map(_ ==> List(
             ("Ann", 7, "Ben"),
             ("Ben", 7, "Ann")
           ))
@@ -49,7 +49,7 @@ object EdgeManySelfSave extends AsyncTestSuite {
           _ <- Person.name("Ann").Knows.weight(7).person(ben).save
 
           // Ann and Ben know each other with a weight of 7
-          _ <- Person.name.Knows.weight.Person.name.get.map(_.sorted ==> List(
+          _ <- Person.name.a1.Knows.weight.Person.name.get.map(_ ==> List(
             ("Ann", 7, "Ben"),
             ("Ben", 7, "Ann")
           ))
@@ -70,7 +70,7 @@ object EdgeManySelfSave extends AsyncTestSuite {
           _ <- Person.name("Ann").knows(knowsBen, knowsJoe).save
 
           // Ann and Ben know each other with a weight of 7
-          _ <- Person.name.Knows.weight.Person.name.get.map(_.sorted ==> List(
+          _ <- Person.name.a1.Knows.weight.a2.Person.name.get.map(_ ==> List(
             ("Ann", 7, "Ben"),
             ("Ann", 8, "Joe"),
             ("Ben", 7, "Ann"),
@@ -91,7 +91,7 @@ object EdgeManySelfSave extends AsyncTestSuite {
           _ <- Person.name("Ann").knows(knowsBen, knowsJoe).save
 
           // Ann and Ben know each other with a weight of 7
-          _ <- Person.name.Knows.weight.Person.name.get.map(_.sorted ==> List(
+          _ <- Person.name.a1.Knows.weight.a2.Person.name.get.map(_ ==> List(
             ("Ann", 7, "Ben"),
             ("Ann", 8, "Joe"),
             ("Ben", 7, "Ann"),

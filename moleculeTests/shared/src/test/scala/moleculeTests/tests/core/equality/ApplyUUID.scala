@@ -26,22 +26,22 @@ object ApplyUUID extends AsyncTestSuite {
           // Varargs
           _ <- Ns.uuid.apply(uuid1).get.map(_ ==> List(uuid1))
           _ <- Ns.uuid.apply(uuid2).get.map(_ ==> List(uuid2))
-          _ <- Ns.uuid.apply(uuid1, uuid2).get.map(_.sorted ==> List(uuid1, uuid2))
+          _ <- Ns.uuid.apply(uuid1, uuid2).a1.get.map(_ ==> List(uuid1, uuid2))
 
           // `or`
-          _ <- Ns.uuid.apply(uuid1 or uuid2).get.map(_.sorted ==> List(uuid1, uuid2))
-          _ <- Ns.uuid.apply(uuid1 or uuid2 or uuid3).get.map(_.sorted ==> List(uuid1, uuid2, uuid3))
+          _ <- Ns.uuid.apply(uuid1 or uuid2).a1.get.map(_ ==> List(uuid1, uuid2))
+          _ <- Ns.uuid.apply(uuid1 or uuid2 or uuid3).a1.get.map(_ ==> List(uuid1, uuid2, uuid3))
 
           // Seq
           _ <- Ns.uuid.apply().get.map(_ ==> Nil)
           _ <- Ns.uuid.apply(Nil).get.map(_ ==> Nil)
           _ <- Ns.uuid.apply(List(uuid1)).get.map(_ ==> List(uuid1))
           _ <- Ns.uuid.apply(List(uuid2)).get.map(_ ==> List(uuid2))
-          _ <- Ns.uuid.apply(List(uuid1, uuid2)).get.map(_.sorted ==> List(uuid1, uuid2))
-          _ <- Ns.uuid.apply(List(uuid1), List(uuid2)).get.map(_.sorted ==> List(uuid1, uuid2))
-          _ <- Ns.uuid.apply(List(uuid1, uuid2), List(uuid3)).get.map(_.sorted ==> List(uuid1, uuid2, uuid3))
-          _ <- Ns.uuid.apply(List(uuid1), List(uuid2, uuid3)).get.map(_.sorted ==> List(uuid1, uuid2, uuid3))
-          _ <- Ns.uuid.apply(List(uuid1, uuid2, uuid3)).get.map(_.sorted ==> List(uuid1, uuid2, uuid3))
+          _ <- Ns.uuid.apply(List(uuid1, uuid2)).a1.get.map(_ ==> List(uuid1, uuid2))
+          _ <- Ns.uuid.apply(List(uuid1), List(uuid2)).a1.get.map(_ ==> List(uuid1, uuid2))
+          _ <- Ns.uuid.apply(List(uuid1, uuid2), List(uuid3)).a1.get.map(_ ==> List(uuid1, uuid2, uuid3))
+          _ <- Ns.uuid.apply(List(uuid1), List(uuid2, uuid3)).a1.get.map(_ ==> List(uuid1, uuid2, uuid3))
+          _ <- Ns.uuid.apply(List(uuid1, uuid2, uuid3)).a1.get.map(_ ==> List(uuid1, uuid2, uuid3))
         } yield ()
       }
 

@@ -34,7 +34,7 @@ object MetaSave extends AsyncTestSuite {
         tx6 = txR6.tx
 
         // Optional tx meta data
-        _ <- Ns.int.Tx(Ns.str$).get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns.int.a1.Tx(Ns.str$).get.map(_ ==> List(
           (1, Some("str tacit")),
           (2, Some("str mandatory")),
           (3, Some("attr mandatory")),
@@ -45,7 +45,7 @@ object MetaSave extends AsyncTestSuite {
 
 
         // Mandatory tx meta data
-        _ <- Ns.int.Tx(Ns.str).get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns.int.a1.Tx(Ns.str).get.map(_ ==> List(
           (1, "str tacit"),
           (2, "str mandatory"),
           (3, "attr mandatory"),
@@ -68,7 +68,7 @@ object MetaSave extends AsyncTestSuite {
         // Fulltext search only available for Peer
         _ <- if (system == SystemPeer) {
           for {
-            _ <- Ns.int.Tx(Ns.str.contains("mandatory")).get.map(_.sortBy(_._1) ==> List(
+            _ <- Ns.int.a1.Tx(Ns.str.contains("mandatory")).get.map(_ ==> List(
               (2, "str mandatory"),
               (3, "attr mandatory")
             ))
@@ -79,7 +79,7 @@ object MetaSave extends AsyncTestSuite {
         } else Future.unit
 
         // tx entity id can be returned too
-        _ <- Ns.int.tx.Tx(Ns.str$).get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns.int.tx.a1.Tx(Ns.str$).get.map(_ ==> List(
           (1, tx1, Some("str tacit")),
           (2, tx2, Some("str mandatory")),
           (3, tx3, Some("attr mandatory")),
@@ -98,7 +98,7 @@ object MetaSave extends AsyncTestSuite {
         _ <- Ns.int(2).Tx(Ns.str_("b").long$(None).bool_(true)).save
 
         // Expected tx meta data
-        _ <- Ns.int.Tx(Ns.str.long$.bool$).get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns.int.a1.Tx(Ns.str.long$.bool$).get.map(_ ==> List(
           (1, "a", Some(10L), Some(false)),
           (2, "b", None, Some(true))
         ))
@@ -131,11 +131,11 @@ object MetaSave extends AsyncTestSuite {
         _ <- Ns.int.Tx(Ns.str.Ref1.int1.Ref2.int2).get.map(_ ==> List(
           (2, "b", 20, 200)
         ))
-        _ <- Ns.int.Tx(Ns.str.Ref1.int1).get.map(_.sorted ==> List(
+        _ <- Ns.int.a1.Tx(Ns.str.Ref1.int1).get.map(_ ==> List(
           (1, "a", 10), // First insert matches too
           (2, "b", 20)
         ))
-        _ <- Ns.int.Tx(Ns.str).get.map(_.sorted ==> List(
+        _ <- Ns.int.a1.Tx(Ns.str).get.map(_ ==> List(
           (1, "a"),
           (2, "b")
         ))

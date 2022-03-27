@@ -35,7 +35,7 @@ object EdgeOneSelfUpdate extends AsyncTestSuite {
         _ <- loveOf("Joe").get.map(_ ==> List((8, "Ann")))
 
         // Even though Ann now loves Joe, Ben still exists
-        _ <- Person.name.get.map(_.sorted ==> List("Ann", "Ben", "Joe"))
+        _ <- Person.name.a1.get.map(_ ==> List("Ann", "Ben", "Joe"))
       } yield ()
     }
 

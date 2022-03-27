@@ -37,7 +37,7 @@ object Input1Boolean extends AsyncTestSuite {
       "Mandatory" - {
 
         "Eq" - core { implicit conn =>
-          val inputMolecule = m(Ns.bool(?))
+          val inputMolecule = m(Ns.bool(?).a1)
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> Nil)
@@ -48,22 +48,22 @@ object Input1Boolean extends AsyncTestSuite {
 
             // Varargs
             _ <- inputMolecule(true).get.map(_ ==> List(true))
-            _ <- inputMolecule(true, false).get.map(_.sorted ==> List(false, true))
+            _ <- inputMolecule(true, false).get.map(_ ==> List(false, true))
 
             // `or`
-            _ <- inputMolecule(true or false).get.map(_.sorted ==> List(false, true))
+            _ <- inputMolecule(true or false).get.map(_ ==> List(false, true))
           } yield ()
         }
 
         "not" - core { implicit conn =>
-          val inputMolecule = m(Ns.bool.not(?))
+          val inputMolecule = m(Ns.bool.not(?).a1)
           for {
             _ <- oneData
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(false, true))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(false, true))
 
-            _ <- inputMolecule(List(true)).get.map(_.sorted ==> List(false))
-            _ <- inputMolecule(List(true, true)).get.map(_.sorted ==> List(false))
-            _ <- inputMolecule(List(true, false)).get.map(_.sorted ==> Nil)
+            _ <- inputMolecule(List(true)).get.map(_ ==> List(false))
+            _ <- inputMolecule(List(true, true)).get.map(_ ==> List(false))
+            _ <- inputMolecule(List(true, false)).get.map(_ ==> Nil)
           } yield ()
         }
       }
@@ -71,24 +71,24 @@ object Input1Boolean extends AsyncTestSuite {
       "Tacit" - {
 
         "Eq" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.bool_(?))
+          val inputMolecule = m(Ns.int.a1.bool_(?))
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(5))
             _ <- inputMolecule(List(true)).get.map(_ ==> List(1, 3))
             _ <- inputMolecule(List(true, true)).get.map(_ ==> List(1, 3))
-            _ <- inputMolecule(List(true, false)).get.map(_.sorted ==> List(1, 2, 3, 4))
+            _ <- inputMolecule(List(true, false)).get.map(_ ==> List(1, 2, 3, 4))
           } yield ()
         }
 
         "not" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.bool_.not(?))
+          val inputMolecule = m(Ns.int.a1.bool_.not(?))
           for {
             _ <- oneData
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(1, 2, 3, 4))
-            _ <- inputMolecule(List(true)).get.map(_.sorted ==> List(2, 4))
-            _ <- inputMolecule(List(true, true)).get.map(_.sorted ==> List(2, 4))
-            _ <- inputMolecule(List(true, false)).get.map(_.sorted ==> Nil) // No other values to negate
+            _ <- inputMolecule(Nil).get.map(_ ==> List(1, 2, 3, 4))
+            _ <- inputMolecule(List(true)).get.map(_ ==> List(2, 4))
+            _ <- inputMolecule(List(true, true)).get.map(_ ==> List(2, 4))
+            _ <- inputMolecule(List(true, false)).get.map(_ ==> Nil) // No other values to negate
           } yield ()
         }
       }
@@ -100,7 +100,7 @@ object Input1Boolean extends AsyncTestSuite {
       "Mandatory" - {
 
         "Eq" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.bools(?))
+          val inputMolecule = m(Ns.int.a1.bools(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> Nil)
@@ -113,7 +113,7 @@ object Input1Boolean extends AsyncTestSuite {
         }
 
         "not" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.bools.not(?))
+          val inputMolecule = m(Ns.int.a1.bools.not(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List((1, Set(true)), (2, Set(false)), (3, Set(true, false))))
@@ -161,28 +161,28 @@ object Input1Boolean extends AsyncTestSuite {
       "Tacit" - {
 
         "Eq" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.bools_(?))
+          val inputMolecule = m(Ns.int.a1.bools_(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List(4))
             _ <- inputMolecule(List(Set[Boolean]())).get.map(_ ==> List(4))
 
             _ <- inputMolecule(List(Set(true))).get.map(_ ==> List(1, 3))
-            _ <- inputMolecule(List(Set(false))).get.map(_.sorted ==> List(2, 3))
-            _ <- inputMolecule(List(Set(true, false))).get.map(_.sorted ==> List(3))
+            _ <- inputMolecule(List(Set(false))).get.map(_ ==> List(2, 3))
+            _ <- inputMolecule(List(Set(true, false))).get.map(_ ==> List(3))
           } yield ()
         }
 
         "not" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.bools_.not(?))
+          val inputMolecule = m(Ns.int.a1.bools_.not(?))
           for {
             _ <- manyData
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(1, 2, 3))
-            _ <- inputMolecule(List(Set[Boolean]())).get.map(_.sorted ==> List(1, 2, 3))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(1, 2, 3))
+            _ <- inputMolecule(List(Set[Boolean]())).get.map(_ ==> List(1, 2, 3))
 
-            _ <- inputMolecule(List(Set(true))).get.map(_.sorted ==> List(2))
-            _ <- inputMolecule(List(Set(false))).get.map(_.sorted ==> List(1))
-            _ <- inputMolecule(List(Set(true, false))).get.map(_.sorted ==> List(1, 2))
+            _ <- inputMolecule(List(Set(true))).get.map(_ ==> List(2))
+            _ <- inputMolecule(List(Set(false))).get.map(_ ==> List(1))
+            _ <- inputMolecule(List(Set(true, false))).get.map(_ ==> List(1, 2))
           } yield ()
         }
       }

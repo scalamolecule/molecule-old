@@ -21,19 +21,19 @@ object Index_AEVT extends Base {
         (tx4, e2, t4, d4, tx5, t5, d5), _, _) <- testData
 
         // Attribute :Ns/int's entities, values and transactions
-        _ <- AEVT(":Ns/int").e.v.t.get.map(_.sortBy(_._3) ==> List(
+        _ <- AEVT(":Ns/int").e.v.t.a1.get.map(_ ==> List(
           (e1, 2, t3),
           (e2, 5, t5)
         ))
 
         // Entities having :Ns/int asserted
-        _ <- AEVT(":Ns/int").e.get.map(_.sorted ==> List(e1, e2).sorted)
+        _ <- AEVT(":Ns/int").e.a1.get.map(_ ==> List(e1, e2))
 
         // All values of attribute :Ns/int
         _ <- AEVT(":Ns/int").v.get.map(_.map(_.toString.toInt).sorted ==> List(2, 5))
 
         // All transactions where attribute :Ns/int is asserted
-        _ <- AEVT(":Ns/int").t.get.map(_.sorted ==> List(t3, t5))
+        _ <- AEVT(":Ns/int").t.a1.get.map(_ ==> List(t3, t5))
 
 
         // Attribute :Ns/int of entity e1's value and transaction
@@ -53,7 +53,7 @@ object Index_AEVT extends Base {
 
         // Attribute :Ns/int's historic entities, values and transactions
         _ <- if (system != SystemPeerServer)
-          AEVT(":Ns/int").e.v.t.op.getHistory.map(_.sortBy(p => (p._3, p._4)) ==> List(
+          AEVT(":Ns/int").e.v.t.a1.op.a2.getHistory.map(_ ==> List(
             (e1, 1, t1, true),
             (e1, 1, t3, false),
             (e1, 2, t3, true),

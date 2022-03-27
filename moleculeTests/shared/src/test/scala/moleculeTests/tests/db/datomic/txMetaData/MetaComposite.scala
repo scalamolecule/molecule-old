@@ -462,30 +462,30 @@ object MetaComposite extends AsyncTestSuite {
 
         // Since both attributes are from the same namespace
         // the two following queries will return both entities
-        _ <- m(Ns.str.int).get.map(_.sorted ==> List(
+        _ <- m(Ns.str.int.a1).get.map(_ ==> List(
           ("with tx meta data", 1),
           ("without tx meta data", 2)
         ))
-        _ <- m(Ns.str + Ns.int).get.map(_.sorted ==> List(
+        _ <- m(Ns.str + Ns.int.a1).get.map(_ ==> List(
           ("with tx meta data", 1),
           ("without tx meta data", 2)
         ))
 
         // Find by some meta data
-        _ <- m(Ns.str.int.Tx(Ns.double_(7.7))).get.map(_.sorted ==> List(("with tx meta data", 1)))
-        _ <- m(Ns.str + Ns.int.Tx(Ns.double_(7.7))).get.map(_.sorted ==> List(("with tx meta data", 1)))
+        _ <- m(Ns.str.int.Tx(Ns.double_(7.7))).get.map(_ ==> List(("with tx meta data", 1)))
+        _ <- m(Ns.str + Ns.int.Tx(Ns.double_(7.7))).get.map(_ ==> List(("with tx meta data", 1)))
 
         // Find by other meta data
-        _ <- m(Ns.str.int.Tx(Ns.long_(7L))).get.map(_.sorted ==> List(("with tx meta data", 1)))
-        _ <- m(Ns.str + Ns.int.Tx(Ns.long_(7L))).get.map(_.sorted ==> List(("with tx meta data", 1)))
+        _ <- m(Ns.str.int.Tx(Ns.long_(7L))).get.map(_ ==> List(("with tx meta data", 1)))
+        _ <- m(Ns.str + Ns.int.Tx(Ns.long_(7L))).get.map(_ ==> List(("with tx meta data", 1)))
 
         // Find by two meta values
         _ <- m(Ns.str.int.Tx(Ns.double_(7.7).long_(7L))).get.map(_ ==> List(("with tx meta data", 1)))
         _ <- m(Ns.str + Ns.int.Tx(Ns.double_(7.7).long_(7L))).get.map(_ ==> List(("with tx meta data", 1)))
 
         // Entities _without_ meta data
-        _ <- m(Ns.str.int.Tx(Ns.long_(Nil))).get.map(_.sorted ==> List(("without tx meta data", 2)))
-        _ <- m(Ns.str + Ns.int.Tx(Ns.long_(Nil))).get.map(_.sorted ==> List(("without tx meta data", 2)))
+        _ <- m(Ns.str.int.Tx(Ns.long_(Nil))).get.map(_ ==> List(("without tx meta data", 2)))
+        _ <- m(Ns.str + Ns.int.Tx(Ns.long_(Nil))).get.map(_ ==> List(("without tx meta data", 2)))
       } yield ()
     }
   }

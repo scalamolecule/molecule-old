@@ -53,22 +53,22 @@ object EnumCard1 extends AsyncTestSuite {
       }
 
       "not" - core { implicit conn =>
-        val inputMolecule = m(Ns.enumm.not(?))
+        val inputMolecule = m(Ns.enumm.not(?).a1)
         for {
           _ <- oneData
-          _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3))
-          _ <- inputMolecule(List(enum1)).get.map(_.sorted ==> List(enum2, enum3))
-          _ <- inputMolecule(List(enum1, enum1)).get.map(_.sorted ==> List(enum2, enum3))
-          _ <- inputMolecule(List(enum1, enum2)).get.map(_.sorted ==> List(enum3))
+          _ <- inputMolecule(Nil).get.map(_ ==> List(enum1, enum2, enum3))
+          _ <- inputMolecule(List(enum1)).get.map(_ ==> List(enum2, enum3))
+          _ <- inputMolecule(List(enum1, enum1)).get.map(_ ==> List(enum2, enum3))
+          _ <- inputMolecule(List(enum1, enum2)).get.map(_ ==> List(enum3))
         } yield ()
       }
 
       ">" - core { implicit conn =>
-        val inputMolecule = m(Ns.enumm.>(?))
+        val inputMolecule = m(Ns.enumm.>(?).a1)
         for {
           _ <- oneData
-          _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3))
-          _ <- inputMolecule(List(enum2)).get.map(_.sorted ==> List(enum3))
+          _ <- inputMolecule(Nil).get.map(_ ==> List(enum1, enum2, enum3))
+          _ <- inputMolecule(List(enum2)).get.map(_ ==> List(enum3))
 
           _ <- inputMolecule(List(enum2, enum3)).get
             .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
@@ -78,11 +78,11 @@ object EnumCard1 extends AsyncTestSuite {
       }
 
       ">=" - core { implicit conn =>
-        val inputMolecule = m(Ns.enumm.>=(?))
+        val inputMolecule = m(Ns.enumm.>=(?).a1)
         for {
           _ <- oneData
-          _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3))
-          _ <- inputMolecule(List(enum2)).get.map(_.sorted ==> List(enum2, enum3))
+          _ <- inputMolecule(Nil).get.map(_ ==> List(enum1, enum2, enum3))
+          _ <- inputMolecule(List(enum2)).get.map(_ ==> List(enum2, enum3))
           _ <- inputMolecule(List(enum2, enum3)).get
             .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
             err ==> "Can't apply multiple values to comparison function."
@@ -91,10 +91,10 @@ object EnumCard1 extends AsyncTestSuite {
       }
 
       "<" - core { implicit conn =>
-        val inputMolecule = m(Ns.enumm.<(?))
+        val inputMolecule = m(Ns.enumm.<(?).a1)
         for {
           _ <- oneData
-          _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3))
+          _ <- inputMolecule(Nil).get.map(_ ==> List(enum1, enum2, enum3))
           _ <- inputMolecule(List(enum2)).get.map(_ ==> List(enum1))
           _ <- inputMolecule(List(enum2, enum3)).get
             .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
@@ -104,11 +104,11 @@ object EnumCard1 extends AsyncTestSuite {
       }
 
       "<=" - core { implicit conn =>
-        val inputMolecule = m(Ns.enumm.<=(?))
+        val inputMolecule = m(Ns.enumm.<=(?).a1)
         for {
           _ <- oneData
-          _ <- inputMolecule(Nil).get.map(_.sorted ==> List(enum1, enum2, enum3))
-          _ <- inputMolecule(List(enum2)).get.map(_.sorted ==> List(enum1, enum2))
+          _ <- inputMolecule(Nil).get.map(_ ==> List(enum1, enum2, enum3))
+          _ <- inputMolecule(List(enum2)).get.map(_ ==> List(enum1, enum2))
           _ <- inputMolecule(List(enum2, enum3)).get
             .map(_ ==> "Unexpected success").recover { case MoleculeException(err, _) =>
             err ==> "Can't apply multiple values to comparison function."
@@ -121,7 +121,7 @@ object EnumCard1 extends AsyncTestSuite {
     "Tacit" - {
 
       "Eq" - core { implicit conn =>
-        val inputMolecule = m(Ns.str.enumm_(?))
+        val inputMolecule = m(Ns.str.a1.enumm_(?))
         for {
           _ <- oneData
 
@@ -142,18 +142,18 @@ object EnumCard1 extends AsyncTestSuite {
       }
 
       "not" - core { implicit conn =>
-        val inputMolecule = m(Ns.str.enumm_.not(?))
+        val inputMolecule = m(Ns.str.a1.enumm_.not(?))
         for {
           _ <- oneData
-          _ <- inputMolecule(Nil).get.map(_.sorted ==> List(str1, str2, str3))
-          _ <- inputMolecule(List(enum1)).get.map(_.sorted ==> List(str2, str3))
-          _ <- inputMolecule(List(enum1, enum1)).get.map(_.sorted ==> List(str2, str3))
+          _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
+          _ <- inputMolecule(List(enum1)).get.map(_ ==> List(str2, str3))
+          _ <- inputMolecule(List(enum1, enum1)).get.map(_ ==> List(str2, str3))
           _ <- inputMolecule(List(enum1, enum2)).get.map(_ ==> List(str3))
         } yield ()
       }
 
       ">" - core { implicit conn =>
-        val inputMolecule = m(Ns.str.enumm_.>(?))
+        val inputMolecule = m(Ns.str.a1.enumm_.>(?))
         for {
           _ <- oneData
           _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
@@ -167,7 +167,7 @@ object EnumCard1 extends AsyncTestSuite {
       }
 
       ">=" - core { implicit conn =>
-        val inputMolecule = m(Ns.str.enumm_.>=(?))
+        val inputMolecule = m(Ns.str.a1.enumm_.>=(?))
         for {
           _ <- oneData
           _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
@@ -180,7 +180,7 @@ object EnumCard1 extends AsyncTestSuite {
       }
 
       "<" - core { implicit conn =>
-        val inputMolecule = m(Ns.str.enumm_.<(?))
+        val inputMolecule = m(Ns.str.a1.enumm_.<(?))
         for {
           _ <- oneData
           _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
@@ -193,7 +193,7 @@ object EnumCard1 extends AsyncTestSuite {
       }
 
       "<=" - core { implicit conn =>
-        val inputMolecule = m(Ns.str.enumm_.<=(?))
+        val inputMolecule = m(Ns.str.a1.enumm_.<=(?))
         for {
           _ <- oneData
           _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))

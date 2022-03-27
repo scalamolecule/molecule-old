@@ -37,7 +37,7 @@ object Index_AVET extends Base {
               (e2, t4, true)
             ))
 
-            r <- AEVT(":Ns/int").v.e.t.op.getHistory.map(_.sortBy(p => (p._3, p._4)) ==> List(
+            r <- AEVT(":Ns/int").v.e.t.a1.op.a2.getHistory.map(_ ==> List(
               (1, e1, t1, true),
               (1, e1, t3, false),
               (2, e1, t3, true),

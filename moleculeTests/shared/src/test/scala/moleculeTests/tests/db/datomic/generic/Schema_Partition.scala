@@ -33,12 +33,12 @@ object Schema_Partition extends AsyncTestSuite {
         _ <- Schema.part.get.map(_.length ==> 2)
 
         // Since all attributes have an attribute name, a tacit `part_` makes no difference
-        _ <- Schema.ns.get.map(_.sorted ==> List("Book", "Person", "Profession"))
-        _ <- Schema.part_.ns.get.map(_.sorted ==> List("Book", "Person", "Profession"))
+        _ <- Schema.ns.a1.get.map(_ ==> List("Book", "Person", "Profession"))
+        _ <- Schema.part_.ns.a1.get.map(_ ==> List("Book", "Person", "Profession"))
 
         // We can though filter by one or more tacit attribute names
-        _ <- Schema.part_("gen").ns.get.map(_.sorted ==> List("Person", "Profession"))
-        _ <- Schema.part_("gen").ns.attr.get.map(_.sorted ==> List(
+        _ <- Schema.part_("gen").ns.a1.get.map(_ ==> List("Person", "Profession"))
+        _ <- Schema.part_("gen").ns.a1.attr.a2.get.map(_ ==> List(
           ("Person", "gender"),
           ("Person", "name"),
           ("Person", "professions"),
@@ -46,10 +46,10 @@ object Schema_Partition extends AsyncTestSuite {
         ))
 
         // Namespaces of partitions named "gen" or "lit"
-        _ <- Schema.part_("gen", "lit").ns.get.map(_.sorted ==> List("Book", "Person", "Profession"))
+        _ <- Schema.part_("gen", "lit").ns.a1.get.map(_ ==> List("Book", "Person", "Profession"))
 
         // Negate tacit partition
-        _ <- Schema.part_.not("lit").ns.get.map(_.sorted ==> List("Person", "Profession"))
+        _ <- Schema.part_.not("lit").ns.a1.get.map(_ ==> List("Person", "Profession"))
         _ <- Schema.part_.not("gen", "lit").ns.get.map(_ ==> Nil)
       } yield ()
     }
@@ -58,18 +58,18 @@ object Schema_Partition extends AsyncTestSuite {
     "nsFull" - partition { implicit conn =>
       for {
         // Partition-prefixed namespaces
-        _ <- Schema.nsFull.get.map(_.sorted ==> List("gen_Person", "gen_Profession", "lit_Book"))
+        _ <- Schema.nsFull.a1.get.map(_ ==> List("gen_Person", "gen_Profession", "lit_Book"))
 
         _ <- Schema.nsFull(count).get.map(_.head ==> 3)
         _ <- Schema.part_("gen").nsFull(count).get.map(_.head ==> 2)
 
         // Namespaces without partition prefix
-        _ <- Schema.ns.get.map(_.sorted ==> List("Book", "Person", "Profession"))
+        _ <- Schema.ns.a1.get.map(_ ==> List("Book", "Person", "Profession"))
 
         _ <- Schema.nsFull("gen_Profession").get.map(_ ==> List("gen_Profession"))
-        _ <- Schema.nsFull("gen_Profession", "lit_Book").get.map(_.sorted ==> List("gen_Profession", "lit_Book"))
+        _ <- Schema.nsFull("gen_Profession", "lit_Book").a1.get.map(_ ==> List("gen_Profession", "lit_Book"))
 
-        _ <- Schema.nsFull.not("gen_Profession").get.map(_.sorted ==> List("gen_Person", "lit_Book"))
+        _ <- Schema.nsFull.not("gen_Profession").a1.get.map(_ ==> List("gen_Person", "lit_Book"))
         _ <- Schema.nsFull.not("gen_Profession", "lit_Book").get.map(_ ==> List("gen_Person"))
 
         _ <- Schema.nsFull.get.map(_.length ==> 3)
@@ -79,20 +79,20 @@ object Schema_Partition extends AsyncTestSuite {
         _ <- Schema.nsFull_.a.get.map(_.size ==> 9)
 
         // We can though filter by one or more tacit namespace names
-        _ <- Schema.nsFull_("gen_Profession").attr.get.map(_.sorted ==> List("name"))
-        _ <- Schema.nsFull_("gen_Person").attr.get.map(_.sorted.sorted ==> List("gender", "name", "professions"))
+        _ <- Schema.nsFull_("gen_Profession").attr.a1.get.map(_ ==> List("name"))
+        _ <- Schema.nsFull_("gen_Person").attr.a1.get.map(_ ==> List("gender", "name", "professions"))
 
         // Attributes in namespace "Ref1" or "gen_Person"
-        _ <- Schema.nsFull_("gen_Profession", "gen_Person").attr.get.map(_.sorted ==> List(
+        _ <- Schema.nsFull_("gen_Profession", "gen_Person").attr.a1.get.map(_ ==> List(
           // Note that duplicate attribute `name`s have coalesced in the result Set
           "gender", "name", "professions"
         ))
 
         // Negate tacit namespace name
-        _ <- Schema.nsFull_.not("lit_Book").attr.get.map(_.sorted ==> List(
+        _ <- Schema.nsFull_.not("lit_Book").attr.a1.get.map(_ ==> List(
           "gender", "name", "professions"
         ))
-        _ <- Schema.nsFull_.not("lit_Book", "gen_Person").attr.get.map(_.sorted ==> List(
+        _ <- Schema.nsFull_.not("lit_Book", "gen_Person").attr.a1.get.map(_ ==> List(
           "name"
         ))
 

@@ -103,7 +103,7 @@ object MetaInsert extends AsyncTestSuite {
       for {
         _ <- Ns.int.Tx(Ns.str_("a").Ref1.str1_("b").int1_(7)) insert List(1, 2, 3)
 
-        _ <- Ns.int.Tx(Ns.str.Ref1.str1.int1).get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns.int.a1.Tx(Ns.str.Ref1.str1.int1).get.map(_ ==> List(
           (1, "a", "b", 7),
           (2, "a", "b", 7),
           (3, "a", "b", 7)
@@ -116,7 +116,7 @@ object MetaInsert extends AsyncTestSuite {
       for {
         _ <- Ns.int.Tx(Ns.str_("a").Ref1.str1_("b").int1_(7).Ref2.str2_("c").int2_(8)) insert List(1, 2, 3)
 
-        _ <- Ns.int.Tx(Ns.str.Ref1.str1.int1.Ref2.str2.int2).get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns.int.a1.Tx(Ns.str.Ref1.str1.int1.Ref2.str2.int2).get.map(_ ==> List(
           (1, "a", "b", 7, "c", 8),
           (2, "a", "b", 7, "c", 8),
           (3, "a", "b", 7, "c", 8)

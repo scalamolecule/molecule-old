@@ -100,7 +100,7 @@ object ObjTime extends AsyncTestSuite with Helpers {
         e = tx1.eid
         tx2 <- Ns(e).int(2).update
 
-        _ <- Ns(e).int.t.op.getObjsHistory.map(_.sortBy(o => (o.t, o.op)).map(o => Vector(o.int, o.t, o.op)) ==> List(
+        _ <- Ns(e).int.t.a1.op.a2.getObjsHistory.map(_.map(o => Vector(o.int, o.t, o.op)) ==> List(
           Vector(1, tx1.t, true),
           Vector(1, tx2.t, false),
           Vector(2, tx2.t, true)

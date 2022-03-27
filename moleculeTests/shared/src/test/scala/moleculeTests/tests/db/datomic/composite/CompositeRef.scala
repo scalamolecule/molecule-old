@@ -46,17 +46,17 @@ object CompositeRef extends AsyncTestSuite {
         ))
 
         // Queries via each namespace
-        _ <- Ref2.int2.str2.get.map(_.sorted ==> List(
+        _ <- Ref2.int2.a1.str2.get.map(_.sorted ==> List(
           (1, "a"),
           (2, "b")
         ))
-        _ <- Ns.str.Ref1.int1.get.map(_.sorted ==> List(
+        _ <- Ns.str.a1.Ref1.int1.get.map(_.sorted ==> List(
           ("aa", 11),
           ("bb", 22)
         ))
 
         // Composite query
-        _ <- m(Ref2.int2.str2 + Ns.str.Ref1.int1).get.map(_.sorted ==> List(
+        _ <- (Ref2.int2.a1.str2 + Ns.str.Ref1.int1).get.map(_.sorted ==> List(
           ((1, "a"), ("aa", 11)),
           ((2, "b"), ("bb", 22))
         ))
@@ -102,17 +102,17 @@ object CompositeRef extends AsyncTestSuite {
         ))
 
         // Queries via each namespace
-        _ <- Ref2.int2.str2.get.map(_.sorted ==> List(
+        _ <- Ref2.int2.a1.str2.get.map(_.sorted ==> List(
           (1, "a"),
           (2, "b")
         ))
-        _ <- Ns.str.Refs1.int1.get.map(_.sorted ==> List(
+        _ <- Ns.str.a1.Refs1.int1.get.map(_.sorted ==> List(
           ("aa", 11),
           ("bb", 22)
         ))
 
         // Composite query
-        _ <- m(Ref2.int2.str2 + Ns.str.Refs1.int1).get.map(_.sorted ==> List(
+        _ <- (Ref2.int2.a1.str2 + Ns.str.Refs1.int1).get.map(_.sorted ==> List(
           ((1, "a"), ("aa", 11)),
           ((2, "b"), ("bb", 22))
         ))
@@ -156,17 +156,17 @@ object CompositeRef extends AsyncTestSuite {
         ))
 
         // Queries via each namespace
-        _ <- Ref2.int2.str2.get.map(_.sorted ==> List(
+        _ <- Ref2.int2.a1.str2.get.map(_.sorted ==> List(
           (1, "a"),
           (2, "b")
         ))
 
         // Composite query
-        _ <- m(Ref2.int2.str2 + Ns.Refs1.int1).get.map(_.sorted ==> List(
+        _ <- (Ref2.int2.a1.str2 + Ns.Refs1.int1).get.map(_.sorted ==> List(
           ((1, "a"), 11),
           ((2, "b"), 22)
         ))
-        _ <- m(Ref2.int2.str2 + Ns.refs1).get.map(_ ==> List(
+        _ <- (Ref2.int2.str2 + Ns.refs1).get.map(_ ==> List(
           ((1, "a"), Set(r1)),
           ((2, "b"), Set(r2))
         ))
@@ -176,12 +176,12 @@ object CompositeRef extends AsyncTestSuite {
 
     "Ref in first group" - core { implicit conn =>
       for {
-        _ <- m(Ns.str.Ref1.int1 + Ref2.int2.str2) insert List(
+        _ <- (Ns.str.Ref1.int1 + Ref2.int2.str2) insert List(
           (("A", 1), (11, "a")),
           (("B", 2), (22, "b"))
         )
 
-        _ <- m(Ns.str.Ref1.int1 + Ref2.int2.str2).get.map(_.sortBy(_._1) ==> List(
+        _ <- (Ns.str.Ref1.int1 + Ref2.int2.str2).get.map(_.sortBy(_._1) ==> List(
           (("A", 1), (11, "a")),
           (("B", 2), (22, "b"))
         ))

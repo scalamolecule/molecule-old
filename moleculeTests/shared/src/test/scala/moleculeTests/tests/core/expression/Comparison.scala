@@ -14,186 +14,186 @@ object Comparison extends Base {
       for {
         _ <- oneData
 
-        _ <- Ns.str.<("").get.map(_.sorted ==> List())
-        _ <- Ns.str.<(" ").get.map(_.sorted ==> List(""))
-        _ <- Ns.str.<(",").get.map(_.sorted ==> List("", " "))
-        _ <- Ns.str.<(".").get.map(_.sorted ==> List("", " ", ","))
-        _ <- Ns.str.<("?").get.map(_.sorted ==> List("", " ", ",", "."))
-        _ <- Ns.str.<("A").get.map(_.sorted ==> List("", " ", ",", ".", "?"))
-        _ <- Ns.str.<("B").get.map(_.sorted ==> List("", " ", ",", ".", "?", "A"))
-        _ <- Ns.str.<("a").get.map(_.sorted ==> List("", " ", ",", ".", "?", "A", "B"))
-        _ <- Ns.str.<("b").get.map(_.sorted ==> List("", " ", ",", ".", "?", "A", "B", "a"))
-        _ <- Ns.str.<("d").get.map(_.sorted ==> List("", " ", ",", ".", "?", "A", "B", "a", "b"))
-        _ <- Ns.str.<(str1).get.map(_.sorted ==> List("", " ", ",", ".", "?", "A", "B"))
+        _ <- Ns.str.<("").a1.get.map(_ ==> List())
+        _ <- Ns.str.<(" ").a1.get.map(_ ==> List(""))
+        _ <- Ns.str.<(",").a1.get.map(_ ==> List("", " "))
+        _ <- Ns.str.<(".").a1.get.map(_ ==> List("", " ", ","))
+        _ <- Ns.str.<("?").a1.get.map(_ ==> List("", " ", ",", "."))
+        _ <- Ns.str.<("A").a1.get.map(_ ==> List("", " ", ",", ".", "?"))
+        _ <- Ns.str.<("B").a1.get.map(_ ==> List("", " ", ",", ".", "?", "A"))
+        _ <- Ns.str.<("a").a1.get.map(_ ==> List("", " ", ",", ".", "?", "A", "B"))
+        _ <- Ns.str.<("b").a1.get.map(_ ==> List("", " ", ",", ".", "?", "A", "B", "a"))
+        _ <- Ns.str.<("d").a1.get.map(_ ==> List("", " ", ",", ".", "?", "A", "B", "a", "b"))
+        _ <- Ns.str.<(str1).a1.get.map(_ ==> List("", " ", ",", ".", "?", "A", "B"))
 
-        _ <- Ns.str.>("").get.map(_.sorted ==> List(" ", ",", ".", "?", "A", "B", "a", "b"))
-        _ <- Ns.str.>(" ").get.map(_.sorted ==> List(",", ".", "?", "A", "B", "a", "b"))
-        _ <- Ns.str.>(",").get.map(_.sorted ==> List(".", "?", "A", "B", "a", "b"))
-        _ <- Ns.str.>(".").get.map(_.sorted ==> List("?", "A", "B", "a", "b"))
-        _ <- Ns.str.>("?").get.map(_.sorted ==> List("A", "B", "a", "b"))
-        _ <- Ns.str.>("A").get.map(_.sorted ==> List("B", "a", "b"))
-        _ <- Ns.str.>("B").get.map(_.sorted ==> List("a", "b"))
-        _ <- Ns.str.>("C").get.map(_.sorted ==> List("a", "b"))
-        _ <- Ns.str.>("a").get.map(_.sorted ==> List("b"))
-        _ <- Ns.str.>("b").get.map(_.sorted ==> List())
-        _ <- Ns.str.>(str1).get.map(_.sorted ==> List("b"))
+        _ <- Ns.str.>("").a1.get.map(_ ==> List(" ", ",", ".", "?", "A", "B", "a", "b"))
+        _ <- Ns.str.>(" ").a1.get.map(_ ==> List(",", ".", "?", "A", "B", "a", "b"))
+        _ <- Ns.str.>(",").a1.get.map(_ ==> List(".", "?", "A", "B", "a", "b"))
+        _ <- Ns.str.>(".").a1.get.map(_ ==> List("?", "A", "B", "a", "b"))
+        _ <- Ns.str.>("?").a1.get.map(_ ==> List("A", "B", "a", "b"))
+        _ <- Ns.str.>("A").a1.get.map(_ ==> List("B", "a", "b"))
+        _ <- Ns.str.>("B").a1.get.map(_ ==> List("a", "b"))
+        _ <- Ns.str.>("C").a1.get.map(_ ==> List("a", "b"))
+        _ <- Ns.str.>("a").a1.get.map(_ ==> List("b"))
+        _ <- Ns.str.>("b").a1.get.map(_ ==> List())
+        _ <- Ns.str.>(str1).a1.get.map(_ ==> List("b"))
 
-        _ <- Ns.str.<=("").get.map(_.sorted ==> List(""))
-        _ <- Ns.str.<=(" ").get.map(_.sorted ==> List("", " "))
-        _ <- Ns.str.<=(",").get.map(_.sorted ==> List("", " ", ","))
-        _ <- Ns.str.<=(".").get.map(_.sorted ==> List("", " ", ",", "."))
-        _ <- Ns.str.<=("?").get.map(_.sorted ==> List("", " ", ",", ".", "?"))
-        _ <- Ns.str.<=("A").get.map(_.sorted ==> List("", " ", ",", ".", "?", "A"))
-        _ <- Ns.str.<=("B").get.map(_.sorted ==> List("", " ", ",", ".", "?", "A", "B"))
-        _ <- Ns.str.<=("a").get.map(_.sorted ==> List("", " ", ",", ".", "?", "A", "B", "a"))
-        _ <- Ns.str.<=("b").get.map(_.sorted ==> List("", " ", ",", ".", "?", "A", "B", "a", "b"))
-        _ <- Ns.str.<=(str1).get.map(_.sorted ==> List("", " ", ",", ".", "?", "A", "B", "a"))
+        _ <- Ns.str.<=("").a1.get.map(_ ==> List(""))
+        _ <- Ns.str.<=(" ").a1.get.map(_ ==> List("", " "))
+        _ <- Ns.str.<=(",").a1.get.map(_ ==> List("", " ", ","))
+        _ <- Ns.str.<=(".").a1.get.map(_ ==> List("", " ", ",", "."))
+        _ <- Ns.str.<=("?").a1.get.map(_ ==> List("", " ", ",", ".", "?"))
+        _ <- Ns.str.<=("A").a1.get.map(_ ==> List("", " ", ",", ".", "?", "A"))
+        _ <- Ns.str.<=("B").a1.get.map(_ ==> List("", " ", ",", ".", "?", "A", "B"))
+        _ <- Ns.str.<=("a").a1.get.map(_ ==> List("", " ", ",", ".", "?", "A", "B", "a"))
+        _ <- Ns.str.<=("b").a1.get.map(_ ==> List("", " ", ",", ".", "?", "A", "B", "a", "b"))
+        _ <- Ns.str.<=(str1).a1.get.map(_ ==> List("", " ", ",", ".", "?", "A", "B", "a"))
 
-        _ <- Ns.str.>=("").get.map(_.sorted ==> List("", " ", ",", ".", "?", "A", "B", "a", "b"))
-        _ <- Ns.str.>=(" ").get.map(_.sorted ==> List(" ", ",", ".", "?", "A", "B", "a", "b"))
-        _ <- Ns.str.>=(",").get.map(_.sorted ==> List(",", ".", "?", "A", "B", "a", "b"))
-        _ <- Ns.str.>=(".").get.map(_.sorted ==> List(".", "?", "A", "B", "a", "b"))
-        _ <- Ns.str.>=("?").get.map(_.sorted ==> List("?", "A", "B", "a", "b"))
-        _ <- Ns.str.>=("A").get.map(_.sorted ==> List("A", "B", "a", "b"))
-        _ <- Ns.str.>=("B").get.map(_.sorted ==> List("B", "a", "b"))
-        _ <- Ns.str.>=("a").get.map(_.sorted ==> List("a", "b"))
-        _ <- Ns.str.>=("b").get.map(_.sorted ==> List("b"))
-        _ <- Ns.str.>=("c").get.map(_.sorted ==> List())
-        _ <- Ns.str.>=(str1).get.map(_.sorted ==> List("a", "b"))
-
-
-        _ <- Ns.int.<(-2).get.map(_.sorted ==> List())
-        _ <- Ns.int.<(0).get.map(_.sorted ==> List(-2, -1))
-        _ <- Ns.int.<(2).get.map(_.sorted ==> List(-2, -1, 0, 1))
-        _ <- Ns.int.<(int1).get.map(_.sorted ==> List(-2, -1, 0))
-
-        _ <- Ns.int.>(2).get.map(_.sorted ==> List())
-        _ <- Ns.int.>(0).get.map(_.sorted ==> List(1, 2))
-        _ <- Ns.int.>(-2).get.map(_.sorted ==> List(-1, 0, 1, 2))
-        _ <- Ns.int.>(int1).get.map(_.sorted ==> List(2))
-
-        _ <- Ns.int.<=(-2).get.map(_.sorted ==> List(-2))
-        _ <- Ns.int.<=(0).get.map(_.sorted ==> List(-2, -1, 0))
-        _ <- Ns.int.<=(2).get.map(_.sorted ==> List(-2, -1, 0, 1, 2))
-        _ <- Ns.int.<=(int1).get.map(_.sorted ==> List(-2, -1, 0, 1))
-
-        _ <- Ns.int.>=(2).get.map(_.sorted ==> List(2))
-        _ <- Ns.int.>=(0).get.map(_.sorted ==> List(0, 1, 2))
-        _ <- Ns.int.>=(-2).get.map(_.sorted ==> List(-2, -1, 0, 1, 2))
-        _ <- Ns.int.>=(int1).get.map(_.sorted ==> List(1, 2))
+        _ <- Ns.str.>=("").a1.get.map(_ ==> List("", " ", ",", ".", "?", "A", "B", "a", "b"))
+        _ <- Ns.str.>=(" ").a1.get.map(_ ==> List(" ", ",", ".", "?", "A", "B", "a", "b"))
+        _ <- Ns.str.>=(",").a1.get.map(_ ==> List(",", ".", "?", "A", "B", "a", "b"))
+        _ <- Ns.str.>=(".").a1.get.map(_ ==> List(".", "?", "A", "B", "a", "b"))
+        _ <- Ns.str.>=("?").a1.get.map(_ ==> List("?", "A", "B", "a", "b"))
+        _ <- Ns.str.>=("A").a1.get.map(_ ==> List("A", "B", "a", "b"))
+        _ <- Ns.str.>=("B").a1.get.map(_ ==> List("B", "a", "b"))
+        _ <- Ns.str.>=("a").a1.get.map(_ ==> List("a", "b"))
+        _ <- Ns.str.>=("b").a1.get.map(_ ==> List("b"))
+        _ <- Ns.str.>=("c").a1.get.map(_ ==> List())
+        _ <- Ns.str.>=(str1).a1.get.map(_ ==> List("a", "b"))
 
 
-        _ <- Ns.long.<(-2L).get.map(_.sorted ==> List())
-        _ <- Ns.long.<(0L).get.map(_.sorted ==> List(-2L, -1L))
-        _ <- Ns.long.<(2L).get.map(_.sorted ==> List(-2L, -1L, 0L, 1L))
-        _ <- Ns.long.<(long1).get.map(_.sorted ==> List(-2L, -1L, 0L))
+        _ <- Ns.int.<(-2).a1.get.map(_ ==> List())
+        _ <- Ns.int.<(0).a1.get.map(_ ==> List(-2, -1))
+        _ <- Ns.int.<(2).a1.get.map(_ ==> List(-2, -1, 0, 1))
+        _ <- Ns.int.<(int1).a1.get.map(_ ==> List(-2, -1, 0))
 
-        _ <- Ns.long.>(2L).get.map(_.sorted ==> List())
-        _ <- Ns.long.>(0L).get.map(_.sorted ==> List(1L, 2L))
-        _ <- Ns.long.>(-2L).get.map(_.sorted ==> List(-1L, 0L, 1L, 2L))
-        _ <- Ns.long.>(long1).get.map(_.sorted ==> List(2L))
+        _ <- Ns.int.>(2).a1.get.map(_ ==> List())
+        _ <- Ns.int.>(0).a1.get.map(_ ==> List(1, 2))
+        _ <- Ns.int.>(-2).a1.get.map(_ ==> List(-1, 0, 1, 2))
+        _ <- Ns.int.>(int1).a1.get.map(_ ==> List(2))
 
-        _ <- Ns.long.<=(-2L).get.map(_.sorted ==> List(-2L))
-        _ <- Ns.long.<=(0L).get.map(_.sorted ==> List(-2L, -1L, 0L))
-        _ <- Ns.long.<=(2L).get.map(_.sorted ==> List(-2L, -1L, 0L, 1L, 2L))
-        _ <- Ns.long.<=(long1).get.map(_.sorted ==> List(-2L, -1L, 0L, 1L))
+        _ <- Ns.int.<=(-2).a1.get.map(_ ==> List(-2))
+        _ <- Ns.int.<=(0).a1.get.map(_ ==> List(-2, -1, 0))
+        _ <- Ns.int.<=(2).a1.get.map(_ ==> List(-2, -1, 0, 1, 2))
+        _ <- Ns.int.<=(int1).a1.get.map(_ ==> List(-2, -1, 0, 1))
 
-        _ <- Ns.long.>=(2L).get.map(_.sorted ==> List(2L))
-        _ <- Ns.long.>=(0L).get.map(_.sorted ==> List(0L, 1L, 2L))
-        _ <- Ns.long.>=(-2L).get.map(_.sorted ==> List(-2L, -1L, 0L, 1L, 2L))
-        _ <- Ns.long.>=(long1).get.map(_.sorted ==> List(1L, 2L))
-
-
-        _ <- Ns.double.<(-2.0).get.map(_.sorted ==> List())
-        _ <- Ns.double.<(0.0).get.map(_.sorted ==> List(-2.0, -1.0))
-        _ <- Ns.double.<(2.0).get.map(_.sorted ==> List(-2.0, -1.0, 0.0, 1.0))
-        _ <- Ns.double.<(double1).get.map(_.sorted ==> List(-2.0, -1.0, 0.0))
-
-        _ <- Ns.double.>(2.0).get.map(_.sorted ==> List())
-        _ <- Ns.double.>(0.0).get.map(_.sorted ==> List(1.0, 2.0))
-        _ <- Ns.double.>(-2.0).get.map(_.sorted ==> List(-1.0, 0.0, 1.0, 2.0))
-        _ <- Ns.double.>(double1).get.map(_.sorted ==> List(2.0))
-
-        _ <- Ns.double.<=(-2.0).get.map(_.sorted ==> List(-2.0))
-        _ <- Ns.double.<=(0.0).get.map(_.sorted ==> List(-2.0, -1.0, 0.0))
-        _ <- Ns.double.<=(2.0).get.map(_.sorted ==> List(-2.0, -1.0, 0.0, 1.0, 2.0))
-        _ <- Ns.double.<=(double1).get.map(_.sorted ==> List(-2.0, -1.0, 0.0, 1.0))
-
-        _ <- Ns.double.>=(2.0).get.map(_.sorted ==> List(2.0))
-        _ <- Ns.double.>=(0.0).get.map(_.sorted ==> List(0.0, 1.0, 2.0))
-        _ <- Ns.double.>=(-2.0).get.map(_.sorted ==> List(-2.0, -1.0, 0.0, 1.0, 2.0))
-        _ <- Ns.double.>=(double1).get.map(_.sorted ==> List(1.0, 2.0))
+        _ <- Ns.int.>=(2).a1.get.map(_ ==> List(2))
+        _ <- Ns.int.>=(0).a1.get.map(_ ==> List(0, 1, 2))
+        _ <- Ns.int.>=(-2).a1.get.map(_ ==> List(-2, -1, 0, 1, 2))
+        _ <- Ns.int.>=(int1).a1.get.map(_ ==> List(1, 2))
 
 
-        _ <- Ns.bool.<(true).get.map(_.sorted ==> List(false))
-        _ <- Ns.bool.<(false).get.map(_.sorted ==> List())
-        _ <- Ns.bool.<(bool0).get.map(_.sorted ==> List())
+        _ <- Ns.long.<(-2L).a1.get.map(_ ==> List())
+        _ <- Ns.long.<(0L).a1.get.map(_ ==> List(-2L, -1L))
+        _ <- Ns.long.<(2L).a1.get.map(_ ==> List(-2L, -1L, 0L, 1L))
+        _ <- Ns.long.<(long1).a1.get.map(_ ==> List(-2L, -1L, 0L))
 
-        _ <- Ns.bool.>(true).get.map(_.sorted ==> List())
-        _ <- Ns.bool.>(false).get.map(_.sorted ==> List(true))
-        _ <- Ns.bool.>(bool0).get.map(_.sorted ==> List(true))
+        _ <- Ns.long.>(2L).a1.get.map(_ ==> List())
+        _ <- Ns.long.>(0L).a1.get.map(_ ==> List(1L, 2L))
+        _ <- Ns.long.>(-2L).a1.get.map(_ ==> List(-1L, 0L, 1L, 2L))
+        _ <- Ns.long.>(long1).a1.get.map(_ ==> List(2L))
 
-        _ <- Ns.bool.<=(true).get.map(_.sorted ==> List(false, true))
-        _ <- Ns.bool.<=(false).get.map(_.sorted ==> List(false))
-        _ <- Ns.bool.<=(bool0).get.map(_.sorted ==> List(false))
+        _ <- Ns.long.<=(-2L).a1.get.map(_ ==> List(-2L))
+        _ <- Ns.long.<=(0L).a1.get.map(_ ==> List(-2L, -1L, 0L))
+        _ <- Ns.long.<=(2L).a1.get.map(_ ==> List(-2L, -1L, 0L, 1L, 2L))
+        _ <- Ns.long.<=(long1).a1.get.map(_ ==> List(-2L, -1L, 0L, 1L))
 
-        _ <- Ns.bool.>=(true).get.map(_.sorted ==> List(true))
-        _ <- Ns.bool.>=(false).get.map(_.sorted ==> List(false, true))
-        _ <- Ns.bool.>=(bool0).get.map(_.sorted ==> List(false, true))
+        _ <- Ns.long.>=(2L).a1.get.map(_ ==> List(2L))
+        _ <- Ns.long.>=(0L).a1.get.map(_ ==> List(0L, 1L, 2L))
+        _ <- Ns.long.>=(-2L).a1.get.map(_ ==> List(-2L, -1L, 0L, 1L, 2L))
+        _ <- Ns.long.>=(long1).a1.get.map(_ ==> List(1L, 2L))
 
 
-        _ <- Ns.date.<(date1).get.map(_.sorted ==> List(date0))
-        _ <- Ns.date.<(date2).get.map(_.sorted ==> List(date0, date1))
+        _ <- Ns.double.<(-2.0).a1.get.map(_ ==> List())
+        _ <- Ns.double.<(0.0).a1.get.map(_ ==> List(-2.0, -1.0))
+        _ <- Ns.double.<(2.0).a1.get.map(_ ==> List(-2.0, -1.0, 0.0, 1.0))
+        _ <- Ns.double.<(double1).a1.get.map(_ ==> List(-2.0, -1.0, 0.0))
 
-        _ <- Ns.date.>(date1).get.map(_.sorted ==> List(date2))
-        _ <- Ns.date.>(date0).get.map(_.sorted ==> List(date1, date2))
+        _ <- Ns.double.>(2.0).a1.get.map(_ ==> List())
+        _ <- Ns.double.>(0.0).a1.get.map(_ ==> List(1.0, 2.0))
+        _ <- Ns.double.>(-2.0).a1.get.map(_ ==> List(-1.0, 0.0, 1.0, 2.0))
+        _ <- Ns.double.>(double1).a1.get.map(_ ==> List(2.0))
 
-        _ <- Ns.date.<=(date1).get.map(_.sorted ==> List(date0, date1))
-        _ <- Ns.date.<=(date2).get.map(_.sorted ==> List(date0, date1, date2))
+        _ <- Ns.double.<=(-2.0).a1.get.map(_ ==> List(-2.0))
+        _ <- Ns.double.<=(0.0).a1.get.map(_ ==> List(-2.0, -1.0, 0.0))
+        _ <- Ns.double.<=(2.0).a1.get.map(_ ==> List(-2.0, -1.0, 0.0, 1.0, 2.0))
+        _ <- Ns.double.<=(double1).a1.get.map(_ ==> List(-2.0, -1.0, 0.0, 1.0))
 
-        _ <- Ns.date.>=(date1).get.map(_.sorted ==> List(date1, date2))
-        _ <- Ns.date.>=(date0).get.map(_.sorted ==> List(date0, date1, date2))
+        _ <- Ns.double.>=(2.0).a1.get.map(_ ==> List(2.0))
+        _ <- Ns.double.>=(0.0).a1.get.map(_ ==> List(0.0, 1.0, 2.0))
+        _ <- Ns.double.>=(-2.0).a1.get.map(_ ==> List(-2.0, -1.0, 0.0, 1.0, 2.0))
+        _ <- Ns.double.>=(double1).a1.get.map(_ ==> List(1.0, 2.0))
+
+
+        _ <- Ns.bool.<(true).a1.get.map(_ ==> List(false))
+        _ <- Ns.bool.<(false).a1.get.map(_ ==> List())
+        _ <- Ns.bool.<(bool0).a1.get.map(_ ==> List())
+
+        _ <- Ns.bool.>(true).a1.get.map(_ ==> List())
+        _ <- Ns.bool.>(false).a1.get.map(_ ==> List(true))
+        _ <- Ns.bool.>(bool0).a1.get.map(_ ==> List(true))
+
+        _ <- Ns.bool.<=(true).a1.get.map(_ ==> List(false, true))
+        _ <- Ns.bool.<=(false).a1.get.map(_ ==> List(false))
+        _ <- Ns.bool.<=(bool0).a1.get.map(_ ==> List(false))
+
+        _ <- Ns.bool.>=(true).a1.get.map(_ ==> List(true))
+        _ <- Ns.bool.>=(false).a1.get.map(_ ==> List(false, true))
+        _ <- Ns.bool.>=(bool0).a1.get.map(_ ==> List(false, true))
+
+
+        _ <- Ns.date.<(date1).a1.get.map(_ ==> List(date0))
+        _ <- Ns.date.<(date2).a1.get.map(_ ==> List(date0, date1))
+
+        _ <- Ns.date.>(date1).a1.get.map(_ ==> List(date2))
+        _ <- Ns.date.>(date0).a1.get.map(_ ==> List(date1, date2))
+
+        _ <- Ns.date.<=(date1).a1.get.map(_ ==> List(date0, date1))
+        _ <- Ns.date.<=(date2).a1.get.map(_ ==> List(date0, date1, date2))
+
+        _ <- Ns.date.>=(date1).a1.get.map(_ ==> List(date1, date2))
+        _ <- Ns.date.>=(date0).a1.get.map(_ ==> List(date0, date1, date2))
 
 
         // Comparison of random UUIDs omitted...
         // Comparison of URIs not implemented
 
 
-        _ <- Ns.enumm.<("enum1").get.map(_.sorted ==> List("enum0"))
-        _ <- Ns.enumm.>("enum1").get.map(_.sorted ==> List("enum2"))
-        _ <- Ns.enumm.<=("enum1").get.map(_.sorted ==> List("enum0", "enum1"))
-        _ <- Ns.enumm.>=("enum1").get.map(_.sorted ==> List("enum1", "enum2"))
+        _ <- Ns.enumm.<("enum1").a1.get.map(_ ==> List("enum0"))
+        _ <- Ns.enumm.>("enum1").a1.get.map(_ ==> List("enum2"))
+        _ <- Ns.enumm.<=("enum1").a1.get.map(_ ==> List("enum0", "enum1"))
+        _ <- Ns.enumm.>=("enum1").a1.get.map(_ ==> List("enum1", "enum2"))
 
-        _ <- Ns.enumm.<(enum1).get.map(_.sorted ==> List("enum0"))
-        _ <- Ns.enumm.>(enum1).get.map(_.sorted ==> List("enum2"))
-        _ <- Ns.enumm.<=(enum1).get.map(_.sorted ==> List("enum0", "enum1"))
-        _ <- Ns.enumm.>=(enum1).get.map(_.sorted ==> List("enum1", "enum2"))
-
-
-        _ <- Ns.bigInt.<(bigInt1).get.map(_.sorted ==> List(bigInt0))
-        _ <- Ns.bigInt.<(bigInt2).get.map(_.sorted ==> List(bigInt0, bigInt1))
-
-        _ <- Ns.bigInt.>(bigInt1).get.map(_.sorted ==> List(bigInt2))
-        _ <- Ns.bigInt.>(bigInt0).get.map(_.sorted ==> List(bigInt1, bigInt2))
-
-        _ <- Ns.bigInt.<=(bigInt1).get.map(_.sorted ==> List(bigInt0, bigInt1))
-        _ <- Ns.bigInt.<=(bigInt2).get.map(_.sorted ==> List(bigInt0, bigInt1, bigInt2))
-
-        _ <- Ns.bigInt.>=(bigInt1).get.map(_.sorted ==> List(bigInt1, bigInt2))
-        _ <- Ns.bigInt.>=(bigInt0).get.map(_.sorted ==> List(bigInt0, bigInt1, bigInt2))
+        _ <- Ns.enumm.<(enum1).a1.get.map(_ ==> List("enum0"))
+        _ <- Ns.enumm.>(enum1).a1.get.map(_ ==> List("enum2"))
+        _ <- Ns.enumm.<=(enum1).a1.get.map(_ ==> List("enum0", "enum1"))
+        _ <- Ns.enumm.>=(enum1).a1.get.map(_ ==> List("enum1", "enum2"))
 
 
-        _ <- Ns.bigDec.<(bigDec1).get.map(_.sorted ==> List(bigDec0))
-        _ <- Ns.bigDec.<(bigDec2).get.map(_.sorted ==> List(bigDec0, bigDec1))
+        _ <- Ns.bigInt.<(bigInt1).a1.get.map(_ ==> List(bigInt0))
+        _ <- Ns.bigInt.<(bigInt2).a1.get.map(_ ==> List(bigInt0, bigInt1))
 
-        _ <- Ns.bigDec.>(bigDec1).get.map(_.sorted ==> List(bigDec2))
-        _ <- Ns.bigDec.>(bigDec0).get.map(_.sorted ==> List(bigDec1, bigDec2))
+        _ <- Ns.bigInt.>(bigInt1).a1.get.map(_ ==> List(bigInt2))
+        _ <- Ns.bigInt.>(bigInt0).a1.get.map(_ ==> List(bigInt1, bigInt2))
 
-        _ <- Ns.bigDec.<=(bigDec1).get.map(_.sorted ==> List(bigDec0, bigDec1))
-        _ <- Ns.bigDec.<=(bigDec2).get.map(_.sorted ==> List(bigDec0, bigDec1, bigDec2))
+        _ <- Ns.bigInt.<=(bigInt1).a1.get.map(_ ==> List(bigInt0, bigInt1))
+        _ <- Ns.bigInt.<=(bigInt2).a1.get.map(_ ==> List(bigInt0, bigInt1, bigInt2))
 
-        _ <- Ns.bigDec.>=(bigDec1).get.map(_.sorted ==> List(bigDec1, bigDec2))
-        _ <- Ns.bigDec.>=(bigDec0).get.map(_.sorted ==> List(bigDec0, bigDec1, bigDec2))
+        _ <- Ns.bigInt.>=(bigInt1).a1.get.map(_ ==> List(bigInt1, bigInt2))
+        _ <- Ns.bigInt.>=(bigInt0).a1.get.map(_ ==> List(bigInt0, bigInt1, bigInt2))
+
+
+        _ <- Ns.bigDec.<(bigDec1).a1.get.map(_ ==> List(bigDec0))
+        _ <- Ns.bigDec.<(bigDec2).a1.get.map(_ ==> List(bigDec0, bigDec1))
+
+        _ <- Ns.bigDec.>(bigDec1).a1.get.map(_ ==> List(bigDec2))
+        _ <- Ns.bigDec.>(bigDec0).a1.get.map(_ ==> List(bigDec1, bigDec2))
+
+        _ <- Ns.bigDec.<=(bigDec1).a1.get.map(_ ==> List(bigDec0, bigDec1))
+        _ <- Ns.bigDec.<=(bigDec2).a1.get.map(_ ==> List(bigDec0, bigDec1, bigDec2))
+
+        _ <- Ns.bigDec.>=(bigDec1).a1.get.map(_ ==> List(bigDec1, bigDec2))
+        _ <- Ns.bigDec.>=(bigDec0).a1.get.map(_ ==> List(bigDec0, bigDec1, bigDec2))
       } yield ()
     }
 
@@ -270,10 +270,10 @@ object Comparison extends Base {
         _ <- Ns.str.strs.<("b").get.map(_ ==> List(
           ("str1", Set("a"))
         ))
-        _ <- Ns.str.strs_.>("b").get.map(_.sorted ==> List("str2", "str3"))
-        _ <- Ns.str.strs_.>=("b").get.map(_.sorted ==> List("str1", "str2", "str3"))
-        _ <- Ns.str.strs_.<=("b").get.map(_.sorted ==> List("str1", "str2"))
-        _ <- Ns.str.strs_.<("b").get.map(_.sorted ==> List("str1"))
+        _ <- Ns.str.a1.strs_.>("b").get.map(_ ==> List("str2", "str3"))
+        _ <- Ns.str.a1.strs_.>=("b").get.map(_ ==> List("str1", "str2", "str3"))
+        _ <- Ns.str.a1.strs_.<=("b").get.map(_ ==> List("str1", "str2"))
+        _ <- Ns.str.a1.strs_.<("b").get.map(_ ==> List("str1"))
 
 
         // Int
@@ -295,10 +295,10 @@ object Comparison extends Base {
         _ <- Ns.int.ints.<(2).get.map(_ ==> List(
           (1, Set(1))
         ))
-        _ <- Ns.int.ints_.>(2).get.map(_.sorted ==> List(2, 3))
-        _ <- Ns.int.ints_.>=(2).get.map(_.sorted ==> List(1, 2, 3))
-        _ <- Ns.int.ints_.<=(2).get.map(_.sorted ==> List(1, 2, 3))
-        _ <- Ns.int.ints_.<(2).get.map(_.sorted ==> List(1))
+        _ <- Ns.int.a1.ints_.>(2).get.map(_ ==> List(2, 3))
+        _ <- Ns.int.a1.ints_.>=(2).get.map(_ ==> List(1, 2, 3))
+        _ <- Ns.int.a1.ints_.<=(2).get.map(_ ==> List(1, 2, 3))
+        _ <- Ns.int.a1.ints_.<(2).get.map(_ ==> List(1))
 
 
         // Date
@@ -320,10 +320,10 @@ object Comparison extends Base {
         _ <- Ns.date.dates.<(date2).get.map(_ ==> List(
           (date1, Set(date1))
         ))
-        _ <- Ns.date.dates_.>(date2).get.map(_.sorted ==> List(date2, date3))
-        _ <- Ns.date.dates_.>=(date2).get.map(_.sorted ==> List(date1, date2, date3))
-        _ <- Ns.date.dates_.<=(date2).get.map(_.sorted ==> List(date1, date2, date3))
-        _ <- Ns.date.dates_.<(date2).get.map(_.sorted ==> List(date1))
+        _ <- Ns.date.a1.dates_.>(date2).get.map(_ ==> List(date2, date3))
+        _ <- Ns.date.a1.dates_.>=(date2).get.map(_ ==> List(date1, date2, date3))
+        _ <- Ns.date.a1.dates_.<=(date2).get.map(_ ==> List(date1, date2, date3))
+        _ <- Ns.date.a1.dates_.<(date2).get.map(_ ==> List(date1))
 
 
         // UUID (comparisons not of much relevance - only works here because we sorted the values)
@@ -345,10 +345,10 @@ object Comparison extends Base {
         _ <- Ns.uuid.uuids.<(uuid2).get.map(_ ==> List(
           (uuid1, Set(uuid1))
         ))
-        _ <- Ns.uuid.uuids_.>(uuid2).get.map(_.sorted ==> List(uuid2, uuid3))
-        _ <- Ns.uuid.uuids_.>=(uuid2).get.map(_.sorted ==> List(uuid1, uuid2, uuid3))
-        _ <- Ns.uuid.uuids_.<=(uuid2).get.map(_.sorted ==> List(uuid1, uuid2, uuid3))
-        _ <- Ns.uuid.uuids_.<(uuid2).get.map(_.sorted ==> List(uuid1))
+        _ <- Ns.uuid.a1.uuids_.>(uuid2).get.map(_ ==> List(uuid2, uuid3))
+        _ <- Ns.uuid.a1.uuids_.>=(uuid2).get.map(_ ==> List(uuid1, uuid2, uuid3))
+        _ <- Ns.uuid.a1.uuids_.<=(uuid2).get.map(_ ==> List(uuid1, uuid2, uuid3))
+        _ <- Ns.uuid.a1.uuids_.<(uuid2).get.map(_ ==> List(uuid1))
 
 
         _ <- Ns.bigInt.bigInts.>(bigInt2).get.map(_ ==> List(
@@ -368,10 +368,10 @@ object Comparison extends Base {
         _ <- Ns.bigInt.bigInts.<(bigInt2).get.map(_ ==> List(
           (bigInt1, Set(bigInt1))
         ))
-        _ <- Ns.bigInt.bigInts_.>(bigInt2).get.map(_.sorted ==> List(bigInt2, bigInt3))
-        _ <- Ns.bigInt.bigInts_.>=(bigInt2).get.map(_.sorted ==> List(bigInt1, bigInt2, bigInt3))
-        _ <- Ns.bigInt.bigInts_.<=(bigInt2).get.map(_.sorted ==> List(bigInt1, bigInt2, bigInt3))
-        _ <- Ns.bigInt.bigInts_.<(bigInt2).get.map(_.sorted ==> List(bigInt1))
+        _ <- Ns.bigInt.a1.bigInts_.>(bigInt2).get.map(_ ==> List(bigInt2, bigInt3))
+        _ <- Ns.bigInt.a1.bigInts_.>=(bigInt2).get.map(_ ==> List(bigInt1, bigInt2, bigInt3))
+        _ <- Ns.bigInt.a1.bigInts_.<=(bigInt2).get.map(_ ==> List(bigInt1, bigInt2, bigInt3))
+        _ <- Ns.bigInt.a1.bigInts_.<(bigInt2).get.map(_ ==> List(bigInt1))
 
 
         _ <- Ns.bigDec.bigDecs.>(bigDec2).get.map(_ ==> List(
@@ -391,10 +391,10 @@ object Comparison extends Base {
         _ <- Ns.bigDec.bigDecs.<(bigDec2).get.map(_ ==> List(
           (bigDec1, Set(bigDec1))
         ))
-        _ <- Ns.bigDec.bigDecs_.>(bigDec2).get.map(_.sorted ==> List(bigDec2, bigDec3))
-        _ <- Ns.bigDec.bigDecs_.>=(bigDec2).get.map(_.sorted ==> List(bigDec1, bigDec2, bigDec3))
-        _ <- Ns.bigDec.bigDecs_.<=(bigDec2).get.map(_.sorted ==> List(bigDec1, bigDec2, bigDec3))
-        _ <- Ns.bigDec.bigDecs_.<(bigDec2).get.map(_.sorted ==> List(bigDec1))
+        _ <- Ns.bigDec.a1.bigDecs_.>(bigDec2).get.map(_ ==> List(bigDec2, bigDec3))
+        _ <- Ns.bigDec.a1.bigDecs_.>=(bigDec2).get.map(_ ==> List(bigDec1, bigDec2, bigDec3))
+        _ <- Ns.bigDec.a1.bigDecs_.<=(bigDec2).get.map(_ ==> List(bigDec1, bigDec2, bigDec3))
+        _ <- Ns.bigDec.a1.bigDecs_.<(bigDec2).get.map(_ ==> List(bigDec1))
       } yield ()
     }
   }

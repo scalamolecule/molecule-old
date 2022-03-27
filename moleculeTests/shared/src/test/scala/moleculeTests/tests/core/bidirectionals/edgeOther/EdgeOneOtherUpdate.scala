@@ -41,8 +41,8 @@ object EdgeOneOtherUpdate extends AsyncTestSuite {
         _ <- favoritePersonOf("Zup").get.map(_ ==> List((8, "Ann")))
 
         // Even though Ann now favorite Zup, Rex still exists
-        _ <- Person.name.get.map(_.sorted ==> List("Ann"))
-        _ <- Animal.name.get.map(_.sorted ==> List("Rex", "Zup"))
+        _ <- Person.name.get.map(_ ==> List("Ann"))
+        _ <- Animal.name.a1.get.map(_ ==> List("Rex", "Zup"))
       } yield ()
     }
 
@@ -78,7 +78,7 @@ object EdgeOneOtherUpdate extends AsyncTestSuite {
 
         // Divorce complete
 
-        _ <- Person.name.Favorite.weight.Animal.name.get.map(_.sorted ==> List())
+        _ <- Person.name.Favorite.weight.Animal.name.get.map(_ ==> Nil)
       } yield ()
     }
 

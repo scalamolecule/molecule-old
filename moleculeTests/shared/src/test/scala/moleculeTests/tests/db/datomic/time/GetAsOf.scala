@@ -22,7 +22,7 @@ object GetAsOf extends AsyncTestSuite {
         tx3 <- ben.retract
 
         // See history of Ben
-        _ <- Ns(ben).int.tx.op.getHistory.map(_.sortBy(r => (r._2, r._3)) ==> List(
+        _ <- Ns(ben).int.tx.a1.op.a2.getHistory.map(_ ==> List(
           (42, tx1.tx, true), // Insert:  42 asserted
           (42, tx2.tx, false), // Update:  42 retracted
           (43, tx2.tx, true), //          43 asserted

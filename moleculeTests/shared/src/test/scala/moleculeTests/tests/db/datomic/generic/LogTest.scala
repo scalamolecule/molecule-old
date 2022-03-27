@@ -288,7 +288,7 @@ object LogTest extends Base {
         _ <- Log(Some(d1), Some(d3)).tx.get.map(_.distinct.sorted ==> List(tx1, tx2))
 
         // Same as quering the history for all transactions within the time range
-        _ <- Ns.tx.txInstant_.>=(d1).txInstant_.<(d3).getHistory.map(_.sorted ==> List(tx1, tx2))
+        _ <- Ns.tx.a1.txInstant_.>=(d1).txInstant_.<(d3).getHistory.map(_ ==> List(tx1, tx2))
       } yield ()
     }
 

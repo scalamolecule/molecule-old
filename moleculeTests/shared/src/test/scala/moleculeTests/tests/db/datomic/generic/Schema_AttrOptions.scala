@@ -132,7 +132,7 @@ object Schema_AttrOptions extends AsyncTestSuite {
         _ <- Schema.unique_.not("value").a.get.map(_ ==> List(":Ref2/str2"))
 
         // Get optional attribute indexing status with `index$`
-        _ <- Schema.attr_("str", "str2", "int2").a.unique$.get.map(_.sorted ==> List(
+        _ <- Schema.attr_("str", "str2", "int2").a.a1.unique$.get.map(_ ==> List(
           (":Ns/str", None),
           (":Ref2/int2", Some("value")),
           (":Ref2/str2", Some("identity"))
@@ -199,7 +199,7 @@ object Schema_AttrOptions extends AsyncTestSuite {
         ))
 
         // Get optional attribute component status with `isComponent$`
-        _ <- Schema.attr_("bool", "refSub1").a.isComponent$.get.map(_.sorted ==> List(
+        _ <- Schema.attr_("bool", "refSub1").a.a1.isComponent$.get.map(_ ==> List(
           (":Ns/bool", None),
           (":Ns/refSub1", Some(true))
         ))
@@ -252,7 +252,7 @@ object Schema_AttrOptions extends AsyncTestSuite {
 
 
         // Get optional attribute no-history status with `noHistory$`
-        _ <- Schema.attr_("bool", "ints2").a.noHistory$.get.map(_.sorted ==> List(
+        _ <- Schema.attr_("bool", "ints2").a.a1.noHistory$.get.map(_ ==> List(
           (":Ns/bool", None),
           (":Ref2/ints2", Some(true))
         ))
@@ -308,7 +308,7 @@ object Schema_AttrOptions extends AsyncTestSuite {
 
 
           // Get optional attribute indexing status with `index$`
-          _ <- Schema.attr_("bool", "str").a.index$.get.map(_.sortBy(_._1) ==> List(
+          _ <- Schema.attr_("bool", "str").a.a1.index$.get.map(_ ==> List(
             (":Ns/bool", Some(true)),
             (":Ns/str", Some(true))
           ))
@@ -345,7 +345,7 @@ object Schema_AttrOptions extends AsyncTestSuite {
           _ <- Schema.fulltext.get.map(_.length ==> 1)
 
           // Attributes with fulltext search
-          _ <- Schema.a.fulltext.get.map(_.sortBy(_._1) ==> List(
+          _ <- Schema.a.a1.fulltext.get.map(_ ==> List(
             (":Ns/str", true),
             (":Ns/strMap", true),
             (":Ns/strs", true),
@@ -362,21 +362,21 @@ object Schema_AttrOptions extends AsyncTestSuite {
 
 
           // Filter attributes with tacit `fulltext_` option
-          _ <- Schema.fulltext_.a.get.map(_.sorted ==> List(
+          _ <- Schema.fulltext_.a.a1.get.map(_ ==> List(
             ":Ns/str",
             ":Ns/strMap",
             ":Ns/strs",
             ":Ref1/str1",
             ":Ref2/str2"
           ))
-          _ <- Schema.fulltext_(true).a.get.map(_.sorted ==> List(
+          _ <- Schema.fulltext_(true).a.a1.get.map(_ ==> List(
             ":Ns/str",
             ":Ns/strMap",
             ":Ns/strs",
             ":Ref1/str1",
             ":Ref2/str2"
           ))
-          _ <- Schema.fulltext_.not(false).a.get.map(_.sorted ==> List(
+          _ <- Schema.fulltext_.not(false).a.a1.get.map(_ ==> List(
             ":Ns/str",
             ":Ns/strMap",
             ":Ns/strs",
@@ -385,7 +385,7 @@ object Schema_AttrOptions extends AsyncTestSuite {
           ))
 
           // Get optional attribute fulltext status with `fulltext$`
-          _ <- Schema.attr_("bool", "str").a.fulltext$.get.map(_.sortBy(_._1) ==> List(
+          _ <- Schema.attr_("bool", "str").a.a1.fulltext$.get.map(_ ==> List(
             (":Ns/bool", None),
             (":Ns/str", Some(true))
           ))

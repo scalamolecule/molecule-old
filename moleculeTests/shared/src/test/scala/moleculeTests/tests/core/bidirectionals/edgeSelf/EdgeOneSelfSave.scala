@@ -30,7 +30,7 @@ object EdgeOneSelfSave extends AsyncTestSuite {
             Person.name("Ann").Loves.weight(7).Person.name("Ben").save.map(_.eids)
 
           // Bidirectional property edges have been saved
-          _ <- Person.name.Loves.weight.Person.name.get.map(_.sorted ==> List(
+          _ <- Person.name.a1.Loves.weight.Person.name.get.map(_ ==> List(
             ("Ann", 7, "Ben"),
             // Reverse edge:
             ("Ben", 7, "Ann")
@@ -68,7 +68,7 @@ object EdgeOneSelfSave extends AsyncTestSuite {
           _ <- Person.name("Ann").Loves.weight(7).person(ben).save
 
           // Ann and Ben know each other with a weight of 7
-          _ <- Person.name.Loves.weight.Person.name.get.map(_.sorted ==> List(
+          _ <- Person.name.a1.Loves.weight.Person.name.get.map(_ ==> List(
             ("Ann", 7, "Ben"),
             ("Ben", 7, "Ann")
           ))
@@ -139,7 +139,7 @@ object EdgeOneSelfSave extends AsyncTestSuite {
           }
 
           // Ann and Ben know each other with a weight of 7
-          _ <- Person.name.Loves.weight.Person.name.get.map(_.sorted ==> List(
+          _ <- Person.name.a1.Loves.weight.Person.name.get.map(_ ==> List(
             ("Ann", 7, "Ben"),
             ("Ben", 7, "Ann")
           ))
@@ -157,7 +157,7 @@ object EdgeOneSelfSave extends AsyncTestSuite {
           _ <- Person.name("Ann").loves(benLovesAnn).save
 
           // Ann loves Ben and Ben loves Ann - that is 70% love
-          _ <- Person.name.Loves.weight.Person.name.get.map(_.sorted ==> List(
+          _ <- Person.name.a1.Loves.weight.Person.name.get.map(_ ==> List(
             ("Ann", 7, "Ben"),
             ("Ben", 7, "Ann")
           ))

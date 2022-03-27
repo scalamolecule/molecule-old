@@ -67,35 +67,35 @@ object TestDbSince extends AsyncTestSuite {
         (txR1, txR2, txR3, e2, e3) <- data
 
         // Live state
-        _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
+        _ <- Ns.int.a1.get.map(_ ==> List(1, 2, 3))
 
         // Use state accumulated since tx1 (exclusive) as a test db "branch"
         _ <- conn.testDbSince(txR1)
 
         // Test state since tx1 (exclusive)
-        _ <- Ns.int.get.map(_.sorted ==> List(2, 3))
+        _ <- Ns.int.a1.get.map(_ ==> List(2, 3))
 
         // Test operations:
 
         // Save
         _ <- Ns.int(4).save
-        _ <- Ns.int.get.map(_.sorted ==> List(2, 3, 4))
+        _ <- Ns.int.a1.get.map(_ ==> List(2, 3, 4))
 
         // Insert
         _ <- Ns.int insert List(5, 6)
-        _ <- Ns.int.get.map(_.sorted ==> List(2, 3, 4, 5, 6))
+        _ <- Ns.int.a1.get.map(_ ==> List(2, 3, 4, 5, 6))
 
         // Update
         _ <- Ns(e2).int(0).update
-        _ <- Ns.int.get.map(_.sorted ==> List(0, 3, 4, 5, 6))
+        _ <- Ns.int.a1.get.map(_ ==> List(0, 3, 4, 5, 6))
 
         // Retract
         _ <- e3.retract
-        _ <- Ns.int.get.map(_.sorted ==> List(0, 4, 5, 6))
+        _ <- Ns.int.a1.get.map(_ ==> List(0, 4, 5, 6))
 
         // Live state unaffected
         _ = conn.useLiveDb()
-        _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
+        _ <- Ns.int.a1.get.map(_ ==> List(1, 2, 3))
       } yield ()
     }
 

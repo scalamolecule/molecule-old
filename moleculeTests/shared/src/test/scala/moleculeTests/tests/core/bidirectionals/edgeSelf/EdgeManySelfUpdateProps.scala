@@ -89,14 +89,14 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
           // Instead update the edge entity itself:
 
           // Current weight value
-          _ <- Person.name("Ann" or "Ben").Knows.weight.get.map(_.sortBy(_._1) ==> List(
+          _ <- Person.name("Ann" or "Ben").a1.Knows.weight.get.map(_ ==> List(
             ("Ann", 7),
             ("Ben", 7)
           ))
 
           // Apply new value
           _ <- Knows(annBen).weight(2).update
-          _ <- Person.name("Ann" or "Ben").Knows.weight.get.map(_.sortBy(_._1) ==> List(
+          _ <- Person.name("Ann" or "Ben").a1.Knows.weight.get.map(_ ==> List(
             ("Ann", 2),
             ("Ben", 2)
           ))
@@ -112,14 +112,14 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
           Seq(love, patience, humor, ann, annBen) <- testData
 
           // Current howWeMet enum value
-          _ <- Person.name("Ann" or "Ben").Knows.howWeMet.get.map(_.sortBy(_._1) ==> List(
+          _ <- Person.name("Ann" or "Ben").a1.Knows.howWeMet.get.map(_ ==> List(
             ("Ann", "atWork"),
             ("Ben", "atWork")
           ))
 
           // Apply new enum value
           _ <- Knows(annBen).howWeMet("throughFriend").update
-          _ <- Person.name("Ann" or "Ben").Knows.howWeMet.get.map(_.sortBy(_._1) ==> List(
+          _ <- Person.name("Ann" or "Ben").a1.Knows.howWeMet.get.map(_ ==> List(
             ("Ann", "throughFriend"),
             ("Ben", "throughFriend")
           ))
@@ -135,7 +135,7 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
           Seq(love, patience, humor, ann, annBen) <- testData
 
           // Current value
-          _ <- Person.name("Ann" or "Ben").Knows.CoreQuality.name.get.map(_.sortBy(_._1) ==> List(
+          _ <- Person.name("Ann" or "Ben").a1.Knows.CoreQuality.name.get.map(_ ==> List(
             ("Ann", "Love"),
             ("Ben", "Love")
           ))
@@ -153,7 +153,7 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
           _ <- Quality(love).name("Compassion").update
 
           // Same reference, new value
-          _ <- Person.name("Ann" or "Ben").Knows.CoreQuality.name.get.map(_.sortBy(_._1) ==> List(
+          _ <- Person.name("Ann" or "Ben").a1.Knows.CoreQuality.name.get.map(_ ==> List(
             ("Ann", "Compassion"),
             ("Ben", "Compassion")
           ))
@@ -165,7 +165,7 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
           _ <- Knows(annBen).coreQuality(trust).update
 
           // New reference/value
-          _ <- Person.name("Ann" or "Ben").Knows.CoreQuality.name.get.map(_.sortBy(_._1) ==> List(
+          _ <- Person.name("Ann" or "Ben").a1.Knows.CoreQuality.name.get.map(_ ==> List(
             ("Ann", "Trust"),
             ("Ben", "Trust")
           ))
@@ -180,41 +180,41 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
     "Card-many" - {
 
       "values" - bidirectional { implicit conn =>
-        val commonInterestsOf = m(Person.name(?).Knows.commonInterests)
+        val commonInterestsOf = m(Person.name(?).a1.Knows.commonInterests)
         for {
           Seq(love, patience, humor, ann, annBen) <- testData
 
 
           // Current values
-          _ <- commonInterestsOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonInterestsOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("Food", "Walking", "Travelling")),
             ("Ben", Set("Food", "Walking", "Travelling"))
           ))
 
           // Replace
           _ <- Knows(annBen).commonInterests.replace("Food" -> "Cuisine").update
-          _ <- commonInterestsOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonInterestsOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("Cuisine", "Walking", "Travelling")),
             ("Ben", Set("Cuisine", "Walking", "Travelling"))
           ))
 
           // Remove
           _ <- Knows(annBen).commonInterests.retract("Travelling").update
-          _ <- commonInterestsOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonInterestsOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("Cuisine", "Walking")),
             ("Ben", Set("Cuisine", "Walking"))
           ))
 
           // Add
           _ <- Knows(annBen).commonInterests.assert("Meditating").update
-          _ <- commonInterestsOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonInterestsOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("Cuisine", "Walking", "Meditating")),
             ("Ben", Set("Cuisine", "Walking", "Meditating"))
           ))
 
           // Apply new values
           _ <- Knows(annBen).commonInterests("Running", "Cycling").update
-          _ <- commonInterestsOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonInterestsOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("Running", "Cycling")),
             ("Ben", Set("Running", "Cycling"))
           ))
@@ -226,41 +226,41 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
       }
 
       "enums" - bidirectional { implicit conn =>
-        val commonLicencesOf = m(Person.name(?).Knows.commonLicences)
+        val commonLicencesOf = m(Person.name(?).a1.Knows.commonLicences)
         for {
           Seq(love, patience, humor, ann, annBen) <- testData
 
 
           // Current enum values
-          _ <- commonLicencesOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonLicencesOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("climbing", "flying")),
             ("Ben", Set("climbing", "flying"))
           ))
 
           // Replace
           _ <- Knows(annBen).commonLicences.replace("flying" -> "diving").update
-          _ <- commonLicencesOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonLicencesOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("climbing", "diving")),
             ("Ben", Set("climbing", "diving"))
           ))
 
           // Remove
           _ <- Knows(annBen).commonLicences.retract("climbing").update
-          _ <- commonLicencesOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonLicencesOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("diving")),
             ("Ben", Set("diving"))
           ))
 
           // Add
           _ <- Knows(annBen).commonLicences.assert("parachuting").update
-          _ <- commonLicencesOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonLicencesOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("diving", "parachuting")),
             ("Ben", Set("diving", "parachuting"))
           ))
 
           // Apply new values
           _ <- Knows(annBen).commonLicences("climbing", "flying").update
-          _ <- commonLicencesOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- commonLicencesOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", Set("climbing", "flying")),
             ("Ben", Set("climbing", "flying"))
           ))
@@ -272,15 +272,15 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
       }
 
       "refs" - bidirectional { implicit conn =>
-        val inCommonOf = m(Person.name(?).Knows.InCommon.*(Quality.name))
+        val inCommonOf = m(Person.name(?).a1.Knows.InCommon.*(Quality.name.a1))
         for {
           Seq(love, patience, humor, ann, annBen) <- testData
 
 
           // Current value
-          _ <- inCommonOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
-            ("Ann", List("Patience", "Humor")),
-            ("Ben", List("Patience", "Humor"))
+          _ <- inCommonOf("Ann" or "Ben").get.map(_ ==> List(
+            ("Ann", List("Humor", "Patience")),
+            ("Ben", List("Humor", "Patience"))
           ))
 
           // As with card-one references we have two choices to change referenced value(s)
@@ -291,9 +291,9 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
           _ <- Quality(humor).name("Funny").update
 
           // Same references, new value(s)
-          _ <- inCommonOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
-            ("Ann", List("Waiting ability", "Funny")),
-            ("Ben", List("Waiting ability", "Funny"))
+          _ <- inCommonOf("Ann" or "Ben").get.map(_ ==> List(
+            ("Ann", List("Funny", "Waiting ability")),
+            ("Ben", List("Funny", "Waiting ability"))
           ))
 
 
@@ -303,31 +303,28 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
 
           // replace
           _ <- Knows(annBen).inCommon.replace(humor -> sporty).update
-          _ <- inCommonOf("Ann" or "Ben").get.map(
-            _.map(p => (p._1, p._2.sorted)).sortBy(_._1) ==> List(
+          _ <- inCommonOf("Ann" or "Ben").get.map(_ ==> List(
               ("Ann", List("Sporty", "Waiting ability")),
               ("Ben", List("Sporty", "Waiting ability"))
             ))
 
           // remove
           _ <- Knows(annBen).inCommon.retract(patience).update
-          _ <- inCommonOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+          _ <- inCommonOf("Ann" or "Ben").get.map(_ ==> List(
             ("Ann", List("Sporty")),
             ("Ben", List("Sporty"))
           ))
 
           // add
           _ <- Knows(annBen).inCommon.assert(patience).update
-          _ <- inCommonOf("Ann" or "Ben").get.map(
-            _.map(p => (p._1, p._2.sorted)).sortBy(_._1) ==> List(
+          _ <- inCommonOf("Ann" or "Ben").get.map(_ ==> List(
               ("Ann", List("Sporty", "Waiting ability")),
               ("Ben", List("Sporty", "Waiting ability"))
             ))
 
           // Apply new values
           _ <- Knows(annBen).inCommon(sporty, humor).update
-          _ <- inCommonOf("Ann" or "Ben").get.map(
-            _.map(p => (p._1, p._2.sorted)).sortBy(_._1) ==> List(
+          _ <- inCommonOf("Ann" or "Ben").get.map(_ ==> List(
               ("Ann", List("Funny", "Sporty")),
               ("Ben", List("Funny", "Sporty"))
             ))
@@ -341,41 +338,41 @@ object EdgeManySelfUpdateProps extends AsyncTestSuite {
     }
 
     "Map" - bidirectional { implicit conn =>
-      val commonScoresOf = m(Person.name(?).Knows.commonScores)
+      val commonScoresOf = m(Person.name(?).a1.Knows.commonScores)
       for {
         Seq(love, patience, humor, ann, annBen) <- testData
 
 
         // Current values
-        _ <- commonScoresOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+        _ <- commonScoresOf("Ann" or "Ben").get.map(_ ==> List(
           ("Ann", Map("baseball" -> 9, "golf" -> 7)),
           ("Ben", Map("baseball" -> 9, "golf" -> 7))
         ))
 
         // Replace values by key
         _ <- Knows(annBen).commonScores.replace("baseball" -> 8, "golf" -> 6).update
-        _ <- commonScoresOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+        _ <- commonScoresOf("Ann" or "Ben").get.map(_ ==> List(
           ("Ann", Map("baseball" -> 8, "golf" -> 6)),
           ("Ben", Map("baseball" -> 8, "golf" -> 6))
         ))
 
         // Remove by key
         _ <- Knows(annBen).commonScores.retract("golf").update
-        _ <- commonScoresOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+        _ <- commonScoresOf("Ann" or "Ben").get.map(_ ==> List(
           ("Ann", Map("baseball" -> 8)),
           ("Ben", Map("baseball" -> 8))
         ))
 
         // Add
         _ <- Knows(annBen).commonScores.assert("parachuting" -> 4).update
-        _ <- commonScoresOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+        _ <- commonScoresOf("Ann" or "Ben").get.map(_ ==> List(
           ("Ann", Map("baseball" -> 8, "parachuting" -> 4)),
           ("Ben", Map("baseball" -> 8, "parachuting" -> 4))
         ))
 
         // Apply new values (replacing all current values!)
         _ <- Knows(annBen).commonScores("volleyball" -> 4, "handball" -> 5).update
-        _ <- commonScoresOf("Ann" or "Ben").get.map(_.sortBy(_._1) ==> List(
+        _ <- commonScoresOf("Ann" or "Ben").get.map(_ ==> List(
           ("Ann", Map("volleyball" -> 4, "handball" -> 5)),
           ("Ben", Map("volleyball" -> 4, "handball" -> 5))
         ))

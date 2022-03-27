@@ -424,25 +424,25 @@ object Aggregates extends AsyncTestSuite {
         )
         _ <- Ns.int(4).save
 
-        _ <- Ns.str.int.get.map(_.sortBy(r => (r._1, r._2)) ==> List(
+        _ <- Ns.str.a1.int.a2.get.map(_ ==> List(
           ("a", 1),
           ("b", 2),
           ("b", 3)
         ))
 
-        _ <- Ns.e.str.int.get.map(_.map(r => (r._2, r._3)).sortBy(r => (r._1, r._2)) ==> List(
+        _ <- Ns.e.str.a1.int.a2.get.map(_.map(r => (r._2, r._3)) ==> List(
           ("a", 1),
           ("b", 2),
           ("b", 2),
           ("b", 3)
         ))
 
-        _ <- Ns.str.int(distinct).get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns.str.a1.int(distinct).get.map(_ ==> List(
           ("a", List(1)),
           ("b", List(3, 2)),
         ))
 
-        _ <- Ns.int.str(distinct).get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns.int.a1.str(distinct).get.map(_ ==> List(
           (1, List("a")),
           (2, List("b")),
           (3, List("b"))
@@ -464,21 +464,21 @@ object Aggregates extends AsyncTestSuite {
         )
         _ <- Ns.int(4).save
 
-        _ <- Ns.str.int(count).get.map(_.sorted ==> List(
+        _ <- Ns.str.a1.int(count).get.map(_ ==> List(
           ("a", 1),
           ("b", 3)
         ))
-        _ <- Ns.str.int(countDistinct).get.map(_.sorted ==> List(
+        _ <- Ns.str.a1.int(countDistinct).get.map(_ ==> List(
           ("a", 1),
           ("b", 2)
         ))
 
-        _ <- Ns.int.str(count).get.map(_.sorted ==> List(
+        _ <- Ns.int.a1.str(count).get.map(_ ==> List(
           (1, 1),
           (2, 2),
           (3, 1)
         ))
-        _ <- Ns.int.str(countDistinct).get.map(_.sorted ==> List(
+        _ <- Ns.int.a1.str(countDistinct).get.map(_ ==> List(
           (1, 1),
           (2, 1),
           (3, 1)
@@ -508,7 +508,7 @@ object Aggregates extends AsyncTestSuite {
         e2 <- Ns.int(2).save.map(_.eid)
         e3 <- Ns.int(3).save.map(_.eid)
 
-        _ <- Ns.e.int(count).get.map(_.sorted ==> List(
+        _ <- Ns.e.a1.int(count).get.map(_ ==> List(
           (e1, 1),
           (e2, 1),
           (e3, 1)
@@ -519,7 +519,7 @@ object Aggregates extends AsyncTestSuite {
         e4 <- Ns.ints(Seq(1, 2)).save.map(_.eid)
         e5 <- Ns.ints(3).save.map(_.eid)
 
-        _ <- Ns.e.ints(count).get.map(_.sortBy(_._2) ==> List(
+        _ <- Ns.e.ints(count).a1.get.map(_.sortBy(_._2) ==> List(
           (e5, 1),
           (e4, 2),
         ))

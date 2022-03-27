@@ -328,10 +328,10 @@ object Values extends Base {
           (2, Map("fr" -> "Bonjour", "it" -> "Bon giorno"))
         ))
 
-        _ <- Ns.int.strMap_.>("Hej").get.map(_.sorted ==> List(1, 2, 3))
-        _ <- Ns.int.strMap_.>=("Hej").get.map(_.sorted ==> List(1, 2, 3, 4))
-        _ <- Ns.int.strMap_.<=("Hej").get.map(_.sorted ==> List(2, 3, 4))
-        _ <- Ns.int.strMap_.<("Hej").get.map(_.sorted ==> List(2))
+        _ <- Ns.int.a1.strMap_.>("Hej").get.map(_ ==> List(1, 2, 3))
+        _ <- Ns.int.a1.strMap_.>=("Hej").get.map(_ ==> List(1, 2, 3, 4))
+        _ <- Ns.int.a1.strMap_.<=("Hej").get.map(_ ==> List(2, 3, 4))
+        _ <- Ns.int.a1.strMap_.<("Hej").get.map(_ ==> List(2))
 
 
         // Int

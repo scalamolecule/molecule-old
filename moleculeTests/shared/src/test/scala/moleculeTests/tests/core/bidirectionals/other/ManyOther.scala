@@ -10,8 +10,8 @@ import molecule.core.util.Executor._
 
 object ManyOther extends AsyncTestSuite {
 
-  val animalBuddiesOf = m(Person.name_(?).Buddies.name)
-  val personBuddiesOf = m(Animal.name_(?).Buddies.name)
+  val animalBuddiesOf = m(Person.name_(?).Buddies.name.a1)
+  val personBuddiesOf = m(Animal.name_(?).Buddies.name.a1)
 
   lazy val tests = Tests {
 
@@ -109,7 +109,7 @@ object ManyOther extends AsyncTestSuite {
           // Save Ann with bidirectional ref to existing Gus and Leo
           _ <- Person.name("Ann").buddies(gusLeo).save
 
-          _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus", "Leo"))
           _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
           _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
         } yield ()
@@ -236,15 +236,15 @@ object ManyOther extends AsyncTestSuite {
 
           // Single reference
           _ <- Person(ann).buddies.assert(gus).update
-          _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus"))
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus"))
 
           // Multiple references (vararg)
           _ <- Person(ann).buddies.assert(leo, rex).update
-          _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo", "Rex"))
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus", "Leo", "Rex"))
 
           // Set of references
           _ <- Person(ann).buddies.assert(Seq(zip)).update
-          _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo", "Rex", "Zip"))
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus", "Leo", "Rex", "Zip"))
 
           // Buddieships have been added in both directions
           _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
@@ -262,7 +262,7 @@ object ManyOther extends AsyncTestSuite {
           ) map (_.eids)
 
           // Buddieships have been inserted in both directions
-          _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo", "Rex", "Zip", "Zup"))
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus", "Leo", "Rex", "Zip", "Zup"))
           _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
           _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
           _ <- personBuddiesOf("Rex").get.map(_ ==> List("Ann"))
@@ -304,7 +304,7 @@ object ManyOther extends AsyncTestSuite {
           _ <- Person(ann).buddies.replace(gus -> rex).update
 
           // Ann now buddies with Rex instead of Gus
-          _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Leo", "Rex"))
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Leo", "Rex"))
           _ <- personBuddiesOf("Gus").get.map(_ ==> List())
           _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
           _ <- personBuddiesOf("Rex").get.map(_ ==> List("Ann"))
@@ -316,7 +316,7 @@ object ManyOther extends AsyncTestSuite {
           List(ann, gus, leo) <- Person.name.Buddies.*(Animal.name).insert("Ann", List("Gus", "Leo")).map(_.eids)
           List(rex, zip) <- Animal.name.insert("Rex", "Zip").map(_.eids)
 
-          _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus", "Leo"))
           _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
           _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
           _ <- personBuddiesOf("Rex").get.map(_ ==> List())
@@ -327,7 +327,7 @@ object ManyOther extends AsyncTestSuite {
 
           // Ann is now buddies with Rex and Zip instead of Gus and Leo
           // Gus and Leo are no longer buddies with Ann either
-          _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Rex", "Zip"))
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Rex", "Zip"))
           _ <- personBuddiesOf("Gus").get.map(_ ==> List())
           _ <- personBuddiesOf("Leo").get.map(_ ==> List())
           _ <- personBuddiesOf("Rex").get.map(_ ==> List("Ann"))
@@ -340,7 +340,7 @@ object ManyOther extends AsyncTestSuite {
           List(ann, gus, leo) <- Person.name.Buddies.*(Animal.name) insert List(("Ann", List("Gus", "Leo"))) map (_.eids)
           rex <- Animal.name.insert("Rex").map(_.eid)
 
-          _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus", "Leo"))
           _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
           _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
           _ <- personBuddiesOf("Rex").get.map(_ ==> List())
@@ -363,7 +363,7 @@ object ManyOther extends AsyncTestSuite {
           List(ann, gus, leo) <- Person.name.Buddies.*(Animal.name) insert List(("Ann", List("Gus", "Leo"))) map (_.eids)
           rex <- Animal.name.insert("Rex").map(_.eid)
 
-          _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus", "Leo"))
           _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
           _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
           _ <- personBuddiesOf("Rex").get.map(_ ==> List())
@@ -373,7 +373,7 @@ object ManyOther extends AsyncTestSuite {
 
           // Ann and Rex new buddies
           // Ann and Leo no longer buddies
-          _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Rex"))
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus", "Rex"))
           _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
           _ <- personBuddiesOf("Leo").get.map(_ ==> List())
           _ <- personBuddiesOf("Rex").get.map(_ ==> List("Ann"))
@@ -385,7 +385,7 @@ object ManyOther extends AsyncTestSuite {
           List(ann, gus, leo) <- Person.name.Buddies.*(Animal.name) insert List(("Ann", List("Gus", "Leo"))) map (_.eids)
           rex <- Animal.name.insert("Rex").map(_.eid)
 
-          _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus", "Leo"))
           _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
           _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
           _ <- personBuddiesOf("Rex").get.map(_ ==> List())
@@ -395,7 +395,7 @@ object ManyOther extends AsyncTestSuite {
 
           // Ann and Rex new buddies
           // Ann and Leo no longer buddies
-          _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Rex"))
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus", "Rex"))
           _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
           _ <- personBuddiesOf("Leo").get.map(_ ==> List())
           _ <- personBuddiesOf("Rex").get.map(_ ==> List("Ann"))
@@ -406,7 +406,7 @@ object ManyOther extends AsyncTestSuite {
         for {
           List(ann, gus, leo) <- Person.name.Buddies.*(Animal.name) insert List(("Ann", List("Gus", "Leo"))) map (_.eids)
 
-          _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus", "Leo"))
           _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
           _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
 
@@ -424,7 +424,7 @@ object ManyOther extends AsyncTestSuite {
         for {
           List(ann, gus, leo) <- Person.name.Buddies.*(Animal.name) insert List(("Ann", List("Gus", "Leo"))) map (_.eids)
 
-          _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus", "Leo"))
           _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
           _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
 
@@ -446,7 +446,7 @@ object ManyOther extends AsyncTestSuite {
       for {
         List(ann, gus, leo) <- Person.name.Buddies.*(Animal.name) insert List(("Ann", List("Gus", "Leo"))) map (_.eids)
 
-        _ <- animalBuddiesOf("Ann").get.map(_.sorted ==> List("Gus", "Leo"))
+        _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus", "Leo"))
         _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
         _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
 

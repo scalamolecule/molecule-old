@@ -109,25 +109,25 @@ object Datom extends AsyncTestSuite {
           _ <- Ns(e1).v.get.map(_ ==> List("b", 3))
 
           // Transaction entity id
-          _ <- Ns(e1).tx.get.map(_.sorted ==> List(tx2, tx3))
+          _ <- Ns(e1).tx.a1.get.map(_ ==> List(tx2, tx3))
 
           // Transaction time t
-          _ <- Ns(e1).t.get.map(_.sorted ==> List(t2, t3))
+          _ <- Ns(e1).t.a1.get.map(_ ==> List(t2, t3))
 
           // Transaction wall clock time as Date
-          _ <- Ns(e1).txInstant.get.map(_.sorted ==> List(d2, d3))
+          _ <- Ns(e1).txInstant.a1.get.map(_ ==> List(d2, d3))
 
           // Transaction operation: true: assert, false: retract
           _ <- Ns(e1).op.get.map(_ ==> List(true))
 
           // Core 5 Datom values (quintuplets)
-          _ <- Ns(e1).e.a.v.tx.op.get.map(_.sortBy(_._4) ==> List(
+          _ <- Ns(e1).e.a.v.tx.a1.op.get.map(_ ==> List(
             (e1, ":Ns/str", "b", tx2, true),
             (e1, ":Ns/int", 3, tx3, true),
           ))
 
           // Generic attributes can be added in any order
-          _ <- Ns(e1).v.e.op.tx.a.get.map(_.sortBy(_._4) ==> List(
+          _ <- Ns(e1).v.e.op.tx.a1.a.get.map(_ ==> List(
             ("b", e1, true, tx2, ":Ns/str"),
             (3, e1, true, tx3, ":Ns/int"),
           ))
@@ -141,7 +141,7 @@ object Datom extends AsyncTestSuite {
           (tx4, e2, t4, d4, tx5, t5, d5),
           (r1, tx6, t6, d6, tx7, t7, d7)) <- testData
 
-          _ <- Ns(e1, e2).tx.e.a.v.get.map(_.sortBy(_._1) ==> List(
+          _ <- Ns(e1, e2).tx.a1.e.a.v.get.map(_ ==> List(
             (tx2, e1, ":Ns/str", "b"),
             (tx3, e1, ":Ns/int", 3),
             (tx4, e2, ":Ns/str", "x"),
@@ -158,7 +158,7 @@ object Datom extends AsyncTestSuite {
           (tx4, e2, t4, d4, tx5, t5, d5),
           (r1, tx6, t6, d6, tx7, t7, d7)) <- testData
 
-          _ <- Ns(e1, e2).tx.e.a.v.op.getHistory.map(_.sortBy(t => (t._1, t._3, t._5)) ==> List(
+          _ <- Ns(e1, e2).tx.a1.e.a.a2.v.op.a3.getHistory.map(_ ==> List(
             (tx1, e1, ":Ns/int", 1, true),
             (tx1, e1, ":Ns/str", "a", true),
             (tx2, e1, ":Ns/str", "a", false),
@@ -183,13 +183,13 @@ object Datom extends AsyncTestSuite {
           ((tx1, e1, t1, d1, tx2, t2, d2, tx3, t3, d3),
           (tx4, e2, t4, d4, tx5, t5, d5), _) <- testData
 
-          _ <- Ns.int.e.get.map(_.sortBy(_._1) ==> List((3, e1), (5, e2)))
-          _ <- Ns.int.a.get.map(_ ==> List((3, ":Ns/int"), (5, ":Ns/int")))
-          _ <- Ns.int.v.get.map(_ ==> List((3, 3), (5, 5)))
-          _ <- Ns.int.tx.get.map(_.sortBy(_._1) ==> List((3, tx3), (5, tx5)))
-          _ <- Ns.int.t.get.map(_.sortBy(_._1) ==> List((3, t3), (5, t5)))
-          _ <- Ns.int.txInstant.get.map(_.sortBy(_._1).toString ==> List((3, d3), (5, d5)).toString)
-          _ <- Ns.int.op.get.map(_ ==> List((5, true), (3, true)))
+          _ <- Ns.int.a1.e.get.map(_ ==> List((3, e1), (5, e2)))
+          _ <- Ns.int.a1.a.get.map(_ ==> List((3, ":Ns/int"), (5, ":Ns/int")))
+          _ <- Ns.int.a1.v.get.map(_ ==> List((3, 3), (5, 5)))
+          _ <- Ns.int.a1.tx.get.map(_ ==> List((3, tx3), (5, tx5)))
+          _ <- Ns.int.a1.t.get.map(_ ==> List((3, t3), (5, t5)))
+          _ <- Ns.int.a1.txInstant.get.map(_.toString ==> List((3, d3), (5, d5)).toString)
+          _ <- Ns.int.a1.op.get.map(_ ==> List((5, true), (3, true)))
 
           // Generic attributes after attribute with applied value
           _ <- Ns.int(5).e.get.map(_ ==> List((5, e2)))
@@ -210,13 +210,13 @@ object Datom extends AsyncTestSuite {
           _ <- Ns.int.<(4).op.get.map(_ ==> List((3, true)))
 
           // Generic attributes after attribute with applied aggregate keyword
-          _ <- Ns.int(max).e.get.map(_.sortBy(_._1) ==> List((3, e1), (5, e2)))
-          _ <- Ns.int(max).a.get.map(_ ==> List((5, ":Ns/int")))
-          _ <- Ns.int(max).v.get.map(_ ==> List((3, 3), (5, 5)))
-          _ <- Ns.int(max).tx.get.map(_ ==> List((3, tx3), (5, tx5)))
-          _ <- Ns.int(max).t.get.map(_ ==> List((3, t3), (5, t5)))
-          _ <- Ns.int(max).txInstant.get.map(_.sortBy(_._1).toString ==> List((3, d3), (5, d5)).toString)
-          _ <- Ns.int(max).op.get.map(_ ==> List((5, true)))
+          _ <- Ns.int(max).a1.e.get.map(_ ==> List((3, e1), (5, e2)))
+          _ <- Ns.int(max).a1.a.get.map(_ ==> List((5, ":Ns/int")))
+          _ <- Ns.int(max).a1.v.get.map(_ ==> List((3, 3), (5, 5)))
+          _ <- Ns.int(max).a1.tx.get.map(_ ==> List((3, tx3), (5, tx5)))
+          _ <- Ns.int(max).a1.t.get.map(_ ==> List((3, t3), (5, t5)))
+          _ <- Ns.int(max).a1.txInstant.get.map(_.toString ==> List((3, d3), (5, d5)).toString)
+          _ <- Ns.int(max).a1.op.get.map(_ ==> List((5, true)))
         } yield ()
       }
 
@@ -228,7 +228,7 @@ object Datom extends AsyncTestSuite {
 
 
           // Generic entity id first is ok
-          _ <- Ns.e.int.tx.get.map(_.sortBy(_._2) ==> List(
+          _ <- Ns.e.int.a1.tx.get.map(_ ==> List(
             (e1, 3, tx3),
             (e2, 5, tx5),
           ))
@@ -240,7 +240,7 @@ object Datom extends AsyncTestSuite {
               "Please add generic attributes `t`, `op` after `int`.")
 
           // Generic attributes after custom attribute ok
-          _ <- Ns.int.tx.op.get.map(_.sortBy(_._2) ==> List(
+          _ <- Ns.int.tx.a1.op.get.map(_ ==> List(
             (3, tx3, true),
             (5, tx5, true),
           ))
@@ -270,7 +270,7 @@ object Datom extends AsyncTestSuite {
 
           // Any filter will prevent a full scan
 
-          _ <- Ns.e.a(":Ns/str").v.tx.get.map(_.sortBy(_._4) ==> List(
+          _ <- Ns.e.a(":Ns/str").v.tx.a1.get.map(_ ==> List(
             (e1, ":Ns/str", "b", tx2),
             (e2, ":Ns/str", "x", tx4)
           ))
@@ -351,17 +351,17 @@ object Datom extends AsyncTestSuite {
           (r1, tx6, t6, d6, tx7, t7, d7)) <- testData
 
           _ <- Ns.e(e1).get.map(_ ==> List(e1))
-          _ <- Ns.e(e1, e2).get.map(_.sorted ==> List(e1, e2).sorted)
+          _ <- Ns.e(e1, e2).a1.get.map(_ ==> List(e1, e2))
 
-          _ <- Ns.e.not(e1).get.map(_.sorted ==> List(e2, r1).sorted)
+          _ <- Ns.e.not(e1).a1.get.map(_ ==> List(e2, r1))
           _ <- Ns.e.not(e1, e2).get.map(_ ==> List(r1))
 
           // Eids not deterministic with dev-local
           _ <- if (system != SystemDevLocal) {
             for {
-              _ <- Ns.e.>(e1).get.map(_.sorted ==> List(e2, r1).sorted)
-              _ <- Ns.e.>=(e1).get.map(_.sorted ==> List(e1, e2, r1).sorted)
-              _ <- Ns.e.<=(e2).get.map(_.sorted ==> List(e1, e2).sorted)
+              _ <- Ns.e.>(e1).a1.get.map(_ ==> List(e2, r1))
+              _ <- Ns.e.>=(e1).a1.get.map(_ ==> List(e1, e2, r1))
+              _ <- Ns.e.<=(e2).a1.get.map(_ ==> List(e1, e2))
               res <- Ns.e.<(e2).get.map(_ ==> List(e1))
             } yield res
           } else Future.unit
@@ -373,7 +373,7 @@ object Datom extends AsyncTestSuite {
 
           _ <- Ns.a(":Ns/str").get.map(_ ==> List(":Ns/str"))
           _ <- Ns.a(":Ns/str", ":Ns/int").get.map(_ ==> List(":Ns/int", ":Ns/str"))
-          _ <- Ns.a.not(":Ns/str").get.map(_.sorted ==> List(":Ns/int", ":Ns/ref1", ":Ref1/str1"))
+          _ <- Ns.a.not(":Ns/str").a1.get.map(_ ==> List(":Ns/int", ":Ns/ref1", ":Ref1/str1"))
           _ <- Ns.a.not(":Ns/str", ":Ns/ref1").get.map(_ ==> List(":Ns/int", ":Ref1/str1"))
           _ <- Ns.a.>(":Ns/str").get.map(_ ==> List(":Ref1/str1"))
           _ <- Ns.a.>=(":Ns/str").get.map(_ ==> List(":Ref1/str1", ":Ns/str"))
@@ -395,52 +395,52 @@ object Datom extends AsyncTestSuite {
               "Can't compare generic values being of different types. Found: v.>(3)")
 
           _ <- Ns.tx(tx3).get.map(_ ==> List(tx3))
-          _ <- Ns.tx(tx3, tx5).get.map(_.sorted ==> List(tx3, tx5))
+          _ <- Ns.tx(tx3, tx5).a1.get.map(_ ==> List(tx3, tx5))
 
           // Note that no current datoms remains from tx1
-          _ <- Ns.tx.not(tx3).get.map(_.sorted ==> List(tx2, tx4, tx5, tx6, tx7))
+          _ <- Ns.tx.not(tx3).a1.get.map(_ ==> List(tx2, tx4, tx5, tx6, tx7))
           // If we ask the history database, tx1 will show up though
-          _ <- Ns.tx.not(tx3).getHistory.map(_.sorted ==> List(tx1, tx2, tx4, tx5, tx6, tx7))
+          _ <- Ns.tx.not(tx3).a1.getHistory.map(_ ==> List(tx1, tx2, tx4, tx5, tx6, tx7))
 
-          _ <- Ns.tx.not(tx3, tx5).get.map(_.sorted ==> List(tx2, tx4, tx6, tx7))
-          _ <- Ns.tx.>(tx3).get.map(_.sorted ==> List(tx4, tx5, tx6, tx7))
-          _ <- Ns.tx.>=(tx3).get.map(_.sorted ==> List(tx3, tx4, tx5, tx6, tx7))
-          _ <- Ns.tx.<=(tx3).get.map(_.sorted ==> List(tx2, tx3)) // excludes tx1 per explanation above)
-          _ <- Ns.tx.<=(tx3).getHistory.map(_.sorted ==> List(tx1, tx2, tx3)) // includes tx1 too per explanation above
+          _ <- Ns.tx.not(tx3, tx5).a1.get.map(_ ==> List(tx2, tx4, tx6, tx7))
+          _ <- Ns.tx.>(tx3).a1.get.map(_ ==> List(tx4, tx5, tx6, tx7))
+          _ <- Ns.tx.>=(tx3).a1.get.map(_ ==> List(tx3, tx4, tx5, tx6, tx7))
+          _ <- Ns.tx.<=(tx3).a1.get.map(_ ==> List(tx2, tx3)) // excludes tx1 per explanation above)
+          _ <- Ns.tx.<=(tx3).a1.getHistory.map(_ ==> List(tx1, tx2, tx3)) // includes tx1 too per explanation above
           _ <- Ns.tx.<(tx3).get.map(_ ==> List(tx2))
           // Range of transaction entity ids
-          _ <- Ns.tx_.>(tx2).tx.<=(tx4).get.map(_.sorted ==> List(tx3, tx4))
+          _ <- Ns.tx_.>(tx2).tx.<=(tx4).a1.get.map(_ ==> List(tx3, tx4))
           _ <- Ns.int_.tx(count).get.map(_ ==> List(2))
 
 
           _ <- Ns.t(t3).get.map(_ ==> List(t3))
-          _ <- Ns.t(t3, t5).get.map(_.sorted ==> List(t3, t5))
-          _ <- Ns.t.not(t3).get.map(_.sorted ==> List(t2, t4, t5, t6, t7))
-          _ <- Ns.t.not(t3, t5).get.map(_.sorted ==> List(t2, t4, t6, t7))
-          _ <- Ns.t.>(t3).get.map(_.sorted ==> List(t4, t5, t6, t7))
-          _ <- Ns.t.>=(t3).get.map(_.sorted ==> List(t3, t4, t5, t6, t7))
-          _ <- Ns.t.<=(t3).get.map(_.sorted ==> List(t2, t3))
-          _ <- Ns.t.<=(t3).getHistory.map(_.sorted ==> List(t1, t2, t3))
+          _ <- Ns.t(t3, t5).a1.get.map(_ ==> List(t3, t5))
+          _ <- Ns.t.not(t3).a1.get.map(_ ==> List(t2, t4, t5, t6, t7))
+          _ <- Ns.t.not(t3, t5).a1.get.map(_ ==> List(t2, t4, t6, t7))
+          _ <- Ns.t.>(t3).a1.get.map(_ ==> List(t4, t5, t6, t7))
+          _ <- Ns.t.>=(t3).a1.get.map(_ ==> List(t3, t4, t5, t6, t7))
+          _ <- Ns.t.<=(t3).a1.get.map(_ ==> List(t2, t3))
+          _ <- Ns.t.<=(t3).a1.getHistory.map(_ ==> List(t1, t2, t3))
 
           _ <- Ns.t.<(t3).get.map(_ ==> List(t2))
           // Range of transaction t's
-          _ <- Ns.t_.>(t2).t.<=(t4).get.map(_.sorted ==> List(t3, t4))
+          _ <- Ns.t_.>(t2).t.<=(t4).a1.get.map(_ ==> List(t3, t4))
           _ <- Ns.int_.t(count).get.map(_ ==> List(2))
 
           // OBS: Avoid using date expressions for precision expressions!
           // Since the minimum fraction of Date is ms, it will be imprecise.
           // For precise expressions, use t or tx.
           _ <- Ns.txInstant(d2).get.map(_ ==> List(d2))
-          _ <- Ns.txInstant(d2, d3).get.map(_.sorted ==> List(d2, d3).sorted)
-          _ <- Ns.txInstant.not(d2).get.map(_.sorted ==> List(d3, d4, d5, d6, d7).sorted)
-          _ <- Ns.txInstant.not(d2, d3).get.map(_.sorted ==> List(d4, d5, d6, d7).sorted)
-          _ <- Ns.txInstant.>(d3).get.map(_.sorted ==> List(d4, d5, d6, d7).sorted)
-          _ <- Ns.txInstant.>=(d3).get.map(_.sorted ==> List(d3, d4, d5, d6, d7).sorted)
-          _ <- Ns.txInstant.<=(d3).get.map(_.sorted ==> List(d2, d3).sorted)
-          _ <- Ns.txInstant.<=(d3).getHistory.map(_.sorted ==> List(d1, d2, d3).sorted)
-          _ <- Ns.txInstant.<(d3).get.map(_.sorted ==> List(d2))
+          _ <- Ns.txInstant(d2, d3).a1.get.map(_ ==> List(d2, d3))
+          _ <- Ns.txInstant.not(d2).a1.get.map(_ ==> List(d3, d4, d5, d6, d7))
+          _ <- Ns.txInstant.not(d2, d3).a1.get.map(_ ==> List(d4, d5, d6, d7))
+          _ <- Ns.txInstant.>(d3).a1.get.map(_ ==> List(d4, d5, d6, d7))
+          _ <- Ns.txInstant.>=(d3).a1.get.map(_ ==> List(d3, d4, d5, d6, d7))
+          _ <- Ns.txInstant.<=(d3).a1.get.map(_ ==> List(d2, d3))
+          _ <- Ns.txInstant.<=(d3).getHistory.map(_ ==> List(d1, d2, d3))
+          _ <- Ns.txInstant.<(d3).a1.get.map(_ ==> List(d2))
           // Range of transaction entity ids
-          _ <- Ns.txInstant_.>(d2).txInstant.<=(d4).get.map(_.sorted ==> List(d3, d4).sorted)
+          _ <- Ns.txInstant_.>(d2).txInstant.<=(d4).a1.get.map(_ ==> List(d3, d4))
           _ <- Ns.int_.txInstant(count).get.map(_ ==> List(2))
 
           // No current datoms are retracted

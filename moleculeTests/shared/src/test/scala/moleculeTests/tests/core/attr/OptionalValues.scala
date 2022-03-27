@@ -23,7 +23,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.insert(2)
 
           // Int mandatory, String optional
-          _ <- Ns.int.str$.get.map(_.sortBy(_._1) ==> List((1, Some("a")), (2, None)))
+          _ <- Ns.int.a1.str$.get.map(_ ==> List((1, Some("a")), (2, None)))
 
           // Int and String mandatory
           _ <- Ns.int.str.get.map(_ ==> List((1, "a")))
@@ -34,7 +34,7 @@ object OptionalValues extends AsyncTestSuite {
         for {
           _ <- Ns.int.str$ insert List((1, Some("a")), (2, None))
 
-          _ <- Ns.int.str$.get.map(_.sortBy(_._1) ==> List((1, Some("a")), (2, None)))
+          _ <- Ns.int.a1.str$.get.map(_ ==> List((1, Some("a")), (2, None)))
           _ <- Ns.int.str.get.map(_ ==> List((1, "a")))
         } yield ()
       }
@@ -43,7 +43,7 @@ object OptionalValues extends AsyncTestSuite {
         for {
           _ <- Ns.str.int$ insert List(("a", Some(1)), ("b", None))
 
-          _ <- Ns.str.int$.get.map(_.sortBy(_._1) ==> List(("a", Some(1)), ("b", None)))
+          _ <- Ns.str.a1.int$.get.map(_ ==> List(("a", Some(1)), ("b", None)))
           _ <- Ns.str.int.get.map(_ ==> List(("a", 1)))
         } yield ()
       }
@@ -52,7 +52,7 @@ object OptionalValues extends AsyncTestSuite {
         for {
           _ <- Ns.int.long$ insert List((1, Some(3L)), (2, None))
 
-          _ <- Ns.int.long$.get.map(_.sortBy(_._1) ==> List((1, Some(3L)), (2, None)))
+          _ <- Ns.int.a1.long$.get.map(_ ==> List((1, Some(3L)), (2, None)))
           _ <- Ns.int.long.get.map(_ ==> List((1, 3L)))
         } yield ()
       }
@@ -61,7 +61,7 @@ object OptionalValues extends AsyncTestSuite {
         for {
           _ <- Ns.int.bool$ insert List((1, Some(true)), (2, None))
 
-          _ <- Ns.int.bool$.get.map(_.sortBy(_._1) ==> List((1, Some(true)), (2, None)))
+          _ <- Ns.int.a1.bool$.get.map(_ ==> List((1, Some(true)), (2, None)))
           _ <- Ns.int.bool.get.map(_ ==> List((1, true)))
         } yield ()
       }
@@ -70,7 +70,7 @@ object OptionalValues extends AsyncTestSuite {
         for {
           _ <- Ns.int.date$ insert List((1, Some(date1)), (2, None))
 
-          _ <- Ns.int.date$.get.map(_.sortBy(_._1) ==> List((1, Some(date1)), (2, None)))
+          _ <- Ns.int.a1.date$.get.map(_ ==> List((1, Some(date1)), (2, None)))
           _ <- Ns.int.date.get.map(_ ==> List((1, date1)))
         } yield ()
       }
@@ -79,7 +79,7 @@ object OptionalValues extends AsyncTestSuite {
         for {
           _ <- Ns.int.uuid$ insert List((1, Some(uuid1)), (2, None))
 
-          _ <- Ns.int.uuid$.get.map(_.sortBy(_._1) ==> List((1, Some(uuid1)), (2, None)))
+          _ <- Ns.int.a1.uuid$.get.map(_ ==> List((1, Some(uuid1)), (2, None)))
           _ <- Ns.int.uuid.get.map(_ ==> List((1, uuid1)))
         } yield ()
       }
@@ -88,7 +88,7 @@ object OptionalValues extends AsyncTestSuite {
         for {
           _ <- Ns.int.uri$ insert List((1, Some(uri1)), (2, None))
 
-          _ <- Ns.int.uri$.get.map(_.sortBy(_._1) ==> List((1, Some(uri1)), (2, None)))
+          _ <- Ns.int.a1.uri$.get.map(_ ==> List((1, Some(uri1)), (2, None)))
           _ <- Ns.int.uri.get.map(_ ==> List((1, uri1)))
         } yield ()
       }
@@ -97,7 +97,7 @@ object OptionalValues extends AsyncTestSuite {
         for {
           _ <- Ns.int.enumm$ insert List((1, Some("enum1")), (2, None))
 
-          _ <- Ns.int.enumm$.get.map(_.sortBy(_._1) ==> List((1, Some("enum1")), (2, None)))
+          _ <- Ns.int.a1.enumm$.get.map(_ ==> List((1, Some("enum1")), (2, None)))
           _ <- Ns.int.enumm.get.map(_ ==> List((1, "enum1")))
         } yield ()
       }
@@ -107,7 +107,7 @@ object OptionalValues extends AsyncTestSuite {
           r3 <- Ref1.int1(3).save.map(_.eid)
           _ <- Ns.int.ref1$ insert List((1, Some(r3)), (2, None))
 
-          _ <- Ns.int.ref1$.get.map(_.sortBy(_._1) ==> List((1, Some(r3)), (2, None)))
+          _ <- Ns.int.a1.ref1$.get.map(_ ==> List((1, Some(r3)), (2, None)))
           _ <- Ns.int.ref1.get.map(_ ==> List((1, r3)))
         } yield ()
       }
@@ -121,7 +121,7 @@ object OptionalValues extends AsyncTestSuite {
           _ <- Ns.int.strs.insert(1, Set("a", "b"))
           _ <- Ns.int.insert(2)
 
-          _ <- Ns.int.strs$.get.map(_.sortBy(_._1) ==> List((1, Some(Set("a", "b"))), (2, None)))
+          _ <- Ns.int.a1.strs$.get.map(_ ==> List((1, Some(Set("a", "b"))), (2, None)))
           _ <- Ns.int.strs.get.map(_ ==> List((1, Set("a", "b"))))
         } yield ()
       }
@@ -132,7 +132,7 @@ object OptionalValues extends AsyncTestSuite {
           // No strings asserted from empty Set
           _ <- Ns.int.strs.insert(2, Set[String]())
 
-          _ <- Ns.int.strs$.get.map(_.sortBy(_._1) ==> List((1, Some(Set("a", "b"))), (2, None)))
+          _ <- Ns.int.a1.strs$.get.map(_ ==> List((1, Some(Set("a", "b"))), (2, None)))
           _ <- Ns.int.strs.get.map(_ ==> List((1, Set("a", "b"))))
         } yield ()
       }
@@ -141,7 +141,7 @@ object OptionalValues extends AsyncTestSuite {
         for {
           _ <- Ns.int.strs$ insert Seq((1, Some(Set("a", "b"))), (2, None))
 
-          _ <- Ns.int.strs$.get.map(_.sortBy(_._1) ==> List((1, Some(Set("a", "b"))), (2, None)))
+          _ <- Ns.int.a1.strs$.get.map(_ ==> List((1, Some(Set("a", "b"))), (2, None)))
           _ <- Ns.int.strs.get.map(_ ==> List((1, Set("a", "b"))))
         } yield ()
       }
@@ -150,7 +150,7 @@ object OptionalValues extends AsyncTestSuite {
         for {
           _ <- Ns.str.ints$ insert List(("a", Some(Set(1, 2))), ("b", None))
 
-          _ <- Ns.str.ints$.get.map(_.sortBy(_._1) ==> List(("a", Some(Set(1, 2))), ("b", None)))
+          _ <- Ns.str.a1.ints$.get.map(_ ==> List(("a", Some(Set(1, 2))), ("b", None)))
           _ <- Ns.str.ints.get.map(_ ==> List(("a", Set(1, 2))))
         } yield ()
       }
@@ -159,7 +159,7 @@ object OptionalValues extends AsyncTestSuite {
         for {
           _ <- Ns.int.longs$ insert Seq((1, Some(Set(3L, 4L))), (2, None))
 
-          _ <- Ns.int.longs$.get.map(_.sortBy(_._1) ==> List((1, Some(Set(3L, 4L))), (2, None)))
+          _ <- Ns.int.a1.longs$.get.map(_ ==> List((1, Some(Set(3L, 4L))), (2, None)))
           _ <- Ns.int.longs.get.map(_ ==> List((1, Set(3L, 4L))))
         } yield ()
       }
@@ -170,7 +170,7 @@ object OptionalValues extends AsyncTestSuite {
         for {
           _ <- Ns.int.dates$ insert Seq((1, Some(Set(date1, date2))), (2, None))
 
-          _ <- Ns.int.dates$.get.map(_.sortBy(_._1) ==> List((1, Some(Set(date1, date2))), (2, None)))
+          _ <- Ns.int.a1.dates$.get.map(_ ==> List((1, Some(Set(date1, date2))), (2, None)))
           _ <- Ns.int.dates.get.map(_ ==> List((1, Set(date1, date2))))
         } yield ()
       }
@@ -179,7 +179,7 @@ object OptionalValues extends AsyncTestSuite {
         for {
           _ <- Ns.int.uuids$ insert Seq((1, Some(Set(uuid1, uuid2))), (2, None))
 
-          _ <- Ns.int.uuids$.get.map(_.sortBy(_._1) ==> List((1, Some(Set(uuid1, uuid2))), (2, None)))
+          _ <- Ns.int.a1.uuids$.get.map(_ ==> List((1, Some(Set(uuid1, uuid2))), (2, None)))
           _ <- Ns.int.uuids.get.map(_ ==> List((1, Set(uuid1, uuid2))))
         } yield ()
       }
@@ -188,7 +188,7 @@ object OptionalValues extends AsyncTestSuite {
         for {
           _ <- Ns.int.uris$ insert Seq((1, Some(Set(uri1, uri2))), (2, None))
 
-          _ <- Ns.int.uris$.get.map(_.sortBy(_._1) ==> List((1, Some(Set(uri1, uri2))), (2, None)))
+          _ <- Ns.int.a1.uris$.get.map(_ ==> List((1, Some(Set(uri1, uri2))), (2, None)))
           _ <- Ns.int.uris.get.map(_ ==> List((1, Set(uri1, uri2))))
         } yield ()
       }
@@ -197,7 +197,7 @@ object OptionalValues extends AsyncTestSuite {
         for {
           _ <- Ns.int.enums$ insert Seq((1, Some(Set("enum1", "enum2"))), (2, None))
 
-          _ <- Ns.int.enums$.get.map(_.sortBy(_._1) ==> List((1, Some(Set("enum1", "enum2"))), (2, None)))
+          _ <- Ns.int.a1.enums$.get.map(_ ==> List((1, Some(Set("enum1", "enum2"))), (2, None)))
           _ <- Ns.int.enums.get.map(_ ==> List((1, Set("enum1", "enum2"))))
         } yield ()
       }
@@ -207,7 +207,7 @@ object OptionalValues extends AsyncTestSuite {
           List(r3, r4) <- Ref1.int1.insert(3, 4).map(_.eids)
           _ <- Ns.int.refs1$ insert Seq((1, Some(Set(r3, r4))), (2, None))
 
-          _ <- Ns.int.refs1$.get.map(_.sortBy(_._1) ==> List((1, Some(Set(r3, r4))), (2, None)))
+          _ <- Ns.int.a1.refs1$.get.map(_ ==> List((1, Some(Set(r3, r4))), (2, None)))
           _ <- Ns.int.refs1.get.map(_ ==> List((1, Set(r3, r4))))
         } yield ()
       }
@@ -217,7 +217,7 @@ object OptionalValues extends AsyncTestSuite {
           List(r3, r4) <- Ref1.int1.insert(3, 4).map(_.eids)
           _ <- Ns.int.refsSub1$ insert Seq((1, Some(Set(r3, r4))), (2, None))
 
-          _ <- Ns.int.refsSub1$.get.map(_.sortBy(_._1) ==> List((1, Some(Set(r3, r4))), (2, None)))
+          _ <- Ns.int.a1.refsSub1$.get.map(_ ==> List((1, Some(Set(r3, r4))), (2, None)))
           _ <- Ns.int.refsSub1.get.map(_ ==> List((1, Set(r3, r4))))
         } yield ()
       }
@@ -234,14 +234,14 @@ object OptionalValues extends AsyncTestSuite {
             ("c", Some(3), None),
             ("d", None, None))
 
-          _ <- Ns.str.int$.long$.get.map(_.sortBy(_._1) ==> List(
+          _ <- Ns.str.a1.int$.long$.get.map(_ ==> List(
             ("a", Some(1), Some(10L)),
             ("b", None, Some(20L)),
             ("c", Some(3), None),
             ("d", None, None)))
 
           // We don't have to retrieve the attribute values in the same order as inserted
-          _ <- Ns.int$.str.long$.get.map(_.sortBy(_._2) ==> List(
+          _ <- Ns.int$.str.a1.long$.get.map(_ ==> List(
             (Some(1), "a", Some(10L)),
             (None, "b", Some(20L)),
             (Some(3), "c", None),
@@ -260,7 +260,7 @@ object OptionalValues extends AsyncTestSuite {
             ("b", "b1", None))
 
           // Now there's a ref from entity with "b" to entity with "b1"
-          _ <- Ns.str.Ref1.str1.int1$.get.map(_.sortBy(_._1) ==> List(
+          _ <- Ns.str.a1.Ref1.str1.int1$.get.map(_ ==> List(
             ("a", "a1", Some(11)),
             ("b", "b1", None),
           ))
@@ -274,7 +274,7 @@ object OptionalValues extends AsyncTestSuite {
             ("b", Some("b1"), 21),
           )
 
-          _ <- Ns.str.Ref1.str1$.int1.get.map(_.sortBy(_._1) ==> List(
+          _ <- Ns.str.a1.Ref1.str1$.int1.get.map(_ ==> List(
             ("a", None, 11),
             ("b", Some("b1"), 21),
           ))
@@ -288,7 +288,7 @@ object OptionalValues extends AsyncTestSuite {
             ("b", List(("b1", None))))
 
           // Now there's a ref from entity with "b" to entity with "b1"
-          _ <- m(Ns.str.Refs1 * Ref1.str1.int1$).get.map(_.sortBy(_._1) ==> List(
+          _ <- m(Ns.str.a1.Refs1 * Ref1.str1.int1$).get.map(_ ==> List(
             ("a", List(("a1", Some(11)))),
             ("b", List(("b1", None)))))
         } yield ()
@@ -301,7 +301,7 @@ object OptionalValues extends AsyncTestSuite {
             ("b", "b1", None)
           )
 
-          _ <- Ns.str.Ref1.str1.enum1$.get.map(_.sortBy(_._1) ==> List(
+          _ <- Ns.str.a1.Ref1.str1.enum1$.get.map(_ ==> List(
             ("a", "a1", Some("enum10")),
             ("b", "b1", None),
           ))
@@ -314,7 +314,7 @@ object OptionalValues extends AsyncTestSuite {
             ("a", List(("a1", Some(11), None))),
             ("b", List(("b1", None, Some("enum12")))))
 
-          _ <- m(Ns.str.Refs1 * Ref1.str1.int1$.enum1$).get.map(_.sortBy(_._1) ==> List(
+          _ <- m(Ns.str.a1.Refs1 * Ref1.str1.int1$.enum1$).get.map(_ ==> List(
             ("a", List(("a1", Some(11), None))),
             ("b", List(("b1", None, Some("enum12"))))))
         } yield ()
@@ -330,7 +330,7 @@ object OptionalValues extends AsyncTestSuite {
             ("a", None, 11, "a2", Some(12)),
             ("b", Some("b1"), 21, "b2", None))
 
-          _ <- Ns.str.Ref1.str1$.int1.Ref2.str2.int2$.get.map(_.sortBy(_._1) ==> List(
+          _ <- Ns.str.a1.Ref1.str1$.int1.Ref2.str2.int2$.get.map(_ ==> List(
             ("a", None, 11, "a2", Some(12)),
             ("b", Some("b1"), 21, "b2", None)
           ))
@@ -347,7 +347,7 @@ object OptionalValues extends AsyncTestSuite {
               (Some("b1"), 21, List(
                 ("b2", None))))))
 
-          _ <- m(Ns.str.Refs1 * (Ref1.str1$.int1.Refs2 * Ref2.str2.int2$)).get.map(_.sortBy(_._1) ==> List(
+          _ <- m(Ns.str.a1.Refs1 * (Ref1.str1$.int1.Refs2 * Ref2.str2.int2$)).get.map(_ ==> List(
             ("a", List(
               (None, 11, List(
                 ("a2", Some(12)))))),
@@ -388,7 +388,7 @@ object OptionalValues extends AsyncTestSuite {
           (Some("a"), 1),
           (None, 2)
         )
-        _ <- Ns.str$.Ref1.int1.get.map(_.sortBy(_._2) ==> List((Some("a"), 1), (None, 2)))
+        _ <- Ns.str$.Ref1.int1.a1.get.map(_ ==> List((Some("a"), 1), (None, 2)))
       } yield ()
     }
 
@@ -400,7 +400,7 @@ object OptionalValues extends AsyncTestSuite {
         ) map (_.eids)
 
         // Entities created for both "c" and "d"
-        _ <- Ref2.e.str2.get.map(_.sortBy(_._2) ==> List((e1, "c"), (e2, "d")))
+        _ <- Ref2.e.str2.a1.get.map(_ ==> List((e1, "c"), (e2, "d")))
 
         // No relationship created for "d"
         _ <- Ref2.e.str2.ref3.get.map(_ ==> List((e1, "c", r1)))
@@ -414,7 +414,7 @@ object OptionalValues extends AsyncTestSuite {
         _ <- Ns.str$(Some("a")).Ref1.int1(1).save
         _ <- Ns.str$(None).Ref1.int1(2).save
 
-        _ <- Ns.str$.Ref1.int1.get.map(_.sortBy(_._2) ==> List((Some("a"), 1), (None, 2)))
+        _ <- Ns.str$.Ref1.int1.a1.get.map(_ ==> List((Some("a"), 1), (None, 2)))
       } yield ()
     }
 
@@ -425,7 +425,7 @@ object OptionalValues extends AsyncTestSuite {
         List(e2) <- Ref2.str2("d").Ref3.int3$(None).save.map(_.eids)
 
         // Entities created for both "c" and "d"
-        _ <- Ref2.e.str2.get.map(_.sortBy(_._2) ==> List((e1, "c"), (e2, "d")))
+        _ <- Ref2.e.str2.a1.get.map(_ ==> List((e1, "c"), (e2, "d")))
 
         // No relationship created for "d"
         _ <- Ref2.e.str2.ref3.get.map(_ ==> List((e1, "c", r1)))
@@ -477,7 +477,7 @@ object OptionalValues extends AsyncTestSuite {
 
         // Normally this would not make sense but we use it in MoleculeAdmin
         // to retrieve a duplicate column of values to edit.
-        _ <- Ns.str.int$.int$.get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns.str.a1.int$.int$.get.map(_ ==> List(
           ("a", Some(1), Some(1)),
           ("b", None, None)
         ))

@@ -21,7 +21,7 @@ object MetaNested extends AsyncTestSuite {
           (true, List("a", "b"), 1)
         ))
 
-        _ <- Ns.bool.Refs1.*?(Ref1.str1).Tx(Ref3.int3).get.map(_.sortBy(_._1.toString) ==> List(
+        _ <- Ns.bool.a1.Refs1.*?(Ref1.str1).Tx(Ref3.int3).get.map(_ ==> List(
           (false, Nil, 1),
           (true, List("a", "b"), 1)
         ))
@@ -38,7 +38,7 @@ object MetaNested extends AsyncTestSuite {
           ("E", List())
         )
 
-        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3).get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns.str.a1.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref3.int3).get.map(_ ==> List(
           ("A", List((Some(11), Some(12), "a")), 1),
           ("B", List((Some(13), None, "b")), 1),
           ("C", List((None, Some(14), "c")), 1),
@@ -59,7 +59,7 @@ object MetaNested extends AsyncTestSuite {
           ("E", List())
         )
 
-        _ <- Ns.str.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref4.int4 + Ref3.int3.str3).get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns.str.a1.Refs1.*?(Ref1.int1$.Ref2.int2$.str2).Tx(Ref4.int4 + Ref3.int3.str3).get.map(_ ==> List(
           ("A", List((Some(11), Some(12), "a"), (None, Some(120), "aa")), 7777, (8888, "meta")),
           ("B", List((Some(13), None, "b")), 7777, (8888, "meta")),
           ("C", List((None, Some(14), "c")), 7777, (8888, "meta")),
@@ -67,7 +67,7 @@ object MetaNested extends AsyncTestSuite {
           ("E", List(), 7777, (8888, "meta"))
         ))
 
-        _ <- Ns.str.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref4.int4 + Ref3.int3.str3).get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1$.Ref2.int2$.str2).Tx(Ref4.int4 + Ref3.int3.str3).get.map(_ ==> List(
           ("A", List((Some(11), Some(12), "a"), (None, Some(120), "aa")), 7777, (8888, "meta")),
           ("B", List((Some(13), None, "b")), 7777, (8888, "meta")),
           ("C", List((None, Some(14), "c")), 7777, (8888, "meta")),
@@ -87,8 +87,8 @@ object MetaNested extends AsyncTestSuite {
           ("B", Nil)
         )
 
-        _ <- Ns.str.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
-          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns.str.a1.Refs1.*?(Ref1.int1.Ref2.int2.str2.Refs3.*?(Ref3.int3))
+          .Tx(Ref2.str2.int2.Ref3.str3 + Ns.int.bool).get.map(_ ==> List(
           ("A", List((1, 2, "a", List(3, 4)), (11, 22, "aa", Nil)), ("b", 5, "c"), (6, true)),
           ("B", Nil, ("b", 5, "c"), (6, true))
         ))

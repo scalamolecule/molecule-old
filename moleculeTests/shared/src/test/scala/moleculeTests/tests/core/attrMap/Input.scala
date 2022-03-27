@@ -135,10 +135,10 @@ object Input extends Base {
           (2, Map("fr" -> "Bonjour", "it" -> "Bon giorno"))
         ))
 
-        _ <- m(Ns.int.strMap_.>(?))(Map(".*" -> "Hej")).get.map(_.sorted ==> List(1, 2, 3))
-        _ <- m(Ns.int.strMap_.>=(?))(Map(".*" -> "Hej")).get.map(_.sorted ==> List(1, 2, 3, 4))
-        _ <- m(Ns.int.strMap_.<=(?))(Map(".*" -> "Hej")).get.map(_.sorted ==> List(2, 3, 4))
-        _ <- m(Ns.int.strMap_.<(?))(Map(".*" -> "Hej")).get.map(_.sorted ==> List(2))
+        _ <- m(Ns.int.a1.strMap_.>(?))(Map(".*" -> "Hej")).get.map(_ ==> List(1, 2, 3))
+        _ <- m(Ns.int.a1.strMap_.>=(?))(Map(".*" -> "Hej")).get.map(_ ==> List(1, 2, 3, 4))
+        _ <- m(Ns.int.a1.strMap_.<=(?))(Map(".*" -> "Hej")).get.map(_ ==> List(2, 3, 4))
+        _ <- m(Ns.int.a1.strMap_.<(?))(Map(".*" -> "Hej")).get.map(_ ==> List(2))
 
 
         // Int

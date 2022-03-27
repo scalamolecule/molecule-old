@@ -19,7 +19,7 @@ object TxBundle extends AsyncTestSuite {
         List(e1, e2, e3) <- Ns.int insert List(1, 2, 3) map (_.eids)
 
         // State before
-        _ <- Ns.int.get.map(_.sorted ==> List(1, 2, 3))
+        _ <- Ns.int.a1.get.map(_ ==> List(1, 2, 3))
 
         // Transact multiple molecule statements in one bundled transaction
         _ <- transactBundle(
@@ -34,7 +34,7 @@ object TxBundle extends AsyncTestSuite {
         )
 
         // State after transaction bundle
-        _ <- Ns.int.get.map(_.sorted ==> List(
+        _ <- Ns.int.a1.get.map(_ ==> List(
           // 1 retracted
           3, // unchanged
           4, // saved
@@ -113,7 +113,7 @@ object TxBundle extends AsyncTestSuite {
         _ = tx.inspect
 
         // Live data has now changed
-        _ <- Ns.int.get.map(_.sorted ==> List(
+        _ <- Ns.int.a1.get.map(_ ==> List(
           // 1 retracted
           3, // unchanged
           4, // saved

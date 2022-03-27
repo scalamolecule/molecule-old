@@ -221,6 +221,28 @@ object ObjRef extends AsyncTestSuite with Helpers {
           p3.Person.name ==> "Ben"
         }
 
+        // or with sort markers:
+
+        _ <- Person
+          .age_(23).name.a1.Likes.beverage.a2._Person.Self
+          .age_(25).name.Likes.beverage_(unify).getObjs.collect { case persons =>
+
+          val List(p1, p2, p3) = persons
+
+          p1.name ==> "Joe"
+          p1.Likes.beverage ==> "Coffee"
+          p1.Person.name ==> "Ben"
+
+          p2.name ==> "Liz"
+          p2.Likes.beverage ==> "Coffee"
+          // Self-join to other Person (same namespace)
+          p2.Person.name ==> "Ben"
+
+          p3.name ==> "Liz"
+          p3.Likes.beverage ==> "Tea"
+          p3.Person.name ==> "Ben"
+        }
+
         _ <- Person
           .name("Joe").Likes.beverage._Person.Self
           .name("Ben").Likes.beverage_(unify)._Person.Self

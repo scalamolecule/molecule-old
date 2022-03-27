@@ -11,8 +11,8 @@ import molecule.core.util.Executor._
 
 object OneOther extends AsyncTestSuite {
 
-  val personPet    = m(Person.name.Pet.name)
-  val animalMaster = m(Animal.name.Master.name)
+  val personPet    = m(Person.name.a1.Pet.name.a2)
+  val animalMaster = m(Animal.name.a1.Master.name.a2)
 
   lazy val tests = Tests {
 
@@ -85,11 +85,11 @@ object OneOther extends AsyncTestSuite {
         )
 
         // Bidirectional references have been inserted
-        _ <- personPet.get.map(_.sorted ==> List(
+        _ <- personPet.get.map(_ ==> List(
           ("Ben", "Rex"),
           ("Kim", "Zip")
         ))
-        _ <- animalMaster.get.map(_.sorted ==> List(
+        _ <- animalMaster.get.map(_ ==> List(
           ("Rex", "Ben"),
           ("Zip", "Kim")
         ))
@@ -107,11 +107,11 @@ object OneOther extends AsyncTestSuite {
         )
 
         // Bidirectional references have been inserted
-        _ <- personPet.get.map(_.sorted ==> List(
+        _ <- personPet.get.map(_ ==> List(
           ("Ben", "Rex"),
           ("Kim", "Zip")
         ))
-        _ <- animalMaster.get.map(_.sorted ==> List(
+        _ <- animalMaster.get.map(_ ==> List(
           ("Rex", "Ben"),
           ("Zip", "Kim")
         ))
@@ -125,10 +125,10 @@ object OneOther extends AsyncTestSuite {
           ben <- Person.name.insert("Ben").map(_.eid)
           _ <- Person(ben).Pet.name("Rex").update
 
-          _ <- personPet.get.map(_.sorted ==> List(
+          _ <- personPet.get.map(_ ==> List(
             ("Ben", "Rex")
           ))
-          _ <- animalMaster.get.map(_.sorted ==> List(
+          _ <- animalMaster.get.map(_ ==> List(
             ("Rex", "Ben")
           ))
 
@@ -137,11 +137,11 @@ object OneOther extends AsyncTestSuite {
           zip <- Animal.name.insert("Zip").map(_.eid)
           _ <- Animal(zip).Master.name("Kim").update
 
-          _ <- personPet.get.map(_.sorted ==> List(
+          _ <- personPet.get.map(_ ==> List(
             ("Ben", "Rex"),
             ("Kim", "Zip")
           ))
-          _ <- animalMaster.get.map(_.sorted ==> List(
+          _ <- animalMaster.get.map(_ ==> List(
             ("Rex", "Ben"),
             ("Zip", "Kim")
           ))
@@ -153,10 +153,10 @@ object OneOther extends AsyncTestSuite {
           List(ben, rex) <- Person.name("Ben").Pet.name("Rex").save.map(_.eids)
 
           // Bidirectional references created
-          _ <- personPet.get.map(_.sorted ==> List(
+          _ <- personPet.get.map(_ ==> List(
             ("Ben", "Rex")
           ))
-          _ <- animalMaster.get.map(_.sorted ==> List(
+          _ <- animalMaster.get.map(_ ==> List(
             ("Rex", "Ben")
           ))
 
@@ -164,10 +164,10 @@ object OneOther extends AsyncTestSuite {
           _ <- Person(ben).Pet.name("Guz").update
 
           // Bidirectional references to Rex have been replaced with refs to/from Zip
-          _ <- personPet.get.map(_.sorted ==> List(
+          _ <- personPet.get.map(_ ==> List(
             ("Ben", "Guz")
           ))
-          _ <- animalMaster.get.map(_.map(p => Seq(p._1, p._2).sorted) ==> List(
+          _ <- animalMaster.get.map(_ ==> List(
             Seq("Ben", "Guz")
           ))
         } yield ()
@@ -185,10 +185,10 @@ object OneOther extends AsyncTestSuite {
           // Update Ben with creation of bidirectional reference to existing Rex
           _ <- Person(ben).pet(rex).update
 
-          _ <- personPet.get.map(_.sorted ==> List(
+          _ <- personPet.get.map(_ ==> List(
             ("Ben", "Rex")
           ))
-          _ <- animalMaster.get.map(_.sorted ==> List(
+          _ <- animalMaster.get.map(_ ==> List(
             ("Rex", "Ben")
           ))
 
@@ -205,10 +205,10 @@ object OneOther extends AsyncTestSuite {
           List(ben, rex) <- Person.name("Ben").Pet.name("Rex").save.map(_.eids)
 
           // Bidirectional references created
-          _ <- personPet.get.map(_.sorted ==> List(
+          _ <- personPet.get.map(_ ==> List(
             ("Ben", "Rex")
           ))
-          _ <- animalMaster.get.map(_.sorted ==> List(
+          _ <- animalMaster.get.map(_ ==> List(
             ("Rex", "Ben")
           ))
 
@@ -217,10 +217,10 @@ object OneOther extends AsyncTestSuite {
           _ <- Person(ben).pet(zip).update
 
           // Bidirectional references to Rex have been replaced with refs to/from Zip
-          _ <- personPet.get.map(_.sorted ==> List(
+          _ <- personPet.get.map(_ ==> List(
             ("Ben", "Zip")
           ))
-          _ <- animalMaster.get.map(_.sorted ==> List(
+          _ <- animalMaster.get.map(_ ==> List(
             ("Zip", "Ben")
           ))
         } yield ()
@@ -233,10 +233,10 @@ object OneOther extends AsyncTestSuite {
         List(ben, rex) <- Person.name("Ben").Pet.name("Rex").save.map(_.eids)
 
         // Bidirectional references created
-        _ <- personPet.get.map(_.sorted ==> List(
+        _ <- personPet.get.map(_ ==> List(
           ("Ben", "Rex")
         ))
-        _ <- animalMaster.get.map(_.sorted ==> List(
+        _ <- animalMaster.get.map(_ ==> List(
           ("Rex", "Ben")
         ))
 
@@ -244,7 +244,7 @@ object OneOther extends AsyncTestSuite {
         _ <- Person(ben).pet().update
 
         // Bidirectional references retracted
-        _ <- personPet.get.map(_.sorted ==> List())
+        _ <- personPet.get.map(_ ==> List())
       } yield ()
     }
 
@@ -255,10 +255,10 @@ object OneOther extends AsyncTestSuite {
         // Create and reference Rex to Ben
         rex <- Person(ben).Pet.name("Rex").update.map(_.eid)
 
-        _ <- personPet.get.map(_.sorted ==> List(
+        _ <- personPet.get.map(_ ==> List(
           ("Ben", "Rex")
         ))
-        _ <- animalMaster.get.map(_.sorted ==> List(
+        _ <- animalMaster.get.map(_ ==> List(
           ("Rex", "Ben")
         ))
 
@@ -272,8 +272,8 @@ object OneOther extends AsyncTestSuite {
         _ <- Person(ben).Pet.name.get.map(_ ==> List())
         _ <- Animal(rex).Master.name.get.map(_ ==> List())
 
-        _ <- personPet.get.map(_.sorted ==> List())
-        _ <- animalMaster.get.map(_.sorted ==> List())
+        _ <- personPet.get.map(_ ==> List())
+        _ <- animalMaster.get.map(_ ==> List())
       } yield ()
     }
   }

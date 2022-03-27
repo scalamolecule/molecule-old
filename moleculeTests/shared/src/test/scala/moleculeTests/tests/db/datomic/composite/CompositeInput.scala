@@ -17,7 +17,7 @@ object CompositeInput extends AsyncTestSuite {
           (2, 22, 222)
         )
 
-        _ <- m(Ref2.int2 + Ref1.int1 + Ns.int).get.map(_.sorted ==> List(
+        _ <- m(Ref2.int2.a1 + Ref1.int1 + Ns.int).get.map(_ ==> List(
           (1, 11, 111),
           (2, 22, 222)
         ))
@@ -64,7 +64,7 @@ object CompositeInput extends AsyncTestSuite {
         )
 
         // 2 + 0 + 0
-        _ <- m(Ref2.int2.str2 + Ref1.int1.str1 + Ns.int.str).get.map(_.sorted ==> List(
+        _ <- m(Ref2.int2.a1.str2 + Ref1.int1.str1 + Ns.int.str).get.map(_ ==> List(
           ((1, "a"), (11, "aa"), (111, "aaa")),
           ((2, "b"), (22, "bb"), (222, "bbb"))
         ))
@@ -121,7 +121,7 @@ object CompositeInput extends AsyncTestSuite {
           ((2, "b", "enum22"), (22, "bb", "enum11"), (222, "bbb", "enum2"))
         )
 
-        _ <- m(Ref2.int2.str2.enum2 + Ref1.int1.str1.enum1 + Ns.int.str.enumm).get.map(_.sorted ==> List(
+        _ <- m(Ref2.int2.a1.str2.enum2 + Ref1.int1.str1.enum1 + Ns.int.str.enumm).get.map(_ ==> List(
           ((1, "a", "enum21"), (11, "aa", "enum11"), (111, "aaa", "enum1")),
           ((2, "b", "enum22"), (22, "bb", "enum11"), (222, "bbb", "enum2"))
         ))

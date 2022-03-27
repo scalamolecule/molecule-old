@@ -28,7 +28,7 @@ object MetaUpdate extends AsyncTestSuite {
 
 
         // History without tx meta data
-        _ <- Ns(e).int.tx.op.getHistory.map(_.sortBy(r => (r._2, r._3)) ==> List(
+        _ <- Ns(e).int.tx.a1.op.a2.getHistory.map(_ ==> List(
           // tx 1
           (1, tx1, true), // 1 asserted (save)
 
@@ -42,7 +42,7 @@ object MetaUpdate extends AsyncTestSuite {
         ))
 
         // History with tx meta data
-        _ <- Ns(e).int.tx.op.Tx(Ns.str).getHistory.map(_.sortBy(r => (r._2, r._3)) ==> List(
+        _ <- Ns(e).int.tx.a1.op.a2.Tx(Ns.str).getHistory.map(_ ==> List(
           // tx 1
           (1, tx1, true, "a"), // 1 asserted (save)
 

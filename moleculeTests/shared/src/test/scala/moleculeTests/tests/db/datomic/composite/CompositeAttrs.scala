@@ -22,49 +22,49 @@ object CompositeAttrs extends AsyncTestSuite {
 
         // Same namespace
 
-        _ <- m(Ref2.int2.str2).get.map(_.sorted ==> List(
+        _ <- Ref2.int2.a1.str2.get.map(_ ==> List(
           (1, "a"),
           (2, "b"),
           (3, "c")
         ))
         // When 1 + 1 attribute, this outcome will be the same
-        _ <- m(Ref2.int2 + Ref2.str2).get.map(_.sorted ==> List(
+        _ <- (Ref2.int2.a1 + Ref2.str2).get.map(_ ==> List(
           (1, "a"),
           (2, "b"),
           (3, "c")
         ))
 
-        _ <- m(Ref2.int2).get.map(_.sorted ==> List(1, 2, 3, 4))
+        _ <- Ref2.int2.a1.get.map(_ ==> List(1, 2, 3, 4))
 
-        _ <- m(Ref2.int2 + Ref2.str2_).get.map(_.sorted ==> List(1, 2, 3))
+        _ <- (Ref2.int2.a1 + Ref2.str2_).get.map(_ ==> List(1, 2, 3))
         // Order irrelevant
-        _ <- m(Ref2.str2_ + Ref2.int2).get.map(_.sorted ==> List(1, 2, 3))
+        _ <- (Ref2.str2_ + Ref2.int2.a1).get.map(_ ==> List(1, 2, 3))
 
-        _ <- m(Ref1.int1 + Ref1.str1_).get.map(_.sorted ==> List(11, 22))
+        _ <- (Ref1.int1.a1 + Ref1.str1_).get.map(_ ==> List(11, 22))
 
-        _ <- m(Ns.int + Ns.str_).get.map(_ ==> List(111))
+        _ <- (Ns.int + Ns.str_).get.map(_ ==> List(111))
 
 
         // 2 namespaces, 1 tacit
 
-        _ <- m(Ref2.int2 + Ref1.str1_).get.map(_.sorted ==> List(1, 2))
-        _ <- m(Ref2.int2 + Ns.str_).get.map(_ ==> List(1))
-        _ <- m(Ref1.int1 + Ns.str_).get.map(_ ==> List(11))
+        _ <- (Ref2.int2.a1 + Ref1.str1_).get.map(_ ==> List(1, 2))
+        _ <- (Ref2.int2 + Ns.str_).get.map(_ ==> List(1))
+        _ <- (Ref1.int1 + Ns.str_).get.map(_ ==> List(11))
 
 
         // 3 namespaces, 2 tacits
 
-        _ <- m(Ref2.int2 + Ref1.str1_ + Ns.str_).get.map(_ ==> List(1))
-        _ <- m(Ref2.str2_ + Ref1.int1 + Ns.str_).get.map(_ ==> List(11))
-        _ <- m(Ref2.str2_ + Ref1.str1_ + Ns.int).get.map(_.sorted ==> List(111, 222))
+        _ <- (Ref2.int2 + Ref1.str1_ + Ns.str_).get.map(_ ==> List(1))
+        _ <- (Ref2.str2_ + Ref1.int1 + Ns.str_).get.map(_ ==> List(11))
+        _ <- (Ref2.str2_ + Ref1.str1_ + Ns.int.a1).get.map(_ ==> List(111, 222))
 
 
         // 3 namespaces, 3 tacits, 4 composite parts (to test second `+` method)
 
-        _ <- m(Ref2.int2 + Ref1.str1_ + Ns.int_ + Ns.str_).get.map(_ ==> List(1))
-        _ <- m(Ref2.str2_ + Ref1.int1 + Ns.int_ + Ns.str_).get.map(_ ==> List(11))
-        _ <- m(Ref2.str2_ + Ref1.str1_ + Ns.int + Ns.str_).get.map(_ ==> List(111))
-        _ <- m(Ref2.str2_ + Ref1.str1_ + Ns.int_ + Ns.str).get.map(_ ==> List("aaa"))
+        _ <- (Ref2.int2 + Ref1.str1_ + Ns.int_ + Ns.str_).get.map(_ ==> List(1))
+        _ <- (Ref2.str2_ + Ref1.int1 + Ns.int_ + Ns.str_).get.map(_ ==> List(11))
+        _ <- (Ref2.str2_ + Ref1.str1_ + Ns.int + Ns.str_).get.map(_ ==> List(111))
+        _ <- (Ref2.str2_ + Ref1.str1_ + Ns.int_ + Ns.str).get.map(_ ==> List("aaa"))
       } yield ()
     }
 
@@ -123,14 +123,14 @@ object CompositeAttrs extends AsyncTestSuite {
             (2, ("bb", 22))
           ) map(_.eids)
 
-          _ <- m(Ns.str).get.map(_.sorted ==> Seq("aa", "bb"))
-          _ <- m(Ns.str.Ref1.int1).get.map(_.sorted ==> Seq(("aa", 11), ("bb", 22)))
+          _ <- Ns.str.a1.get.map(_ ==> Seq("aa", "bb"))
+          _ <- Ns.str.a1.Ref1.int1.get.map(_ ==> Seq(("aa", 11), ("bb", 22)))
 
           // Note how 4 Ref1.int1 values have been inserted!
-          _ <- m(Ref1.int1).get.map(_.sorted ==> Seq(1, 2, 11, 22))
+          _ <- Ref1.int1.a1.get.map(_ ==> Seq(1, 2, 11, 22))
 
           // Composite query
-          _ <- m(Ref1.int1 + Ns.str.Ref1.int1).get.map(_.sorted ==> Seq(
+          _ <- (Ref1.int1.a1 + Ns.str.Ref1.int1).get.map(_ ==> Seq(
             (1, ("aa", 11)),
             (2, ("bb", 22))
           ))

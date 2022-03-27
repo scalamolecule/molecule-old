@@ -10,7 +10,7 @@ import molecule.core.util.Executor._
 
 object ManySelf extends AsyncTestSuite {
 
-  val friendsOf = m(Person.name_(?).Friends.name)
+  val friendsOf = m(Person.name_(?).Friends.name.a1)
 
   lazy val tests = Tests {
 
@@ -22,7 +22,7 @@ object ManySelf extends AsyncTestSuite {
           _ <- Person.name("Ann").Friends.name("Ben").save
 
           // Reference is bidirectional - both point to each other
-          _ <- Person.name.Friends.name.get.map(_.sorted ==> List(
+          _ <- Person.name.a1.Friends.name.get.map(_ ==> List(
             ("Ann", "Ben"),
             // Reverse reference:
             ("Ben", "Ann")
@@ -76,7 +76,7 @@ object ManySelf extends AsyncTestSuite {
           // Save Ann with bidirectional ref to existing Ben
           _ <- Person.name("Ann").friends(ben).save
 
-          _ <- Person.name.Friends.name.get.map(_.sorted ==> List(
+          _ <- Person.name.a1.Friends.name.get.map(_ ==> List(
             ("Ann", "Ben"),
             ("Ben", "Ann")
           ))
@@ -179,7 +179,7 @@ object ManySelf extends AsyncTestSuite {
           )
 
           // Bidirectional references have been inserted
-          _ <- Person.name.Friends.*(Person.name).get.map(_.sortBy(_._1) ==> List(
+          _ <- Person.name.a1.Friends.*(Person.name.a1).get.map(_ ==> List(
             ("Ann", List("Ben", "Joe")),
             ("Ben", List("Ann")),
             ("Don", List("Tim", "Tom")),
@@ -201,7 +201,7 @@ object ManySelf extends AsyncTestSuite {
           )
 
           // Bidirectional references have been inserted - not how Ben got 2 (reverse) friendships
-          _ <- Person.name.Friends.*(Person.name).get.map(_.sortBy(_._1) ==> List(
+          _ <- Person.name.a1.Friends.*(Person.name.a1).get.map(_ ==> List(
             ("Ann", List("Ben", "Joe")),
             ("Ben", List("Ann", "Don")),
             ("Don", List("Ben", "Tim")),
@@ -230,7 +230,7 @@ object ManySelf extends AsyncTestSuite {
           _ <- Person(ann).friends.assert(Seq(tom)).update
 
           // Friendships have been added in both directions
-          _ <- friendsOf("Ann").get.map(_.sorted ==> List("Ben", "Joe", "Liz", "Tom"))
+          _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe", "Liz", "Tom"))
           _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
           _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
           _ <- friendsOf("Liz").get.map(_ ==> List("Ann"))
@@ -246,7 +246,7 @@ object ManySelf extends AsyncTestSuite {
           ) map (_.eids)
 
           // Friendships have been inserted in both directions
-          _ <- friendsOf("Ann").get.map(_.sorted ==> List("Ben", "Joe", "Liz", "Tom", "Ulf"))
+          _ <- friendsOf("Ann").get.map(_ ==> List("Ben", "Joe", "Liz", "Tom", "Ulf"))
           _ <- friendsOf("Ben").get.map(_ ==> List("Ann"))
           _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
           _ <- friendsOf("Liz").get.map(_ ==> List("Ann"))

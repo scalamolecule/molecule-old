@@ -84,8 +84,8 @@ object Attribute extends AsyncTestSuite {
         _ <- Ns.long.get.map(_ ==> List(long1, long2))
         _ <- Ns.double.get.map(_ ==> List(double1, double2))
         _ <- Ns.bool.get.map(_ ==> List(bool2, bool1))
-        _ <- Ns.date.get.map(_.sorted ==> List(date1, date2))
-        _ <- Ns.uuid.get.map(_.sortBy(_.toString) ==> List(uuid1, uuid2))
+        _ <- Ns.date.a1.get.map(_ ==> List(date1, date2))
+        _ <- Ns.uuid.a1.get.map(_ ==> List(uuid1, uuid2))
         _ <- Ns.uri.get.map(_ ==> List(uri1, uri2))
         _ <- Ns.enumm.get.map(_ ==> List(enum2, enum1))
       } yield ()
@@ -156,7 +156,7 @@ object Attribute extends AsyncTestSuite {
         )
 
         // Get two molecules as tuples of values
-        _ <- Ns.str.int.long.double.date.uuid.uri.enumm.get.map(_.sortBy(_._1) ==> List(
+        _ <- Ns.str.a1.int.long.double.date.uuid.uri.enumm.get.map(_ ==> List(
           (str1, int1, long1, double1, date1, uuid1, uri1, enum1),
           (str2, int2, long2, double2, date2, uuid2, uri2, enum2)
         ))

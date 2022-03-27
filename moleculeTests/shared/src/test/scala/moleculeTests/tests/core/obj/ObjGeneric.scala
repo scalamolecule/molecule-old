@@ -161,8 +161,8 @@ object ObjGeneric extends AsyncTestSuite with Helpers {
         txInstant4 = txR4.txInstant
 
         // :Ns/int attribute
-        _ <- AEVT(":Ns/int").e.a.v.t.tx.txInstant.op.getObjs.collect { case datoms =>
-          val List(datom1, datom2) = datoms.sortBy(_.t)
+        _ <- AEVT(":Ns/int").e.a.v.t.a1.tx.txInstant.op.getObjs.collect { case datoms =>
+          val List(datom1, datom2) = datoms
           datom1.e ==> e
           datom1.a ==> ":Ns/int"
           datom1.v ==> 2

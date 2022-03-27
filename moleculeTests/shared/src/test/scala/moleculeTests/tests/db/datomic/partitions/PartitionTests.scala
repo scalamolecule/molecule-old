@@ -55,11 +55,9 @@ object PartitionTests extends AsyncTestSuite {
       for {
         _ <- m(lit_Book.title.Reviewers.Professions * gen_Profession.name) insert List(("book", List("Hacker", "Magician")))
 
-        _ <- m(lit_Book.title.Reviewers * gen_Person.Professions.name).get.map(_.map(r => (r._1, r._2.sorted)) ==>
-          List(("book", List("Hacker", "Magician"))))
+        _ <- m(lit_Book.title.Reviewers * gen_Person.Professions.name.a1).get.map(_ ==> List(("book", List("Hacker", "Magician"))))
         // Same as
-        _ <- m(lit_Book.title.Reviewers.Professions * gen_Profession.name).get.map(_.map(r => (r._1, r._2.sorted)) ==>
-          List(("book", List("Hacker", "Magician"))))
+        _ <- m(lit_Book.title.Reviewers.Professions * gen_Profession.name.a1).get.map(_ ==> List(("book", List("Hacker", "Magician"))))
       } yield ()
     }
 

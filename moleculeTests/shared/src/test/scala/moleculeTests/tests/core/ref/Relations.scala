@@ -23,7 +23,7 @@ object Relations extends AsyncTestSuite {
 
         // Get attribute values from 2 namespaces
         // Namespace references like `Ref1` starts with Capital letter
-        _ <- Ns.str.Ref1.str1.get.map(_.sorted ==> List(
+        _ <- Ns.str.a1.Ref1.str1.get.map(_ ==> List(
           ("a0", "a1"),
           ("b0", "b1"),
           ("c0", "c1")
@@ -31,7 +31,7 @@ object Relations extends AsyncTestSuite {
 
         // We can also retrieve the referenced entity id
         // Referenced entity id `ref1` starts with lower case letter
-        _ <- Ns.str.ref1.get.map(_.sorted ==> List(
+        _ <- Ns.str.a1.ref1.get.map(_ ==> List(
           ("a0", a1),
           ("b0", b1),
           ("c0", c1)))
@@ -52,7 +52,7 @@ object Relations extends AsyncTestSuite {
 
         // Get attribute values from 2 namespaces
         // Namespace references like `Ref1` starts with Capital letter
-        _ <- Ns.str.Ref1.str1.get.map(_.sorted ==> List(
+        _ <- Ns.str.a1.Ref1.str1.get.map(_ ==> List(
           ("kid1", "father1"),
           ("kid2", "father2"),
           ("kid3", "father3")
@@ -60,7 +60,7 @@ object Relations extends AsyncTestSuite {
 
         // We can also retrieve the referenced entity id
         // Referenced entity id `ref1` starts with lower case letter
-        _ <- Ns.str.ref1.get.map(_.sorted ==> List(
+        _ <- Ns.str.a1.ref1.get.map(_ ==> List(
           ("kid1", father1),
           ("kid2", father2),
           ("kid3", father3)))

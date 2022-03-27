@@ -94,9 +94,9 @@ object Input1StringIntro extends AsyncTestSuite {
           _ <- m(Ns.int.str_(?))("b").get.map(_ ==> List(2))
           _ <- m(Ns.int.str_.<(?))("b").get.map(_ ==> List(1))
           _ <- m(Ns.int.str_.>(?))("b").get.map(_ ==> List(3))
-          _ <- m(Ns.int.str_.<=(?))("b").get.map(_.sorted ==> List(1, 2))
-          _ <- m(Ns.int.str_.>=(?))("b").get.map(_.sorted ==> List(2, 3))
-          _ <- m(Ns.int.str_.not(?))("b").get.map(_.sorted ==> List(1, 3))
+          _ <- m(Ns.int.a1.str_.<=(?))("b").get.map(_ ==> List(1, 2))
+          _ <- m(Ns.int.a1.str_.>=(?))("b").get.map(_ ==> List(2, 3))
+          _ <- m(Ns.int.a1.str_.not(?))("b").get.map(_ ==> List(1, 3))
         } yield ()
       }
 
@@ -107,32 +107,32 @@ object Input1StringIntro extends AsyncTestSuite {
         for {
           _ <- oneData
           // `or`-separated values
-          _ <- m(Ns.int.str_(?)).apply("a" or "b").get.map(_.sorted ==> List(1, 2))
-          _ <- m(Ns.int.str_(?)).apply("a" or "b" or "c").get.map(_.sorted ==> List(1, 2, 3))
+          _ <- m(Ns.int.a1.str_(?)).apply("a" or "b").get.map(_ ==> List(1, 2))
+          _ <- m(Ns.int.a1.str_(?)).apply("a" or "b" or "c").get.map(_ ==> List(1, 2, 3))
 
           // Comma-separated values
-          _ <- m(Ns.int.str_(?)).apply("a", "b").get.map(_.sorted ==> List(1, 2))
+          _ <- m(Ns.int.a1.str_(?)).apply("a", "b").get.map(_ ==> List(1, 2))
 
           // Seq of values
-          _ <- m(Ns.int.str_(?)).apply(Seq("a", "b")).get.map(_.sorted ==> List(1, 2))
+          _ <- m(Ns.int.a1.str_(?)).apply(Seq("a", "b")).get.map(_ ==> List(1, 2))
 
           // Only distinct values are matched
-          _ <- m(Ns.int.str_(?)).apply(Seq("a", "b", "b")).get.map(_.sorted ==> List(1, 2))
+          _ <- m(Ns.int.a1.str_(?)).apply(Seq("a", "b", "b")).get.map(_ ==> List(1, 2))
 
           // No input elements returns Nil
-          _ <- m(Ns.int.str_(?)).apply(Nil).get.map(_.sorted ==> Nil)
+          _ <- m(Ns.int.a1.str_(?)).apply(Nil).get.map(_ ==> Nil)
 
 
           // Values assigned to variables
-          _ <- m(Ns.int.str_(?))(str1 or str2).get.map(_.sorted ==> List(1, 2))
-          _ <- m(Ns.int.str_(?))(str1, str2).get.map(_.sorted ==> List(1, 2))
-          _ <- m(Ns.int.str_(?))(Seq(str1, str2)).get.map(_.sorted ==> List(1, 2))
+          _ <- m(Ns.int.a1.str_(?))(str1 or str2).get.map(_ ==> List(1, 2))
+          _ <- m(Ns.int.a1.str_(?))(str1, str2).get.map(_ ==> List(1, 2))
+          _ <- m(Ns.int.a1.str_(?))(Seq(str1, str2)).get.map(_ ==> List(1, 2))
 
           seq = Seq(str1, str2)
-          _ <- m(Ns.int.str_(?))(seq).get.map(_.sorted ==> List(1, 2))
+          _ <- m(Ns.int.a1.str_(?))(seq).get.map(_ ==> List(1, 2))
 
           // Order of input of no importance
-          _ <- m(Ns.int.str_(?))("b", "a").get.map(_.sorted ==> List(1, 2))
+          _ <- m(Ns.int.a1.str_(?))("b", "a").get.map(_ ==> List(1, 2))
         } yield ()
       }
 
@@ -169,19 +169,19 @@ object Input1StringIntro extends AsyncTestSuite {
           _ <- manyData
           // If we want the full sets containing the matching value we can't use an
           // input-molecule anymore but will have to map a full result set
-          _ <- Ns.int.strs.get.map(_.filter(_._2.contains("b")) ==> List((1, Set("a", "b")), (2, Set("b", "c"))))
+          _ <- Ns.int.a1.strs.get.map(_.filter(_._2.contains("b")) ==> List((1, Set("a", "b")), (2, Set("b", "c"))))
 
           // Input-molecules with tacit expression
-          _ <- m(Ns.int.strs_(?))(Set("a")).get.map(_.sorted ==> List(1))
-          _ <- m(Ns.int.strs_(?))(Set("b")).get.map(_.sorted ==> List(1, 2))
-          _ <- m(Ns.int.strs_(?))(Set("c")).get.map(_.sorted ==> List(2, 3))
-          _ <- m(Ns.int.strs_(?))(Set("d")).get.map(_.sorted ==> List(3))
+          _ <- m(Ns.int.a1.strs_(?))(Set("a")).get.map(_ ==> List(1))
+          _ <- m(Ns.int.a1.strs_(?))(Set("b")).get.map(_ ==> List(1, 2))
+          _ <- m(Ns.int.a1.strs_(?))(Set("c")).get.map(_ ==> List(2, 3))
+          _ <- m(Ns.int.a1.strs_(?))(Set("d")).get.map(_ ==> List(3))
 
-          _ <- m(Ns.int.strs_.<(?))(Set("b")).get.map(_.sorted ==> List(1))
-          _ <- m(Ns.int.strs_.>(?))(Set("b")).get.map(_.sorted ==> List(2, 3))
-          _ <- m(Ns.int.strs_.<=(?))(Set("b")).get.map(_.sorted ==> List(1, 2))
-          _ <- m(Ns.int.strs_.>=(?))(Set("b")).get.map(_.sorted ==> List(1, 2, 3))
-          _ <- m(Ns.int.strs_.not(?))(Set("b")).get.map(_.sorted ==> List(3))
+          _ <- m(Ns.int.a1.strs_.<(?))(Set("b")).get.map(_ ==> List(1))
+          _ <- m(Ns.int.a1.strs_.>(?))(Set("b")).get.map(_ ==> List(2, 3))
+          _ <- m(Ns.int.a1.strs_.<=(?))(Set("b")).get.map(_ ==> List(1, 2))
+          _ <- m(Ns.int.a1.strs_.>=(?))(Set("b")).get.map(_ ==> List(1, 2, 3))
+          _ <- m(Ns.int.a1.strs_.not(?))(Set("b")).get.map(_ ==> List(3))
         } yield ()
       }
 
@@ -189,7 +189,7 @@ object Input1StringIntro extends AsyncTestSuite {
       "Fulltext search" - core { implicit conn =>
         // fulltext only implemented in Datomic Peer
         if (system == SystemPeer) {
-          val inputMolecule = m(Ns.int.strs.contains(?))
+          val inputMolecule = m(Ns.int.a1.strs.contains(?))
           for {
             _ <- Ns.int.strs insert List(
               (1, Set("The quick fox jumps", "Ten slow monkeys")),

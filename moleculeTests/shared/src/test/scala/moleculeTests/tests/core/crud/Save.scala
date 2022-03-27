@@ -421,7 +421,7 @@ object Save extends AsyncTestSuite {
           _ <- Ns.int(7).intMap$(none).save
           _ <- Ns.int(7).intMap.get.map(_ ==> Nil)
           _ <- Ns.int(7).intMap$.get.map(_.head ==> (7, None))
-          _ <- Ns.int.intMap$(none).get.map(_.sortBy(_._1) ==> List((6, None), (7, None)))
+          _ <- Ns.int.a1.intMap$(none).get.map(_ ==> List((6, None), (7, None)))
         } yield ()
       }
     }

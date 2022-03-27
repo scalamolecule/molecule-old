@@ -39,7 +39,7 @@ object Input1Long extends AsyncTestSuite {
       "Mandatory" - {
 
         "Eq" - core { implicit conn =>
-          val inputMolecule = m(Ns.long(?))
+          val inputMolecule = m(Ns.long(?).a1)
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> Nil)
@@ -58,7 +58,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         "not" - core { implicit conn =>
-          val inputMolecule = m(Ns.long.not(?))
+          val inputMolecule = m(Ns.long.not(?).a1)
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(long1, long2, long3))
@@ -70,7 +70,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         ">" - core { implicit conn =>
-          val inputMolecule = m(Ns.long.>(?))
+          val inputMolecule = m(Ns.long.>(?).a1)
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(long1, long2, long3))
@@ -83,7 +83,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         ">=" - core { implicit conn =>
-          val inputMolecule = m(Ns.long.>=(?))
+          val inputMolecule = m(Ns.long.>=(?).a1)
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(long1, long2, long3))
@@ -96,7 +96,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         "<" - core { implicit conn =>
-          val inputMolecule = m(Ns.long.<(?))
+          val inputMolecule = m(Ns.long.<(?).a1)
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(long1, long2, long3))
@@ -109,7 +109,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         "<=" - core { implicit conn =>
-          val inputMolecule = m(Ns.long.<=(?))
+          val inputMolecule = m(Ns.long.<=(?).a1)
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(long1, long2, long3))
@@ -126,7 +126,7 @@ object Input1Long extends AsyncTestSuite {
       "Tacit" - {
 
         "Eq" - core { implicit conn =>
-          val inputMolecule = m(Ns.str.long_(?))
+          val inputMolecule = m(Ns.str.a1.long_(?))
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(str4))
@@ -137,7 +137,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         "not" - core { implicit conn =>
-          val inputMolecule = m(Ns.str.long_.not(?))
+          val inputMolecule = m(Ns.str.a1.long_.not(?))
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
@@ -148,7 +148,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         ">" - core { implicit conn =>
-          val inputMolecule = m(Ns.str.long_.>(?))
+          val inputMolecule = m(Ns.str.a1.long_.>(?))
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
@@ -161,7 +161,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         ">=" - core { implicit conn =>
-          val inputMolecule = m(Ns.str.long_.>=(?))
+          val inputMolecule = m(Ns.str.a1.long_.>=(?))
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
@@ -174,7 +174,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         "<" - core { implicit conn =>
-          val inputMolecule = m(Ns.str.long_.<(?))
+          val inputMolecule = m(Ns.str.a1.long_.<(?))
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
@@ -187,7 +187,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         "<=" - core { implicit conn =>
-          val inputMolecule = m(Ns.str.long_.<=(?))
+          val inputMolecule = m(Ns.str.a1.long_.<=(?))
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
@@ -207,7 +207,7 @@ object Input1Long extends AsyncTestSuite {
       "Mandatory" - {
 
         "Eq" - core { implicit conn =>
-          val inputMolecule = m(Ns.long.longs(?))
+          val inputMolecule = m(Ns.long.a1.longs(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> Nil)
@@ -268,7 +268,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         "not" - core { implicit conn =>
-          val inputMolecule = m(Ns.long.longs.not(?))
+          val inputMolecule = m(Ns.long.a1.longs.not(?))
           val all           = List(
             (long1, Set(long1, long2, long3)),
             (long2, Set(long2, long3, long4)),
@@ -357,7 +357,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         ">" - core { implicit conn =>
-          val inputMolecule = m(Ns.long.longs.>(?))
+          val inputMolecule = m(Ns.long.a1.longs.>(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List((long1, Set(long1, long2)), (long2, Set(long3, long2)), (long3, Set(long4, long3)), (long4, Set(long4, long5)), (long5, Set(long4, long6, long5))))
@@ -377,7 +377,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         ">=" - core { implicit conn =>
-          val inputMolecule = m(Ns.long.longs.>=(?))
+          val inputMolecule = m(Ns.long.a1.longs.>=(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List((long1, Set(long1, long2)), (long2, Set(long3, long2)), (long3, Set(long4, long3)), (long4, Set(long4, long5)), (long5, Set(long4, long6, long5))))
@@ -397,7 +397,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         "<" - core { implicit conn =>
-          val inputMolecule = m(Ns.long.longs.<(?))
+          val inputMolecule = m(Ns.long.a1.longs.<(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List((long1, Set(long1, long2)), (long2, Set(long3, long2)), (long3, Set(long4, long3)), (long4, Set(long4, long5)), (long5, Set(long4, long6, long5))))
@@ -416,7 +416,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         "<=" - core { implicit conn =>
-          val inputMolecule = m(Ns.long.longs.<=(?))
+          val inputMolecule = m(Ns.long.a1.longs.<=(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List((long1, Set(long1, long2)), (long2, Set(long3, long2)), (long3, Set(long4, long3)), (long4, Set(long4, long5)), (long5, Set(long4, long6, long5))))
@@ -594,7 +594,7 @@ object Input1Long extends AsyncTestSuite {
       "Tacit" - {
 
         "Eq" - core { implicit conn =>
-          val inputMolecule = m(Ns.long.longs_(?))
+          val inputMolecule = m(Ns.long.a1.longs_(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List(long6))
@@ -630,7 +630,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         "not" - core { implicit conn =>
-          val inputMolecule = m(Ns.long.longs_.not(?))
+          val inputMolecule = m(Ns.long.a1.longs_.not(?))
           for {
             _ <- Ns.long.longs insert List(
               (long1, Set(long1, long2, long3)),
@@ -638,8 +638,8 @@ object Input1Long extends AsyncTestSuite {
               (long3, Set(long3, long4, long5))
             )
 
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(long1, long2, long3))
-            _ <- inputMolecule(Set[Long]()).get.map(_.sorted ==> List(long1, long2, long3))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(long1, long2, long3))
+            _ <- inputMolecule(Set[Long]()).get.map(_ ==> List(long1, long2, long3))
 
             // Vararg/List(args*) syntax/semantics not available for card-many attributes of input molecules
             // inputMolecule(long1).get.map(_ ==> ...)
@@ -647,9 +647,9 @@ object Input1Long extends AsyncTestSuite {
 
             // Set semantics omit the whole set with one or more matching values
 
-            _ <- inputMolecule(Set(long1)).get.map(_.sorted ==> List(long2, long3))
+            _ <- inputMolecule(Set(long1)).get.map(_ ==> List(long2, long3))
             // Same as
-            _ <- inputMolecule(List(Set(long1))).get.map(_.sorted ==> List(long2, long3))
+            _ <- inputMolecule(List(Set(long1))).get.map(_ ==> List(long2, long3))
 
             _ <- inputMolecule(Set(long2)).get.map(_ ==> List(long3))
             _ <- inputMolecule(Set(long3)).get.map(_ ==> Nil) // long3 match all
@@ -657,15 +657,15 @@ object Input1Long extends AsyncTestSuite {
 
             _ <- inputMolecule(Set(long1), Set(long2)).get.map(_ ==> List(long3))
             // Multiple values in a Set matches matches set-wise
-            _ <- inputMolecule(Set(long1, long2)).get.map(_.sorted ==> List(long2, long3))
+            _ <- inputMolecule(Set(long1, long2)).get.map(_ ==> List(long2, long3))
 
             _ <- inputMolecule(Set(long1), Set(long3)).get.map(_ ==> Nil) // long3 match all
-            _ <- inputMolecule(Set(long1, long3)).get.map(_.sorted ==> List(long2, long3))
+            _ <- inputMolecule(Set(long1, long3)).get.map(_ ==> List(long2, long3))
 
             _ <- inputMolecule(Set(long1), Set(long2), Set(long3)).get.map(_ ==> Nil) // long3 match all
-            _ <- inputMolecule(Set(long1, long2, long3)).get.map(_.sorted ==> List(long2, long3))
+            _ <- inputMolecule(Set(long1, long2, long3)).get.map(_ ==> List(long2, long3))
 
-            _ <- inputMolecule(Set(long1, long2), Set(long1)).get.map(_.sorted ==> List(long2, long3))
+            _ <- inputMolecule(Set(long1, long2), Set(long1)).get.map(_ ==> List(long2, long3))
             _ <- inputMolecule(Set(long1, long2), Set(long2)).get.map(_ ==> List(long3))
             _ <- inputMolecule(Set(long1, long2), Set(long3)).get.map(_ ==> Nil)
             _ <- inputMolecule(Set(long1, long2), Set(long4)).get.map(_ ==> Nil)
@@ -677,7 +677,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         ">" - core { implicit conn =>
-          val inputMolecule = m(Ns.long.longs_.>(?))
+          val inputMolecule = m(Ns.long.a1.longs_.>(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List(long1, long2, long3, long4, long5))
@@ -697,7 +697,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         ">=" - core { implicit conn =>
-          val inputMolecule = m(Ns.long.longs_.>=(?))
+          val inputMolecule = m(Ns.long.a1.longs_.>=(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List(long1, long2, long3, long4, long5))
@@ -717,7 +717,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         "<" - core { implicit conn =>
-          val inputMolecule = m(Ns.long.longs_.<(?))
+          val inputMolecule = m(Ns.long.a1.longs_.<(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List(long1, long2, long3, long4, long5))
@@ -736,7 +736,7 @@ object Input1Long extends AsyncTestSuite {
         }
 
         "<=" - core { implicit conn =>
-          val inputMolecule = m(Ns.long.longs_.<=(?))
+          val inputMolecule = m(Ns.long.a1.longs_.<=(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List(long1, long2, long3, long4, long5))

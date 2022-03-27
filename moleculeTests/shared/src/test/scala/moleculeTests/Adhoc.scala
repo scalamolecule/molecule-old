@@ -17,92 +17,44 @@ object Adhoc extends AsyncTestSuite with Helpers with JavaUtil {
       for {
         conn <- futConn
 
-        _ <- Ns.int.str$.Refs1.*(Ref1.int1.str1$) insert List(
-          (1, Some("A"), List(
-            (1, Some("a")),
-            (1, Some("b")),
-            (2, Some("a")),
-            (2, Some("b")),
-            (2, None),
-          )),
-          (2, Some("B"), List(
-            (1, Some("a")),
-            (1, Some("b")),
-            (2, Some("a")),
-            (2, Some("b")),
-          )),
-          (3, Some("C"), List()),
-          (4, None, List()),
-        )
 
-
-        // d1 *? d2/d1
-        _ <- Ns.int.str$.d1.Refs1.*?(Ref1.int1.d2.str1$.d1).getJson.map(_ ==>
-          """{
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "int": 3,
-            |        "str$": "C",
-            |        "Refs1": []
-            |      },
-            |      {
-            |        "int": 2,
-            |        "str$": "B",
-            |        "Refs1": [
-            |          {
-            |            "int1": 2,
-            |            "str1$": "b"
-            |          },
-            |          {
-            |            "int1": 1,
-            |            "str1$": "b"
-            |          },
-            |          {
-            |            "int1": 2,
-            |            "str1$": "a"
-            |          },
-            |          {
-            |            "int1": 1,
-            |            "str1$": "a"
-            |          }
-            |        ]
-            |      },
-            |      {
-            |        "int": 1,
-            |        "str$": "A",
-            |        "Refs1": [
-            |          {
-            |            "int1": 2,
-            |            "str1$": "b"
-            |          },
-            |          {
-            |            "int1": 1,
-            |            "str1$": "b"
-            |          },
-            |          {
-            |            "int1": 2,
-            |            "str1$": "a"
-            |          },
-            |          {
-            |            "int1": 1,
-            |            "str1$": "a"
-            |          },
-            |          {
-            |            "int1": 2,
-            |            "str1$": null
-            |          }
-            |        ]
-            |      },
-            |      {
-            |        "int": 4,
-            |        "str$": null,
-            |        "Refs1": []
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin
-        )
+        /*
+moleculeTests.tests.core.input1.expression.Input1Enum
+moleculeTests.tests.core.input1.resolution.IntCard2coalesce
+moleculeTests.tests.core.input1.resolution.EnumCard2
+moleculeTests.tests.core.bidirectionals.edgeSelf.EdgeOneSelfUpdateProps
+moleculeTests.tests.core.input2.OneMany
+moleculeTests.tests.core.input2.ManyMany
+moleculeTests.tests.core.input1.expression.Input1BigDecimal
+moleculeTests.tests.core.input1.resolution.IntCard1
+moleculeTests.tests.core.input2.Input2syntax
+moleculeTests.tests.db.datomic.time.TestDbWith
+moleculeTests.tests.core.input1.expression.Input1URI
+moleculeTests.tests.core.expression.Eid
+moleculeTests.tests.core.input1.expression.Input1StringIntro
+moleculeTests.tests.core.bidirectionals.edgeOther.EdgeOneOtherUpdateProps
+moleculeTests.tests.core.input1.resolution.EnumCard1
+moleculeTests.tests.core.input1.resolution.EnumCard2coalesce
+moleculeTests.tests.core.pagination.OffsetPagination
+moleculeTests.tests.core.ref.SelfJoin
+moleculeTests.tests.core.input1.expression.Input1Date
+moleculeTests.tests.core.input1.resolution.IntCard2
+moleculeTests.tests.core.input3.Input3examples
+moleculeTests.tests.core.bidirectionals.other.OneOther
+moleculeTests.tests.core.input1.expression.Input1UUID
+moleculeTests.tests.core.input1.expression.Input1Boolean
+moleculeTests.tests.db.datomic.generic.Datom
+moleculeTests.tests.core.bidirectionals.self.ManySelf
+moleculeTests.tests.core.input1.expression.Input1Int
+moleculeTests.tests.core.input1.expression.Input1String
+moleculeTests.tests.core.input1.resolution.IntCard2tacit
+moleculeTests.tests.core.bidirectionals.other.ManyOther
+moleculeTests.tests.core.input1.expression.Input1BigInt
+moleculeTests.tests.db.datomic.generic.Schema_Attr
+moleculeTests.tests.core.input1.resolution.EnumCard2tacit
+moleculeTests.tests.core.input1.expression.Input1Long
+moleculeTests.tests.core.input1.expression.Input1Double
+         */
 
       } yield ()
     }

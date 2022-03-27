@@ -39,7 +39,7 @@ object Input1Int extends AsyncTestSuite {
       "Mandatory" - {
 
         "Eq" - core { implicit conn =>
-          val inputMolecule = m(Ns.int(?))
+          val inputMolecule = m(Ns.int(?).a1)
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> Nil)
@@ -58,7 +58,7 @@ object Input1Int extends AsyncTestSuite {
         }
 
         "not" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.not(?))
+          val inputMolecule = m(Ns.int.not(?).a1)
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(int1, int2, int3))
@@ -70,7 +70,7 @@ object Input1Int extends AsyncTestSuite {
         }
 
         ">" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.>(?))
+          val inputMolecule = m(Ns.int.>(?).a1)
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(int1, int2, int3))
@@ -83,7 +83,7 @@ object Input1Int extends AsyncTestSuite {
         }
 
         ">=" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.>=(?))
+          val inputMolecule = m(Ns.int.>=(?).a1)
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(int1, int2, int3))
@@ -96,7 +96,7 @@ object Input1Int extends AsyncTestSuite {
         }
 
         "<" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.<(?))
+          val inputMolecule = m(Ns.int.<(?).a1)
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(int1, int2, int3))
@@ -125,7 +125,7 @@ object Input1Int extends AsyncTestSuite {
       "Tacit" - {
 
         "Eq" - core { implicit conn =>
-          val inputMolecule = m(Ns.str.int_(?))
+          val inputMolecule = m(Ns.str.a1.int_(?))
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(str4))
@@ -136,7 +136,7 @@ object Input1Int extends AsyncTestSuite {
         }
 
         "not" - core { implicit conn =>
-          val inputMolecule = m(Ns.str.int_.not(?))
+          val inputMolecule = m(Ns.str.a1.int_.not(?))
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
@@ -147,7 +147,7 @@ object Input1Int extends AsyncTestSuite {
         }
 
         ">" - core { implicit conn =>
-          val inputMolecule = m(Ns.str.int_.>(?))
+          val inputMolecule = m(Ns.str.a1.int_.>(?))
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
@@ -160,7 +160,7 @@ object Input1Int extends AsyncTestSuite {
         }
 
         ">=" - core { implicit conn =>
-          val inputMolecule = m(Ns.str.int_.>=(?))
+          val inputMolecule = m(Ns.str.a1.int_.>=(?))
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
@@ -173,7 +173,7 @@ object Input1Int extends AsyncTestSuite {
         }
 
         "<" - core { implicit conn =>
-          val inputMolecule = m(Ns.str.int_.<(?))
+          val inputMolecule = m(Ns.str.a1.int_.<(?))
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
@@ -186,7 +186,7 @@ object Input1Int extends AsyncTestSuite {
         }
 
         "<=" - core { implicit conn =>
-          val inputMolecule = m(Ns.str.int_.<=(?))
+          val inputMolecule = m(Ns.str.a1.int_.<=(?))
           for {
             _ <- oneData
             _ <- inputMolecule(Nil).get.map(_ ==> List(str1, str2, str3))
@@ -206,7 +206,7 @@ object Input1Int extends AsyncTestSuite {
       "Mandatory" - {
 
         "Eq" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.ints(?))
+          val inputMolecule = m(Ns.int.a1.ints(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> Nil)
@@ -268,7 +268,7 @@ object Input1Int extends AsyncTestSuite {
         }
 
         "not" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.ints.not(?))
+          val inputMolecule = m(Ns.int.a1.ints.not(?))
           val all           = List(
             (int1, Set(int1, int2, int3)),
             (int2, Set(int2, int3, int4)),
@@ -357,7 +357,7 @@ object Input1Int extends AsyncTestSuite {
         }
 
         ">" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.ints.>(?))
+          val inputMolecule = m(Ns.int.a1.ints.>(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List((int1, Set(int1, int2)), (int2, Set(int3, int2)), (int3, Set(int4, int3)), (int4, Set(int4, int5)), (int5, Set(int4, int6, int5))))
@@ -379,7 +379,7 @@ object Input1Int extends AsyncTestSuite {
         }
 
         ">=" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.ints.>=(?))
+          val inputMolecule = m(Ns.int.a1.ints.>=(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List((int1, Set(int1, int2)), (int2, Set(int3, int2)), (int3, Set(int4, int3)), (int4, Set(int4, int5)), (int5, Set(int4, int6, int5))))
@@ -401,7 +401,7 @@ object Input1Int extends AsyncTestSuite {
         }
 
         "<" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.ints.<(?))
+          val inputMolecule = m(Ns.int.a1.ints.<(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List((int1, Set(int1, int2)), (int2, Set(int3, int2)), (int3, Set(int4, int3)), (int4, Set(int4, int5)), (int5, Set(int4, int6, int5))))
@@ -421,7 +421,7 @@ object Input1Int extends AsyncTestSuite {
         }
 
         "<=" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.ints.<=(?))
+          val inputMolecule = m(Ns.int.a1.ints.<=(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List((int1, Set(int1, int2)), (int2, Set(int3, int2)), (int3, Set(int4, int3)), (int4, Set(int4, int5)), (int5, Set(int4, int6, int5))))
@@ -600,7 +600,7 @@ object Input1Int extends AsyncTestSuite {
       "Tacit" - {
 
         "Eq" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.ints_(?))
+          val inputMolecule = m(Ns.int.a1.ints_(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List(int6))
@@ -636,7 +636,7 @@ object Input1Int extends AsyncTestSuite {
         }
 
         "not" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.ints_.not(?))
+          val inputMolecule = m(Ns.int.a1.ints_.not(?))
           for {
             _ <- Ns.int.ints insert List(
               (int1, Set(int1, int2, int3)),
@@ -644,8 +644,8 @@ object Input1Int extends AsyncTestSuite {
               (int3, Set(int3, int4, int5))
             )
 
-            _ <- inputMolecule(Nil).get.map(_.sorted ==> List(int1, int2, int3))
-            _ <- inputMolecule(Set[Int]()).get.map(_.sorted ==> List(int1, int2, int3))
+            _ <- inputMolecule(Nil).get.map(_ ==> List(int1, int2, int3))
+            _ <- inputMolecule(Set[Int]()).get.map(_ ==> List(int1, int2, int3))
 
             // Vararg/List(args*) syntax/semantics not available for card-many attributes of input molecules
             // inputMolecule(int1).get.map(_ ==> ...)
@@ -653,9 +653,9 @@ object Input1Int extends AsyncTestSuite {
 
             // Set semantics omit the whole set with one or more matching values
 
-            _ <- inputMolecule(Set(int1)).get.map(_.sorted ==> List(int2, int3))
+            _ <- inputMolecule(Set(int1)).get.map(_ ==> List(int2, int3))
             // Same as
-            _ <- inputMolecule(List(Set(int1))).get.map(_.sorted ==> List(int2, int3))
+            _ <- inputMolecule(List(Set(int1))).get.map(_ ==> List(int2, int3))
 
             _ <- inputMolecule(Set(int2)).get.map(_ ==> List(int3))
             _ <- inputMolecule(Set(int3)).get.map(_ ==> Nil) // int3 match all
@@ -663,15 +663,15 @@ object Input1Int extends AsyncTestSuite {
 
             _ <- inputMolecule(Set(int1), Set(int2)).get.map(_ ==> List(int3))
             // Multiple values in a Set matches matches set-wise
-            _ <- inputMolecule(Set(int1, int2)).get.map(_.sorted ==> List(int2, int3))
+            _ <- inputMolecule(Set(int1, int2)).get.map(_ ==> List(int2, int3))
 
             _ <- inputMolecule(Set(int1), Set(int3)).get.map(_ ==> Nil) // int3 match all
-            _ <- inputMolecule(Set(int1, int3)).get.map(_.sorted ==> List(int2, int3))
+            _ <- inputMolecule(Set(int1, int3)).get.map(_ ==> List(int2, int3))
 
             _ <- inputMolecule(Set(int1), Set(int2), Set(int3)).get.map(_ ==> Nil) // int3 match all
-            _ <- inputMolecule(Set(int1, int2, int3)).get.map(_.sorted ==> List(int2, int3))
+            _ <- inputMolecule(Set(int1, int2, int3)).get.map(_ ==> List(int2, int3))
 
-            _ <- inputMolecule(Set(int1, int2), Set(int1)).get.map(_.sorted ==> List(int2, int3))
+            _ <- inputMolecule(Set(int1, int2), Set(int1)).get.map(_ ==> List(int2, int3))
             _ <- inputMolecule(Set(int1, int2), Set(int2)).get.map(_ ==> List(int3))
             _ <- inputMolecule(Set(int1, int2), Set(int3)).get.map(_ ==> Nil)
             _ <- inputMolecule(Set(int1, int2), Set(int4)).get.map(_ ==> Nil)
@@ -683,7 +683,7 @@ object Input1Int extends AsyncTestSuite {
         }
 
         ">" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.ints_.>(?))
+          val inputMolecule = m(Ns.int.a1.ints_.>(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List(int1, int2, int3, int4, int5))
@@ -703,7 +703,7 @@ object Input1Int extends AsyncTestSuite {
         }
 
         ">=" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.ints_.>=(?))
+          val inputMolecule = m(Ns.int.a1.ints_.>=(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List(int1, int2, int3, int4, int5))
@@ -723,7 +723,7 @@ object Input1Int extends AsyncTestSuite {
         }
 
         "<" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.ints_.<(?))
+          val inputMolecule = m(Ns.int.a1.ints_.<(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List(int1, int2, int3, int4, int5))
@@ -742,7 +742,7 @@ object Input1Int extends AsyncTestSuite {
         }
 
         "<=" - core { implicit conn =>
-          val inputMolecule = m(Ns.int.ints_.<=(?))
+          val inputMolecule = m(Ns.int.a1.ints_.<=(?))
           for {
             _ <- manyData
             _ <- inputMolecule(Nil).get.map(_ ==> List(int1, int2, int3, int4, int5))
