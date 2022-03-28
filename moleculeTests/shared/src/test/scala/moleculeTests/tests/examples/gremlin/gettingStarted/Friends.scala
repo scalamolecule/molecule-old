@@ -158,11 +158,11 @@ object Friends extends AsyncTestSuite {
         ))
 
         // Who has most friends
-        _ <- Person.name.friends(count).get.map(_.sortBy(_._2).reverse ==> List(
-          ("vadas", 2),
+        _ <- Person.name.a2.friends(count).d1.get.map(_ ==> List(
           ("marko", 2),
+          ("vadas", 2),
+          ("josh", 1),
           ("peter", 1),
-          ("josh", 1)
         ))
 
         // Markos friends older than 30

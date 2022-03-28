@@ -137,7 +137,7 @@ case class Conn_Js(
     sortCoordinates: List[List[SortCoordinate]]
   ): Future[String] = {
     model.elements.head match {
-      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _, _) => indexQuery(model)
+      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _, _) => indexQuery(model, sortCoordinates)
       case _                                                              => datalogQuery(
         query, datalog, maxRows, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
       )
@@ -150,7 +150,10 @@ case class Conn_Js(
     null
   }
 
-  private final def indexQuery(model: Model): Future[String] = {
+  private final def indexQuery(
+    model: Model,
+    sortCoordinates: List[List[SortCoordinate]]
+  ): Future[String] = {
     def p(v: Any): (String, String) = v match {
       case _: String     => (v.toString, "String")
       case _: Int        => (v.toString, "Int")
@@ -296,7 +299,7 @@ case class Conn_Js(
       case Generic(_, attr, _, _, _) if attr != "args_" && attr != "range" => attr
     }
 
-    rpc.index2packed(connProxy, api, index, indexArgs, attrs)
+    rpc.index2packed(connProxy, api, index, indexArgs, attrs, sortCoordinates)
   }
 
 

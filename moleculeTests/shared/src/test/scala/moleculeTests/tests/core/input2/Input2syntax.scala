@@ -83,7 +83,7 @@ object Input2syntax extends AsyncTestSuite {
 
           _ <- personOfAgeAndStatus(28 and 5L).get.map(_ ==> List("Ben"))
           _ <- personOfAgeAndStatus(28 and (5L or 4L)).get.map(_ ==> List("Ben", "Joe"))
-          _ <- personOfAgeAndStatus(28 and (5L or 4L or 3L)).get.map(_ ==> List("Ben", "Liz", "Joe"))
+          _ <- personOfAgeAndStatus(28 and (5L or 4L or 3L)).get.map(_ ==> List("Ben", "Joe", "Liz"))
 
           _ <- personOfAgeAndStatus(37 and 5L).get.map(_ ==> List("Ann"))
           _ <- personOfAgeAndStatus((37 or 28) and 5L).get.map(_ ==> List("Ann", "Ben"))
@@ -98,7 +98,7 @@ object Input2syntax extends AsyncTestSuite {
 
           _ <- personOfAgeAndStatus(Seq(28), Seq(5L)).get.map(_ ==> List("Ben"))
           _ <- personOfAgeAndStatus(Seq(28), Seq(5L, 4L)).get.map(_ ==> List("Ben", "Joe"))
-          _ <- personOfAgeAndStatus(Seq(28), Seq(5L, 4L, 3L)).get.map(_ ==> List("Ben", "Liz", "Joe"))
+          _ <- personOfAgeAndStatus(Seq(28), Seq(5L, 4L, 3L)).get.map(_ ==> List("Ben", "Joe", "Liz"))
 
           _ <- personOfAgeAndStatus(Seq(37), Seq(5L)).get.map(_ ==> List("Ann"))
           _ <- personOfAgeAndStatus(Seq(37, 28), Seq(5L)).get.map(_ ==> List("Ann", "Ben"))

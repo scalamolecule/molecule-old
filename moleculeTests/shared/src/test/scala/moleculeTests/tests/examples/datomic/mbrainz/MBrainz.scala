@@ -29,34 +29,34 @@ object MBrainz extends AsyncTestSuite {
         ))
 
         // What are the titles, album names, and release years of John Lennon's tracks?
-        _ <- Release.year.name.Media.Tracks.name.Artists.name_("John Lennon")
-          .get(5).map(_.sortBy(t => (t._1, t._2, t._3)) ==> List(
+        _ <- Release.year.a1.name.a2.Media.Tracks.name.a3.Artists.name_("John Lennon")
+          .get(5).map(_ ==> List(
+          (1969, "Live Peace in Toronto 1969", "Blue Suede Shoes"),
           (1969, "Live Peace in Toronto 1969", "Cold Turkey"),
-          (1969, "Unfinished Music No. 3: Wedding Album", "Amsterdam"),
-          (1971, "Power to the People", "Open Your Box"),
-          (1973, "Some Time in New York City", "Sunday Bloody Sunday"),
-          (1973, "Some Time in New York City", "The Luck of the Irish"),
+          (1969, "Live Peace in Toronto 1969", "Dizzy Miss Lizzy"),
+          (1969, "Live Peace in Toronto 1969", "Don't Worry Kyoko (Mummy's Only Looking for Her Hand in the Snow)"),
+          (1969, "Live Peace in Toronto 1969", "Give Peace a Chance"),
         ))
 
         // What are the titles, album names, and release years of the John Lennon tracks released before or during 1970?
-        _ <- Release.year.<=(1970).name.Media.Tracks.name.Artists.name_("John Lennon")
-          .get(5).map(_.sortBy(t => (t._1, t._2, t._3)) ==> List(
-          (1969, "Live Peace in Toronto 1969", "Cold Turkey"),
-          (1969, "Unfinished Music No. 2: Life With the Lions", "Baby's Heartbeat"),
-          (1969, "Unfinished Music No. 2: Life With the Lions", "Two Minutes Silence"),
+        _ <- Release.year.<=(1970).name.Media.Tracks.name.a1.Artists.name_("John Lennon")
+          .get(5).map(_ ==> List(
           (1969, "Unfinished Music No. 3: Wedding Album", "Amsterdam"),
-          (1970, "Instant Karma! / Who Has Seen the Wind?", "Instant Karma!"),
+          (1969, "Unfinished Music No. 2: Life With the Lions", "Baby's Heartbeat"),
+          (1969, "Live Peace in Toronto 1969", "Blue Suede Shoes"),
+          (1969, "Unfinished Music No. 2: Life With the Lions", "Cambridge 1969"),
+          (1969, "Live Peace in Toronto 1969", "Cold Turkey"),
         ))
 
         _ <- if (system == SystemPeer) {
           // What are the titles, artists, album names, and release years of all tracks having the word "always" in their titles?
-          Release.year.name.Media.Tracks.name.contains("always").Artists.name
-            .get(5).map(_.sortBy(t => (t._1, t._2, t._3)) ==> List(
-            (1968, "Signed, Sealed and Delivered", "I Want to Be With You Always", "Lefty Frizzell"),
-            (1970, "Check Out Your Mind!", "You'll Always Be Mine", "The Impressions"),
-            (1971, "Hot Rocks 1964-1971", "You Can’t Always Get What You Want", "The Rolling Stones"),
-            (1972, "Always on My Mind / That Ain't Right", "Always on My Mind", "Brenda Lee"),
-            (1972, "You'll Always Be a Friend", "You'll Always Be a Friend", "Hot Chocolate"),
+          Release.year.name.Media.Tracks.name.contains("always").a1.Artists.name
+            .get(5).map(_ ==> List(
+            (1971, "Rita Coolidge", "(I Always Called Them) Mountains", "Rita Coolidge"),
+            (1968, "Ridin' High", "(There's) Always Something There to Remind Me", "Martha Reeves and The Vandellas"),
+            (1968, "Feliciano!", "(There's) Always Something There to Remind Me", "José Feliciano"),
+            (1973, "In a Gospel Way", "A Man I Always Wanted to Meet", "George Jones"),
+            (1973, "A Little Touch of Schmilsson in the Night", "Always", "Harry Nilsson"),
           ))
         } else Future.unit
 

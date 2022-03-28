@@ -44,7 +44,8 @@ abstract class Molecule_1[Obj, I1](
       case 2 => // Mapped attributes
         val inVars                                         = query.i.inputs.collect { case Placeholder(_, _, v, _, _) => v }
         val Placeholder(_, KW(nsFull, attr, _), _, tpe, _) = query.i.inputs.head
-        val values                                         = inputs.flatMap {
+
+        val values = inputs.flatMap {
           case map: Map[_, _] =>
             map.head._2 match {
               case _: Date => map.toSeq.map {
@@ -57,7 +58,8 @@ abstract class Molecule_1[Obj, I1](
             }
           case other          => throw Molecule_1_Exception(s"Unexpected input for mapped attribute `:$nsFull/$attr`: " + other)
         }
-        val tpeDateStr                                     = if (isJsPlatform && tpe == "Date") "String" else tpe
+
+        val tpeDateStr = if (isJsPlatform && tpe == "Date") "String" else tpe
         query.copy(i = In(Seq(InVar(RelationBinding(inVars), tpeDateStr, values)), query.i.rules, query.i.ds))
 
       case 1 => // Card-one/many/mapK

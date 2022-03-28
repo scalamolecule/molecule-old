@@ -128,7 +128,7 @@ object Pull extends AsyncTestSuite {
         _ <- Release.e.Media.e_(dylanHarrisonCd).get.map(_.head ==> dylanHarrisonSessions)
 
         // Map specification
-        _ <- Track(ghostRiders).name.Artists.*(Artist.e.name).get.map(_.map(t => (t._1, t._2.sortBy(_._2))) ==> List(
+        _ <- Track(ghostRiders).name.a1.Artists.*(Artist.e.name.a1).get.map(_ ==> List(
           ("Ghost Riders in the Sky", List(
             (bobDylan, "Bob Dylan"),
             (georgeHarrison, "George Harrison"),
@@ -137,18 +137,14 @@ object Pull extends AsyncTestSuite {
 
         // Nested map specification
         _ <- Release(concertForBangladesh).Media.*(
-          Medium.position.Tracks.*(
-            Track.name.Artists.*(
-              Artist.name))).get
-          // sort output
-          .map(_.map(medium =>
-            medium.sortBy(_._1).map(tracks =>
-              tracks._2.sortBy(_._1))) ==>
+          Medium.position.a1.Tracks.*(
+            Track.name.a1.Artists.*(
+              Artist.name.a1))).get.map(_.map(_.map(_._2)) ==>
             List(
               List(
                 List(
                   ("Bangla Dhun", List("Ravi Shankar")),
-                  ("George Harrison / Ravi Shankar Introduction", List("Ravi Shankar", "George Harrison"))),
+                  ("George Harrison / Ravi Shankar Introduction", List("George Harrison", "Ravi Shankar"))),
                 List(
                   ("Bangla Desh", List("George Harrison")),
                   ("Something", List("George Harrison"))),
@@ -171,7 +167,6 @@ object Pull extends AsyncTestSuite {
                 List(
                   ("Here Comes the Sun", List("George Harrison")),
                   ("Jumpin' Jack Flash / Youngblood", List("Leon Russell"))))))
-
 
         // Wildcard specification
         //     concertForBangladeshEid.graph.map(_ ==> Map(<big data graph for Bangladesh concert>))

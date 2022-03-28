@@ -161,14 +161,19 @@ object Datom extends AsyncTestSuite {
           _ <- Ns(e1, e2).tx.a1.e.a.a2.v.op.a3.getHistory.map(_ ==> List(
             (tx1, e1, ":Ns/int", 1, true),
             (tx1, e1, ":Ns/str", "a", true),
+
             (tx2, e1, ":Ns/str", "a", false),
             (tx2, e1, ":Ns/str", "b", true),
+
             (tx3, e1, ":Ns/int", 1, false),
             (tx3, e1, ":Ns/int", 3, true),
+
             (tx4, e2, ":Ns/int", 4, true),
             (tx4, e2, ":Ns/str", "x", true),
+
             (tx5, e2, ":Ns/int", 4, false),
             (tx5, e2, ":Ns/int", 5, true),
+
             (tx7, e2, ":Ns/ref1", r1, true),
           ))
         } yield ()
@@ -189,7 +194,7 @@ object Datom extends AsyncTestSuite {
           _ <- Ns.int.a1.tx.get.map(_ ==> List((3, tx3), (5, tx5)))
           _ <- Ns.int.a1.t.get.map(_ ==> List((3, t3), (5, t5)))
           _ <- Ns.int.a1.txInstant.get.map(_.toString ==> List((3, d3), (5, d5)).toString)
-          _ <- Ns.int.a1.op.get.map(_ ==> List((5, true), (3, true)))
+          _ <- Ns.int.a1.op.get.map(_ ==> List((3, true), (5, true)))
 
           // Generic attributes after attribute with applied value
           _ <- Ns.int(5).e.get.map(_ ==> List((5, e2)))
@@ -343,21 +348,23 @@ object Datom extends AsyncTestSuite {
     }
 
 
-    "Expressions, mandatory" - core { implicit conn =>
+    "Expressions mandatory" - core { implicit conn =>
       if (system != SystemPeerServer) {
         for {
           ((tx1, e1, t1, d1, tx2, t2, d2, tx3, t3, d3),
           (tx4, e2, t4, d4, tx5, t5, d5),
           (r1, tx6, t6, d6, tx7, t7, d7)) <- testData
 
-          _ <- Ns.e(e1).get.map(_ ==> List(e1))
-          _ <- Ns.e(e1, e2).a1.get.map(_ ==> List(e1, e2))
+          // Eids not deterministic with dev-local, so we sort the expected outcome too
 
-          _ <- Ns.e.not(e1).a1.get.map(_ ==> List(e2, r1))
+          _ <- Ns.e(e1).get.map(_ ==> List(e1))
+          _ <- Ns.e(e1, e2).a1.get.map(_ ==> List(e1, e2).sorted)
+
+          _ <- Ns.e.not(e1).a1.get.map(_ ==> List(e2, r1).sorted)
           _ <- Ns.e.not(e1, e2).get.map(_ ==> List(r1))
 
-          // Eids not deterministic with dev-local
           _ <- if (system != SystemDevLocal) {
+            // Comparing non-deterministic entity ids on dev-local is not meaningful
             for {
               _ <- Ns.e.>(e1).a1.get.map(_ ==> List(e2, r1))
               _ <- Ns.e.>=(e1).a1.get.map(_ ==> List(e1, e2, r1))
@@ -437,7 +444,7 @@ object Datom extends AsyncTestSuite {
           _ <- Ns.txInstant.>(d3).a1.get.map(_ ==> List(d4, d5, d6, d7))
           _ <- Ns.txInstant.>=(d3).a1.get.map(_ ==> List(d3, d4, d5, d6, d7))
           _ <- Ns.txInstant.<=(d3).a1.get.map(_ ==> List(d2, d3))
-          _ <- Ns.txInstant.<=(d3).getHistory.map(_ ==> List(d1, d2, d3))
+          _ <- Ns.txInstant.<=(d3).a1.getHistory.map(_ ==> List(d1, d2, d3))
           _ <- Ns.txInstant.<(d3).a1.get.map(_ ==> List(d2))
           // Range of transaction entity ids
           _ <- Ns.txInstant_.>(d2).txInstant.<=(d4).a1.get.map(_ ==> List(d3, d4))

@@ -131,7 +131,7 @@ object SocialNews extends AsyncTestSuite {
         _ <- User.email.upVotes.get.map(_.head ==> ("stuarthalloway@datomic.com", Set(paulGrahamStory)))
 
         // Current upVotes
-        _ <- User.email.upVotes$.get.map(_.sortBy(_._1) ==> List(
+        _ <- User.email.a1.upVotes$.get.map(_ ==> List(
           ("editor@example.com", None),
           ("john@example.com", None),
           ("stuarthalloway@datomic.com", Some(Set(paulGrahamStory))),

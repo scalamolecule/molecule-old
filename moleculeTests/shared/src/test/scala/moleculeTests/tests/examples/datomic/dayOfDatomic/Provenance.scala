@@ -30,7 +30,7 @@ object Provenance extends AsyncTestSuite {
         List(elasticacheStory, chocolateStory) = stuTx.eids
 
         // Now we have 5 stories - the two last from the transaction above
-        _ <- Story.title.url.tx.get.map(_.sortBy(t => (t._3, t._1)) ==> List(
+        _ <- Story.title.a2.url.tx.a1.get.map(_ ==> List(
           ("Beating the Averages", "http://www.paulgraham.com/avg.html", tx1),
           ("Clojure Rationale", "http://clojure.org/rationale", tx1),
           ("Teach Yourself Programming in Ten Years", "http://norvig.com/21-days.html", tx1),
@@ -76,43 +76,43 @@ object Provenance extends AsyncTestSuite {
         // Find data via transaction meta data
 
         // Stories that Stu added (first meta information used)
-        _ <- Story.title.url.Tx(MetaData.user_(stu)).get.map(_.sortBy(_._1) ==> List(
+        _ <- Story.title.a1.url.Tx(MetaData.user_(stu)).get.map(_ ==> List(
           ("ElastiCache in 6 minutes", ecURL),
           ("Keep Chocolate Love Atomic", "http://blog.datomic.com/2012/08/atomic-chocolate.html"),
         ))
 
         // Stories that were added with the AddStories use case (second meta information used)
-        _ <- Story.title.url.Tx(MetaData.usecase_("AddStories")).get.map(_.sortBy(_._1) ==> List(
+        _ <- Story.title.a1.url.Tx(MetaData.usecase_("AddStories")).get.map(_ ==> List(
           ("ElastiCache in 6 minutes", ecURL),
           ("Keep Chocolate Love Atomic", "http://blog.datomic.com/2012/08/atomic-chocolate.html"),
         ))
 
         // Stories that Stu added with the AddStories use case (both meta data used)
-        _ <- Story.title.url.Tx(MetaData.user_(stu).usecase_("AddStories")).get.map(_.sortBy(_._1) ==> List(
+        _ <- Story.title.a1.url.Tx(MetaData.user_(stu).usecase_("AddStories")).get.map(_ ==> List(
           ("ElastiCache in 6 minutes", ecURL),
           ("Keep Chocolate Love Atomic", "http://blog.datomic.com/2012/08/atomic-chocolate.html"),
         ))
 
         // Stories and transactions where Stu added stories (`tx` is returned)
-        _ <- Story.title.tx.Tx(MetaData.user_(stu).usecase_("AddStories")).get.map(_.sortBy(_._1) ==> List(
+        _ <- Story.title.a1.tx.Tx(MetaData.user_(stu).usecase_("AddStories")).get.map(_ ==> List(
           ("ElastiCache in 6 minutes", stuTxId),
           ("Keep Chocolate Love Atomic", stuTxId),
         ))
 
         // Stories and names of who added them (Note that we can have referenced meta data!)
-        _ <- Story.title.Tx(MetaData.User.firstName.lastName).get.map(_.sortBy(_._1) ==> List(
+        _ <- Story.title.a1.Tx(MetaData.User.firstName.lastName).get.map(_ ==> List(
           ("ElastiCache in 6 minutes", "Stu", "Halloway"),
           ("Keep Chocolate Love Atomic", "Stu", "Halloway")
         ))
 
         // Stories added by a user named "Stu"
-        _ <- Story.title.Tx(MetaData.User.firstName_("Stu")).get.map(_.sorted ==> List(
+        _ <- Story.title.a1.Tx(MetaData.User.firstName_("Stu")).get.map(_ ==> List(
           "ElastiCache in 6 minutes",
           "Keep Chocolate Love Atomic"
         ))
 
         // Stories added by a user with email "stuarthalloway@datomic.com"
-        _ <- Story.title.Tx(MetaData.User.email_("stuarthalloway@datomic.com")).get.map(_.sorted ==> List(
+        _ <- Story.title.a1.Tx(MetaData.User.email_("stuarthalloway@datomic.com")).get.map(_ ==> List(
           "ElastiCache in 6 minutes",
           "Keep Chocolate Love Atomic"
         ))
@@ -140,14 +140,14 @@ object Provenance extends AsyncTestSuite {
         _ <- if (system != SystemPeerServer) {
           for {
             // Who changed the title and when? Using the history database
-            _ <- Story.url_(ecURL).title.op.tx.Tx(MetaData.usecase.User.firstName).getHistory.map(_.sortBy(r => (r._3, r._2)) ==> List(
+            _ <- Story.url_(ecURL).title.op.a2.tx.a1.Tx(MetaData.usecase.User.firstName).getHistory.map(_ ==> List(
               ("ElastiCache in 6 minutes", true, stuTxId, "AddStories", "Stu"), // Stu adds the story
               ("ElastiCache in 6 minutes", false, edTxId, "UpdateStory", "Ed"), // retraction automatically added by Datomic
               ("ElastiCache in 5 minutes", true, edTxId, "UpdateStory", "Ed") // Ed's update of the title
             ))
 
             // Entire attributes history of ElastiCache story _entity_
-            res <- Story(elasticacheStory).a.v.op.tx.Tx(MetaData.usecase.User.firstName).getHistory.map(_.sortBy(r => (r._4, r._3)) ==> List(
+            res <- Story(elasticacheStory).a.v.op.a2.tx.a1.Tx(MetaData.usecase.User.firstName).getHistory.map(_ ==> List(
               (":Story/title", "ElastiCache in 6 minutes", true, stuTxId, "AddStories", "Stu"),
               (":Story/url", "http://blog.datomic.com/2012/09/elasticache-in-5-minutes.html", true, stuTxId, "AddStories", "Stu"),
               (":Story/title", "ElastiCache in 6 minutes", false, edTxId, "UpdateStory", "Ed"),
@@ -157,13 +157,13 @@ object Provenance extends AsyncTestSuite {
         } else Future.unit
 
         // Stories with latest use case meta date
-        _ <- Story.title.Tx(MetaData.usecase).get.map(_.sortBy(_._1) ==> List(
+        _ <- Story.title.a1.Tx(MetaData.usecase).get.map(_ ==> List(
           ("ElastiCache in 5 minutes", "UpdateStory"),
           ("Keep Chocolate Love Atomic", "AddStories"),
         ))
 
         // Stories without use case meta data
-        _ <- Story.title.Tx(MetaData.usecase_(Nil)).get.map(_.sorted ==> List(
+        _ <- Story.title.a1.Tx(MetaData.usecase_(Nil)).get.map(_ ==> List(
           "Beating the Averages",
           "Clojure Rationale",
           "Teach Yourself Programming in Ten Years"

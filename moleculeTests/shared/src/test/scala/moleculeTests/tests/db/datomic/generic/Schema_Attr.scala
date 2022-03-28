@@ -147,7 +147,7 @@ object Schema_Attr extends AsyncTestSuite {
 
     "ns" - core { implicit conn =>
       for {
-        _ <- Schema.ns.a1.get.map(_ ==> List("Ns", "Ref4", "Ref2", "Ref3", "Ref1"))
+        _ <- Schema.ns.a1.get.map(_ ==> List("Ns", "Ref1", "Ref2", "Ref3", "Ref4"))
 
         _ <- Schema.ns(count).get.map(_.head ==> 5)
 

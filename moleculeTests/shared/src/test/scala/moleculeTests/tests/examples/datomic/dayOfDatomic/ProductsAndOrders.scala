@@ -132,8 +132,8 @@ object ProductsAndOrders extends AsyncTestSuite {
         _ <- Order.e.LineItems.Product.description_("Expensive Chocolate").get.map(_ ==>
           List(order23))
 
-        _ <- Order.e.LineItems.Product.description_("Licorice").get.map(_.sorted ==>
-          List(order23, order24))
+        _ <- Order.e.a1.LineItems.Product.description_("Licorice").get.map(_ ==>
+          List(order23, order24).sorted)
 
 
         // Touch ................................
@@ -164,8 +164,7 @@ object ProductsAndOrders extends AsyncTestSuite {
         // Get ................................
 
         // Get adjacent facts
-        _ <- Order.orderid.LineItems.quantity.price.Product.e.description
-          .get.map(_.sortBy(t => (t._1, t._2)) ==> List(
+        _ <- Order.orderid.a1.LineItems.quantity.a2.price.Product.e.description.get.map(_ ==> List(
           // whisky for order 23 is _not_ fetched since it has no quantity asserted!
           (23, 1, 48.0, chocolateId, "Expensive Chocolate"),
           (23, 2, 77.0, licoriceId, "Licorice"),
@@ -176,8 +175,7 @@ object ProductsAndOrders extends AsyncTestSuite {
         // Make `quantity` optional (by appending `$`) and get all facts wether
         // quantity is asserted or not.
         // Quantities are then returned as Option[Int]
-        _ <- Order.orderid.LineItems.quantity$.price.Product.e.description
-          .get.map(_.sortBy(t => (t._1, t._5)) ==> List(
+        _ <- Order.orderid.a1.LineItems.quantity$.price.Product.e.description.a2.get.map(_ ==> List(
           (23, None, 38.0, whiskyId, "Cheap Whisky"),
           (23, Some(1), 48.0, chocolateId, "Expensive Chocolate"),
           (23, Some(2), 77.0, licoriceId, "Licorice"),
@@ -231,8 +229,8 @@ object ProductsAndOrders extends AsyncTestSuite {
         _ <- Order.e.LineItems.Product.description_("Expensive Chocolate").get.map(_ ==>
           List(order23))
 
-        _ <- Order.e.LineItems.Product.description_("Licorice").get.map(_.sorted ==>
-          List(order23, order24))
+        _ <- Order.e.a1.LineItems.Product.description_("Licorice").get.map(_ ==>
+          List(order23, order24).sorted)
 
 
         // Touch ................................

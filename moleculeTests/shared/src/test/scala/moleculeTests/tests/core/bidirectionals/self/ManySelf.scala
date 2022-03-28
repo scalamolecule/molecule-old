@@ -288,7 +288,7 @@ object ManySelf extends AsyncTestSuite {
           _ <- Person(ann).friends.replace(ben -> tim).update
 
           // Ann now friends with Tim instead of Ben
-          _ <- friendsOf("Ann").get.map(_ ==> List("Tim", "Joe"))
+          _ <- friendsOf("Ann").get.map(_ ==> List("Joe", "Tim"))
           _ <- friendsOf("Ben").get.map(_ ==> List())
           _ <- friendsOf("Joe").get.map(_ ==> List("Ann"))
           _ <- friendsOf("Tim").get.map(_ ==> List("Ann"))
@@ -311,7 +311,7 @@ object ManySelf extends AsyncTestSuite {
 
           // Ann is now friends with Tim and Tom instead of Ben and Joe
           // Ben and Joe are no longer friends with Ann either
-          _ <- friendsOf("Ann").get.map(_ ==> List("Tom", "Tim"))
+          _ <- friendsOf("Ann").get.map(_ ==> List("Tim", "Tom"))
           _ <- friendsOf("Ben").get.map(_ ==> List())
           _ <- friendsOf("Joe").get.map(_ ==> List())
           _ <- friendsOf("Tim").get.map(_ ==> List("Ann"))

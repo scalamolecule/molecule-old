@@ -46,7 +46,9 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
           val queryData: (Query, String, Option[Throwable]) = args0 match {
             case Right(args) =>
               bindValues(_query, args) match {
-                case Right(boundQuery) => (boundQuery, Query2String(boundQuery).multiLine(60), None)
+                case Right(boundQuery) =>
+                  val optimizedQuery = QueryOptimizer(boundQuery)
+                  (optimizedQuery, Query2String(optimizedQuery).multiLine(60), None)
                 case Left(exc)         => (_query, "", Some(exc))
               }
             case Left(exc)   => (_query, "", Some(exc))
@@ -67,7 +69,9 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
             val queryData: (Query, String, Option[Throwable]) = args0 match {
               case Right(args) =>
                 bindSeqs(_query, args._1, args._2) match {
-                  case Right(boundQuery) => (boundQuery, Query2String(boundQuery).multiLine(60), None)
+                  case Right(boundQuery) =>
+                    val optimizedQuery = QueryOptimizer(boundQuery)
+                    (optimizedQuery, Query2String(optimizedQuery).multiLine(60), None)
                   case Left(exc)         => (_query, "", Some(exc))
                 }
               case Left(exc)   => (_query, "", Some(exc))
@@ -84,7 +88,9 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
             val queryData: (Query, String, Option[Throwable]) = args0 match {
               case Right(args) =>
                 bindSeqs(_query, args._1, args._2, args._3) match {
-                  case Right(boundQuery) => (boundQuery, Query2String(boundQuery).multiLine(60), None)
+                  case Right(boundQuery) =>
+                    val optimizedQuery = QueryOptimizer(boundQuery)
+                    (optimizedQuery, Query2String(optimizedQuery).multiLine(60), None)
                   case Left(exc)         => (_query, "", Some(exc))
                 }
               case Left(exc)   => (_query, "", Some(exc))
@@ -101,7 +107,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
       q"""
         private val _resolvedModel: Model = resolveIdentifiers($model, $identifiers)
         final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$OutTypes](
-          _resolvedModel, Model2Query(_resolvedModel)
+          _resolvedModel, Model2Query(_resolvedModel, optimize = false) // Optimize after binding input variables
         ) {
           val isJsPlatform = $isJsPlatform
           ${getApplyValues(outMoleculeClass)}
@@ -111,7 +117,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
     } else {
       q"""
         final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$OutTypes](
-          $model, ${Model2Query(model)}
+          $model, ${Model2Query(model, optimize = false)}
         ) {
           val isJsPlatform = $isJsPlatform
           ${getApplyValues(outMoleculeClass)}

@@ -279,8 +279,8 @@ object EdgeOneSelfUpdateProps extends AsyncTestSuite {
 
           // Current value
           _ <- inCommonOf("Ann" or "Ben").get.map(_ ==> List(
-            ("Ann", List("Patience", "Humor")),
-            ("Ben", List("Patience", "Humor"))
+            ("Ann", List("Humor", "Patience")),
+            ("Ben", List("Humor", "Patience"))
           ))
 
           // As with card-one references we have two choices to change referenced value(s)
@@ -292,8 +292,8 @@ object EdgeOneSelfUpdateProps extends AsyncTestSuite {
 
           // Same references, new value(s)
           _ <- inCommonOf("Ann" or "Ben").get.map(_ ==> List(
-            ("Ann", List("Waiting ability", "Funny")),
-            ("Ben", List("Waiting ability", "Funny"))
+            ("Ann", List("Funny", "Waiting ability")),
+            ("Ben", List("Funny", "Waiting ability"))
           ))
 
 

@@ -40,7 +40,8 @@ trait MoleculeRpc {
     api: String,
     index: String,
     indexArgs: IndexArgs,
-    attrs: Seq[String]
+    attrs: Seq[String],
+    sortCoordinates: List[List[SortCoordinate]]
   ): Future[String]
 
 

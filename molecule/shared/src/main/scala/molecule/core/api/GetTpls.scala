@@ -74,7 +74,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
             obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl, sortCoordinates
           )
         } else {
-          conn.jvmQuery(_model, _query).map { rows => rows2tuples(rows, rows.size) }
+          conn.jvmQuery(_model, _query).map(rows => rows2tuples(rows, rows.size))
         }
       }
     )(Future.failed) // Wrap exception from input failure in Future
@@ -107,7 +107,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
               obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl, sortCoordinates
             )
           } else {
-            conn.jvmQuery(_model, _query).map { rows => rows2tuples(rows, rows.size.min(limit)) }
+            conn.jvmQuery(_model, _query).map(rows => rows2tuples(rows, rows.size.min(limit)))
           }
         }
       )(Future.failed) // Wrap exception from input failure in Future

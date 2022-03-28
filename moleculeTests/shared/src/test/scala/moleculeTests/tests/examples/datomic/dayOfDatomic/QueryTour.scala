@@ -19,7 +19,7 @@ object QueryTour extends AsyncTestSuite {
         (txR2, tx1, s1, s2, s3, stu, ed, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12) <- SocialNews.data
 
         // 3. Finding All Users with a first name
-        _ <- User.e.firstName_.get.map(_.sorted ==> List(stu, ed).sorted)
+        _ <- User.e.a1.firstName_.get.map(_ ==> List(stu, ed).sorted)
 
 
         // 4. Finding a specific user
@@ -27,10 +27,10 @@ object QueryTour extends AsyncTestSuite {
 
 
         // 5. Finding a User's Comments
-        _ <- Comment.e.Author.email_("editor@example.com").get.map(_.sorted ==> List(c2, c4, c5, c7, c11))
-        _ <- Comment.e.Author.email_("stuarthalloway@datomic.com").get.map(_.sorted ==> List(c1, c3, c6, c8, c9, c10, c12))
+        _ <- Comment.e.a1.Author.email_("editor@example.com").get.map(_ ==> List(c2, c4, c5, c7, c11))
+        _ <- Comment.e.a1.Author.email_("stuarthalloway@datomic.com").get.map(_ ==> List(c1, c3, c6, c8, c9, c10, c12))
 
-        _ <- Comment.e.text.Author.email_("editor@example.com").firstName.get.map(_.sorted ==> List(
+        _ <- Comment.e.a1.text.Author.email_("editor@example.com").firstName.get.map(_ ==> List(
           (c2, "blah 2", "Ed"),
           (c4, "blah 4", "Ed"),
           (c5, "blah 5", "Ed"),
@@ -64,7 +64,7 @@ object QueryTour extends AsyncTestSuite {
 
         // Attributes of all entities having comments
         commentIds <- Parent.e.comment_.get
-        _ <- Parent(commentIds).a.get.map(_.sorted ==> List(
+        _ <- Parent(commentIds).a.a1.get.map(_ ==> List(
           ":Comment/author",
           ":Comment/text",
           ":Parent/comment",
@@ -82,7 +82,7 @@ object QueryTour extends AsyncTestSuite {
 
         // Attributes of comments having a sub-comment
         commentsWithSubComments <- m(Comment.e.text_ + Parent.comment_).get
-        _ <- Comment(commentsWithSubComments).a.get.map(_.sorted ==> List(
+        _ <- Comment(commentsWithSubComments).a.a1.get.map(_ ==> List(
           ":Comment/author",
           ":Comment/text",
           ":Parent/comment"
@@ -118,16 +118,16 @@ object QueryTour extends AsyncTestSuite {
         // 14. Navigating backwards
 
         // The editors comments (Comments pointing to the Editor entity)
-        _ <- Comment.e.author_(editor).get.map(_.sorted ==> List(c2, c4, c5, c7, c11))
+        _ <- Comment.e.a1.author_(editor).get.map(_ ==> List(c2, c4, c5, c7, c11))
 
 
         // 15. Navigating Deeper
 
         // Comments to the editors comments
-        _ <- m(Comment.author_(editor) + Parent.comment).get.map(_.sorted ==> List(c3, c6, c8, c12))
+        _ <- m(Comment.author_(editor) + Parent.comment.a1).get.map(_ ==> List(c3, c6, c8, c12))
 
         // Editors comments and responses (note that c4 wasn't commented on)
-        _ <- m(Comment.author_(editor) + Parent.e.comment).get.map(_.sorted ==> List(
+        _ <- m(Comment.author_(editor) + Parent.e.a1.comment).get.map(_ ==> List(
           (c2, c3),
           (c5, c6),
           (c7, c8),
@@ -135,7 +135,7 @@ object QueryTour extends AsyncTestSuite {
         ))
 
         // Editors comments having responses (c4 not commented on)
-        _ <- m(Comment.author_(editor) + Parent.e.comment_).get.map(_.sorted ==> List(c2, c5, c7, c11))
+        _ <- m(Comment.author_(editor) + Parent.e.a1.comment_).get.map(_ ==> List(c2, c5, c7, c11))
       } yield ()
     }
 
@@ -182,8 +182,8 @@ object QueryTour extends AsyncTestSuite {
 
         // Auditing ................................................................
 
-        // 20. Querying Across All time (sort by transactions)
-        _ <- User(ed).firstName.tx.op.getHistory.map(_.sortBy(t => (t._2, t._3)) ==> List(
+        // 20. Querying Across All time
+        _ <- User(ed).firstName.tx.a1.op.a2.getHistory.map(_ ==> List(
           ("Ed", tx2, true),
           ("Ed", tx3, false),
           ("Edward", tx3, true)

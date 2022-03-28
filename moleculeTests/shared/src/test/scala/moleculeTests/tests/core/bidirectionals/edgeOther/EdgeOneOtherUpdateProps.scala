@@ -286,7 +286,7 @@ object EdgeOneOtherUpdateProps extends AsyncTestSuite {
           _ <- Person.name_("Ann").Favorite.Animal.name._Favorite.InCommon.*(Quality.name.a1).get
             .map(_ ==> List(("Rex", Seq("Sporty", "Waiting ability"))))
 
-          _ <- Animal.name_("Rex").Favorite.Person.name._Favorite.InCommon.*(Quality.name).get
+          _ <- Animal.name_("Rex").Favorite.Person.name._Favorite.InCommon.*(Quality.name.a1).get
             .map(_ ==> List(("Ann", Seq("Sporty", "Waiting ability"))))
 
           // remove

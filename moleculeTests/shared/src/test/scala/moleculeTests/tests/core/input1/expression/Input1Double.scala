@@ -561,6 +561,7 @@ object Input1Double extends AsyncTestSuite {
           } yield ()
         }
 
+
         "<=" - core { implicit conn =>
           val inputMolecule = m(Ns.doubles.<=(?))
           for {

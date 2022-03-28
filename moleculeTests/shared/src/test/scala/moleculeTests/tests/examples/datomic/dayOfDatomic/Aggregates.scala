@@ -81,7 +81,7 @@ object Aggregates extends AsyncTestSuite {
         )
 
         // How many attributes does this schema use?
-        _ <- Schema.a.get.map(_.sorted ==> List(
+        _ <- Schema.a.a1.get.map(_ ==> List(
           ":Data/source",
           ":Monster/heads",
           ":Monster/name",
@@ -120,7 +120,7 @@ object Aggregates extends AsyncTestSuite {
         _ <- Monster.name.heads.insert("Cyclops", 4)
 
         // Now we have a different set to aggregate over and compare
-        _ <- Monster.name.heads.get.map(_.sortBy(t => (t._1, t._2)) ==> List(
+        _ <- Monster.name.a1.heads.a2.get.map(_ ==> List(
           ("Cerberus", 3),
           ("Chimera", 1),
           ("Cyclops", 1),
@@ -134,7 +134,7 @@ object Aggregates extends AsyncTestSuite {
         _ <- Monster.heads(stddev).get.map(_.head ==> 1.2649110640673518)
 
         // Note how the query group by name so that we get 1 + 4 = 5 Cyclopes heads
-        _ <- Monster.name.heads(sum).get.map(_.sortBy(t => (t._1, t._2)) ==> List(
+        _ <- Monster.name.a1.heads(sum).a2.get.map(_ ==> List(
           ("Cerberus", 3),
           ("Chimera", 1),
           ("Cyclops", 5), // <-- 1 + 4

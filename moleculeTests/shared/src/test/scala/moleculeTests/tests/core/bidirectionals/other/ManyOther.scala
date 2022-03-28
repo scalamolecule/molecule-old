@@ -295,7 +295,7 @@ object ManyOther extends AsyncTestSuite {
           List(ann, gus, leo) <- Person.name.Buddies.*(Animal.name).insert("Ann", List("Gus", "Leo")).map(_.eids)
           rex <- Animal.name("Rex").save.map(_.eid)
 
-          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Leo", "Gus"))
+          _ <- animalBuddiesOf("Ann").get.map(_ ==> List("Gus", "Leo"))
           _ <- personBuddiesOf("Gus").get.map(_ ==> List("Ann"))
           _ <- personBuddiesOf("Leo").get.map(_ ==> List("Ann"))
           _ <- personBuddiesOf("Rex").get.map(_ ==> List())

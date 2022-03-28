@@ -91,7 +91,7 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
         _ <- loadData
 
         // Find attributes with a certain applied value
-        _ <- Community.name.tpe("twitter").get(3).map(_.sortBy(_._1) ==> List(
+        _ <- Community.name.a1.tpe("twitter").get(3).map(_ ==> List(
           ("Columbia Citizens", "twitter"),
           ("Discover SLU", "twitter"),
           ("Fremont Universe", "twitter")))
@@ -171,34 +171,35 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
         _ <- facebookCommunities.get(3).map(_ ==> List("Magnolia Voice", "Columbia Citizens", "Discover SLU"))
 
         // If we omit the underscore we can get the type too
-        communitiesWithType = m(Community.name.tpe(?))
+        communitiesWithType = m(Community.name.a1.tpe(?))
         _ <- communitiesWithType("twitter").get(3).map(_ ==> List(
+          ("Columbia Citizens", "twitter"),
           ("Discover SLU", "twitter"),
           ("Fremont Universe", "twitter"),
-          ("Columbia Citizens", "twitter")))
+        ))
 
 
         // Multiple input values for an attribute - logical OR ------------------------
 
         // Finding communities of type "facebook_page" OR "twitter"
         facebookOrTwitterCommunities = List(
-          ("Discover SLU", "twitter"),
-          ("Eastlake Community Council", "facebook_page"),
-          ("MyWallingford", "facebook_page")
+          ("Blogging Georgetown", "facebook_page"),
+          ("Columbia Citizens", "twitter"),
+          ("Columbia Citizens", "facebook_page"),
         )
 
         // Notation variations with OR-semantics for multiple inputs:
 
         // 1. OR expression-----------------------------------------------------
 
-        _ <- communitiesWithType("facebook_page" or "twitter").get(3).map(_.sorted ==> facebookOrTwitterCommunities)
+        _ <- communitiesWithType("facebook_page" or "twitter").get(3).map(_ ==> facebookOrTwitterCommunities)
 
         // 2. Comma-separated list
         // Note how this has OR-semantics with a single input paramter!
-        _ <- communitiesWithType("facebook_page", "twitter").get(3).map(_.sorted ==> facebookOrTwitterCommunities)
+        _ <- communitiesWithType("facebook_page", "twitter").get(3).map(_ ==> facebookOrTwitterCommunities)
 
         // 3. List
-        _ <- communitiesWithType(Seq("facebook_page", "twitter")).get(3).map(_.sorted ==> facebookOrTwitterCommunities)
+        _ <- communitiesWithType(Seq("facebook_page", "twitter")).get(3).map(_ ==> facebookOrTwitterCommunities)
 
 
         /** ******* Multiple input parameters ************************* */
@@ -206,28 +207,28 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
         // Tuple of input values for multiple attributes - logical AND ------------------------
 
         // Communities of some tpe AND some `orgtype`
-        typeAndOrgtype = m(Community.name.tpe_(?).orgtype_(?))
+        typeAndOrgtype = m(Community.name.a1.tpe_(?).orgtype_(?))
 
         // Finding communities of type "email_list" AND orgtype "community"
         emailListCommunities = List(
           "15th Ave Community",
           "Admiral Neighborhood Association",
-          "Ballard Moms",
+          "Alki News",
         )
 
         // Notation variations with AND-semantics for a single tuple of inputs:
 
         // 1. AND expression
-        _ <- typeAndOrgtype("email_list" and "community").get(3).map(_.sorted ==> emailListCommunities)
+        _ <- typeAndOrgtype("email_list" and "community").get(3).map(_ ==> emailListCommunities)
 
         // 2. Comma-separated list
         // Note how this shorthand notation has AND-semantics and expects a number of
         // inputs matching the arity of input parameters, in this case 2.
-        _ <- typeAndOrgtype("email_list", "community").get(3).map(_.sorted ==> emailListCommunities)
+        _ <- typeAndOrgtype("email_list", "community").get(3).map(_ ==> emailListCommunities)
 
         // 3. List of tuples
         // Note how this has AND-semantics and how it differs from the the OR-version above!
-        _ <- typeAndOrgtype(Seq(("email_list", "community"))).get(3).map(_.sorted ==> emailListCommunities)
+        _ <- typeAndOrgtype(Seq(("email_list", "community"))).get(3).map(_ ==> emailListCommunities)
 
 
         // Multiple tuples of input values ------------------------
@@ -261,14 +262,13 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
       for {
         _ <- loadData
 
-        beforeC = List("Ballard Blog", "Beach Drive Blog", "Beacon Hill Blog")
+        beforeC = List("15th Ave Community", "Admiral Neighborhood Association", "Alki News")
 
-        _ <- m(Community.name < "C").get(3).map(_.sorted ==> beforeC)
-        _ <- Community.name.<("C").get(3).map(_.sorted ==> beforeC)
+        _ <- Community.name.<("C").a1.get(3).map(_ ==> beforeC)
 
-        communitiesBefore = m(Community.name < ?)
-        _ <- communitiesBefore("C").get(3).map(_.sorted ==> beforeC)
-        _ <- communitiesBefore("A").get(3).map(_.sorted ==> List("15th Ave Community"))
+        communitiesBefore = m(Community.name.<(?).a1)
+        _ <- communitiesBefore("C").get(3).map(_ ==> beforeC)
+        _ <- communitiesBefore("A").get(3).map(_ ==> List("15th Ave Community"))
       } yield ()
     }
 
@@ -319,18 +319,16 @@ object SeattleTests extends AsyncTestSuite with SeattleData {
           "MyWallingford",
         )
 
-        _ <- Community.name.tpe_("twitter" or "facebook_page")
+        _ <- Community.name.a1.tpe_("twitter" or "facebook_page")
           .Neighborhood.District.region_("sw" or "s" or "se")
-          .get.map(_.sorted ==> southernSocialMedia)
+          .get.map(_ ==> southernSocialMedia)
 
         // Parameterized
-        typeAndRegion = m(Community.name.tpe_(?).Neighborhood.District.region_(?))
+        typeAndRegion = m(Community.name.a1.tpe_(?).Neighborhood.District.region_(?))
 
-        _ <- typeAndRegion(("twitter" or "facebook_page") and ("sw" or "s" or "se"))
-          .get.map(_.sorted ==> southernSocialMedia)
+        _ <- typeAndRegion(("twitter" or "facebook_page") and ("sw" or "s" or "se")).get.map(_ ==> southernSocialMedia)
         // ..same as
-        _ <- typeAndRegion(Seq("twitter", "facebook_page"), Seq("sw", "s", "se"))
-          .get.map(_.sorted ==> southernSocialMedia)
+        _ <- typeAndRegion(Seq("twitter", "facebook_page"), Seq("sw", "s", "se")).get.map(_ ==> southernSocialMedia)
       } yield ()
     }
 

@@ -9,7 +9,7 @@ import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.ast.SortCoordinate
 
 
-case class Sort(
+case class SortRows(
   rows: jCollection[jList[AnyRef]],
   sortCoordinates: List[List[SortCoordinate]]
 ) extends Comparator[jList[AnyRef]] {
@@ -156,6 +156,16 @@ case class Sort(
       else
         (x: jList[AnyRef], y: jList[AnyRef]) => rowComparison(y, x)
     }
+  }
+
+
+  override def compare(x: jList[AnyRef], y: jList[AnyRef]): Int = {
+    sorter(x, y)
+  }
+
+  def get: jCollection[jList[AnyRef]] = {
+    sortedRows.sort(this)
+    sortedRows
   }
 
   // Up to maximum of 7 sub levels (8 including top level) * 5 sort markers per level = 40
@@ -1997,15 +2007,6 @@ case class Sort(
           result
         }
     }
-  }
-
-  override def compare(x: jList[AnyRef], y: jList[AnyRef]): Int = {
-    sorter(x, y)
-  }
-
-  def get: jCollection[jList[AnyRef]] = {
-    sortedRows.sort(this)
-    sortedRows
   }
 }
 

@@ -109,7 +109,7 @@ object Eid extends AsyncTestSuite {
         _ <- Ns.e.int(1).get.map(_ ==> List((e1, 1)))
         _ <- Ns.e.int(2).get.map(_ ==> List((e2, 2)))
 
-        _ <- Ns.e.int_(1, 2).a1.get.map(_ ==> List(e1, e2))
+        _ <- Ns.e.a1.int_(1, 2).get.map(_ ==> List(e1, e2))
         _ <- Ns.e.int(1, 2).a1.get.map(_ ==> List((e1, 1), (e2, 2)))
 
 

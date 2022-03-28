@@ -97,8 +97,8 @@ object Graph extends AsyncTestSuite {
 
         // All groups and the roles a user has, sorted by the name of the role
         _ <- User.name_("User1")
-          .RoleInGroup.Role.name
-          ._RoleInGroup.Group.name.get.map(_.sorted ==> List(
+          .RoleInGroup.Role.name.a1
+          ._RoleInGroup.Group.name.a2.get.map(_ ==> List(
           ("Role1", "Group2"),
           ("Role2", "Group1")
         ))
@@ -134,15 +134,16 @@ object Graph extends AsyncTestSuite {
           ("User2", "U2G3R56", g3, Set(r5, r6)))
 
         // Users and their Roles in Groups
-        _ <- User.name
-          .RoleInGroup.Roles.name
-          ._RoleInGroup.Group.name.get.map(_.sorted ==> List(
+        _ <- User.name.a1
+          .RoleInGroup.Roles.name.a2
+          ._RoleInGroup.Group.name.a3.get.map(_ ==> List(
           ("User1", "Role1", "Group1"),
           ("User1", "Role2", "Group1"), // Sharing Role2 in Group 1
           ("User1", "Role2", "Group2"),
           ("User1", "Role3", "Group2"), // Sharing Role3 in Group 2
           ("User1", "Role3", "Group3"),
           ("User1", "Role4", "Group3"),
+
           ("User2", "Role2", "Group1"), // Sharing Role2 in Group 1
           ("User2", "Role3", "Group2"), // Sharing Role3 in Group 2
           ("User2", "Role4", "Group2"),
@@ -153,13 +154,13 @@ object Graph extends AsyncTestSuite {
         // Groups where User1 and User2 share a role
 
         // Since we unify on both Group name and Role name we can use the AND notation:
-        _ <- User.name_("User1" and "User2").RoleInGroup.Group.name._RoleInGroup.Roles.name.get.map(_.sorted ==> List(
+        _ <- User.name_("User1" and "User2").RoleInGroup.Group.name.a1._RoleInGroup.Roles.name.a2.get.map(_ ==> List(
           ("Group1", "Role2"),
           ("Group2", "Role3")))
 
         // .. or we could use the full SelfJoin notation
-        _ <- User.name_("User1").RoleInGroup.Group.name._RoleInGroup.Roles.name._RoleInGroup._User.Self
-          .name_("User2").RoleInGroup.Group.name_(unify)._RoleInGroup.Roles.name_(unify).get.map(_.sorted ==> List(
+        _ <- User.name_("User1").RoleInGroup.Group.name.a1._RoleInGroup.Roles.name.a2._RoleInGroup._User.Self
+          .name_("User2").RoleInGroup.Group.name_(unify)._RoleInGroup.Roles.name_(unify).get.map(_ ==> List(
           ("Group1", "Role2"),
           ("Group2", "Role3")))
 
@@ -170,8 +171,8 @@ object Graph extends AsyncTestSuite {
           ("Group1", 1),
           ("Group2", 1)))
         // .. or
-        _ <- User.name_("User1").RoleInGroup.Group.name._RoleInGroup.roles(count)._User.Self
-          .name_("User2").RoleInGroup.Group.name_(unify)._RoleInGroup.roles_(unify).get.map(_.sortBy(_._1) ==> List(
+        _ <- User.name_("User1").RoleInGroup.Group.name.a1._RoleInGroup.roles(count)._User.Self
+          .name_("User2").RoleInGroup.Group.name_(unify)._RoleInGroup.roles_(unify).get.map(_ ==> List(
           ("Group1", 1),
           ("Group2", 1)))
 

@@ -118,6 +118,7 @@ object OneOther extends AsyncTestSuite {
       } yield ()
     }
 
+
     "Update new" - {
 
       "creating ref to new" - bidirectional { implicit conn =>
@@ -168,11 +169,12 @@ object OneOther extends AsyncTestSuite {
             ("Ben", "Guz")
           ))
           _ <- animalMaster.get.map(_ ==> List(
-            Seq("Ben", "Guz")
+            ("Guz", "Ben")
           ))
         } yield ()
       }
     }
+
 
     "Update id" - {
 

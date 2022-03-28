@@ -22,8 +22,8 @@ object Binding extends AsyncTestSuite {
 
   // Input molecules returning only the entity id (`e`).
   // (Underscore-suffixed attribute names are not returned in the result set)
-  val personFirst = m(User.e.firstName_(?))
-  val person      = m(User.e.firstName_(?).lastName_(?))
+  val personFirst = m(User.e.a1.firstName_(?))
+  val person      = m(User.e.a1.firstName_(?).lastName_(?))
 
   lazy val tests = Tests {
     import molecule.core.util.Executor._
@@ -36,10 +36,10 @@ object Binding extends AsyncTestSuite {
         _ <- personFirst("Stewart").get.map(_ ==> List(stewartBrand))
 
         // Find all the Stewart or Stuart first names
-        _ <- personFirst("Stewart" or "Stuart").get.map(_.sorted ==>
+        _ <- personFirst("Stewart" or "Stuart").get.map(_ ==>
           List(stewartBrand, stuartSmalley, stuartHalloway).sorted)
 
-        _ <- personFirst("Stewart", "Stuart").get.map(_.sorted ==>
+        _ <- personFirst("Stewart", "Stuart").get.map(_ ==>
           List(stewartBrand, stuartSmalley, stuartHalloway).sorted)
 
         // Find all the Stewart/Stuart as either first name or last name
@@ -65,11 +65,11 @@ object Binding extends AsyncTestSuite {
         _ <- person(("John", "Stewart")).get.map(_ ==> List(johnStewart))
 
         // Bind collection
-        _ <- personFirst(List("John", "Stuart")).get.map(_.sorted ==>
+        _ <- personFirst(List("John", "Stuart")).get.map(_ ==>
           List(johnStewart, stuartSmalley, stuartHalloway).sorted)
 
         // Bind relation
-        _ <- person(("John", "Stewart"), ("Stuart", "Halloway")).get.map(_.sorted ==>
+        _ <- person(("John", "Stewart"), ("Stuart", "Halloway")).get.map(_ ==>
           List(johnStewart, stuartHalloway).sorted)
 
         _ <- person(("John", "Stewart"), ("Stuart", "Hallowey")).get.map(_ ==> List(johnStewart))

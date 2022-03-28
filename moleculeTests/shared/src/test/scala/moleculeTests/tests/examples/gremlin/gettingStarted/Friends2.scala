@@ -51,7 +51,7 @@ object Friends2 extends AsyncTestSuite {
       List(lop, ripple) <- Software.name.lang insert Seq(
         ("lop", "java"),
         ("ripple", "java")
-      ) map(_.eids)
+      ) map (_.eids)
 
       // People and software created
       List(
@@ -64,7 +64,7 @@ object Friends2 extends AsyncTestSuite {
         ("vadas", 27, Seq()),
         ("josh", 32, Seq((lop, 0.4), (ripple, 1.0))),
         ("peter", 35, Seq((lop, 0.2)))
-      ) map(_.eids)
+      ) map (_.eids)
 
       // Weighed friendships (property edges)
 
@@ -92,17 +92,17 @@ object Friends2 extends AsyncTestSuite {
 
         // Marko knows (entity ids)
         // g.V(1).outE('knows')
-        _ <- Person(marko).Knows.person.get.map(_.sorted ==> Seq(josh, vadas).sorted)
+        _ <- Person(marko).Knows.person.a1.get.map(_ ==> Seq(josh, vadas).sorted)
 
         // Marko knows (by name)
         // g.V(1).outE('knows').inV().values('name')
         // g.V(1).out('knows').values('name')
         _ <- Person(marko).Knows.Person.name.get.map(_ ==> List("vadas", "josh"))
-        _ <- Person(marko).Knows.person.get.map(_.sorted ==> List(josh, vadas).sorted)
+        _ <- Person(marko).Knows.person.a1.get.map(_ ==> List(josh, vadas).sorted)
 
         // We can uniformly query in the other direction too
         // vadas and josh also know marko
-        _ <- Person(vadas).Knows.person.get.map(_.sorted ==> List(peter, marko).sorted)
+        _ <- Person(vadas).Knows.person.a1.get.map(_ ==> List(peter, marko).sorted)
         _ <- Person(josh).Knows.person.get.map(_ ==> List(marko))
 
         // "Markos knows older than 30"
@@ -168,7 +168,7 @@ object Friends2 extends AsyncTestSuite {
         (marko, markoLop, vadas, josh, joshLop, joshRipple, peter, peterLop) <- testData
 
         // What friends does each person have (nested lists)
-        _ <- m(Person.name.Knows * Person.name).get.map(_.map(t => (t._1, t._2.sorted)).sortBy(_._1) ==> List(
+        _ <- m(Person.name.a1.Knows * Person.name.a1).get.map(_ ==> List(
           ("josh", List("marko")),
           ("marko", List("josh", "vadas")),
           ("peter", List("vadas")),
@@ -176,11 +176,11 @@ object Friends2 extends AsyncTestSuite {
         ))
 
         // Who has most friends
-        _ <- Person.name.Knows.person(count).get.map(_.sortBy(_._2).reverse ==> List(
-          ("vadas", 2),
+        _ <- Person.name.a2.Knows.person(count).d1.get.map(_ ==> List(
           ("marko", 2),
+          ("vadas", 2),
+          ("josh", 1),
           ("peter", 1),
-          ("josh", 1)
         ))
 
         // Markos friends older than 30
@@ -218,19 +218,15 @@ object Friends2 extends AsyncTestSuite {
         ))
 
         // Same, nested
-        _ <- Person.name("marko").Knows.*(
-          Person.name.Knows.*(
-            Person.name)).get
-          .map(_.map(t1 => (t1._1, t1._2.map(t2 => (t2._1, t2._2.sorted)).sortBy(_._1))) ==>
+        _ <- Person.name("marko").Knows.*(Person.name.a1.Knows.*(Person.name.a1)).get.map(_ ==> List(
+          (
+            "marko",
             List(
-              (
-                "marko",
-                List(
-                  ("josh", List("marko")),
-                  ("vadas", List("marko", "peter")),
-                )
-              )
-            ))
+              ("josh", List("marko")),
+              ("vadas", List("marko", "peter")),
+            )
+          )
+        ))
 
         // Marko's friends and their friends (excluding marko)
         _ <- Person.name("marko").Knows.Person.name.Knows.Person.name.not("marko").get.map(_ ==> List(
