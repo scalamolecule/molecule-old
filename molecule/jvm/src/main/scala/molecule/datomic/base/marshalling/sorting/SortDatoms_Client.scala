@@ -5,7 +5,7 @@ import java.util
 import java.util.{Comparator, Date, Iterator => jIterator, List => jList}
 import clojure.lang.Keyword
 import datomic.Peer.toT
-import datomic.{Database => PeerDb, Datom => PeerDatom}
+import datomicScala.client.api.{Datom => ClientDatom}
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.ast.SortCoordinate
 import molecule.core.util.JavaConversions
@@ -15,12 +15,12 @@ import molecule.datomic.base.util.JavaHelpers
 import scala.collection.StringOps
 import scala.concurrent.{ExecutionContext, Future}
 
-case class SortDatoms_Peer(
+case class SortDatoms_Client(
   conn: Conn,
   adhocDb: DatomicDb,
   attrs: Seq[String],
   sortCoordinates: List[List[SortCoordinate]],
-  datoms: jIterator[PeerDatom],
+  datoms: jIterator[ClientDatom],
   tOpt: Option[Long] = None
 )(implicit ec: ExecutionContext) extends Comparator[jList[AnyRef]]
   with JavaHelpers with PackBase with JavaConversions {
@@ -47,15 +47,28 @@ case class SortDatoms_Peer(
     row
   }
 
-  def getValue(attr: String): (jList[AnyRef], PeerDatom) => Future[jList[AnyRef]] = {
+  private def getIdent(conn: Conn, eid: Any): Future[String] = {
+    conn.rawQuery(s"[:find ?idIdent :where [$eid :db/ident ?idIdent]]").map { rows =>
+      if (rows.size() != 1)
+        throw MoleculeException(s"Couldn't find attribute name of eid $eid in saved schema.")
+      else
+        rows.iterator().next().get(0).toString
+    }
+  }
+
+  def getValue(attr: String): (jList[AnyRef], ClientDatom) => Future[jList[AnyRef]] = {
     attr match {
-      case "e" => (row: jList[AnyRef], d: PeerDatom) => fut(row, d.e)
-      case "a" => (row: jList[AnyRef], d: PeerDatom) => fut(row, adhocDb.getDatomicDb.asInstanceOf[PeerDb].ident(d.a))
-      case "v" => (row: jList[AnyRef], d: PeerDatom) =>
-        Future {
-          val a         = adhocDb.getDatomicDb.asInstanceOf[PeerDb].ident(d.a).toString
-          val (_, tpe)  = attrMap.getOrElse(a,
-            throw MoleculeException(s"Unexpected attribute `$a` not found in attrMap.")
+      case "e" => (row: jList[AnyRef], d: ClientDatom) => fut(row, d.e.asInstanceOf[AnyRef])
+      case "a" => (row: jList[AnyRef], d: ClientDatom) =>
+        getIdent(conn, d.a).map { attrName =>
+          row.add(attrName)
+          row
+        }
+
+      case "v" => (row: jList[AnyRef], d: ClientDatom) =>
+        getIdent(conn, d.a).map { attrName =>
+          val (_, tpe)  = attrMap.getOrElse(attrName,
+            throw MoleculeException(s"Attribute name `$attrName` not found in attrMap.")
           )
           val tpePrefix = tpe + " " * (10 - tpe.length)
           row.add(tpe match {
@@ -66,22 +79,22 @@ case class SortDatoms_Peer(
           row
         }
 
-      case "t" if tOpt.isDefined => (row: jList[AnyRef], _: PeerDatom) => fut(row, tOpt.get.asInstanceOf[AnyRef])
-      case "t"                   => (row: jList[AnyRef], d: PeerDatom) => fut(row, toT(d.tx).asInstanceOf[AnyRef])
-      case "tx"                  => (row: jList[AnyRef], d: PeerDatom) => fut(row, d.tx)
-      case "txInstant"           => (row: jList[AnyRef], d: PeerDatom) =>
+      case "t" if tOpt.isDefined => (row: jList[AnyRef], _: ClientDatom) => fut(row, tOpt.get.asInstanceOf[AnyRef])
+      case "t"                   => (row: jList[AnyRef], d: ClientDatom) => fut(row, toT(d.tx).asInstanceOf[AnyRef])
+      case "tx"                  => (row: jList[AnyRef], d: ClientDatom) => fut(row, d.tx.asInstanceOf[AnyRef])
+      case "txInstant"           => (row: jList[AnyRef], d: ClientDatom) =>
         adhocDb.entity(conn, d.tx).rawValue(":db/txInstant").map { v =>
           row.add(v.asInstanceOf[Date])
           row
         }
-      case "op"                  => (row: jList[AnyRef], d: PeerDatom) => fut(row, d.added.asInstanceOf[AnyRef])
+      case "op"                  => (row: jList[AnyRef], d: ClientDatom) => fut(row, d.added.asInstanceOf[AnyRef])
     }
   }
 
-  def getDatom2row: (util.ArrayList[jList[AnyRef]], PeerDatom) => Future[util.ArrayList[jList[AnyRef]]] = attrs.size match {
+  def getDatom2row: (util.ArrayList[jList[AnyRef]], ClientDatom) => Future[util.ArrayList[jList[AnyRef]]] = attrs.size match {
     case 1 =>
       val get1 = getValue(attrs.head)
-      (rows: util.ArrayList[jList[AnyRef]], d: PeerDatom) =>
+      (rows: util.ArrayList[jList[AnyRef]], d: ClientDatom) =>
         for {
           row1 <- get1(new util.ArrayList[AnyRef](1), d)
         } yield {
@@ -92,7 +105,7 @@ case class SortDatoms_Peer(
     case 2 =>
       val get1 = getValue(attrs.head)
       val get2 = getValue(attrs(1))
-      (rows: util.ArrayList[jList[AnyRef]], d: PeerDatom) =>
+      (rows: util.ArrayList[jList[AnyRef]], d: ClientDatom) =>
         for {
           row1 <- get1(new util.ArrayList[AnyRef](2), d)
           row2 <- get2(row1, d)
@@ -105,7 +118,7 @@ case class SortDatoms_Peer(
       val get1 = getValue(attrs.head)
       val get2 = getValue(attrs(1))
       val get3 = getValue(attrs(2))
-      (rows: util.ArrayList[jList[AnyRef]], d: PeerDatom) =>
+      (rows: util.ArrayList[jList[AnyRef]], d: ClientDatom) =>
         for {
           row1 <- get1(new util.ArrayList[AnyRef](3), d)
           row2 <- get2(row1, d)
@@ -120,7 +133,7 @@ case class SortDatoms_Peer(
       val get2 = getValue(attrs(1))
       val get3 = getValue(attrs(2))
       val get4 = getValue(attrs(3))
-      (rows: util.ArrayList[jList[AnyRef]], d: PeerDatom) =>
+      (rows: util.ArrayList[jList[AnyRef]], d: ClientDatom) =>
         for {
           row1 <- get1(new util.ArrayList[AnyRef](4), d)
           row2 <- get2(row1, d)
@@ -137,7 +150,7 @@ case class SortDatoms_Peer(
       val get3 = getValue(attrs(2))
       val get4 = getValue(attrs(3))
       val get5 = getValue(attrs(4))
-      (rows: util.ArrayList[jList[AnyRef]], d: PeerDatom) =>
+      (rows: util.ArrayList[jList[AnyRef]], d: ClientDatom) =>
         for {
           row1 <- get1(new util.ArrayList[AnyRef](5), d)
           row2 <- get2(row1, d)
@@ -156,7 +169,7 @@ case class SortDatoms_Peer(
       val get4 = getValue(attrs(3))
       val get5 = getValue(attrs(4))
       val get6 = getValue(attrs(5))
-      (rows: util.ArrayList[jList[AnyRef]], d: PeerDatom) =>
+      (rows: util.ArrayList[jList[AnyRef]], d: ClientDatom) =>
         for {
           row1 <- get1(new util.ArrayList[AnyRef](6), d)
           row2 <- get2(row1, d)
@@ -177,7 +190,7 @@ case class SortDatoms_Peer(
       val get5 = getValue(attrs(4))
       val get6 = getValue(attrs(5))
       val get7 = getValue(attrs(6))
-      (rows: util.ArrayList[jList[AnyRef]], d: PeerDatom) =>
+      (rows: util.ArrayList[jList[AnyRef]], d: ClientDatom) =>
         for {
           row1 <- get1(new util.ArrayList[AnyRef](7), d)
           row2 <- get2(row1, d)

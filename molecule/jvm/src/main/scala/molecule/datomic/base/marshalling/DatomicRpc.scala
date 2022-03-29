@@ -19,7 +19,7 @@ import molecule.core.util.{DateHandling, Helpers, JavaConversions, Quoted}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.facade._
 import molecule.datomic.base.marshalling.packers.{PackDatoms, PackEntityGraph}
-import molecule.datomic.base.marshalling.sorting.{SortDatoms_Peer, SortRows}
+import molecule.datomic.base.marshalling.sorting.{SortDatoms_Client, SortDatoms_Peer, SortRows}
 import molecule.datomic.base.util.JavaHelpers
 import molecule.datomic.client.facade.{Conn_Client, DatomicDb_Client, Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.{Conn_Peer, DatomicDb_Peer, Datomic_Peer}
@@ -130,7 +130,8 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
           OptNested2packed(obj, rows, maxRows, refIndexes, tacitIndexes, sortCoordinates).getPacked
 
         } else if (nestedLevels == 0) {
-          val rows = if (sortCoordinates.flatten.nonEmpty) SortRows(rawRows, sortCoordinates).get else rawRows
+          val rows = if (sortCoordinates.flatten.nonEmpty)
+            SortRows(rawRows, sortCoordinates).get else rawRows
           Flat2packed(obj, rows, maxRows).getPacked
 
         } else {
@@ -207,102 +208,125 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
       conn <- getConn(connProxy)
       db <- conn.db
       packer = PackDatoms(conn, db, attrs, index, indexArgs)
-      sb <- api match {
-        case "datoms" =>
-          db match {
-            case db: DatomicDb_Peer        =>
-              val datomicIndex = index match {
-                case "EAVT" => datomic.Database.EAVT
-                case "AEVT" => datomic.Database.AEVT
-                case "AVET" => datomic.Database.AVET
-                case "VAET" => datomic.Database.VAET
-              }
-              val datom2packed = packer.getPeerDatom2packed(None)
-              //                  if (sortCoordinates.nonEmpty) {
-              //                if (false) {
-              //                  for {
-              //                    datoms <- db.datoms(datomicIndex, packer.args: _*)
-              //                    sortedDatoms = {
-              //                      SortDatoms_Peer(datoms, sortCoordinates).get
-              //                    }
-              //                  } yield ()
-              //
-              //                } else {
-              //                }
-              db.datoms(datomicIndex, packer.args: _*).flatMap { datoms =>
-                datoms.asScala.foldLeft(Future(new StringBuffer())) {
-                  case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+      sb <- {
+        api match {
+          case "datoms" =>
+            db match {
+              case db: DatomicDb_Peer        =>
+                val datomicIndex = index match {
+                  case "EAVT" => datomic.Database.EAVT
+                  case "AEVT" => datomic.Database.AEVT
+                  case "AVET" => datomic.Database.AVET
+                  case "VAET" => datomic.Database.VAET
                 }
-              }
-            case adhocDb: DatomicDb_Client =>
-              val datomicIndex = index match {
-                case "EAVT" => ":eavt"
-                case "AEVT" => ":aevt"
-                case "AVET" => ":avet"
-                case "VAET" => ":vaet"
-              }
-              val datom2packed = packer.getClientDatom2packed(None)
-              adhocDb.datoms(datomicIndex, packer.args).flatMap { datoms =>
-                datoms.iterator().asScala.foldLeft(Future(new StringBuffer())) {
-                  case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
-                }
-              }
-          }
-
-        case "indexRange" =>
-          db match {
-            case db: DatomicDb_Peer   =>
-              val datom2packed = packer.getPeerDatom2packed(None)
-              val startValue   = if (indexArgs.v.isEmpty) null else castTpeV(indexArgs.tpe, indexArgs.v)
-              val endValue     = if (indexArgs.v2.isEmpty) null else castTpeV(indexArgs.tpe2, indexArgs.v2)
-              db.indexRange(indexArgs.a, startValue, endValue).flatMap { datoms =>
-                datoms.asScala.foldLeft(Future(new StringBuffer())) {
-                  case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
-                }
-              }
-            case db: DatomicDb_Client =>
-              val datom2packed = packer.getClientDatom2packed(None)
-              val startValue   = if (indexArgs.v.isEmpty) None else Some(castTpeV(indexArgs.tpe, indexArgs.v))
-              val endValue     = if (indexArgs.v2.isEmpty) None else Some(castTpeV(indexArgs.tpe2, indexArgs.v2))
-              db.indexRange(indexArgs.a, startValue, endValue).flatMap { datoms =>
-                datoms.iterator().asScala.foldLeft(Future(new StringBuffer())) {
-                  case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
-                }
-              }
-          }
-
-        case "txRange" =>
-          // Loop transactions
-          conn match {
-            case conn: Conn_Peer =>
-              val from  = if (indexArgs.v.isEmpty) null else castTpeV(indexArgs.tpe, indexArgs.v)
-              val until = if (indexArgs.v2.isEmpty) null else castTpeV(indexArgs.tpe2, indexArgs.v2)
-              conn.peerConn.log.txRange(from, until).asScala.foldLeft(Future(new StringBuffer())) {
-                case (sbFut, txMap) =>
-                  // Flatten transaction datoms to uniform tuples return type
-                  val datom2packed = packer
-                    .getPeerDatom2packed(Some(txMap.get(datomic.Log.T).asInstanceOf[Long]))
-                  txMap.get(datomic.Log.DATA).asInstanceOf[jList[PeerDatom]].asScala.foldLeft(sbFut) {
-                    case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                db.datoms(datomicIndex, packer.args: _*).flatMap { datoms =>
+                  if (sortCoordinates.nonEmpty) {
+                    SortDatoms_Peer(conn, db, attrs, sortCoordinates, datoms.iterator).getPacked
+                  } else {
+                    val datom2packed = packer.getPeerDatom2packed(None)
+                    datoms.asScala.foldLeft(Future(new StringBuffer())) {
+                      case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                    }
                   }
-              }
-
-            case conn: Conn_Client =>
-              val from  = if (indexArgs.v.isEmpty) None else Some(castTpeV(indexArgs.tpe, indexArgs.v))
-              val until = if (indexArgs.v2.isEmpty) None else Some(castTpeV(indexArgs.tpe2, indexArgs.v2))
-              conn.clientConn.txRange(from, until).foldLeft(Future(new StringBuffer())) {
-                case (sbFut, (t, datoms)) =>
-                  // Flatten transaction datoms to uniform tuples return type
-                  val datom2packed: (StringBuffer, ClientDatom) => Future[StringBuffer] =
-                    packer.getClientDatom2packed(Some(t))
-                  datoms.foldLeft(sbFut) {
-                    case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                }
+              case adhocDb: DatomicDb_Client =>
+                val datomicIndex = index match {
+                  case "EAVT" => ":eavt"
+                  case "AEVT" => ":aevt"
+                  case "AVET" => ":avet"
+                  case "VAET" => ":vaet"
+                }
+                adhocDb.datoms(datomicIndex, packer.args).flatMap { datoms =>
+                  if (sortCoordinates.nonEmpty) {
+                    SortDatoms_Client(conn, db, attrs, sortCoordinates, datoms.iterator).getPacked
+                  } else {
+                    val datom2packed = packer.getClientDatom2packed(None)
+                    datoms.iterator().asScala.foldLeft(Future(new StringBuffer())) {
+                      case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                    }
                   }
-              }
-          }
+                }
+            }
+
+          case "indexRange" =>
+            db match {
+              case db: DatomicDb_Peer   =>
+                val datom2packed = packer.getPeerDatom2packed(None)
+                val startValue   = if (indexArgs.v.isEmpty) null else castTpeV(indexArgs.tpe, indexArgs.v)
+                val endValue     = if (indexArgs.v2.isEmpty) null else castTpeV(indexArgs.tpe2, indexArgs.v2)
+                db.indexRange(indexArgs.a, startValue, endValue).flatMap { datoms =>
+                  if (sortCoordinates.nonEmpty) {
+                    SortDatoms_Peer(conn, db, attrs, sortCoordinates, datoms.iterator).getPacked
+                  } else {
+                    datoms.asScala.foldLeft(Future(new StringBuffer())) {
+                      case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                    }
+                  }
+                }
+              case db: DatomicDb_Client =>
+                val datom2packed = packer.getClientDatom2packed(None)
+                val startValue   = if (indexArgs.v.isEmpty) None else Some(castTpeV(indexArgs.tpe, indexArgs.v))
+                val endValue     = if (indexArgs.v2.isEmpty) None else Some(castTpeV(indexArgs.tpe2, indexArgs.v2))
+                db.indexRange(indexArgs.a, startValue, endValue).flatMap { datoms =>
+                  if (sortCoordinates.nonEmpty) {
+                    SortDatoms_Client(conn, db, attrs, sortCoordinates, datoms.iterator).getPacked
+                  } else {
+                    datoms.iterator().asScala.foldLeft(Future(new StringBuffer())) {
+                      case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                    }
+                  }
+                }
+            }
+
+          case "txRange" =>
+            // Flatten transaction datoms to uniform tuples return type
+            conn match {
+              case conn: Conn_Peer =>
+                val from  = if (indexArgs.v.isEmpty) null else castTpeV(indexArgs.tpe, indexArgs.v)
+                val until = if (indexArgs.v2.isEmpty) null else castTpeV(indexArgs.tpe2, indexArgs.v2)
+                if (sortCoordinates.nonEmpty) {
+                  val datoms = new util.ArrayList[PeerDatom]()
+                  conn.peerConn.log.txRange(from, until).asScala.foreach {
+                    txMap => datoms.addAll(txMap.get(datomic.Log.DATA).asInstanceOf[jList[PeerDatom]])
+                  }
+                  SortDatoms_Peer(conn, db, attrs, sortCoordinates, datoms.iterator).getPacked
+                } else {
+                  conn.peerConn.log.txRange(from, until).asScala.foldLeft(Future(new StringBuffer())) {
+                    case (sbFut, txMap) =>
+                      val datom2packed = packer
+                        .getPeerDatom2packed(Some(txMap.get(datomic.Log.T).asInstanceOf[Long]))
+                      txMap.get(datomic.Log.DATA).asInstanceOf[jList[PeerDatom]].asScala.foldLeft(sbFut) {
+                        case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                      }
+                  }
+                }
+
+              case conn: Conn_Client =>
+                val from  = if (indexArgs.v.isEmpty) None else Some(castTpeV(indexArgs.tpe, indexArgs.v))
+                val until = if (indexArgs.v2.isEmpty) None else Some(castTpeV(indexArgs.tpe2, indexArgs.v2))
+                if (sortCoordinates.nonEmpty) {
+                  val datoms = new util.ArrayList[ClientDatom]()
+                  conn.clientConn.txRange(from, until).foreach {
+                    case (_, txDatoms) => txDatoms.foreach(d => datoms.add(d))
+                  }
+                  SortDatoms_Client(conn, db, attrs, sortCoordinates, datoms.iterator).getPacked
+                } else {
+                  conn.clientConn.txRange(from, until).foldLeft(Future(new StringBuffer())) {
+                    case (sbFut, (t, datoms)) =>
+                      val datom2packed: (StringBuffer, ClientDatom) => Future[StringBuffer] =
+                        packer.getClientDatom2packed(Some(t))
+                      datoms.foldLeft(sbFut) {
+                        case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                      }
+                  }
+                }
+            }
+        }
       }
     } yield {
-      //        println("-------------------------------" + sb.toString)
+      //      val s = sb.toString
+      //      println("--------------- packed ----------------" + s)
+      //      s
       sb.toString
     }
   }
