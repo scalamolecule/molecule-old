@@ -3,23 +3,23 @@ package molecule.datomic.base.marshalling
 import java.io.StringReader
 import java.net.URI
 import java.util
-import java.util.{Collections, Comparator, Date, UUID, List => jList}
-import java.lang.{Boolean => jBoolean, Double => jDouble, Integer => jInteger, Long => jLong}
-import datomic.Peer.toT
+import java.util.{Collections, Date, UUID, List => jList}
 import datomic.Util._
-import datomic.{Util, Database => PeerDb, Datom => PeerDatom}
+import datomic.{Database, Log, Peer, Util, Datom => PeerDatom}
 import datomicClient.ClojureBridge
 import datomicScala.client.api.{Datom => ClientDatom}
+import molecule.core.dto.SchemaAttr
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling._
-import molecule.core.marshalling.ast.{ConnProxy, DatomicDevLocalProxy, DatomicPeerProxy, DatomicPeerServerProxy, IndexArgs, SortCoordinate}
 import molecule.core.marshalling.ast.nodes.Obj
+import molecule.core.marshalling.ast._
 import molecule.core.util.testing.TimerPrint
-import molecule.core.util.{DateHandling, Helpers, JavaConversions, Quoted}
+import molecule.core.util.{Helpers, JavaConversions, Quoted}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.facade._
 import molecule.datomic.base.marshalling.packers.{PackDatoms, PackEntityGraph}
 import molecule.datomic.base.marshalling.sorting.{SortDatoms_Client, SortDatoms_Peer, SortRows}
+import molecule.datomic.base.ops.QueryOps.txBase
 import molecule.datomic.base.util.JavaHelpers
 import molecule.datomic.client.facade.{Conn_Client, DatomicDb_Client, Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.{Conn_Peer, DatomicDb_Peer, Datomic_Peer}
@@ -33,7 +33,8 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
   with PackEntityGraph with Quoted
   with BooPicklers
   with PackBase
-  with JavaConversions {
+  with JavaConversions
+  with SchemaOps {
 
   // Api ---------------------------------------------
 
@@ -44,13 +45,45 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
   ): Future[TxReportRPC] = {
     for {
       conn <- getConn(connProxy)
+//      _ = println("DatomicRpc.transact -------\n" + stmtsEdn)
+      javaStmts = getJavaStmts(stmtsEdn, uriAttrs)
 
-      _ = println(stmtsEdn)
+      _ = javaStmts.forEach(s => println(s))
 
+      txReport <- conn.transact(javaStmts)
+    } yield txReportRPC(txReport)
+  }
+
+  def retract(
+    connProxy: ConnProxy,
+    stmtsEdn: String,
+    uriAttrs: Set[String]
+  ): Future[TxReport] = {
+    println(stmtsEdn)
+    for {
+      conn <- getConn(connProxy)
       javaStmts = getJavaStmts(stmtsEdn, uriAttrs)
       txReport <- conn.transact(javaStmts)
+    } yield txReportRPC(txReport)
+  }
+
+  private def txReportRPC(txReport: TxReport): TxReportRPC = {
+    TxReportRPC(txReport.t, txReport.tx, txReport.txInstant, txReport.eids, txReport.txData, txReport.toString)
+  }
+
+  def schemaHistoryQuery2packed(
+    connProxy: ConnProxy,
+    datalogQuery: String,
+    obj: Obj,
+    schemaAttrs: Seq[SchemaAttr],
+    sortCoordinates: List[List[SortCoordinate]]
+  ): Future[String] = {
+    for {
+      conn <- getConn(connProxy)
+      rawRows <- QuerySchemaHistory(conn).fetchSchemaHistory(schemaAttrs, datalogQuery)
     } yield {
-      TxReportRPC(txReport.t, txReport.tx, txReport.txInstant, txReport.eids, txReport.txData, txReport.toString)
+      val rows = if (sortCoordinates.nonEmpty) SortRows(rawRows, sortCoordinates).get else rawRows
+      Flat2packed(obj, rows).getPacked
     }
   }
 
@@ -146,54 +179,6 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
       case NonFatal(exc) => Future.failed(exc)
     }
   }.flatten
-
-  // Unmarshall to Datomic java types
-  private def unmarshallInputs(lists: Seq[(Int, String, Any)]): Seq[Object] = {
-    lists.sortBy(_._1).map {
-      case (_, tpe, rawValue) =>
-        val cast = tpe match {
-          case "String"     => if (isEnum(rawValue)) (v: String) => getEnum(v) else (v: String) => v
-          case "Int"        => (v: String) => new java.lang.Long(v)
-          case "Long"       => (v: String) => new java.lang.Long(v)
-          case "Double"     => (v: String) => new java.lang.Double(v)
-          case "Boolean"    => (v: String) => v.toBoolean.asInstanceOf[Object]
-          case "Date"       => (v: String) => str2date(v).asInstanceOf[Object]
-          case "URI"        => (v: String) => new java.net.URI(v).asInstanceOf[Object]
-          case "UUID"       => (v: String) => java.util.UUID.fromString(v).asInstanceOf[Object]
-          case "BigInt"     => (v: String) => new java.math.BigInteger(v).asInstanceOf[Object]
-          case "BigDecimal" => (v: String) => new java.math.BigDecimal(v).asInstanceOf[Object]
-          case "Any"        => (s: String) =>
-            val v = s.drop(10)
-            s.take(10) match {
-              case "String    " => if (isEnum(v)) getEnum(v) else v
-              case "Int       " => new java.lang.Long(v)
-              case "Long      " => new java.lang.Long(v)
-              case "Double    " => new java.lang.Double(v)
-              case "Boolean   " => v.toBoolean.asInstanceOf[Object]
-              case "Date      " => str2date(v).asInstanceOf[Object]
-              case "URI       " => new URI(v).asInstanceOf[Object]
-              case "UUID      " => UUID.fromString(v).asInstanceOf[Object]
-              case "BigInt    " => new java.math.BigInteger(v).asInstanceOf[Object]
-              case "BigDecimal" => new java.math.BigDecimal(v).asInstanceOf[Object]
-            }
-          case _            => throw MoleculeException(s"Unexpected type to cast: $tpe")
-        }
-
-        rawValue match {
-          case l: Seq[_] =>
-            Util.list(l.collect {
-              case l2: Seq[_] =>
-                val Seq(k, v2: String) = l2
-                Util.list(k.toString.asInstanceOf[Object], cast(v2))
-
-              case v1: String => cast(v1)
-            }: _*)
-
-          case v: String => cast(v)
-          case _         => throw MoleculeException("Unexpected input values")
-        }
-    }
-  }
 
 
   def index2packed(
@@ -332,6 +317,8 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
   }
 
 
+  // Schema ---------------------------------------------
+
   // Presuming a datalog query returning rows of single values.
   // Card-many attributes should therefore not be returned as Sets.
   def getAttrValues(
@@ -370,61 +357,74 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
     }
   }
 
-
-  def basisT(connProxy: ConnProxy): Future[Long] = {
+  private def go(connProxy: ConnProxy, action: Conn_Jvm => Future[TxReport]): Future[TxReportRPC] = {
     for {
       conn <- getConn(connProxy)
-      db <- conn.db
-      t <- db.basisT
-    } yield t
+      txReport <- action(conn)
+    } yield txReportRPC(txReport)
   }
 
+  final def changeAttrName(connProxy: ConnProxy, curName: String, newName: String): Future[TxReportRPC] =
+    go(connProxy, (conn: Conn_Jvm) => changeAttrName_(conn, curName, newName))
 
-  def retract(
-    connProxy: ConnProxy,
-    stmtsEdn: String,
-    uriAttrs: Set[String]
-  ): Future[TxReport] = {
-    println(stmtsEdn)
+  final def retireAttr(connProxy: ConnProxy, attrName: String): Future[TxReportRPC] =
+    go(connProxy, (conn: Conn_Jvm) => retireAttr_(conn, attrName))
+
+  final def changeNamespaceName(connProxy: ConnProxy, curName: String, newName: String): Future[TxReportRPC] =
+    go(connProxy, (conn: Conn_Jvm) => changeNamespaceName_(conn, curName, newName))
+
+  final def retireNamespace(connProxy: ConnProxy, nsName: String): Future[TxReportRPC] =
+    go(connProxy, (conn: Conn_Jvm) => retireNamespace_(conn, nsName))
+
+  final def changePartitionName(connProxy: ConnProxy, curName: String, newName: String): Future[TxReportRPC] =
+    go(connProxy, (conn: Conn_Jvm) => changePartitionName_(conn, curName, newName))
+
+  final def retirePartition(connProxy: ConnProxy, partName: String): Future[TxReportRPC] =
+    go(connProxy, (conn: Conn_Jvm) => retirePartition_(conn, partName))
+
+  final def retractSchemaOption(connProxy: ConnProxy, attr: String, option: String): Future[TxReportRPC] =
+    go(connProxy, (conn: Conn_Jvm) => retractSchemaOption_(conn, attr, option))
+
+  final def getEnumHistory(connProxy: ConnProxy): Future[List[(String, Int, Long, Date, String, Boolean)]] = {
     for {
       conn <- getConn(connProxy)
-      javaStmts = getJavaStmts(stmtsEdn, uriAttrs)
-      txReport <- conn.transact(javaStmts)
-    } yield TxReportRPC(
-      txReport.t, txReport.tx, txReport.txInstant, txReport.eids, txReport.txData, txReport.toString
-    )
+      res <- getEnumHistory_(conn)
+    } yield res
   }
+
+  final def retractEnum(connProxy: ConnProxy, enumString: String): Future[TxReportRPC] =
+    go(connProxy, (conn: Conn_Jvm) => retractEnum_(conn, enumString))
 
 
   // Entity api ---------------------------------------------------
 
-  def rawValue(connProxy: ConnProxy, eid: Long, attr: String): Future[String] = {
+  final def rawValue(connProxy: ConnProxy, eid: Long, attr: String): Future[String] = {
     getDatomicEntity(connProxy, eid)
       .flatMap(_.rawValue(attr))
       .map(res => entityList2packed(List(attr -> res)))
   }
 
-  def asMap(connProxy: ConnProxy, eid: Long, depth: Int, maxDepth: Int): Future[String] = {
+  final def asMap(connProxy: ConnProxy, eid: Long, depth: Int, maxDepth: Int): Future[String] = {
     getDatomicEntity(connProxy, eid).flatMap(_.asMap(depth, maxDepth)).map(entityMap2packed)
   }
 
-  def asList(connProxy: ConnProxy, eid: Long, depth: Int, maxDepth: Int): Future[String] = {
+  final def asList(connProxy: ConnProxy, eid: Long, depth: Int, maxDepth: Int): Future[String] = {
     getDatomicEntity(connProxy, eid).flatMap(_.asList(depth, maxDepth)).map(entityList2packed)
   }
 
 
-  def attrs(connProxy: ConnProxy, eid: Long): Future[List[String]] = {
+  final def attrs(connProxy: ConnProxy, eid: Long): Future[List[String]] = {
     getDatomicEntity(connProxy, eid).flatMap(_.attrs)
   }
 
 
-  def apply(connProxy: ConnProxy, eid: Long, attr: String): Future[String] = {
+  final def apply(connProxy: ConnProxy, eid: Long, attr: String): Future[String] = {
     getDatomicEntity(connProxy, eid)
       .flatMap(_.apply[Any](attr))
       .map(_.fold("")(v => entityMap2packed(Map(attr -> v))))
   }
 
-  def apply(connProxy: ConnProxy, eid: Long, attrs: List[String]): Future[List[String]] = {
+  final def apply(connProxy: ConnProxy, eid: Long, attrs: List[String]): Future[List[String]] = {
     val attr1 :: attr2 :: moreAttrs = attrs
     getDatomicEntity(connProxy, eid)
       .flatMap(_.apply(attr1, attr2, moreAttrs: _*))
@@ -435,12 +435,12 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
       }
   }
 
-  def graphDepth(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String] = {
+  final def graphDepth(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String] = {
     // Use list to guarantee order of attributes for packing
     getDatomicEntity(connProxy, eid).flatMap(_.asList(1, maxDepth)).map(entityList2packed)
   }
 
-  def graphCode(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String] = {
+  final def graphCode(connProxy: ConnProxy, eid: Long, maxDepth: Int): Future[String] = {
     getDatomicEntity(connProxy, eid).flatMap(_.graphCode(maxDepth))
   }
 
@@ -455,28 +455,46 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
   // Connection pool ---------------------------------------------
 
   // todo - this is primitive, is a more correct implementation needed?
-  private val connectionPool = mutable.HashMap.empty[String, Future[Conn]]
+  private val connectionPool = mutable.HashMap.empty[String, Future[Conn_Jvm]]
 
   def clearConnPool: Future[Unit] = Future {
     //    println(s"Connection pool with ${connectionPool.size} connections cleared.")
     connectionPool.clear()
   }
 
-  private def getFreshConn(connProxy: ConnProxy): Future[Conn] = connProxy match {
+  private def getConn(connProxy: ConnProxy): Future[Conn_Jvm] = {
+    val futConn             = connectionPool.getOrElse(connProxy.uuid, getFreshConn(connProxy))
+    val futConnTimeAdjusted = futConn.map { conn =>
+      conn.updateAdhocDbView(connProxy.adhocDbView)
+      conn.updateTestDbView(connProxy.testDbView, connProxy.testDbStatus)
+      conn
+    }
+    connectionPool(connProxy.uuid) = futConnTimeAdjusted
+    futConnTimeAdjusted
+  }
+
+  private def printStackTrace(exc: Throwable): Unit = {
+    println(exc)
+    exc.getStackTrace.toList.foreach(println)
+    println("----")
+  }
+
+  private def getFreshConn(connProxy: ConnProxy): Future[Conn_Jvm] = connProxy match {
     case proxy@DatomicPeerProxy(protocol, dbIdentifier, schema, _, _, _, _, _, _) =>
       protocol match {
         case "mem" =>
           Datomic_Peer.recreateDbFromEdn(proxy, schema)
             .recoverWith { case exc =>
-              println(exc)
-              exc.getStackTrace.toList.foreach(println)
-              println("----")
-              Future.failed[Conn](MoleculeException(exc.getMessage))
+              printStackTrace(exc)
+              Future.failed[Conn_Jvm](MoleculeException(exc.getMessage))
             }
 
         case "free" | "dev" | "pro" =>
           Datomic_Peer.connect(proxy, protocol, dbIdentifier)
-            .recoverWith { case exc => Future.failed[Conn](MoleculeException(exc.getMessage)) }
+            .recoverWith { case exc =>
+              printStackTrace(exc)
+              Future.failed[Conn_Jvm](MoleculeException(exc.getMessage))
+            }
 
         case other =>
           Future.failed(MoleculeException(
@@ -489,11 +507,17 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
       protocol match {
         case "mem" =>
           devLocal.recreateDbFromEdn(schema, proxy)
-            .recoverWith { case exc => Future.failed[Conn](MoleculeException(exc.getMessage)) }
+            .recoverWith { case exc =>
+              printStackTrace(exc)
+              Future.failed[Conn_Jvm](MoleculeException(exc.getMessage))
+            }
 
         case "dev" | "pro" =>
           devLocal.connect(proxy, dbName)
-            .recoverWith { case exc => Future.failed[Conn](MoleculeException(exc.getMessage)) }
+            .recoverWith { case exc =>
+              printStackTrace(exc)
+              Future.failed[Conn_Jvm](MoleculeException(exc.getMessage))
+            }
 
         case other =>
           Future.failed(MoleculeException(
@@ -503,24 +527,67 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
 
     case proxy@DatomicPeerServerProxy(accessKey, secret, endpoint, dbName, _, _, _, _, _, _, _) =>
       Datomic_PeerServer(accessKey, secret, endpoint).connect(proxy, dbName)
-        .recoverWith { case exc => Future.failed[Conn](MoleculeException(exc.getMessage)) }
-  }
-
-  private def getConn(
-    connProxy: ConnProxy
-  ): Future[Conn] = {
-    val futConn             = connectionPool.getOrElse(connProxy.uuid, getFreshConn(connProxy))
-    val futConnTimeAdjusted = futConn.map { conn =>
-      conn.updateAdhocDbView(connProxy.adhocDbView)
-      conn.updateTestDbView(connProxy.testDbView, connProxy.testDbStatus)
-      conn
-    }
-    connectionPool(connProxy.uuid) = futConnTimeAdjusted
-    futConnTimeAdjusted
+        .recoverWith { case exc => Future.failed[Conn_Jvm](MoleculeException(exc.getMessage)) }
   }
 
 
   // Helpers -------------------------------------------------
+
+  def basisT(connProxy: ConnProxy): Future[Long] = {
+    for {
+      conn <- getConn(connProxy)
+      db <- conn.db
+      t <- db.basisT
+    } yield t
+  }
+
+  // Unmarshall to Datomic java types
+  private def unmarshallInputs(lists: Seq[(Int, String, Any)]): Seq[Object] = {
+    lists.sortBy(_._1).map {
+      case (_, tpe, rawValue) =>
+        val cast = tpe match {
+          case "String"     => if (isEnum(rawValue)) (v: String) => getEnum(v) else (v: String) => v
+          case "Int"        => (v: String) => new java.lang.Long(v)
+          case "Long"       => (v: String) => new java.lang.Long(v)
+          case "Double"     => (v: String) => new java.lang.Double(v)
+          case "Boolean"    => (v: String) => v.toBoolean.asInstanceOf[Object]
+          case "Date"       => (v: String) => str2date(v).asInstanceOf[Object]
+          case "URI"        => (v: String) => new java.net.URI(v).asInstanceOf[Object]
+          case "UUID"       => (v: String) => java.util.UUID.fromString(v).asInstanceOf[Object]
+          case "BigInt"     => (v: String) => new java.math.BigInteger(v).asInstanceOf[Object]
+          case "BigDecimal" => (v: String) => new java.math.BigDecimal(v).asInstanceOf[Object]
+          case "Any"        => (s: String) =>
+            val v = s.drop(10)
+            s.take(10) match {
+              case "String    " => if (isEnum(v)) getEnum(v) else v
+              case "Int       " => new java.lang.Long(v)
+              case "Long      " => new java.lang.Long(v)
+              case "Double    " => new java.lang.Double(v)
+              case "Boolean   " => v.toBoolean.asInstanceOf[Object]
+              case "Date      " => str2date(v).asInstanceOf[Object]
+              case "URI       " => new URI(v).asInstanceOf[Object]
+              case "UUID      " => UUID.fromString(v).asInstanceOf[Object]
+              case "BigInt    " => new java.math.BigInteger(v).asInstanceOf[Object]
+              case "BigDecimal" => new java.math.BigDecimal(v).asInstanceOf[Object]
+            }
+          case _            => throw MoleculeException(s"Unexpected type to cast: $tpe")
+        }
+
+        rawValue match {
+          case l: Seq[_] =>
+            Util.list(l.collect {
+              case l2: Seq[_] =>
+                val Seq(k, v2: String) = l2
+                Util.list(k.toString.asInstanceOf[Object], cast(v2))
+
+              case v1: String => cast(v1)
+            }: _*)
+
+          case v: String => cast(v)
+          case _         => throw MoleculeException("Unexpected input values")
+        }
+    }
+  }
 
   // Necessary for `readString` to encode uri in transactions
   require("clojure.core.async")

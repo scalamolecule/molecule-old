@@ -7,6 +7,7 @@ import moleculeTests.setup.core.CoreData
 import utest._
 import utest.framework.Formatter
 import scala.concurrent.{ExecutionContext, Future}
+import molecule.core.util.Executor._
 
 trait AsyncTestSuite extends TestSuite with CoreData
   // Platform-specific implementations (JS/JVM)
@@ -18,7 +19,7 @@ trait AsyncTestSuite extends TestSuite with CoreData
 
   lazy val system: System = {
     SystemPeer
-//    SystemDevLocal
+    //    SystemDevLocal
 
     // Since we run asynchronous tests and can't recreate databases against the Peer Server,
     // we can only test reliably by restarting the Peer Server and test a single test at a time.
@@ -60,12 +61,14 @@ trait AsyncTestSuite extends TestSuite with CoreData
   def seattle[T](test: Future[Conn] => T): T = seattleImpl(test)
   def mbrainz[T](test: Future[Conn] => Future[T]): Future[T] = mbrainzImpl(test)
 
+
   // At least 1 ms delay between transactions involving Dates to avoid overlapping
   // (can't use Thread.sleep(1000) on js platform)
   def delay = (1 to 50000).sum
 
 
-  def transact(schema: SchemaTransaction)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[Seq[TxReport]] = {
+  // Testing schema definitions
+  def transact(schema: SchemaTransaction)(implicit futConn: Future[Conn]): Future[Seq[TxReport]] = {
     for {
       conn <- futConn
       _ = conn.updateConnProxy(schema)

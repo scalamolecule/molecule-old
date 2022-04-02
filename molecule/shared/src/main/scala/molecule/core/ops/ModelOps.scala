@@ -1,11 +1,15 @@
 package molecule.core.ops
 
+import java.util.Date
 import molecule.core.ast.elements._
+import molecule.core.dto.SchemaAttr
+import molecule.core.exceptions.MoleculeException
 import molecule.core.util.Helpers
 
 
 /** Model operations */
-object ModelOps extends Helpers {
+object ModelOps extends ModelOps
+trait ModelOps extends Helpers {
 
   def convert(value: Any): Any = value match {
     case set: Set[_]  => set map convert
@@ -91,5 +95,40 @@ object ModelOps extends Helpers {
     }
 
     if (identMap.isEmpty) model else Model(resolve(model.elements))
+  }
+
+  def model2schemaAttrs(model: Model): Seq[SchemaAttr] = {
+    model.elements.collect { case g: Generic =>
+      val attr           = g.attr
+      val last           = attr.last
+      val attrClean      = if (last == '_' || last == '$') attr.init else attr
+      val (expr, inputs) = g match {
+        case Generic(_, "txInstant" | "txInstant_", _, v, _) => v match {
+          case NoValue       => ("", Nil)
+          case Eq(Seq(None)) => ("none", Nil)
+          case Eq(args)      => ("=", args.map(arg => date2str(arg.asInstanceOf[Date])))
+          case Neq(args)     => ("!=", args.map(arg => date2str(arg.asInstanceOf[Date])))
+          case Gt(arg)       => (">", Seq(date2str(arg.asInstanceOf[Date])))
+          case Ge(arg)       => (">=", Seq(date2str(arg.asInstanceOf[Date])))
+          case Lt(arg)       => ("<", Seq(date2str(arg.asInstanceOf[Date])))
+          case Le(arg)       => ("<=", Seq(date2str(arg.asInstanceOf[Date])))
+          case other         => throw MoleculeException(
+            "Unexpected txInstant schema history attribute expression: " + other)
+        }
+
+        case Generic(_, _, _, NoValue, _)       => ("", Nil)
+        case Generic(_, _, _, Eq(Seq(None)), _) => ("none", Nil)
+        case Generic(_, _, _, Eq(args), _)      => ("=", args.map(_.toString))
+        case Generic(_, _, _, Neq(args), _)     => ("!=", args.map(_.toString))
+        case Generic(_, _, _, Gt(arg), _)       => (">", Seq(arg.toString))
+        case Generic(_, _, _, Ge(arg), _)       => (">=", Seq(arg.toString))
+        case Generic(_, _, _, Lt(arg), _)       => ("<", Seq(arg.toString))
+        case Generic(_, _, _, Le(arg), _)       => ("<=", Seq(arg.toString))
+        case Generic(_, _, _, Fn("not", _), _)  => ("none", Nil)
+        case other                              => throw MoleculeException(
+          s"Unsupported expression for schema history attribute `${g.attr}`: " + other)
+      }
+      SchemaAttr(attrClean, attr, expr, inputs)
+    }
   }
 }

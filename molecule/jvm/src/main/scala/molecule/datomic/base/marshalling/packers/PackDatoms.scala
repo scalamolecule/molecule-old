@@ -34,7 +34,14 @@ case class PackDatoms(
   indexArgs: IndexArgs,
 )(implicit ec: ExecutionContext) extends JavaHelpers with PackBase {
 
-  lazy val attrMap = conn.connProxy.attrMap ++ Seq(":db/txInstant" -> (1, "Date"))
+  lazy val attrMap = conn.connProxy.attrMap ++ Seq(
+    ":db/txInstant" -> (1, "Date"),
+    ":db/ident" -> (1, "String"),
+    ":db/valueType" -> (1, "String"),
+    ":db/cardinality" -> (1, "String"),
+    ":db/index" -> (1, "Boolean"),
+    ":db.install/attribute" -> (1, "String"),
+  )
 
   def peerDatomElement2packed(
     tOpt: Option[Long],

@@ -27,7 +27,7 @@ case class Conn_Peer(
   peerConn: datomic.Connection,
   override val defaultConnProxy: ConnProxy,
   system: String = ""
-) extends Conn_Jvm with QueryIndex with QuerySchemaHistory {
+) extends Conn_Jvm with QueryIndex {
 
   // Molecule api --------------------------------------------------------------
 
@@ -245,7 +245,7 @@ case class Conn_Peer(
 
   // Schema --------------------------------------------------------------------
 
-  protected def historyQuery(query: String, inputs: Seq[jList[AnyRef]] = Nil)
+  private[molecule] def historyQuery(query: String, inputs: Seq[jList[AnyRef]] = Nil)
                             (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     db.map(db => Peer.q(
       query,

@@ -9,13 +9,14 @@ import molecule.core.marshalling._
 import molecule.core.marshalling.ast.{ConnProxy, IndexArgs, SortCoordinate, nodes}
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.marshalling.ast.nodes.Obj
+import molecule.core.ops.ModelOps
 import molecule.core.util.{Helpers, Inspect}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, DatomicDb, TxReport}
-import molecule.datomic.base.transform.Query2String
+import molecule.datomic.base.transform.{Model2Query, Query2String}
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -32,7 +33,7 @@ case class Conn_Js(
   override val defaultConnProxy: ConnProxy,
   interface: String,
   port: Int
-)(implicit ec: ExecutionContext) extends WebClient() with Conn with Helpers {
+)(implicit ec: ExecutionContext) extends WebClient() with Conn with Helpers with ModelOps {
 
   // Molecule api --------------------------------------------------------------
 
@@ -93,21 +94,44 @@ case class Conn_Js(
     usingAdhocDbView(Sync(t))
 
 
-  // Schema change -------------------------------------------------------------
+  // Schema --------------------------------------------------------------------
 
-  def changeAttrName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
-  def retireAttr(attrName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+  final def changeAttrName(curName: String, newName: String)
+                                            (implicit ec: ExecutionContext): Future[TxReport] =
+    rpc.changeAttrName(connProxy, curName, newName)
 
-  def changeNamespaceName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
-  def retireNamespace(nsName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+  final def retireAttr(attrName: String)
+                                        (implicit ec: ExecutionContext): Future[TxReport] =
+    rpc.retireAttr(connProxy, attrName)
 
-  def changePartitionName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
-  def retirePartition(partName: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+  final def changeNamespaceName(curName: String, newName: String)
+                                                 (implicit ec: ExecutionContext): Future[TxReport] =
+    rpc.changeNamespaceName(connProxy, curName, newName)
 
-  def retractSchemaOption(attr: String, option: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+  final def retireNamespace(nsName: String)
+                                             (implicit ec: ExecutionContext): Future[TxReport] =
+    rpc.retireNamespace(connProxy, nsName)
 
-  def getEnumHistory(implicit ec: ExecutionContext): Future[List[(String, Int, Long, Date, String, Boolean)]] = ???
-  def retractEnum(enumString: String)(implicit ec: ExecutionContext): Future[TxReport] = ???
+  final def changePartitionName(curName: String, newName: String)
+                                                 (implicit ec: ExecutionContext): Future[TxReport] =
+    rpc.changePartitionName(connProxy, curName, newName)
+
+  final def retirePartition(partName: String)
+                                             (implicit ec: ExecutionContext): Future[TxReport] =
+    rpc.retirePartition(connProxy, partName)
+
+  final def retractSchemaOption(attr: String, option: String)
+                                                 (implicit ec: ExecutionContext): Future[TxReport] =
+    rpc.retractSchemaOption(connProxy, attr, option)
+
+  final def getEnumHistory(implicit ec: ExecutionContext)
+  : Future[List[(String, Int, Long, Date, String, Boolean)]] =
+    rpc.getEnumHistory(connProxy)
+
+  final def retractEnum(enumString: String)
+                                         (implicit ec: ExecutionContext): Future[TxReport] =
+    rpc.retractEnum(connProxy, enumString)
+
 
   // Internal ------------------------------------------------------------------
 
@@ -123,6 +147,74 @@ case class Conn_Js(
     txReport <- rpc.transact(connProxy, Stmts2Edn(stmts, this))
   } yield txReport
 
+
+  private[molecule] final override def jsQuery[T](
+    model: Model,
+    query: Query,
+    datalog: String,
+    n: Int,
+    obj: Obj,
+    nestedLevels: Int,
+    isOptNested: Boolean,
+    refIndexes: List[List[Int]],
+    tacitIndexes: List[List[Int]],
+    sortCoordinates: List[List[SortCoordinate]],
+    unpacker: Iterator[String] => T
+  )(implicit ec: ExecutionContext): Future[List[T]] = withDbView(
+    jsMoleculeQuery(
+      model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
+    ).map(packed => unpack(packed, unpacker))
+  )
+
+  private def unpack[T](packed: String, unpacker: Iterator[String] => T): List[T] = {
+    if (packed.isEmpty) {
+      List.empty[T]
+    } else {
+      val lines = packed.linesIterator
+      lines.next() // skip initial newline
+      var rows = List.empty[T]
+      while (lines.hasNext) {
+        rows = rows :+ unpacker(lines)
+      }
+      rows
+    }
+  }
+
+  private[molecule] final override def jsQueryJson(
+    model: Model,
+    query: Query,
+    datalog: String,
+    n: Int,
+    obj: nodes.Obj,
+    nestedLevels: Int,
+    isOptNested: Boolean,
+    refIndexes: List[List[Int]],
+    tacitIndexes: List[List[Int]],
+    sortCoordinates: List[List[SortCoordinate]]
+  )(implicit ec: ExecutionContext): Future[String] = withDbView(
+    jsMoleculeQuery(model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates)
+  )
+
+  private[molecule] final override def jsSchemaHistoryQuery[T](
+    model: Model,
+    obj: Obj,
+    sortCoordinates: List[List[SortCoordinate]],
+    unpacker: Iterator[String] => T
+  )(implicit ec: ExecutionContext): Future[List[T]] = {
+    val queryString = Model2Query(model, schemaHistory0 = true, optimize = false)._2
+    val schemaAttrs = model2schemaAttrs(model)
+    rpc.schemaHistoryQuery2packed(connProxy, queryString, obj, schemaAttrs, sortCoordinates)
+      .map(packed => unpack(packed, unpacker))
+  }
+  private[molecule] final override def jsSchemaHistoryQueryJson(
+    model: Model,
+    obj: Obj,
+    sortCoordinates: List[List[SortCoordinate]]
+  )(implicit ec: ExecutionContext): Future[String] = {
+    val queryString = Model2Query(model, schemaHistory0 = true, optimize = false)._2
+    val schemaAttrs = model2schemaAttrs(model)
+    rpc.schemaHistoryQuery2packed(connProxy, queryString, obj, schemaAttrs, sortCoordinates)
+  }
 
   private final def jsMoleculeQuery(
     model: Model,
@@ -142,12 +234,6 @@ case class Conn_Js(
         query, datalog, maxRows, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
       )
     }
-  }
-
-
-  private final def schemaHistoryQuery(model: Model): Future[String] = {
-    schemaHistoryQuery(model)
-    null
   }
 
   private final def indexQuery(
@@ -345,82 +431,8 @@ case class Conn_Js(
   )(implicit ec: ExecutionContext): Future[DatomicEntity] = db.map(_.entity(this, id))
 
 
-  private def queryJs[T](
-    model: Model,
-    query: Query,
-    datalog: String,
-    n: Int,
-    obj: Obj,
-    nestedLevels: Int,
-    isOptNested: Boolean,
-    refIndexes: List[List[Int]],
-    tacitIndexes: List[List[Int]],
-    packed2T: Iterator[String] => T,
-    sortCoordinates: List[List[SortCoordinate]]
-  )(implicit ec: ExecutionContext): Future[List[T]] = withDbView(
-    jsMoleculeQuery(
-      model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
-    ).map { packed =>
-      if (packed.isEmpty) {
-        List.empty[T]
-      } else {
-        val lines = packed.linesIterator
-        lines.next() // skip initial newline
-        var rows = List.empty[T]
-        while (lines.hasNext) {
-          rows = rows :+ packed2T(lines)
-        }
-        rows
-      }
-    }
-  )
 
-  override def jsQueryTpl[Tpl](
-    model: Model,
-    query: Query,
-    datalog: String,
-    n: Int,
-    obj: Obj,
-    nestedLevels: Int,
-    isOptNested: Boolean,
-    refIndexes: List[List[Int]],
-    tacitIndexes: List[List[Int]],
-    packed2tpl: Iterator[String] => Tpl,
-    sortCoordinates: List[List[SortCoordinate]]
-  )(implicit ec: ExecutionContext): Future[List[Tpl]] = queryJs(
-    model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl, sortCoordinates
-  )
 
-  override def jsQueryObj[Obj](
-    model: Model,
-    query: Query,
-    datalog: String,
-    n: Int,
-    obj: nodes.Obj,
-    nestedLevels: Int,
-    isOptNested: Boolean,
-    refIndexes: List[List[Int]],
-    tacitIndexes: List[List[Int]],
-    packed2obj: Iterator[String] => Obj,
-    sortCoordinates: List[List[SortCoordinate]]
-  )(implicit ec: ExecutionContext): Future[List[Obj]] = queryJs(
-    model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj, sortCoordinates
-  )
-
-  override def jsQueryJson(
-    model: Model,
-    query: Query,
-    datalog: String,
-    n: Int,
-    obj: nodes.Obj,
-    nestedLevels: Int,
-    isOptNested: Boolean,
-    refIndexes: List[List[Int]],
-    tacitIndexes: List[List[Int]],
-    sortCoordinates: List[List[SortCoordinate]]
-  )(implicit ec: ExecutionContext): Future[String] = withDbView(
-    jsMoleculeQuery(model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates)
-  )
 
 
   def inspect(
@@ -435,18 +447,6 @@ case class Conn_Js(
   )(id, params: _*)
 
 
-  private[molecule] def getAttrValues(
-    datalogQuery: String,
-    card: Int,
-    tpe: String
-  )(implicit ec: ExecutionContext): Future[List[String]] =
-    rpc.getAttrValues(connProxy, datalogQuery, card, tpe)
-
-
-  private[molecule] def getEntityAttrKeys(
-    query: String
-  )(implicit ec: ExecutionContext): Future[List[String]] =
-    rpc.getEntityAttrKeys(connProxy, query)
 
 
   private def withDbView[T](futResult: Future[T])(implicit ec: ExecutionContext): Future[T] = Future {
@@ -460,4 +460,17 @@ case class Conn_Js(
     }
     futResult
   }.flatten
+
+
+  private[molecule] def getAttrValues(
+    datalogQuery: String,
+    card: Int,
+    tpe: String
+  )(implicit ec: ExecutionContext): Future[List[String]] =
+    rpc.getAttrValues(connProxy, datalogQuery, card, tpe)
+
+  private[molecule] def getEntityAttrKeys(
+    query: String
+  )(implicit ec: ExecutionContext): Future[List[String]] =
+    rpc.getEntityAttrKeys(connProxy, query)
 }

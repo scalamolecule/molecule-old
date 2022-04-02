@@ -69,9 +69,9 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
           // println(_query)
           // println("----------------")
           // println(_datalog)
-          conn.jsQueryTpl(
+          conn.jsQuery(
             _model, _query, _datalog, -1,
-            obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl, sortCoordinates
+            obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2tpl
           )
         } else {
           conn.jvmQuery(_model, _query).map(rows => rows2tuples(rows, rows.size))
@@ -102,9 +102,9 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
       _inputThrowable.fold(
         futConn.flatMap { conn =>
           if (conn.isJsPlatform) {
-            conn.jsQueryTpl(
+            conn.jsQuery(
               _model, _query, _datalog, limit,
-              obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl, sortCoordinates
+              obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2tpl
             )
           } else {
             conn.jvmQuery(_model, _query).map(rows => rows2tuples(rows, rows.size.min(limit)))
@@ -221,42 +221,14 @@ private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj
       case Generic("Schema", _, _, _, _) =>
         futConn.flatMap { conn =>
           if (conn.isJsPlatform) {
-            conn.jsQueryTpl(
-              _model, _query, _datalog, -1,
-              obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl, sortCoordinates
-            )
+            conn.jsSchemaHistoryQuery(_model, obj, sortCoordinates, packed2tpl)
           } else {
-            conn.jvmSchemaHistoryQueryTpl(_model).map { jColl =>
-              val last = jColl.size
-              last match {
-                case 0 => List.empty[Tpl]
-                case 1 => List(row2tpl(jColl.iterator().next()))
-                case _ =>
-                  val rows   = if (sortRows) {
-                    val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
-                    rows.sort(this) // using macro-implemented `compare` method
-                    rows
-                  } else {
-                    new java.util.ArrayList(jColl)
-                  }
-                  val tuples = List.newBuilder[Tpl]
-                  var i      = 0
-                  while (i != last) {
-                    tuples += row2tpl(rows.get(i))
-                    i += 1
-                  }
-                  tuples.result()
-              }
-            }
+            conn.jvmSchemaHistoryQuery(_model).map(rows => rows2tuples(rows, rows.size))
           }
         }
 
       case _ => get(futConn.map(_.usingAdhocDbView(History)), ec)
     }
-  }
-
-  def getHistoryOLD(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-    get(conn.map(_.usingAdhocDbView(History)), ec)
   }
 
   // get as of ================================================================================================

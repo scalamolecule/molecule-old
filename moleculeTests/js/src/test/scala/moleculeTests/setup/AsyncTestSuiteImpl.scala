@@ -5,7 +5,7 @@ import molecule.core.facade.Conn_Js
 import molecule.core.marshalling.ast.{DatomicDevLocalProxy, DatomicPeerProxy, DatomicPeerServerProxy}
 import molecule.core.util.EmptySchema
 import molecule.core.util.Executor._
-import molecule.datomic.base.facade.Conn
+import molecule.datomic.base.facade.{Conn, TxReport}
 import molecule.datomic.base.util.{SystemDevLocal, SystemPeer, SystemPeerServer}
 import moleculeBuildInfo.BuildInfo
 import moleculeBuildInfo.BuildInfo.datomicHome
@@ -17,7 +17,7 @@ import moleculeTests.dataModels.examples.datomic.dayOfDatomic.schema._
 import moleculeTests.dataModels.examples.datomic.mbrainz.schema.MBrainzSchema
 import moleculeTests.dataModels.examples.datomic.seattle.schema.SeattleSchema
 import moleculeTests.dataModels.examples.gremlin.gettingStarted.schema.{ModernGraph1Schema, ModernGraph2Schema}
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 
 trait AsyncTestSuiteImpl { self: AsyncTestSuite =>

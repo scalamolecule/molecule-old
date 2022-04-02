@@ -486,6 +486,10 @@ object SchemaChange_Attr extends AsyncTestSuite {
             val long = oneLong
           }
         }).map(_.last.t)
+//        }).map{res =>
+//          res foreach println
+//          res.last.t
+//        }
 
         _ <- Schema.t.a.d1.get.map(_ ==> List(
           (t0, ":Foo/str"),

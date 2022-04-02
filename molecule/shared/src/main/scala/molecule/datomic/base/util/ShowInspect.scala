@@ -174,9 +174,9 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
 
     def jsRows(conn: Conn): Future[jCollection[jList[AnyRef]]] = {
       // Converting tuples to java list (for now - not critical for inspection of 500 rows)
-      conn.jsQueryTpl(
+      conn.jsQuery(
         _model, _query, _datalog, -1,
-        obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl, sortCoordinates
+        obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2tpl
       ).map { listOfTuples =>
         listOfTuples.map {
           case tpl: Product => Collections.list(tpl.productIterator.asJavaEnumeration)

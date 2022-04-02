@@ -10,6 +10,7 @@ import datomic.{Peer, Util}
 import molecule.core.ast.elements._
 import molecule.core.dto.SchemaAttr
 import molecule.core.exceptions.MoleculeException
+import molecule.core.ops.ModelOps
 import molecule.core.util.{Helpers, JavaConversions}
 import molecule.datomic.base.ast.transactionModel.{Cas, Enum, RetractEntity, Statement, TempId}
 import molecule.datomic.base.ops.QueryOps.txBase
@@ -18,7 +19,7 @@ import molecule.datomic.base.util.Inspect
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-trait Conn_Jvm extends Conn with JavaConversions with Helpers with QuerySchemaHistory {
+trait Conn_Jvm extends Conn with JavaConversions with Helpers with ModelOps with SchemaOps {
 
   // Molecule api --------------------------------------------------------------
 
@@ -85,216 +86,36 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers with QuerySchemaHi
 
   // Schema --------------------------------------------------------------------
 
-  private def attrExists(ident: String)(implicit ec: ExecutionContext): Future[Boolean] = query(
-    s"[:find (count ?id) :where [?id :db/ident $ident]]"
-  ).map { res =>
-    if (res == List(List(1))) true else throw MoleculeException(
-      s"Couldn't find attribute `$ident` in the database."
-    )
-  }
+  def changeAttrName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] =
+    changeAttrName_(this, curName, newName)
 
-  private def attrHasNoData(ident: String)(implicit ec: ExecutionContext): Future[Unit] = {
-    query(s"[:find (count ?v) :where [_ $ident ?v]]").map(data =>
-      if (data.nonEmpty) {
-        val count  = data.head.head.toString.toInt
-        val values = if (count == 1) "value" else "values"
-        throw MoleculeException(
-          s"Can't retire attribute `$ident` having $count $values asserted. " +
-            s"Please retract $values before retiring attribute."
-        )
-      }
-    ).recoverWith { case exc =>
-      exc.getMessage match {
-        case r".*Unable to resolve entity: :.+/(.+)$attr.*" => Future.failed(
-          MoleculeException(s"Couldn't find attribute `$ident` in the database schema.")
-        )
-        case _                                              => Future.failed(exc)
-      }
-    }
-  }
+  def retireAttr(attrName: String)(implicit ec: ExecutionContext): Future[TxReport] =
+    retireAttr_(this, attrName)
 
-  def changeAttrName(curName: String, newName: String)
-                    (implicit ec: ExecutionContext): Future[TxReport] = try {
-    val (curIdent, newIdent) = (okIdent(curName), okIdent(newName))
-    attrExists(curIdent).flatMap(_ => transact(s"[{:db/id $curIdent :db/ident $newIdent}]"))
-  } catch {
-    case NonFatal(exc) => Future.failed(exc)
-  }
+  def changeNamespaceName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] =
+    changeNamespaceName_(this, curName, newName)
 
-  def retireAttr(attrName: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
-    val ident        = okIdent(attrName)
-    val retiredIdent = ident.replace(":", ":-")
-    for {
-      _ <- attrExists(ident)
-      _ <- attrHasNoData(ident)
-      txReport <- transact(s"[{:db/id $ident :db/ident $retiredIdent}]")
-    } yield txReport
-  } catch {
-    case NonFatal(exc) => Future.failed(exc)
-  }
+  def retireNamespace(nsName: String)(implicit ec: ExecutionContext): Future[TxReport] =
+    retireNamespace_(this, nsName)
+
+  def changePartitionName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] =
+    changePartitionName_(this, curName, newName)
+
+  def retirePartition(partName: String)(implicit ec: ExecutionContext): Future[TxReport] =
+    retirePartition_(this, partName)
+
+  def retractSchemaOption(attr: String, option: String)(implicit ec: ExecutionContext): Future[TxReport] =
+    retractSchemaOption_(this, attr, option)
+
+  def getEnumHistory(implicit ec: ExecutionContext): Future[List[(String, Int, Long, Date, String, Boolean)]] =
+    getEnumHistory_(this)
+
+  def retractEnum(enumString: String)(implicit ec: ExecutionContext): Future[TxReport] =
+    retractEnum_(this, enumString)
 
 
-  def changeNamespaceName(curName: String, newName: String)
-                         (implicit ec: ExecutionContext): Future[TxReport] = try {
-    val (curNs, newNs) = (okNamespaceName(curName), okNamespaceName(newName))
-    connProxy.nsMap.get(curNs).fold[Future[TxReport]](
-      Future.failed(MoleculeException(s"Couldn't find namespace `$curNs`."))
-    ) { nsMap =>
-      val attrNameChanges = nsMap.attrs.map { metaAttr =>
-        val attr = metaAttr.name
-        s"{:db/id :$curNs/$attr :db/ident :$newNs/$attr}"
-      }.mkString("")
-      transact(s"[$attrNameChanges]")
-    }
-  } catch {
-    case NonFatal(exc) => Future.failed(exc)
-  }
-
-  def retireNamespace(nsName: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
-    val ns = okNamespaceName(nsName)
-    connProxy.nsMap.get(ns).fold[Future[TxReport]](
-      Future.failed(MoleculeException(s"Couldn't find namespace `$ns`."))
-    ) { nsMap =>
-      for {
-        _ <- Future.sequence(nsMap.attrs.map(metaAttr => attrHasNoData(s":$ns/${metaAttr.name}")))
-        txReport <- {
-          // Prefix all attribute names in namespace with `-`
-          val attrNameChanges = nsMap.attrs.map { metaAttr =>
-            val attr = metaAttr.name
-            s"{:db/id :$ns/$attr :db/ident :-$ns/$attr}"
-          }.mkString("")
-          transact(s"[$attrNameChanges]")
-        }
-      } yield txReport
-    }
-  } catch {
-    case NonFatal(exc) => Future.failed(exc)
-  }
-
-  def changePartitionName(curName: String, newName: String)
-                         (implicit ec: ExecutionContext): Future[TxReport] = try {
-    val (curPart, newPart) = (okPartitionName(curName), okPartitionName(newName))
-    val nss                = connProxy.nsMap.filter(_._1.startsWith(curPart)).toSeq
-    if (nss.isEmpty) {
-      throw MoleculeException(s"Couldn't find partition `$curPart`.")
-    }
-    val stmts = for {
-      (_, nsMap) <- nss
-      ns = nsMap.name
-      metaAttr <- nsMap.attrs
-      attr = metaAttr.name
-    } yield s"{:db/id :${curPart}_$ns/$attr :db/ident :${newPart}_$ns/$attr}"
-    transact(stmts.mkString("[", "", "]"))
-  } catch {
-    case NonFatal(exc) => Future.failed(exc)
-  }
-
-  def retirePartition(partName: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
-    val part = okPartitionName(partName)
-    val nss  = connProxy.nsMap.filter(_._1.startsWith(part)).toSeq
-    if (nss.isEmpty) {
-      throw MoleculeException(s"Couldn't find partition `$part`.")
-    }
-    val (nsAttr, stmts) = (for {
-      (_, nsMap) <- nss
-      ns = nsMap.name
-      metaAttr <- nsMap.attrs
-      attr = metaAttr.name
-    } yield {
-      // Prefix all attribute names in partition with `-`
-      ((ns, attr), s"{:db/id :${part}_$ns/$attr :db/ident :-${part}_$ns/$attr}")
-    }).unzip
-    for {
-      _ <- Future.sequence(nsAttr.map { case (ns, attr) => attrHasNoData(s":${part}_$ns/$attr") })
-      txReport <- transact(stmts.mkString("[", "", "]"))
-    } yield txReport
-  } catch {
-    case NonFatal(exc) => Future.failed(exc)
-  }
-
-  def retractSchemaOption(attr: String, option: String)
-                         (implicit ec: ExecutionContext): Future[TxReport] = try {
-    val ident   = okIdent(attr)
-    val options = List("doc", "unique", "isComponent", "noHistory", "index")
-    if (!options.contains(option)) {
-      throw MoleculeException(
-        s"Can't retract option '$option' for attribute `$attr`. " +
-          s"Only the following options can be retracted: " + options.mkString(", ") + s"."
-      )
-    }
-    for {
-      _ <- attrExists(ident)
-      res <- query(s"[:find ?v :where [$ident :db/$option ?v]]")
-      txReport <- {
-        if (res.isEmpty) {
-          Future.failed(MoleculeException(s"'$option' option of attribute $attr has no value."))
-        } else {
-          val rawValue = res.head.head // Keyword (unique), String (doc) or Boolean (isComponent, noHistory, index)
-          val curValue = option match {
-            case "doc" => s""""$rawValue""""
-            case _     => rawValue
-          }
-          transact(s"[[:db/retract $attr :db/$option $curValue]]")
-        }
-      }
-    } yield txReport
-  } catch {
-    case NonFatal(exc) => Future.failed(exc)
-  }
-
-  protected def historyQuery(query: String, inputs: Seq[jList[AnyRef]] = Nil)
-                            (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]]
-
-  def getEnumHistory(implicit ec: ExecutionContext)
-  : Future[List[(String, Int, Long, Date, String, Boolean)]] = {
-    val enumQuery =
-      s"""[:find  ?a
-         |        ?enumT
-         |        ?enumTx
-         |        ?enumTxInst
-         |        ?enum
-         |        ?op
-         | :in $$ $$dbCurrent
-         | :where [:db.part/db :db.install/attribute ?attrId]
-         |        [$$dbCurrent ?attrId :db/ident ?attrIdent]
-         |        [(name ?attrIdent) ?attr]
-         |        [(str ?attrIdent) ?a]
-         |        [(namespace ?attrIdent) ?nsFull0]
-         |        [(if (= (subs ?nsFull0 0 1) "-") (subs ?nsFull0 1) ?nsFull0) ?nsFull]
-         |        [(.matches ^String ?nsFull "^(db|db.alter|db.excise|db.install|db.part|db.sys|fressian|db.entity|db.attr|-.*)") ?sys]
-         |        [(= ?sys false)]
-         |        [_ :db/ident ?enumIdent ?enumTx ?op]
-         |        [(namespace ?enumIdent) ?enumNs]
-         |        [(str ?nsFull "." ?attr) ?enumSubNs]
-         |        [(= ?enumSubNs ?enumNs)]
-         |        [(name ?enumIdent) ?enum]
-         |        [(- ?enumTx $txBase) ?enumT]
-         |        [?enumTx :db/txInstant ?enumTxInst]
-         |]""".stripMargin
-
-    historyQuery(enumQuery).map { enumRes =>
-      val rows = List.newBuilder[(String, Int, Long, Date, String, Boolean)]
-      enumRes.forEach { enumRow =>
-        rows.+=((
-          enumRow.get(0).asInstanceOf[String],
-          enumRow.get(1).toString.toInt,
-          enumRow.get(2).toString.toLong,
-          enumRow.get(3).asInstanceOf[Date],
-          enumRow.get(4).asInstanceOf[String],
-          enumRow.get(5).asInstanceOf[Boolean],
-        ))
-      }
-      rows.result().sortBy(r => (r._1, r._2, r._5, r._6))
-    }
-  }
-
-  def retractEnum(enumString: String)(implicit ec: ExecutionContext): Future[TxReport] = try {
-    val enumIdent = okEnumIdent(enumString)
-    transact(s"[[:db/retractEntity $enumIdent]]")
-  } catch {
-    case NonFatal(exc) => Future.failed(exc)
-  }
-
+  private[molecule] def historyQuery(query: String, inputs: Seq[jList[AnyRef]] = Nil)
+                                    (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]]
 
   // Internal ------------------------------------------------------------------
 
@@ -320,49 +141,12 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers with QuerySchemaHi
     transactRaw(stmts2java(stmts), scalaStmts)
   }
 
-  private[molecule] final override def jvmSchemaHistoryQueryTpl(
+  private[molecule] final override def jvmSchemaHistoryQuery(
     model: Model
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = try {
-    val schemaAttrs = model.elements.collect { case g: Generic =>
-      val attr           = g.attr
-      val last           = attr.last
-      val attrClean      = if (last == '_' || last == '$') attr.init else attr
-      val (expr, inputs) = g match {
-        case Generic(_, "txInstant" | "txInstant_", _, v, _) => v match {
-          case NoValue       => ("", Nil)
-          case Eq(Seq(None)) => ("none", Nil)
-          case Eq(args)      => ("=", args.map(arg => date2str(arg.asInstanceOf[Date])))
-          case Neq(args)     => ("!=", args.map(arg => date2str(arg.asInstanceOf[Date])))
-          case Gt(arg)       => (">", Seq(date2str(arg.asInstanceOf[Date])))
-          case Ge(arg)       => (">=", Seq(date2str(arg.asInstanceOf[Date])))
-          case Lt(arg)       => ("<", Seq(date2str(arg.asInstanceOf[Date])))
-          case Le(arg)       => ("<=", Seq(date2str(arg.asInstanceOf[Date])))
-          case other         => throw MoleculeException(
-            "Unexpected txInstant schema history attribute expression: " + other)
-        }
-
-        case Generic(_, _, _, NoValue, _)       => ("", Nil)
-        case Generic(_, _, _, Eq(Seq(None)), _) => ("none", Nil)
-        case Generic(_, _, _, Eq(args), _)      => ("=", args.map(_.toString))
-        case Generic(_, _, _, Neq(args), _)     => ("!=", args.map(_.toString))
-        case Generic(_, _, _, Gt(arg), _)       => (">", Seq(arg.toString))
-        case Generic(_, _, _, Ge(arg), _)       => (">=", Seq(arg.toString))
-        case Generic(_, _, _, Lt(arg), _)       => ("<", Seq(arg.toString))
-        case Generic(_, _, _, Le(arg), _)       => ("<=", Seq(arg.toString))
-        case Generic(_, _, _, Fn("not", _), _)  => ("none", Nil)
-        case other                              => throw MoleculeException(
-          s"Unsupported expression for schema history attribute `${g.attr}`: " + other)
-      }
-      SchemaAttr(attrClean, attr, expr, inputs)
-    }
+  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
+    val schemaAttrs = model2schemaAttrs(model)
     val queryString = Model2Query(model, schemaHistory0 = true, optimize = false)._2
-
-    //    println(model)
-    //    println(queryString)
-
-    fetchSchemaHistory(schemaAttrs, queryString)
-  } catch {
-    case NonFatal(exc) => Future.failed(exc)
+    QuerySchemaHistory(this).fetchSchemaHistory(schemaAttrs, queryString)
   }
 
   private[molecule] final override def inspect(

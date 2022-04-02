@@ -64,8 +64,8 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     _inputThrowable.fold(
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
-          conn.jsQueryObj(_model, _query, _datalog, -1,
-            obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj, sortCoordinates
+          conn.jsQuery(_model, _query, _datalog, -1,
+            obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2obj
           )
         } else {
           conn.jvmQuery(_model, _query).map { rows => rows2objs(rows, rows.size) }
@@ -95,8 +95,8 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
       _inputThrowable.fold(
         futConn.flatMap { conn =>
           if (conn.isJsPlatform) {
-            conn.jsQueryObj(_model, _query, _datalog, limit,
-              obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2obj, sortCoordinates
+            conn.jsQuery(_model, _query, _datalog, limit,
+              obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2obj
             )
           } else {
             conn.jvmQuery(_model, _query).map { rows => rows2objs(rows, rows.size.min(limit)) }

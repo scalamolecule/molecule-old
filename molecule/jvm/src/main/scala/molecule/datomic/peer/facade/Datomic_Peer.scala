@@ -206,14 +206,14 @@ trait Datomic_Peer extends JavaConversions {
    *     `implicit val conn = recreateDbFrom(YourDomainSchema)`
    *
    * @group database
-   * @param edns
+   * @param schemaEdns
    * @param protocol
    * @param dbIdentifier
    * @return
    */
   def recreateDbFromEdn(
     connProxy: ConnProxy,
-    edns: Seq[String],
+    schemaEdns: Seq[String],
     protocol: String = "mem",
     dbIdentifier: String = ""
   )(implicit ec: ExecutionContext): Future[Conn_Peer] = {
@@ -224,11 +224,11 @@ trait Datomic_Peer extends JavaConversions {
       conn <- connect(connProxy, protocol, id)
       // Ensure each transaction finishes before the next
       // partitions/attributes (or none for initial empty test dummy)
-      _ <- if (edns.nonEmpty) conn.transact(edns.head) else Future.unit
+      _ <- if (schemaEdns.nonEmpty && schemaEdns.head.trim.nonEmpty) conn.transact(schemaEdns.head) else Future.unit
       // attributes/aliases
-      _ <- if (edns.size > 1) conn.transact(edns(1)) else Future.unit
+      _ <- if (schemaEdns.size > 1 && schemaEdns(1).trim.nonEmpty) conn.transact(schemaEdns(1)) else Future.unit
       // aliases
-      _ <- if (edns.size > 2) conn.transact(edns(2)) else Future.unit
+      _ <- if (schemaEdns.size > 2 && schemaEdns(2).trim.nonEmpty) conn.transact(schemaEdns(2)) else Future.unit
     } yield {
       conn
     }
@@ -285,11 +285,11 @@ trait Datomic_Peer extends JavaConversions {
       conn <- connect(connProxy, protocol, id)
       // Ensure each transaction finishes before the next
       // partitions/attributes (or none for initial empty test dummy)
-      _ <- if (edns.nonEmpty) conn.transact(edns.head) else Future.unit
+      _ <- if (edns.nonEmpty && edns.head.trim.nonEmpty) conn.transact(edns.head) else Future.unit
       // attributes/aliases
-      _ <- if (edns.size > 1) conn.transact(edns(1)) else Future.unit
+      _ <- if (edns.size > 1 && edns(1).trim.nonEmpty) conn.transact(edns(1)) else Future.unit
       // aliases
-      _ <- if (edns.size > 2) conn.transact(edns(2)) else Future.unit
+      _ <- if (edns.size > 2 && edns(2).trim.nonEmpty) conn.transact(edns(2)) else Future.unit
     } yield conn
   }
 }

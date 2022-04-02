@@ -35,7 +35,8 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
          |}""".stripMargin
   }
 
-  def rows2json(sb: StringBuffer, rows: jCollection[jList[AnyRef]], limit: Int, offset: Int = 0): String = {
+  private def rows2json(rows: jCollection[jList[AnyRef]], limit: Int, offset: Int = 0): String = {
+    val sb   = new StringBuffer()
     limit match {
       case 0 => // no data to add to string buffer
       case _ =>
@@ -62,6 +63,23 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
     outerJson(sb.toString)
   }
 
+  private def packed2json(packed: String): String = {
+    val sb   = new StringBuffer()
+    var next = false
+    if (packed.isEmpty) {
+      outerJson("")
+    } else {
+      val lines = packed.linesIterator
+      lines.next() // skip first empty line
+      while (lines.hasNext) {
+        if (next) sb.append(",") else next = true
+        packed2json(lines, sb)
+      }
+      sb.append("\n    ")
+      outerJson(sb.toString)
+    }
+  }
+
   /** Get json data for all rows matching a molecule.
    * {{{
    * Person.name.age.getJson.map(_ ==>
@@ -80,28 +98,13 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
   def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
     _inputThrowable.fold(
       futConn.flatMap { conn =>
-        val sb   = new StringBuffer()
-        var next = false
         if (conn.isJsPlatform) {
           conn.jsQueryJson(
             _model, _query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
-          ).map { packed =>
-              if (packed.isEmpty) {
-                outerJson("")
-              } else {
-                val lines = packed.linesIterator
-                lines.next() // skip first empty line
-                while (lines.hasNext) {
-                  if (next) sb.append(",") else next = true
-                  packed2json(lines, sb)
-                }
-                sb.append("\n    ")
-                outerJson(sb.toString)
-              }
-            }
+          ).map(packed => packed2json(packed))
         } else {
           conn.jvmQuery(_model, _query).map { rows =>
-            rows2json(sb, rows, rows.size)
+            rows2json(rows, rows.size)
           }
         }
       }
@@ -130,50 +133,13 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
     } else {
       _inputThrowable.fold(
         futConn.flatMap { conn =>
-          val sb   = new StringBuffer()
-          var next = false
           if (conn.isJsPlatform) {
             conn.jsQueryJson(
               _model, _query, _datalog, limit, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
-            ).map { packed =>
-                if (packed.isEmpty) {
-                  outerJson("")
-                } else {
-                  val lines = packed.linesIterator
-                  lines.next() // skip first empty line
-                  while (lines.hasNext) {
-                    if (next) sb.append(",") else next = true
-                    packed2json(lines, sb)
-                  }
-                  sb.append("\n    ")
-                  outerJson(sb.toString)
-                }
-              }
+            ).map(packed => packed2json(packed))
           } else {
             conn.jvmQuery(_model, _query).map { rows =>
-              rows2json(sb, rows, rows.size.min(limit))
-              //              val count = jColl.size()
-              //              val rows  = jColl.iterator()
-              //              if (count == 0) {
-              //                // Empty result set
-              //              } else if (limit == -1) {
-              //                // All rows
-              //                while (rows.hasNext) {
-              //                  if (next) sb.append(",") else next = true
-              //                  row2json(rows.next, sb)
-              //                }
-              //                sb.append("\n    ")
-              //              } else {
-              //                // n rows
-              //                var i = 0
-              //                while (rows.hasNext && i < limit) {
-              //                  if (next) sb.append(",") else next = true
-              //                  row2json(rows.next, sb)
-              //                  i += 1
-              //                }
-              //                sb.append("\n    ")
-              //              }
-              //              outerJson(sb.toString)
+              rows2json(rows, rows.size.min(limit))
             }
           }
         }

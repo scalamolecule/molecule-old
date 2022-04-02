@@ -1,10 +1,12 @@
 package molecule.core.marshalling
 
-import molecule.core.marshalling.ast.{ConnProxy, IndexArgs, SortCoordinate}
+import java.util.Date
+import molecule.core.dto.SchemaAttr
 import molecule.core.marshalling.ast.nodes.Obj
-import molecule.datomic.base.facade.TxReportRPC
+import molecule.core.marshalling.ast.{ConnProxy, IndexArgs, SortCoordinate}
+import molecule.datomic.base.facade.{TxReport, TxReportRPC}
 import sloth.PathName
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 trait MoleculeRpc {
 
@@ -35,6 +37,14 @@ trait MoleculeRpc {
     sortCoordinates: List[List[SortCoordinate]]
   ): Future[String]
 
+  def schemaHistoryQuery2packed(
+    connProxy: ConnProxy,
+    datalogQuery: String,
+    obj: Obj,
+    schemaAttrs: Seq[SchemaAttr],
+    sortCoordinates: List[List[SortCoordinate]]
+  ): Future[String]
+
   def index2packed(
     connProxy: ConnProxy,
     api: String,
@@ -44,6 +54,8 @@ trait MoleculeRpc {
     sortCoordinates: List[List[SortCoordinate]]
   ): Future[String]
 
+
+  // Schema ...............................
 
   def getAttrValues(
     connProxy: ConnProxy,
@@ -59,8 +71,19 @@ trait MoleculeRpc {
   ): Future[List[String]]
 
 
-  def basisT(connProxy: ConnProxy): Future[Long]
+  def changeAttrName(connProxy: ConnProxy,curName: String, newName: String): Future[TxReportRPC]
+  def retireAttr(connProxy: ConnProxy,attrName: String): Future[TxReportRPC]
 
+  def changeNamespaceName(connProxy: ConnProxy,curName: String, newName: String): Future[TxReportRPC]
+  def retireNamespace(connProxy: ConnProxy,nsName: String): Future[TxReportRPC]
+
+  def changePartitionName(connProxy: ConnProxy,curName: String, newName: String): Future[TxReportRPC]
+  def retirePartition(connProxy: ConnProxy,partName: String): Future[TxReportRPC]
+
+  def retractSchemaOption(connProxy: ConnProxy, attr: String, option: String): Future[TxReportRPC]
+
+  def getEnumHistory(connProxy: ConnProxy): Future[List[(String, Int, Long, Date, String, Boolean)]]
+  def retractEnum(connProxy: ConnProxy, enumString: String): Future[TxReportRPC]
 
   // Entity api ....................................
 
@@ -85,4 +108,9 @@ trait MoleculeRpc {
   // Connection pool ...............................
 
   def clearConnPool: Future[Unit]
+
+
+  // Helpers ...............................
+
+  def basisT(connProxy: ConnProxy): Future[Long]
 }

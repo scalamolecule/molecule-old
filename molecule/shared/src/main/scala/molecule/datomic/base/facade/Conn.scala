@@ -233,7 +233,7 @@ trait Conn extends ColOps with BooPicklers {
   def sync(t: Long): Conn
 
 
-  // Schema --------------------------------------------------------------------
+  // Schema change -------------------------------------------------------------
 
   def changeAttrName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport]
   def retireAttr(attrName: String)(implicit ec: ExecutionContext): Future[TxReport]
@@ -246,30 +246,6 @@ trait Conn extends ColOps with BooPicklers {
 
   def retractSchemaOption(attr: String, option: String)(implicit ec: ExecutionContext): Future[TxReport]
 
-  def updateConnProxy(schema: SchemaTransaction): Unit = {
-    connProxy match {
-      case proxy: DatomicPeerProxy =>
-        connProxy = proxy.copy(
-          schema = schema.datomicClient,
-          nsMap = schema.nsMap,
-          attrMap = schema.attrMap,
-        )
-
-      case proxy: DatomicDevLocalProxy =>
-        connProxy = proxy.copy(
-          schema = schema.datomicClient,
-          nsMap = schema.nsMap,
-          attrMap = schema.attrMap,
-        )
-
-      case proxy: DatomicPeerServerProxy =>
-        connProxy = proxy.copy(
-          schema = schema.datomicClient,
-          nsMap = schema.nsMap,
-          attrMap = schema.attrMap,
-        )
-    }
-  }
 
   def getEnumHistory(implicit ec: ExecutionContext): Future[List[(String, Int, Long, Date, String, Boolean)]]
   def retractEnum(enumString: String)(implicit ec: ExecutionContext): Future[TxReport]
@@ -283,9 +259,6 @@ trait Conn extends ColOps with BooPicklers {
 
   private[molecule] def buildTxFnInvoker(txFn: String, args: Seq[Any]): jList[_] =
     throw jvmPeerOnly("buildTxFnInstall(txFn: String, args: Seq[Any])")
-
-  private[molecule] def buildTxFnInvoker2(txFn: String, args: Seq[Any]): jList[_] =
-    throw jvmPeerOnly("buildTxFnInstall2(txFn: String, args: Seq[Any])")
 
 
   // Internal ------------------------------------------------------------------
@@ -304,14 +277,34 @@ trait Conn extends ColOps with BooPicklers {
 
   private[molecule] lazy val rpc: MoleculeRpc = throw jsOnly("rpc")
 
+  def updateConnProxy(schema: SchemaTransaction): Unit = {
+    connProxy match {
+      case proxy: DatomicPeerProxy =>
+        connProxy = proxy.copy(
+          // Don't set on initialization to avoid redundant schema transactions
+          schema = if (proxy.nsMap.isEmpty) Nil else schema.datomicPeer,
+          nsMap = schema.nsMap,
+          attrMap = schema.attrMap,
+        )
+
+      case proxy: DatomicDevLocalProxy =>
+        connProxy = proxy.copy(
+          schema = if (proxy.nsMap.isEmpty) Nil else schema.datomicClient,
+          nsMap = schema.nsMap,
+          attrMap = schema.attrMap,
+        )
+
+      case proxy: DatomicPeerServerProxy =>
+        connProxy = proxy.copy(
+          schema = if (proxy.nsMap.isEmpty) Nil else schema.datomicClient,
+          nsMap = schema.nsMap,
+          attrMap = schema.attrMap,
+        )
+    }
+  }
 
   def usingAdhocDbView(dbView: DbView): Conn = {
     updateAdhocDbView(Some(dbView))
-    this
-  }
-
-  def skipAdhocDbView: Conn = {
-    updateAdhocDbView(None)
     this
   }
 
@@ -384,12 +377,12 @@ trait Conn extends ColOps with BooPicklers {
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] =
     Future.failed(jvmOnly("datalogQuery(model: Model, query: Query, _db: Option[DatomicDb] = None)"))
 
-  private[molecule] def jvmSchemaHistoryQueryTpl(
+  private[molecule] def jvmSchemaHistoryQuery(
     model: Model
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] =
     Future.failed(jvmOnly("jvmSchemaHistoryQueryTpl(model: Model, queryString: String)"))
 
-  private[molecule] def jsQueryTpl[Tpl](
+  private[molecule] def jsQuery[T](
     model: Model,
     query: Query,
     datalog: String,
@@ -399,23 +392,9 @@ trait Conn extends ColOps with BooPicklers {
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
-    packed2tpl: Iterator[String] => Tpl,
-    sortCoordinates: List[List[SortCoordinate]]
-  )(implicit ec: ExecutionContext): Future[List[Tpl]] = Future.failed(jsOnly("jsQueryTpl"))
-
-  private[molecule] def jsQueryObj[Obj](
-    model: Model,
-    query: Query,
-    datalog: String,
-    n: Int,
-    obj: nodes.Obj,
-    nestedLevels: Int,
-    isOptNested: Boolean,
-    refIndexes: List[List[Int]],
-    tacitIndexes: List[List[Int]],
-    packed2obj: Iterator[String] => Obj,
-    sortCoordinates: List[List[SortCoordinate]]
-  )(implicit ec: ExecutionContext): Future[List[Obj]] = Future.failed(jsOnly("jsQueryObj"))
+    sortCoordinates: List[List[SortCoordinate]],
+    unpacker: Iterator[String] => T
+  )(implicit ec: ExecutionContext): Future[List[T]] = Future.failed(jsOnly("jsQuery"))
 
   private[molecule] def jsQueryJson(
     model: Model,
@@ -430,10 +409,21 @@ trait Conn extends ColOps with BooPicklers {
     sortCoordinates: List[List[SortCoordinate]]
   )(implicit ec: ExecutionContext): Future[String] = Future.failed(jsOnly("jsQueryJson"))
 
+  private[molecule] def jsSchemaHistoryQuery[T](
+    model: Model,
+    obj: Obj,
+    sortCoordinates: List[List[SortCoordinate]],
+    unpacker: Iterator[String] => T
+  )(implicit ec: ExecutionContext): Future[List[T]] = Future.failed(jsOnly("jsSchemaHistoryQuery"))
 
-  // Internal convenience method
+  private[molecule] def jsSchemaHistoryQueryJson(
+    model: Model,
+    obj: Obj,
+    sortCoordinates: List[List[SortCoordinate]]
+  )(implicit ec: ExecutionContext): Future[String] = Future.failed(jsOnly("jsSchemaHistoryQuery"))
+
+
   private[molecule] def entity(id: Any)(implicit ec: ExecutionContext): Future[DatomicEntity]
-
 
   private[molecule] def inspect(
     header: String,

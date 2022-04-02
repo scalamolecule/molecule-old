@@ -4,14 +4,13 @@ import java.lang.{Boolean => jBoolean, Long => jLong}
 import java.util
 import java.util.{Collections, Comparator, Collection => jCollection, List => jList}
 import molecule.core.dto.SchemaAttr
-import molecule.core.marshalling.ast.{DatomicDevLocalProxy, DatomicPeerProxy, DatomicPeerServerProxy}
-import molecule.core.util.JavaUtil
+import molecule.core.marshalling.ast.DatomicPeerProxy
+import molecule.core.util.{DateHandling, JavaUtil}
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-
-trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
+case class QuerySchemaHistory(conn: Conn_Jvm)(implicit ec: ExecutionContext) extends JavaUtil with DateHandling {
 
   private val sharedAttrs = List("t", "tx", "txInstant", "attrId", "a", "part", "nsFull", "ns", "attr")
 
@@ -41,7 +40,7 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
   }
 
   private lazy val id2str = {
-    self.connProxy match {
+    conn.connProxy match {
       case _: DatomicPeerProxy => (tpeId: AnyRef) =>
         tpeId.toString.toInt match {
           // cardinality
@@ -118,7 +117,7 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
 
   private[molecule] def fetchSchemaHistory(
     schemaAttrs: Seq[SchemaAttr],
-    queryString: String
+    datalogQuery: String
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = try {
     val attrs          = mutable.ListBuffer[String]()
     val requireAttrs   = mutable.ListBuffer[String]()
@@ -690,7 +689,7 @@ trait QuerySchemaHistory extends JavaUtil { self: Conn_Jvm =>
     //    println("excludeAttrs : " + excludeAttrs)
     //    println("Length       : " + length)
 
-    historyQuery(queryString, javaInputs).map { jColl =>
+    conn.historyQuery(datalogQuery, javaInputs).map { jColl =>
       // Sort by tx, attrId, schemaId, op
       val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
       Collections.sort(rows, new SchemaComparator())

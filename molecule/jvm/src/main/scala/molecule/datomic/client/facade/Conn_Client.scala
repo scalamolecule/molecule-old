@@ -2,7 +2,7 @@ package molecule.datomic.client.facade
 
 import java.util
 import java.util.{Date, Collection => jCollection, List => jList}
-import datomic.{Database, Peer, Util}
+import datomic.Util
 import datomicScala.client.api.Datom
 import datomicScala.client.api.sync.{Client, Db, Connection => ClientConnection, Datomic => clientDatomic}
 import molecule.core.ast.elements._
@@ -12,7 +12,7 @@ import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.ast.transactionModel._
-import molecule.datomic.base.facade.{Conn, Conn_Jvm, DatomicDb, QuerySchemaHistory, TxReport}
+import molecule.datomic.base.facade.{Conn, Conn_Jvm, DatomicDb, TxReport}
 import molecule.datomic.base.marshalling.DatomicRpc
 import molecule.datomic.base.transform.Query2String
 import molecule.datomic.base.util.QueryOpsClojure
@@ -27,7 +27,7 @@ case class Conn_Client(
   override val defaultConnProxy: ConnProxy,
   dbName: String,
   system: String = "",
-) extends Conn_Jvm with QueryIndex with QuerySchemaHistory {
+) extends Conn_Jvm with QueryIndex {
 
   // Molecule api --------------------------------------------------------------
 
@@ -142,7 +142,7 @@ case class Conn_Client(
 
   // Schema --------------------------------------------------------------------
 
-  protected def historyQuery(query: String, inputs: Seq[jList[AnyRef]] = Nil)
+  private[molecule] def historyQuery(query: String, inputs: Seq[jList[AnyRef]] = Nil)
                             (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     db.map { db =>
       clientDatomic.q(
