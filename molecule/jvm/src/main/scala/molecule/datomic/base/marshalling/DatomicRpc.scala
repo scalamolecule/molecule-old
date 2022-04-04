@@ -5,21 +5,20 @@ import java.net.URI
 import java.util
 import java.util.{Collections, Date, UUID, List => jList}
 import datomic.Util._
-import datomic.{Database, Log, Peer, Util, Datom => PeerDatom}
+import datomic.{Util, Datom => PeerDatom}
 import datomicClient.ClojureBridge
 import datomicScala.client.api.{Datom => ClientDatom}
 import molecule.core.dto.SchemaAttr
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling._
-import molecule.core.marshalling.ast.nodes.Obj
 import molecule.core.marshalling.ast._
+import molecule.core.marshalling.ast.nodes.Obj
 import molecule.core.util.testing.TimerPrint
 import molecule.core.util.{Helpers, JavaConversions, Quoted}
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.facade._
 import molecule.datomic.base.marshalling.packers.{PackDatoms, PackEntityGraph}
 import molecule.datomic.base.marshalling.sorting.{SortDatoms_Client, SortDatoms_Peer, SortRows}
-import molecule.datomic.base.ops.QueryOps.txBase
 import molecule.datomic.base.util.JavaHelpers
 import molecule.datomic.client.facade.{Conn_Client, DatomicDb_Client, Datomic_DevLocal, Datomic_PeerServer}
 import molecule.datomic.peer.facade.{Conn_Peer, DatomicDb_Peer, Datomic_Peer}
@@ -357,43 +356,13 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
     }
   }
 
-  private def go(connProxy: ConnProxy, action: Conn_Jvm => Future[TxReport]): Future[TxReportRPC] = {
-    for {
-      conn <- getConn(connProxy)
-      txReport <- action(conn)
-    } yield txReportRPC(txReport)
-  }
-
-  final def changeAttrName(connProxy: ConnProxy, curName: String, newName: String): Future[TxReportRPC] =
-    go(connProxy, (conn: Conn_Jvm) => changeAttrName_(conn, curName, newName))
-
-  final def retireAttr(connProxy: ConnProxy, attrName: String): Future[TxReportRPC] =
-    go(connProxy, (conn: Conn_Jvm) => retireAttr_(conn, attrName))
-
-  final def changeNamespaceName(connProxy: ConnProxy, curName: String, newName: String): Future[TxReportRPC] =
-    go(connProxy, (conn: Conn_Jvm) => changeNamespaceName_(conn, curName, newName))
-
-  final def retireNamespace(connProxy: ConnProxy, nsName: String): Future[TxReportRPC] =
-    go(connProxy, (conn: Conn_Jvm) => retireNamespace_(conn, nsName))
-
-  final def changePartitionName(connProxy: ConnProxy, curName: String, newName: String): Future[TxReportRPC] =
-    go(connProxy, (conn: Conn_Jvm) => changePartitionName_(conn, curName, newName))
-
-  final def retirePartition(connProxy: ConnProxy, partName: String): Future[TxReportRPC] =
-    go(connProxy, (conn: Conn_Jvm) => retirePartition_(conn, partName))
-
-  final def retractSchemaOption(connProxy: ConnProxy, attr: String, option: String): Future[TxReportRPC] =
-    go(connProxy, (conn: Conn_Jvm) => retractSchemaOption_(conn, attr, option))
-
-  final def getEnumHistory(connProxy: ConnProxy): Future[List[(String, Int, Long, Date, String, Boolean)]] = {
+  final def getEnumHistory(connProxy: ConnProxy)
+  : Future[List[(String, Int, Long, Date, String, Boolean)]] = {
     for {
       conn <- getConn(connProxy)
       res <- getEnumHistory_(conn)
     } yield res
   }
-
-  final def retractEnum(connProxy: ConnProxy, enumString: String): Future[TxReportRPC] =
-    go(connProxy, (conn: Conn_Jvm) => retractEnum_(conn, enumString))
 
 
   // Entity api ---------------------------------------------------

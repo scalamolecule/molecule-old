@@ -7,7 +7,7 @@ import molecule.core.util.DateHandling
 import molecule.datomic.base.ast.query._
 
 
-trait ColOps extends DateHandling {
+trait Conversions extends DateHandling {
 
   def marshallInputs(q: Query): (
     Seq[(Int, String, String)],

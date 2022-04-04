@@ -5,7 +5,7 @@ import molecule.core.ast.elements.Generic
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
-import molecule.core.ops.ColOps
+import molecule.core.ops.Conversions
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
@@ -13,7 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 /** Default data getter methods on molecules that return data as lists of tuples. */
-private[molecule] trait GetTpls[Obj, Tpl] extends ColOps { self: Marshalling[Obj, Tpl] =>
+private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshalling[Obj, Tpl] =>
 
   // get ================================================================================================
 

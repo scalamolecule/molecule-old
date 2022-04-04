@@ -1,4 +1,4 @@
-package moleculeTests.tests.db.datomic.generic
+package moleculeTests.jvm.db.datomic
 
 import molecule.core.data.model._
 import molecule.core.exceptions.MoleculeException

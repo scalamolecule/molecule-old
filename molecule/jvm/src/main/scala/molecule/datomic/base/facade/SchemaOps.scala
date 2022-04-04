@@ -42,7 +42,7 @@ trait SchemaOps extends Helpers {
   }
 
 
-  def changeAttrName_(conn: Conn_Jvm, curName: String, newName: String)
+  protected def changeAttrName_(conn: Conn_Jvm, curName: String, newName: String)
                      (implicit ec: ExecutionContext): Future[TxReport] = try {
     val (curIdent, newIdent) = (okIdent(curName), okIdent(newName))
     for {

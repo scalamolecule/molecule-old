@@ -6,9 +6,9 @@ import boopickle.Default._
 import molecule.core.ast.elements._
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling._
+import molecule.core.marshalling.ast.nodes.Obj
 import molecule.core.marshalling.ast.{ConnProxy, IndexArgs, SortCoordinate, nodes}
 import molecule.core.marshalling.convert.Stmts2Edn
-import molecule.core.marshalling.ast.nodes.Obj
 import molecule.core.ops.ModelOps
 import molecule.core.util.{Helpers, Inspect}
 import molecule.datomic.base.api.DatomicEntity
@@ -84,7 +84,7 @@ case class Conn_Js(
 
   final def transact(edn: String)
                     (implicit ec: ExecutionContext): Future[TxReport] =
-    rpc.transact(connProxy, (edn, Set.empty[String]))
+    rpc.transact(connProxy, edn, Set.empty[String])
 
 
   final def sync: Conn =
@@ -96,41 +96,9 @@ case class Conn_Js(
 
   // Schema --------------------------------------------------------------------
 
-  final def changeAttrName(curName: String, newName: String)
-                                            (implicit ec: ExecutionContext): Future[TxReport] =
-    rpc.changeAttrName(connProxy, curName, newName)
-
-  final def retireAttr(attrName: String)
-                                        (implicit ec: ExecutionContext): Future[TxReport] =
-    rpc.retireAttr(connProxy, attrName)
-
-  final def changeNamespaceName(curName: String, newName: String)
-                                                 (implicit ec: ExecutionContext): Future[TxReport] =
-    rpc.changeNamespaceName(connProxy, curName, newName)
-
-  final def retireNamespace(nsName: String)
-                                             (implicit ec: ExecutionContext): Future[TxReport] =
-    rpc.retireNamespace(connProxy, nsName)
-
-  final def changePartitionName(curName: String, newName: String)
-                                                 (implicit ec: ExecutionContext): Future[TxReport] =
-    rpc.changePartitionName(connProxy, curName, newName)
-
-  final def retirePartition(partName: String)
-                                             (implicit ec: ExecutionContext): Future[TxReport] =
-    rpc.retirePartition(connProxy, partName)
-
-  final def retractSchemaOption(attr: String, option: String)
-                                                 (implicit ec: ExecutionContext): Future[TxReport] =
-    rpc.retractSchemaOption(connProxy, attr, option)
-
   final def getEnumHistory(implicit ec: ExecutionContext)
   : Future[List[(String, Int, Long, Date, String, Boolean)]] =
     rpc.getEnumHistory(connProxy)
-
-  final def retractEnum(enumString: String)
-                                         (implicit ec: ExecutionContext): Future[TxReport] =
-    rpc.retractEnum(connProxy, enumString)
 
 
   // Internal ------------------------------------------------------------------
@@ -431,10 +399,6 @@ case class Conn_Js(
   )(implicit ec: ExecutionContext): Future[DatomicEntity] = db.map(_.entity(this, id))
 
 
-
-
-
-
   def inspect(
     header: String,
     threshold: Int,
@@ -445,8 +409,6 @@ case class Conn_Js(
   )(id: Int, params: Any*): Unit = Inspect(
     header, threshold, max, showStackTrace, maxLevel, showBi
   )(id, params: _*)
-
-
 
 
   private def withDbView[T](futResult: Future[T])(implicit ec: ExecutionContext): Future[T] = Future {

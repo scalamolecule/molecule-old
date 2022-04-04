@@ -8,16 +8,12 @@ import com.cognitect.transit.impl.URIImpl
 import datomic.Util.{read, readAll}
 import datomic.{Peer, Util}
 import molecule.core.ast.elements._
-import molecule.core.dto.SchemaAttr
-import molecule.core.exceptions.MoleculeException
 import molecule.core.ops.ModelOps
 import molecule.core.util.{Helpers, JavaConversions}
 import molecule.datomic.base.ast.transactionModel.{Cas, Enum, RetractEntity, Statement, TempId}
-import molecule.datomic.base.ops.QueryOps.txBase
 import molecule.datomic.base.transform.Model2Query
 import molecule.datomic.base.util.Inspect
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.NonFatal
 
 trait Conn_Jvm extends Conn with JavaConversions with Helpers with ModelOps with SchemaOps {
 
@@ -48,6 +44,7 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers with ModelOps with
 
   final override def transact(javaStmts: jList[_])(implicit ec: ExecutionContext): Future[TxReport] =
     transactRaw(javaStmts, Future.successful(Seq.empty[Statement]))
+
 
   final override def query(datalogQuery: String, inputs: Any*)
                           (implicit ec: ExecutionContext): Future[List[List[AnyRef]]] = {
@@ -86,33 +83,33 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers with ModelOps with
 
   // Schema --------------------------------------------------------------------
 
-  def changeAttrName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] =
+  override def changeAttrName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] =
     changeAttrName_(this, curName, newName)
 
-  def retireAttr(attrName: String)(implicit ec: ExecutionContext): Future[TxReport] =
+  override def retireAttr(attrName: String)(implicit ec: ExecutionContext): Future[TxReport] =
     retireAttr_(this, attrName)
 
-  def changeNamespaceName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] =
+  override def changeNamespaceName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] =
     changeNamespaceName_(this, curName, newName)
 
-  def retireNamespace(nsName: String)(implicit ec: ExecutionContext): Future[TxReport] =
+  override def retireNamespace(nsName: String)(implicit ec: ExecutionContext): Future[TxReport] =
     retireNamespace_(this, nsName)
 
-  def changePartitionName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] =
+  override def changePartitionName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] =
     changePartitionName_(this, curName, newName)
 
-  def retirePartition(partName: String)(implicit ec: ExecutionContext): Future[TxReport] =
+  override def retirePartition(partName: String)(implicit ec: ExecutionContext): Future[TxReport] =
     retirePartition_(this, partName)
 
-  def retractSchemaOption(attr: String, option: String)(implicit ec: ExecutionContext): Future[TxReport] =
+  override def retractSchemaOption(attr: String, option: String)(implicit ec: ExecutionContext): Future[TxReport] =
     retractSchemaOption_(this, attr, option)
+
+  override def retractEnum(enumString: String)(implicit ec: ExecutionContext): Future[TxReport] =
+    retractEnum_(this, enumString)
+
 
   def getEnumHistory(implicit ec: ExecutionContext): Future[List[(String, Int, Long, Date, String, Boolean)]] =
     getEnumHistory_(this)
-
-  def retractEnum(enumString: String)(implicit ec: ExecutionContext): Future[TxReport] =
-    retractEnum_(this, enumString)
-
 
   private[molecule] def historyQuery(query: String, inputs: Seq[jList[AnyRef]] = Nil)
                                     (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]]

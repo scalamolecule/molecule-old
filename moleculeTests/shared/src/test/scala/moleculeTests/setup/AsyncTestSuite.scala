@@ -6,7 +6,7 @@ import molecule.datomic.base.util.{System, SystemDevLocal, SystemPeer, SystemPee
 import moleculeTests.setup.core.CoreData
 import utest._
 import utest.framework.Formatter
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 import molecule.core.util.Executor._
 
 trait AsyncTestSuite extends TestSuite with CoreData

@@ -4,9 +4,9 @@ import java.util.Date
 import molecule.core.dto.SchemaAttr
 import molecule.core.marshalling.ast.nodes.Obj
 import molecule.core.marshalling.ast.{ConnProxy, IndexArgs, SortCoordinate}
-import molecule.datomic.base.facade.{TxReport, TxReportRPC}
+import molecule.datomic.base.facade.TxReportRPC
 import sloth.PathName
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 trait MoleculeRpc {
 
@@ -70,20 +70,8 @@ trait MoleculeRpc {
     query: String
   ): Future[List[String]]
 
-
-  def changeAttrName(connProxy: ConnProxy,curName: String, newName: String): Future[TxReportRPC]
-  def retireAttr(connProxy: ConnProxy,attrName: String): Future[TxReportRPC]
-
-  def changeNamespaceName(connProxy: ConnProxy,curName: String, newName: String): Future[TxReportRPC]
-  def retireNamespace(connProxy: ConnProxy,nsName: String): Future[TxReportRPC]
-
-  def changePartitionName(connProxy: ConnProxy,curName: String, newName: String): Future[TxReportRPC]
-  def retirePartition(connProxy: ConnProxy,partName: String): Future[TxReportRPC]
-
-  def retractSchemaOption(connProxy: ConnProxy, attr: String, option: String): Future[TxReportRPC]
-
   def getEnumHistory(connProxy: ConnProxy): Future[List[(String, Int, Long, Date, String, Boolean)]]
-  def retractEnum(connProxy: ConnProxy, enumString: String): Future[TxReportRPC]
+
 
   // Entity api ....................................
 

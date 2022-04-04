@@ -6,9 +6,9 @@ import molecule.core.ast.elements.Model
 import molecule.core.data.SchemaTransaction
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling._
-import molecule.core.marshalling.ast.{ConnProxy, DatomicDevLocalProxy, DatomicPeerProxy, DatomicPeerServerProxy, SortCoordinate, nodes}
 import molecule.core.marshalling.ast.nodes.Obj
-import molecule.core.ops.ColOps
+import molecule.core.marshalling.ast._
+import molecule.core.ops.Conversions
 import molecule.core.transform.Model2Stmts
 import molecule.datomic.base.api.DatomicEntity
 import molecule.datomic.base.ast.dbView.DbView
@@ -22,7 +22,7 @@ import scala.concurrent.{ExecutionContext, Future}
  *
  * Has additional internal state to manage using adhoc and test databases.
  * */
-trait Conn extends ColOps with BooPicklers {
+trait Conn extends Conversions with BooPicklers {
 
   // Molecule api --------------------------------------------------------------
 
@@ -235,20 +235,33 @@ trait Conn extends ColOps with BooPicklers {
 
   // Schema change -------------------------------------------------------------
 
-  def changeAttrName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport]
-  def retireAttr(attrName: String)(implicit ec: ExecutionContext): Future[TxReport]
+  def changeAttrName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] =
+    Future.failed(jvmOnly("changeAttrName"))
 
-  def changeNamespaceName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport]
-  def retireNamespace(nsName: String)(implicit ec: ExecutionContext): Future[TxReport]
+  def retireAttr(attrName: String)(implicit ec: ExecutionContext): Future[TxReport] =
+    Future.failed(jvmOnly("retireAttr"))
 
-  def changePartitionName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport]
-  def retirePartition(partName: String)(implicit ec: ExecutionContext): Future[TxReport]
+  def changeNamespaceName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] =
+    Future.failed(jvmOnly("changeNamespaceName"))
 
-  def retractSchemaOption(attr: String, option: String)(implicit ec: ExecutionContext): Future[TxReport]
+  def retireNamespace(nsName: String)(implicit ec: ExecutionContext): Future[TxReport] =
+    Future.failed(jvmOnly("retireNamespace"))
+
+  def changePartitionName(curName: String, newName: String)(implicit ec: ExecutionContext): Future[TxReport] =
+    Future.failed(jvmOnly("changePartitionName"))
+
+  def retirePartition(partName: String)(implicit ec: ExecutionContext): Future[TxReport] =
+    Future.failed(jvmOnly("retirePartition"))
+
+  def retractSchemaOption(attr: String, option: String)(implicit ec: ExecutionContext): Future[TxReport] =
+    Future.failed(jvmOnly("retractSchemaOption"))
+
+  def retractEnum(enumString: String)(implicit ec: ExecutionContext): Future[TxReport] =
+    Future.failed(jvmOnly("retractEnum"))
+
 
 
   def getEnumHistory(implicit ec: ExecutionContext): Future[List[(String, Int, Long, Date, String, Boolean)]]
-  def retractEnum(enumString: String)(implicit ec: ExecutionContext): Future[TxReport]
 
 
   // Tx fn helpers -------------------------------------------------------------
