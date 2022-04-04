@@ -19,7 +19,7 @@ object NonBlocking extends AsyncTestSuite {
 
   def run[T](id: String, max: Int, test: Int => T)
             (implicit ex: ExecutionContext, conn: Future[Conn]): Long = {
-    val start = (new Date).getTime // using Date to allow js platform test too
+    val start = (new Date).getTime
     (1 to max).foreach(test)
     val ms = (new Date).getTime - start
     println(s"$id: $ms ms")

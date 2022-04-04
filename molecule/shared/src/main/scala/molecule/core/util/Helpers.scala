@@ -4,6 +4,7 @@ import java.net.URI
 import java.time._
 import java.time.format.DateTimeFormatter
 import java.util.{Date, UUID}
+import com.cognitect.transit.impl.URIImpl
 import molecule.core.ast.elements._
 import molecule.core.exceptions.MoleculeException
 import molecule.datomic.base.ops.QueryOps.withDecimal
@@ -76,7 +77,6 @@ trait Helpers extends DateHandling {
       case (a, b)      => s"${render(a)} -> ${render(b)}"
       case v           => render(v)
     }.mkString("Seq(", ", ", ")")
-
 
   final def untupled(rawData: Iterable[Seq[Any]]): Iterable[Seq[Any]] = {
     if (this.toString.contains("compositeOutMolecule")) {

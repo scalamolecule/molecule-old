@@ -1,10 +1,8 @@
 package molecule.datomic.base.facade
 
 import java.io.{Reader, StringReader}
-import java.net.URI
 import java.util.{Collections, Date, Collection => jCollection, List => jList, Map => jMap}
 import clojure.lang.{PersistentArrayMap, PersistentVector}
-import com.cognitect.transit.impl.URIImpl
 import datomic.Util.{read, readAll}
 import datomic.{Peer, Util}
 import molecule.core.ast.elements._
@@ -12,10 +10,10 @@ import molecule.core.ops.ModelOps
 import molecule.core.util.{Helpers, JavaConversions}
 import molecule.datomic.base.ast.transactionModel.{Cas, Enum, RetractEntity, Statement, TempId}
 import molecule.datomic.base.transform.Model2Query
-import molecule.datomic.base.util.Inspect
+import molecule.datomic.base.util.{Convert, Inspect}
 import scala.concurrent.{ExecutionContext, Future}
 
-trait Conn_Jvm extends Conn with JavaConversions with Helpers with ModelOps with SchemaOps {
+trait Conn_Jvm extends Conn with JavaConversions with Helpers with ModelOps with SchemaOps with Convert {
 
   // Molecule api --------------------------------------------------------------
 
@@ -64,16 +62,26 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers with ModelOps with
           && raw.asInstanceOf[PersistentVector].nth(0).isInstanceOf[PersistentArrayMap]
       ) {
         raw.asInstanceOf[jCollection[jMap[_, _]]].asScala.toList.map { rows =>
-          rows.asScala.toList.map { case (k, v) => k.toString -> v }
+          rows.asScala.toList.map {
+            case (k, v) =>
+              k.toString -> datomValue2Scala(v)
+          }
         }
       } else {
         raw.asScala.toList
           .map(_.asScala.toList
             .map {
-              case set: clojure.lang.PersistentHashSet => set.asScala.toSet
-              case uriImpl: URIImpl                    => new URI(uriImpl.toString)
-              case bi: clojure.lang.BigInt             => BigInt(bi.toString)
-              case other                               => other
+              case set: clojure.lang.PersistentHashSet =>
+                set.asScala.toSet.map(v =>
+                  datomValue2Scala(v)
+                )
+
+              case m: java.util.Map[_, _] =>
+                m.asScala.toMap.map { case (k, v) =>
+                  k.toString -> datomValue2Scala(v)
+                }
+
+              case v => datomValue2Scala(v).asInstanceOf[AnyRef]
             }
           )
       }

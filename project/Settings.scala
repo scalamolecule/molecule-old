@@ -185,7 +185,6 @@ object Settings extends SettingsDatomic {
         //        sharedTests + "/db/datomic/entity",
         sharedTests + "/db/datomic/generic",
         //        sharedTests + "/db/datomic/partitions",
-        sharedTests + "/db/datomic/raw",
         //        sharedTests + "/db/datomic/time",
         //        sharedTests + "/db/datomic/txMetaData",
         //        sharedTests + "/examples/datomic/dayOfDatomic",

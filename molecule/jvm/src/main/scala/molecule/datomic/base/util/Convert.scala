@@ -1,9 +1,12 @@
 package molecule.datomic.base.util
 
+import java.net.URI
+import com.cognitect.transit.impl.URIImpl
 import molecule.core.exceptions.MoleculeException
 import molecule.core.util.JavaConversions
 
-private[molecule] object Convert extends JavaConversions {
+private[molecule] object Convert extends Convert
+private[molecule] trait Convert extends JavaConversions {
 
   private[molecule] def datomValue2Scala(v: Any): Any = v match {
     case s: java.lang.String      => s
@@ -14,11 +17,11 @@ private[molecule] object Convert extends JavaConversions {
     case d: java.util.Date        => d
     case u: java.util.UUID        => u
     case u: java.net.URI          => u
+    case uriImpl: URIImpl         => new URI(uriImpl.toString)
     case kw: clojure.lang.Keyword => kw.toString
     case bi: clojure.lang.BigInt  => BigInt(bi.toBigInteger)
     case bi: java.math.BigInteger => BigInt(bi)
     case bd: java.math.BigDecimal => BigDecimal(bd)
-    case other                    => throw MoleculeException(
-      "Unexpected Datom java value type to convert: " + other.getClass)
+    case other                    => other
   }
 }
