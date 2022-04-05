@@ -1,9 +1,10 @@
 package molecule.datomic.base.marshalling
 
 import java.io.StringReader
+import java.lang.{Long => jLong}
 import java.net.URI
 import java.util
-import java.util.{Collections, Date, UUID, List => jList}
+import java.util.{Collections, Date, UUID, List => jList, Collection => jCollection}
 import datomic.Util._
 import datomic.{Util, Datom => PeerDatom}
 import datomicClient.ClojureBridge
@@ -44,7 +45,7 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
   ): Future[TxReportRPC] = {
     for {
       conn <- getConn(connProxy)
-//      _ = println("DatomicRpc.transact -------\n" + stmtsEdn)
+      //      _ = println("DatomicRpc.transact -------\n" + stmtsEdn)
       javaStmts = getJavaStmts(stmtsEdn, uriAttrs)
 
       _ = javaStmts.forEach(s => println(s))
@@ -76,13 +77,13 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
     obj: Obj,
     schemaAttrs: Seq[SchemaAttr],
     sortCoordinates: List[List[SortCoordinate]]
-  ): Future[String] = {
+  ): Future[(Int, String)] = {
     for {
       conn <- getConn(connProxy)
       rawRows <- QuerySchemaHistory(conn).fetchSchemaHistory(schemaAttrs, datalogQuery)
     } yield {
       val rows = if (sortCoordinates.nonEmpty) SortRows(rawRows, sortCoordinates).get else rawRows
-      Flat2packed(obj, rows).getPacked
+      (rawRows.size, Flat2packed(obj, rows, -1, 0).getPacked)
     }
   }
 
@@ -93,14 +94,15 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
     l: Seq[(Int, String, String)],
     ll: Seq[(Int, String, Seq[String])],
     lll: Seq[(Int, String, Seq[Seq[String]])],
-    maxRows0: Int,
+    limit: Int,
+    offset: Int,
     obj: Obj,
     nestedLevels: Int,
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
     sortCoordinates: List[List[SortCoordinate]]
-  ): Future[String] = Future {
+  ): Future[(Int, String)] = Future {
     try {
       val log = new log
       val t   = TimerPrint("DatomicRpc")
@@ -122,12 +124,12 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
         conn <- getConn(connProxy)
         rawRows <- conn.rawQuery(datalogQuery, allInputs)
       } yield {
-        val rowCountAll = rawRows.size
-        val maxRows     = if (maxRows0 == -1 || rowCountAll < maxRows0) rowCountAll else maxRows0
-        val queryTime   = t.delta
-        val space       = " " * (70 - datalogQuery.split('\n').last.length)
-        val time        = qTime(queryTime)
-        val timeRight   = " " * (8 - time.length) + time
+        val flatTotalCount = rawRows.size
+        //        val maxRows      = if (limit == -1 || flatRowCount < limit) flatRowCount else limit
+        val queryTime      = t.delta
+        val space          = " " * (70 - datalogQuery.split('\n').last.length)
+        val time           = qTime(queryTime)
+        val timeRight      = " " * (8 - time.length) + time
 
         log("================================================================================")
         log(datalogQuery + space + timeRight)
@@ -140,9 +142,10 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
         //      log(qTime(queryTime) + "  " + datalogQuery)
         //      log("connProxy uuid: " + connProxy.uuid)
         //      log("Query time  : " + thousands(queryTime) + " ms")
-        //      log("rowCountAll : " + rowCountAll)
-        //      log("maxRows     : " + (if (maxRows == -1) "all" else maxRows))
-        //      log("rowCount    : " + rowCount)
+        //        log("flatTotalCount: " + flatTotalCount)
+        //        log("limit         : " + limit)
+        //        log("offset        : " + offset)
+        //        log("maxRows     : " + (if (maxRows == -1) "all" else maxRows))
 
         log("-------------------------------")
         //      log(obj.toString)
@@ -156,23 +159,39 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
         //        sortCoordinates.foreach(level => log(level.mkString("List(\n  ", ",\n  ", ")")))
         log.print()
 
-        val packed = if (isOptNested) {
-          val rows = if (sortCoordinates.nonEmpty && sortCoordinates.head.nonEmpty)
-            SortRows(rawRows, sortCoordinates).get else rawRows
-          OptNested2packed(obj, rows, maxRows, refIndexes, tacitIndexes, sortCoordinates).getPacked
+        val (totalCount, packed) = if (flatTotalCount == 0) {
+          (0, "")
+        } else if (isOptNested) {
+          // Optional nested
+          if (offset > flatTotalCount) {
+            (flatTotalCount, "")
+          } else {
+            val sortedRows = if (sortCoordinates.nonEmpty && sortCoordinates.head.nonEmpty)
+              SortRows(rawRows, sortCoordinates).get else rawRows
+            (
+              flatTotalCount,
+              OptNested2packed(obj, sortedRows, limit, offset, refIndexes, tacitIndexes, sortCoordinates).getPacked
+            )
+          }
 
         } else if (nestedLevels == 0) {
-          val rows = if (sortCoordinates.flatten.nonEmpty)
-            SortRows(rawRows, sortCoordinates).get else rawRows
-          Flat2packed(obj, rows, maxRows).getPacked
+          // Flat
+          if (offset > flatTotalCount) {
+            (flatTotalCount, "")
+          } else {
+            val sortedRows = if (sortCoordinates.flatten.nonEmpty) SortRows(rawRows, sortCoordinates).get else rawRows
+            (flatTotalCount, Flat2packed(obj, sortedRows, limit, offset).getPacked)
+          }
 
         } else {
-          Nested2packed(obj, SortRows(rawRows, sortCoordinates).get, nestedLevels).getPacked
+          // Nested
+          val sortedRows = SortRows(rawRows, sortCoordinates).get
+          Nested2packed(obj, sortedRows, flatTotalCount, limit, offset, nestedLevels).getRowCountAndPacked
         }
 
-        //        println("-------------------------------" + packed)
+        //        println(s"-------------------------------" + packed)
         //        log("Sending data to client... Total server time: " + t.msTotal)
-        packed
+        (totalCount, packed)
       }
     } catch {
       case NonFatal(exc) => Future.failed(exc)
@@ -187,7 +206,8 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
     indexArgs: IndexArgs,
     attrs: Seq[String],
     sortCoordinates: List[List[SortCoordinate]]
-  ): Future[String] = {
+  ): Future[(Int, String)] = {
+    var totalCount = 0
     for {
       conn <- getConn(connProxy)
       db <- conn.db
@@ -205,11 +225,18 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
                 }
                 db.datoms(datomicIndex, packer.args: _*).flatMap { datoms =>
                   if (sortCoordinates.nonEmpty) {
-                    SortDatoms_Peer(conn, db, attrs, sortCoordinates, datoms.iterator).getPacked
+                    SortDatoms_Peer(conn, db, attrs, sortCoordinates, datoms.iterator).getPacked.map {
+                      case (count, packed) =>
+                        totalCount = count
+                        packed
+                    }
                   } else {
                     val datom2packed = packer.getPeerDatom2packed(None)
                     datoms.asScala.foldLeft(Future(new StringBuffer())) {
-                      case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                      case (sbFut, datom) => sbFut.flatMap { sb =>
+                        totalCount += 1
+                        datom2packed(sb, datom)
+                      }
                     }
                   }
                 }
@@ -222,11 +249,18 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
                 }
                 adhocDb.datoms(datomicIndex, packer.args).flatMap { datoms =>
                   if (sortCoordinates.nonEmpty) {
-                    SortDatoms_Client(conn, db, attrs, sortCoordinates, datoms.iterator).getPacked
+                    SortDatoms_Client(conn, db, attrs, sortCoordinates, datoms.iterator).getPacked.map {
+                      case (count, packed) =>
+                        totalCount = count
+                        packed
+                    }
                   } else {
                     val datom2packed = packer.getClientDatom2packed(None)
-                    datoms.iterator().asScala.foldLeft(Future(new StringBuffer())) {
-                      case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                    datoms.iterator.asScala.foldLeft(Future(new StringBuffer())) {
+                      case (sbFut, datom) => sbFut.flatMap { sb =>
+                        totalCount += 1
+                        datom2packed(sb, datom)
+                      }
                     }
                   }
                 }
@@ -240,10 +274,17 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
                 val endValue     = if (indexArgs.v2.isEmpty) null else castTpeV(indexArgs.tpe2, indexArgs.v2)
                 db.indexRange(indexArgs.a, startValue, endValue).flatMap { datoms =>
                   if (sortCoordinates.nonEmpty) {
-                    SortDatoms_Peer(conn, db, attrs, sortCoordinates, datoms.iterator).getPacked
+                    SortDatoms_Peer(conn, db, attrs, sortCoordinates, datoms.iterator).getPacked.map {
+                      case (count, packed) =>
+                        totalCount = count
+                        packed
+                    }
                   } else {
                     datoms.asScala.foldLeft(Future(new StringBuffer())) {
-                      case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                      case (sbFut, datom) => sbFut.flatMap { sb =>
+                        totalCount += 1
+                        datom2packed(sb, datom)
+                      }
                     }
                   }
                 }
@@ -253,10 +294,17 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
                 val endValue     = if (indexArgs.v2.isEmpty) None else Some(castTpeV(indexArgs.tpe2, indexArgs.v2))
                 db.indexRange(indexArgs.a, startValue, endValue).flatMap { datoms =>
                   if (sortCoordinates.nonEmpty) {
-                    SortDatoms_Client(conn, db, attrs, sortCoordinates, datoms.iterator).getPacked
+                    SortDatoms_Client(conn, db, attrs, sortCoordinates, datoms.iterator).getPacked.map {
+                      case (count, packed) =>
+                        totalCount = count
+                        packed
+                    }
                   } else {
-                    datoms.iterator().asScala.foldLeft(Future(new StringBuffer())) {
-                      case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                    datoms.iterator.asScala.foldLeft(Future(new StringBuffer())) {
+                      case (sbFut, datom) => sbFut.flatMap { sb =>
+                        totalCount += 1
+                        datom2packed(sb, datom)
+                      }
                     }
                   }
                 }
@@ -273,14 +321,21 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
                   conn.peerConn.log.txRange(from, until).asScala.foreach {
                     txMap => datoms.addAll(txMap.get(datomic.Log.DATA).asInstanceOf[jList[PeerDatom]])
                   }
-                  SortDatoms_Peer(conn, db, attrs, sortCoordinates, datoms.iterator).getPacked
+                  SortDatoms_Peer(conn, db, attrs, sortCoordinates, datoms.iterator).getPacked.map {
+                    case (count, packed) =>
+                      totalCount = count
+                      packed
+                  }
                 } else {
                   conn.peerConn.log.txRange(from, until).asScala.foldLeft(Future(new StringBuffer())) {
                     case (sbFut, txMap) =>
                       val datom2packed = packer
                         .getPeerDatom2packed(Some(txMap.get(datomic.Log.T).asInstanceOf[Long]))
                       txMap.get(datomic.Log.DATA).asInstanceOf[jList[PeerDatom]].asScala.foldLeft(sbFut) {
-                        case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                        case (sbFut, datom) => sbFut.flatMap { sb =>
+                          totalCount += 1
+                          datom2packed(sb, datom)
+                        }
                       }
                   }
                 }
@@ -293,14 +348,21 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
                   conn.clientConn.txRange(from, until).foreach {
                     case (_, txDatoms) => txDatoms.foreach(d => datoms.add(d))
                   }
-                  SortDatoms_Client(conn, db, attrs, sortCoordinates, datoms.iterator).getPacked
+                  SortDatoms_Client(conn, db, attrs, sortCoordinates, datoms.iterator).getPacked.map {
+                    case (count, packed) =>
+                      totalCount = count
+                      packed
+                  }
                 } else {
                   conn.clientConn.txRange(from, until).foldLeft(Future(new StringBuffer())) {
                     case (sbFut, (t, datoms)) =>
                       val datom2packed: (StringBuffer, ClientDatom) => Future[StringBuffer] =
                         packer.getClientDatom2packed(Some(t))
                       datoms.foldLeft(sbFut) {
-                        case (sbFut, datom) => sbFut.flatMap(sb => datom2packed(sb, datom))
+                        case (sbFut, datom) => sbFut.flatMap { sb =>
+                          totalCount += 1
+                          datom2packed(sb, datom)
+                        }
                       }
                   }
                 }
@@ -311,7 +373,7 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
       //      val s = sb.toString
       //      println("--------------- packed ----------------" + s)
       //      s
-      sb.toString
+      (totalCount, sb.toString)
     }
   }
 

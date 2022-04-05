@@ -26,6 +26,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.str.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -42,6 +45,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -58,6 +64,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.long.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -74,6 +83,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.double.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -90,6 +102,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.bool.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -106,6 +121,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.date.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -122,6 +140,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.uuid.Refs1.*(Ref1.int1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -138,6 +159,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.uri.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -154,6 +178,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.enumm.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -187,6 +214,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.strs.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -207,6 +237,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.ints.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -226,6 +259,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.longs.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -245,6 +281,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.doubles.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -264,6 +303,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.bools.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -283,6 +325,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.dates.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -302,6 +347,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.uuids.Refs1.*(Ref1.int1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -320,6 +368,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.uris.Refs1.*(Ref1.int1).getJson.map(_ ==>
             """{
+              |  "totalCount": 1,
+              |  "limit"     : 1,
+              |  "offset"    : 0,
               |  "data": {
               |    "Ns": [
               |      {
@@ -339,6 +390,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.enums.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -358,6 +412,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.bigInts.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -377,6 +434,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.bigDecs.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -412,6 +472,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.strMap.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -431,6 +494,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.intMap.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -450,6 +516,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.longMap.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -469,6 +538,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.doubleMap.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -488,6 +560,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.boolMap.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -507,6 +582,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.dateMap.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -526,6 +604,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.uuidMap.Refs1.*(Ref1.int1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -544,6 +625,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.uriMap.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -563,6 +647,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.bigIntMap.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -582,6 +669,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.bigDecMap.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -618,6 +708,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(1).str$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 3,
+            |  "limit"     : 3,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -653,6 +746,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.long(2L).int$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -679,6 +775,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(3).long$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -705,6 +804,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(5).double$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -731,6 +833,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(6).bool$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 3,
+            |  "limit"     : 3,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -766,6 +871,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(7).date$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -792,6 +900,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(8).uuid$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -818,6 +929,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(9).uri$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -844,6 +958,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(10).enumm$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -870,6 +987,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(11).bigInt$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -896,6 +1016,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(12).bigDec$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -939,6 +1062,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(1).strs$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -968,6 +1094,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.long(2L).ints$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -997,6 +1126,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(3).longs$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1026,6 +1158,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(5).doubles$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1057,6 +1192,9 @@ object JsonNestedTypes extends AsyncTestSuite {
           // For some reason, Datomic Free returns only one boolean for a card-many attr.
           Ns.int(6).bools$.Refs1.*(Ref1.int1).getJson.map(_ ==>
             """{
+              |  "totalCount": 2,
+              |  "limit"     : 2,
+              |  "offset"    : 0,
               |  "data": {
               |    "Ns": [
               |      {
@@ -1085,6 +1223,9 @@ object JsonNestedTypes extends AsyncTestSuite {
         } else {
           Ns.int(6).bools$.Refs1.*(Ref1.int1).getJson.map(_ ==>
             """{
+              |  "totalCount": 2,
+              |  "limit"     : 2,
+              |  "offset"    : 0,
               |  "data": {
               |    "Ns": [
               |      {
@@ -1115,6 +1256,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(7).dates$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1144,6 +1288,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(8).uuids$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -1173,6 +1320,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(9).uris$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1202,6 +1352,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(10).enums$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1231,6 +1384,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(11).bigInts$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1260,6 +1416,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(12).bigDecs$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1305,6 +1464,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int.apply(1).strMap$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1334,6 +1496,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.long(2L).intMap$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1363,6 +1528,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(3).longMap$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1392,6 +1560,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(5).doubleMap$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1421,6 +1592,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(6).boolMap$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1450,6 +1624,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(7).dateMap$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1479,6 +1656,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(8).uuidMap$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -1508,6 +1688,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(9).uriMap$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1537,6 +1720,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(11).bigIntMap$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1566,6 +1752,9 @@ object JsonNestedTypes extends AsyncTestSuite {
 
         _ <- Ns.int(12).bigDecMap$.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {

@@ -20,6 +20,9 @@ object JsonComposite extends AsyncTestSuite {
 
         _ <- m(Ref2.int2 + Ns.int).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "composite": [
             |      {
@@ -55,6 +58,9 @@ object JsonComposite extends AsyncTestSuite {
 
         _ <- m(Ref2.int2 + Ns.int.str).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "composite": [
             |      {
@@ -92,6 +98,9 @@ object JsonComposite extends AsyncTestSuite {
 
         _ <- m(Ref2.int2.str2 + Ns.int).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "composite": [
             |      {
@@ -128,6 +137,9 @@ object JsonComposite extends AsyncTestSuite {
 
         _ <- m(Ref2.int2.str2 + Ns.int.str).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "composite": [
             |      {
@@ -166,6 +178,9 @@ object JsonComposite extends AsyncTestSuite {
 
         _ <- m(Ref2.int2.str2 + Ref1.int1.str1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "composite": [
             |      {
@@ -195,6 +210,9 @@ object JsonComposite extends AsyncTestSuite {
         // .. including transaction meta data
         _ <- m(Ref2.int2.str2 + Ref1.int1.str1.Tx(Ns.str)).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "composite": [
             |      {
@@ -244,6 +262,9 @@ object JsonComposite extends AsyncTestSuite {
         // Note how ref attr in tx meta data has both a `tx` and `ref1` prefix
         _ <- m(Ref2.int2.str2 + Ref1.int1.str1.Tx(Ns.str.Ref1.int1)).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "composite": [
             |      {
@@ -298,6 +319,9 @@ object JsonComposite extends AsyncTestSuite {
 
         _ <- m(Ref2.int2.str2 + Ns.int.Ref1.str1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "composite": [
             |      {
@@ -340,6 +364,9 @@ object JsonComposite extends AsyncTestSuite {
 
         _ <- m(Ref2.int2.str2 + Ns.int.Refs1.str1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "composite": [
             |      {
@@ -382,6 +409,9 @@ object JsonComposite extends AsyncTestSuite {
 
         _ <- m(Ref2.int2.str2 + Ns.Refs1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "composite": [
             |      {
@@ -412,6 +442,9 @@ object JsonComposite extends AsyncTestSuite {
 
         _ <- m(Ref2.int2.str2 + Ns.refs1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "composite": [
              |      {

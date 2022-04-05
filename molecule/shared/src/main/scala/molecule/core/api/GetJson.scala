@@ -20,66 +20,6 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
 
   // get ================================================================================================
 
-  private def outerJson(json: String): String = _model.elements.head match {
-    case _: Composite =>
-      s"""{
-         |  "data": {
-         |    "composite": [$json]
-         |  }
-         |}""".stripMargin
-    case _            =>
-      s"""{
-         |  "data": {
-         |    "${firstNs(_model)}": [$json]
-         |  }
-         |}""".stripMargin
-  }
-
-  private def rows2json(rows: jCollection[jList[AnyRef]], limit: Int, offset: Int = 0): String = {
-    val sb   = new StringBuffer()
-    limit match {
-      case 0 => // no data to add to string buffer
-      case _ =>
-        var next = false
-        var i    = offset
-        if (sortRows) {
-          val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
-          sortedRows.sort(this) // using macro-implemented `compare` method
-          while (i != limit) { // No need to check hasNext since (offset + limit) will not exceed total count
-            if (next) sb.append(",") else next = true
-            row2json(sortedRows.get(i), sb)
-            i += 1
-          }
-        } else {
-          val rowsIterator = rows.iterator
-          while (i != limit) { // No need to check hasNext since (offset + limit) will not exceed total count
-            if (next) sb.append(",") else next = true
-            row2json(rowsIterator.next, sb)
-            i += 1
-          }
-        }
-        sb.append("\n    ")
-    }
-    outerJson(sb.toString)
-  }
-
-  private def packed2json(packed: String): String = {
-    val sb   = new StringBuffer()
-    var next = false
-    if (packed.isEmpty) {
-      outerJson("")
-    } else {
-      val lines = packed.linesIterator
-      lines.next() // skip first empty line
-      while (lines.hasNext) {
-        if (next) sb.append(",") else next = true
-        packed2json(lines, sb)
-      }
-      sb.append("\n    ")
-      outerJson(sb.toString)
-    }
-  }
-
   /** Get json data for all rows matching a molecule.
    * {{{
    * Person.name.age.getJson.map(_ ==>
@@ -100,17 +40,17 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
           conn.jsQueryJson(
-            _model, _query, _datalog, -1, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
-          ).map(packed => packed2json(packed))
+            _model, _query, _datalog, -1, 0, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
+          ).map { case (totalCount, packed) => packed2json(totalCount, totalCount, 0, packed) }
         } else {
           conn.jvmQuery(_model, _query).map { rows =>
-            rows2json(rows, rows.size)
+            val totalCount = rows.size
+            rows2json(totalCount, rows, totalCount, totalCount, 0)
           }
         }
       }
     )(Future.failed) // Pass on exception from input failure
   }
-
 
   /** Get json data for n rows matching a molecule
    * {{{
@@ -135,17 +75,125 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
         futConn.flatMap { conn =>
           if (conn.isJsPlatform) {
             conn.jsQueryJson(
-              _model, _query, _datalog, limit, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
-            ).map(packed => packed2json(packed))
+              _model, _query, _datalog, limit, 0, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
+            ).map { case (totalCount, packed) => packed2json(totalCount, limit, 0, packed) }
           } else {
             conn.jvmQuery(_model, _query).map { rows =>
-              rows2json(rows, rows.size.min(limit))
+              val totalCount = rows.size
+              rows2json(totalCount, rows, totalCount.min(limit), limit, 0)
             }
           }
         }
       )(Future.failed) // Pass on exception from input failure
     }
   }
+
+  /** Get json data for n rows matching a molecule
+   * {{{
+   * Person.name.age.getJson(1).map(_ ==>
+   *   """[
+   *     |{"person.name": "Ben", "person.age": 42}
+   *     |]""".stripMargin)
+   * }}}
+   * Namespace.Attribute is used as json fields. Values are
+   * quoted when necessary. Nested data becomes json objects etc.
+   *
+   * @group get
+   * @param limit   Number of rows returned
+   * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   * @return String of json
+   */
+  def getJson(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    if (limit < 1) {
+      Future.failed(MoleculeException("Limit has to be a positive number. Found " + limit))
+    } else if (offset < 0) {
+      Future.failed(MoleculeException("Offset has to be >= 0. Found: " + offset))
+    } else {
+      _inputThrowable.fold(
+        futConn.flatMap { conn =>
+          if (conn.isJsPlatform) {
+            conn.jsQueryJson(
+              _model, _query, _datalog, limit, offset, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
+            ).map { case (totalCount, packed) => packed2json(totalCount, limit, offset, packed) }
+          } else {
+            conn.jvmQuery(_model, _query).map { rows =>
+              val totalCount = rows.size
+              rows2json(totalCount, rows, totalCount.min(offset + limit), limit, offset)
+            }
+          }
+        }
+      )(Future.failed) // Pass on exception from input failure
+    }
+  }
+
+  private def outerJson(totalCount: Int, limit: Int, offset: Int, json: String): String = {
+    _model.elements.head match {
+      case _: Composite =>
+        s"""{
+           |  "totalCount": $totalCount,
+           |  "limit"     : $limit,
+           |  "offset"    : $offset,
+           |  "data": {
+           |    "composite": [$json]
+           |  }
+           |}""".stripMargin
+
+      case _ =>
+        s"""{
+           |  "totalCount": $totalCount,
+           |  "limit"     : $limit,
+           |  "offset"    : $offset,
+           |  "data": {
+           |    "${firstNs(_model)}": [$json]
+           |  }
+           |}""".stripMargin
+    }
+  }
+
+  private def rows2json(totalCount: Int, rows: jCollection[jList[AnyRef]], maxRows: Int, limit: Int, offset: Int): String = {
+    if (totalCount == 0 || offset >= totalCount) {
+      return outerJson(totalCount, limit, offset, "")
+    }
+    val sb   = new StringBuffer()
+    var next = false
+    var i    = offset
+    if (sortRows) {
+      val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
+      sortedRows.sort(this) // using macro-implemented `compare` method
+      while (i != maxRows) { // No need to check hasNext since (offset + limit) will not exceed total count
+        if (next) sb.append(",") else next = true
+        row2json(sortedRows.get(i), sb)
+        i += 1
+      }
+    } else {
+      val rowsIterator = rows.iterator
+      while (i != maxRows) {
+        if (next) sb.append(",") else next = true
+        row2json(rowsIterator.next, sb)
+        i += 1
+      }
+    }
+    sb.append("\n    ")
+    outerJson(totalCount, limit, offset, sb.toString)
+  }
+
+  private def packed2json(totalCount: Int, limit: Int, offset: Int, packed: String): String = {
+    val sb   = new StringBuffer()
+    var next = false
+    if (packed.isEmpty) {
+      outerJson(totalCount, limit, offset, "")
+    } else {
+      val lines = packed.linesIterator
+      lines.next() // skip first empty line
+      while (lines.hasNext) {
+        if (next) sb.append(",") else next = true
+        packed2json(lines, sb)
+      }
+      sb.append("\n    ")
+      outerJson(totalCount, limit, offset, sb.toString)
+    }
+  }
+
 
   // get as of ================================================================================================
 
@@ -207,7 +255,6 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
   def getJsonAsOf(t: Long)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
     getJson(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
-
   /** Get json data for n rows matching a molecule as of transaction time `t`.
    * <br><br>
    * Transaction time `t` is an auto-incremented transaction number assigned internally by Datomic.
@@ -248,13 +295,16 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
    * }}}
    *
    * @group getJsonAsOf
-   * @param t    Transaction time t
-   * @param n    Int Number of rows returned
-   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   * @param t     Transaction time t
+   * @param limit Int Number of rows returned
+   * @param conn  Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return String of json
    */
-  def getJsonAsOf(t: Long, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
-    getJson(n)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
+  def getJsonAsOf(t: Long, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+    getJson(limit)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
+
+  def getJsonAsOf(t: Long, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+    getJson(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
 
   /** Get json data for all rows matching a molecule as of tx.
@@ -311,7 +361,6 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
   def getJsonAsOf(tx: TxReport)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
     getJson(conn.map(_.usingAdhocDbView(AsOf(TxLong(tx.t)))), ec)
 
-
   /** Get json data for n rows matching a molecule as of tx.
    * <br><br>
    * Datomic's internal `asOf` method can take a transaction entity id as argument to retrieve a
@@ -349,13 +398,16 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
    * }}}
    *
    * @group getJsonAsOf
-   * @param tx   [[molecule.datomic.base.facade.TxReport TxReport]] (returned from all molecule transaction operations)
-   * @param n    Int Number of rows returned
-   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   * @param tx    [[molecule.datomic.base.facade.TxReport TxReport]] (returned from all molecule transaction operations)
+   * @param limit Int Number of rows returned
+   * @param conn  Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return String of json
    */
-  def getJsonAsOf(tx: TxReport, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
-    getJson(n)(conn.map(_.usingAdhocDbView(AsOf(TxLong(tx.t)))), ec)
+  def getJsonAsOf(tx: TxReport, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+    getJson(limit)(conn.map(_.usingAdhocDbView(AsOf(TxLong(tx.t)))), ec)
+
+  def getJsonAsOf(tx: TxReport, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+    getJson(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxLong(tx.t)))), ec)
 
 
   /** Get json data for all rows matching a molecule as of date.
@@ -414,7 +466,6 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
   def getJsonAsOf(date: java.util.Date)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
     getJson(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
 
-
   /** Get json data for n rows matching a molecule as of tx.
    * <br><br>
    * Get data at a human point in time (a java.util.Date).
@@ -450,13 +501,16 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
    * }}}
    *
    * @group getJsonAsOf
-   * @param date java.util.Date
-   * @param n    Int Number of rows returned
-   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   * @param date  java.util.Date
+   * @param limit Int Number of rows returned
+   * @param conn  Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return String of json
    */
-  def getJsonAsOf(date: java.util.Date, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
-    getJson(n)(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
+  def getJsonAsOf(date: java.util.Date, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+    getJson(limit)(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
+
+  def getJsonAsOf(date: java.util.Date, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+    getJson(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
 
 
   // get since ================================================================================================
@@ -503,7 +557,6 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
   def getJsonSince(t: Long)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
     getJson(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
-
   /** Get json data for n rows matching a molecule since transaction time `t`.
    * <br><br>
    * Transaction time `t` is an auto-incremented transaction number assigned internally by Datomic.
@@ -536,13 +589,16 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
    * }}}
    *
    * @group getJsonSince
-   * @param t    Transaction time t
-   * @param n    Int Number of rows returned
-   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   * @param t     Transaction time t
+   * @param limit Int Number of rows returned
+   * @param conn  Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return String of json
    */
-  def getJsonSince(t: Long, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
-    getJson(n)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
+  def getJsonSince(t: Long, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+    getJson(limit)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
+
+  def getJsonSince(t: Long, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+    getJson(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
 
   /** Get json data for all rows matching a molecule since tx.
@@ -589,7 +645,6 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
   def getJsonSince(tx: TxReport)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
     getJson(conn.map(_.usingAdhocDbView(Since(TxLong(tx.t)))), ec)
 
-
   /** Get json data for n rows matching a molecule since tx.
    * <br><br>
    * Datomic's internal `since` can take a transaction entity id as argument to retrieve a database
@@ -624,13 +679,16 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
    * }}}
    *
    * @group getJsonSince
-   * @param tx   [[molecule.datomic.base.facade.TxReport TxReport]] (returned from all molecule transaction operations)
-   * @param n    Int Number of rows returned
-   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   * @param tx    [[molecule.datomic.base.facade.TxReport TxReport]] (returned from all molecule transaction operations)
+   * @param limit Int Number of rows returned
+   * @param conn  Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return String of json
    */
-  def getJsonSince(tx: TxReport, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
-    getJson(n)(conn.map(_.usingAdhocDbView(Since(TxLong(tx.t)))), ec)
+  def getJsonSince(tx: TxReport, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+    getJson(limit)(conn.map(_.usingAdhocDbView(Since(TxLong(tx.t)))), ec)
+
+  def getJsonSince(tx: TxReport, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+    getJson(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxLong(tx.t)))), ec)
 
 
   /** Get json data for all rows matching a molecule since date.
@@ -672,7 +730,6 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
   def getJsonSince(date: java.util.Date)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
     getJson(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
 
-
   /** Get json data for n rows matching a molecule since date.
    * <br><br>
    * Get data added/retracted since a human point in time (a java.util.Date).
@@ -702,13 +759,16 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
    * }}}
    *
    * @group getJsonSince
-   * @param date java.util.Date
-   * @param n    Int Number of rows returned
-   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   * @param date  java.util.Date
+   * @param limit Int Number of rows returned
+   * @param conn  Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return String of json
    */
-  def getJsonSince(date: java.util.Date, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
-    getJson(n)(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
+  def getJsonSince(date: java.util.Date, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+    getJson(limit)(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
+
+  def getJsonSince(date: java.util.Date, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+    getJson(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
 
 
   // get with ================================================================================================
@@ -752,7 +812,6 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
     }
   }
 
-
   /** Get json data for all rows matching a molecule with applied molecule transaction data.
    * <br><br>
    * Apply one or more molecule transactions to in-memory "branch" of db without affecting db to see how it would then look:
@@ -788,18 +847,30 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
    * Multiple transactions can be applied to test more complex what-if scenarios!
    *
    * @group getJsonWith
+   * @param limit       Int Number of rows returned
    * @param txMolecules Transaction statements from applied Molecules with test data
    * @param conn        Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return String of json
    */
-  def getJsonWith(n: Int, txMolecules: Future[Seq[Statement]]*)
+  def getJsonWith(limit: Int, txMolecules: Future[Seq[Statement]]*)
                  (implicit conn: Future[Conn], ec: ExecutionContext): Future[String] = {
     Future.sequence(txMolecules).flatMap { stmtss =>
       val connWith = conn.map { conn =>
         val (stmtsEdn, uriAttrs) = Stmts2Edn(stmtss.flatten, conn)
         conn.usingAdhocDbView(With(stmtsEdn, uriAttrs))
       }
-      getJson(n)(connWith, ec)
+      getJson(limit)(connWith, ec)
+    }
+  }
+
+  def getJsonWith(limit: Int, offset: Int, txMolecules: Future[Seq[Statement]]*)
+                 (implicit conn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    Future.sequence(txMolecules).flatMap { stmtss =>
+      val connWith = conn.map { conn =>
+        val (stmtsEdn, uriAttrs) = Stmts2Edn(stmtss.flatten, conn)
+        conn.usingAdhocDbView(With(stmtsEdn, uriAttrs))
+      }
+      getJson(limit, offset)(connWith, ec)
     }
   }
 

@@ -6,44 +6,46 @@ import molecule.datomic.base.marshalling.packers.ResolverFlat
 
 private[molecule] case class Flat2packed(
   obj: Obj,
-  rows: jCollection[jList[AnyRef]],
-  maxRows: Int = -1
+  sortedRows: jCollection[jList[AnyRef]],
+  limit: Int,
+  offset: Int
 ) extends ResolverFlat {
 
-  val sb = new StringBuffer()
+  private val sb = new StringBuffer()
+  private var colIndex = -1
 
   def getPacked: String = {
-    if (!rows.isEmpty) {
-      val nodesWithNonTacitProps: List[Node] = {
-        def resolve(node: Node, acc: List[Node]): List[Node] = node match {
-          case Obj(_, _, _, Nil)     => acc
-          case prop: Prop            => acc :+ prop
-          case o@Obj(_, _, _, props) =>
-            val nonEmptyProps = props.flatMap(prop => resolve(prop, Nil))
-            nonEmptyProps match {
-              case Nil => acc
-              case _   => acc :+ o.copy(props = nonEmptyProps)
-            }
-        }
-        resolve(obj, Nil)
+    val nodesWithNonTacitProps: List[Node] = {
+      def resolve(node: Node, acc: List[Node]): List[Node] = node match {
+        case Obj(_, _, _, Nil)     => acc
+        case prop: Prop            => acc :+ prop
+        case o@Obj(_, _, _, props) =>
+          val nonEmptyProps = props.flatMap(prop => resolve(prop, Nil))
+          nonEmptyProps match {
+            case Nil => acc
+            case _   => acc :+ o.copy(props = nonEmptyProps)
+          }
       }
+      resolve(obj, Nil)
+    }
 
-      val packRow = packRef(nodesWithNonTacitProps, 0)
-      if (maxRows == -1) {
-        rows.forEach(row => packRow(row))
-      } else {
-        val rowIterator = rows.iterator()
-        var i           = 0
-        while (rowIterator.hasNext && i != maxRows) {
-          packRow(rowIterator.next)
-          i += 1
-        }
+    val packRow = packRef(nodesWithNonTacitProps, 0)
+
+    // Pack flat data
+    if (limit == -1) {
+      // All (offset will be 0)
+      sortedRows.forEach(row => packRow(row))
+
+    } else {
+      val it = if (offset == 0) sortedRows.iterator else sortedRows.stream.skip(offset).iterator
+      var i  = 0
+      while (it.hasNext && i != limit) {
+        packRow(it.next)
+        i += 1
       }
     }
     sb.toString
   }
-
-  private var colIndex = -1
 
   def packAttr(node: Node, level: Int): jList[_] => StringBuffer = {
     node match {

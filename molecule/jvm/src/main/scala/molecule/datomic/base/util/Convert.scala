@@ -2,7 +2,6 @@ package molecule.datomic.base.util
 
 import java.net.URI
 import com.cognitect.transit.impl.URIImpl
-import molecule.core.exceptions.MoleculeException
 import molecule.core.util.JavaConversions
 
 private[molecule] object Convert extends Convert

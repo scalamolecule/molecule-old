@@ -15,6 +15,9 @@ object JsonAttributes extends AsyncTestSuite {
     "Empty result set" - core { implicit conn =>
       Ns.str.getJson.map(_ ==>
         """{
+          |  "totalCount": 0,
+          |  "limit"     : 0,
+          |  "offset"    : 0,
           |  "data": {
           |    "Ns": []
           |  }
@@ -40,6 +43,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.str.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -51,6 +57,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -62,6 +71,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.long.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -73,6 +85,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.double.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -84,6 +99,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.bool.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -95,6 +113,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.date.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -106,6 +127,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.uuid.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -117,6 +141,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.uri.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -128,6 +155,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.bigInt.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -139,6 +169,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.bigDec.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -150,6 +183,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.enumm.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -161,6 +197,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.ref1.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -191,6 +230,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.strs.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -206,6 +248,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.ints.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -220,6 +265,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.longs.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -235,6 +283,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.doubles.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -249,6 +300,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.bools.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -263,6 +317,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.dates.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -277,6 +334,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.uuids.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -290,6 +350,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.uris.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -304,6 +367,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.bigInts.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -318,6 +384,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.bigDecs.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -332,6 +401,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.enums.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -351,6 +423,9 @@ object JsonAttributes extends AsyncTestSuite {
           )
           val variations = orderings.map { case (r1, r2) =>
             s"""{
+               |  "totalCount": 1,
+               |  "limit"     : 1,
+               |  "offset"    : 0,
                |  "data": {
                |    "Ns": [
                |      {
@@ -384,6 +459,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.strMap.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -398,6 +476,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.intMap.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -412,6 +493,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.longMap.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -426,6 +510,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.doubleMap.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -440,6 +527,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.boolMap.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -454,6 +544,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.dateMap.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -468,6 +561,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.uuidMap.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -481,6 +577,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.uriMap.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -495,6 +594,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.bigIntMap.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -509,6 +611,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.bigDecMap.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -543,6 +648,9 @@ object JsonAttributes extends AsyncTestSuite {
         _ <- Ns.int(1).str$.getJson.map(_ ==> {
           val (a, b, c) = if (useFree) ("\"\"", "\"c\"", "null") else ("null", "\"\"", "\"c\"")
           s"""{
+             |  "totalCount": 3,
+             |  "limit"     : 3,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -564,6 +672,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.long(2L).int$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -580,6 +691,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(3).long$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -596,6 +710,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(4).double$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -612,6 +729,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(5).bool$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -628,6 +748,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(6).date$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -644,6 +767,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(7).uuid$.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -660,6 +786,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(8).uri$.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -676,6 +805,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(9).bigInt$.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -692,6 +824,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(10).bigDec$.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -708,6 +843,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(11).enumm$.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -724,6 +862,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(12).ref1$.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -759,6 +900,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(1).strs$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -778,6 +922,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(2).ints$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -797,6 +944,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(3).longs$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -816,6 +966,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(4).doubles$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -835,6 +988,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(5).bools$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -854,6 +1010,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(6).dates$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -873,6 +1032,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(7).uuids$.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -892,6 +1054,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(8).uris$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -911,6 +1076,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(9).bigInts$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -930,6 +1098,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(10).bigDecs$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -949,6 +1120,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(11).enums$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -968,6 +1142,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(12).refs1$.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -1003,6 +1180,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(1).strMap$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1022,6 +1202,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(2).intMap$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1041,6 +1224,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(3).longMap$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1060,6 +1246,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(4).doubleMap$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1079,6 +1268,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(5).boolMap$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1098,6 +1290,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(6).dateMap$.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1117,6 +1312,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(7).uuidMap$.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -1136,6 +1334,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(8).uriMap$.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -1155,6 +1356,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(9).bigIntMap$.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -1174,6 +1378,9 @@ object JsonAttributes extends AsyncTestSuite {
 
         _ <- Ns.int(10).bigDecMap$.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {

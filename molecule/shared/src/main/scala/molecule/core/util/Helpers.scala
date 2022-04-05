@@ -4,7 +4,6 @@ import java.net.URI
 import java.time._
 import java.time.format.DateTimeFormatter
 import java.util.{Date, UUID}
-import com.cognitect.transit.impl.URIImpl
 import molecule.core.ast.elements._
 import molecule.core.exceptions.MoleculeException
 import molecule.datomic.base.ops.QueryOps.withDecimal

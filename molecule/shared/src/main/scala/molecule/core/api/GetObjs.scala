@@ -18,32 +18,6 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
 
   // get ================================================================================================
 
-  private def rows2objs(rows: jCollection[jList[AnyRef]], limit: Int, offset: Int = 0): List[Obj] = {
-    limit match {
-      case 0 => List.empty[Obj]
-      case 1 => List(row2obj(rows.iterator.next))
-      case _ =>
-        val objs = List.newBuilder[Obj]
-        var i    = offset
-        if (sortRows) {
-          val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
-          sortedRows.sort(this) // using macro-implemented `compare` method
-          while (i != limit) {
-            objs += row2obj(sortedRows.get(i))
-            i += 1
-          }
-          objs.result()
-        } else {
-          val rowsIterator = rows.iterator
-          while (i != limit) { // No need to check hasNext since we know the size
-            objs += row2obj(rowsIterator.next)
-            i += 1
-          }
-          objs.result()
-        }
-    }
-  }
-
   /** Get Future with List of all rows as objects matching a molecule.
    * <br><br>
    * {{{
@@ -64,11 +38,14 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     _inputThrowable.fold(
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
-          conn.jsQuery(_model, _query, _datalog, -1,
+          conn.jsQuery(_model, _query, _datalog, -1, 0,
             obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2obj
-          )
+          ).map(_._2)
         } else {
-          conn.jvmQuery(_model, _query).map { rows => rows2objs(rows, rows.size) }
+          conn.jvmQuery(_model, _query).map { rows =>
+            val totalCount = rows.size
+            rows2objs(totalCount, rows, totalCount, 0)
+          }
         }
       }
     )(Future.failed) // Pass on exception from input failure
@@ -95,11 +72,52 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
       _inputThrowable.fold(
         futConn.flatMap { conn =>
           if (conn.isJsPlatform) {
-            conn.jsQuery(_model, _query, _datalog, limit,
+            conn.jsQuery(_model, _query, _datalog, limit, 0,
+              obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2obj
+            ).map(_._2)
+          } else {
+            conn.jvmQuery(_model, _query).map { rows =>
+              val totalCount = rows.size
+              rows2objs(totalCount, rows, totalCount.min(limit), 0)
+            }
+          }
+        }
+      )(Future.failed) // Pass on exception from input failure
+    }
+  }
+
+  /** Get Future with List of n rows as objects matching a molecule.
+   * {{{
+   * for {
+   *   List(p1) <- Person.name.age.getObjs(1)
+   *   _ = p1.name ==> "Ben"
+   *   _ = p1.age  ==> 42
+   * } yield ()
+   * }}}
+   *
+   * @group get
+   * @param limit   Int Number of rows returned
+   * @param offset  Int Number of first row to return
+   * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
+   */
+  def getObjs(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Obj])] = {
+    if (limit < 1) {
+      Future.failed(MoleculeException("Limit has to be a positive number. Found " + limit))
+    } else if (offset < 0) {
+      Future.failed(MoleculeException("Offset has to be >= 0. Found: " + offset))
+    } else {
+      _inputThrowable.fold(
+        futConn.flatMap { conn =>
+          if (conn.isJsPlatform) {
+            conn.jsQuery(_model, _query, _datalog, limit, offset,
               obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2obj
             )
           } else {
-            conn.jvmQuery(_model, _query).map { rows => rows2objs(rows, rows.size.min(limit)) }
+            conn.jvmQuery(_model, _query).map { rows =>
+              val totalCount = rows.size
+              (totalCount, rows2objs(totalCount, rows, totalCount.min(offset + limit), offset))
+            }
           }
         }
       )(Future.failed) // Pass on exception from input failure
@@ -125,6 +143,31 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
         Future.failed(new RuntimeException("Empty result set."))
       )(Future(_))
     )
+
+
+  private def rows2objs(totalCount: Int, rows: jCollection[jList[AnyRef]], maxRows: Int, offset: Int): List[Obj] = {
+    if (totalCount == 0 || offset >= totalCount) {
+      return List.empty[Obj]
+    }
+    val objs = List.newBuilder[Obj]
+    var i    = offset
+    if (sortRows) {
+      val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
+      sortedRows.sort(this) // using macro-implemented `compare` method
+      while (i != maxRows) {
+        objs += row2obj(sortedRows.get(i))
+        i += 1
+      }
+      objs.result()
+    } else {
+      val rowsIterator = rows.iterator
+      while (i != maxRows) {
+        objs += row2obj(rowsIterator.next)
+        i += 1
+      }
+      objs.result()
+    }
+  }
 
   // get as of ================================================================================================
 
@@ -185,7 +228,6 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   def getObjsAsOf(t: Long)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
     getObjs(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
-
   /** Get Future with List of n rows as objects matching a molecule as of transaction time `t`.
    * <br><br>
    * Transaction time `t` is an auto-incremented transaction number assigned internally by Datomic.
@@ -225,13 +267,16 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
    * }}}
    *
    * @group getAsOf
-   * @param t    Long Transaction time t
-   * @param n    Int Number of rows returned
-   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   * @param t     Long Transaction time t
+   * @param limit Int Number of rows returned
+   * @param conn  Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
    */
-  def getObjsAsOf(t: Long, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjs(n)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
+  def getObjsAsOf(t: Long, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
+    getObjs(limit)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
+
+  def getObjsAsOf(t: Long, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Obj])] =
+    getObjs(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
 
   /** Get Future with List of all rows as objects matching a molecule as of tx.
@@ -287,7 +332,6 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   def getObjsAsOf(tx: TxReport)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
     getObjs(conn.map(_.usingAdhocDbView(AsOf(TxLong(tx.t)))), ec)
 
-
   /** Get Future with List of n rows as objects matching a molecule as of tx.
    * <br><br>
    * Datomic's internal `asOf` method can take a transaction entity id as argument to retrieve a database
@@ -325,12 +369,15 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
    *
    * @group getAsOf
    * @param tx   [[molecule.datomic.base.facade.TxReport TxReport]] (returned from all molecule transaction operations)
-   * @param n    Int Number of rows returned
+   * @param limit    Int Number of rows returned
    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
    * */
-  def getObjsAsOf(tx: TxReport, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjs(n)(conn.map(_.usingAdhocDbView(AsOf(TxLong(tx.t)))), ec)
+  def getObjsAsOf(tx: TxReport, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
+    getObjs(limit)(conn.map(_.usingAdhocDbView(AsOf(TxLong(tx.t)))), ec)
+
+  def getObjsAsOf(tx: TxReport, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Obj])] =
+    getObjs(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxLong(tx.t)))), ec)
 
 
   /** Get Future with List of all rows as objects matching a molecule as of date.
@@ -389,7 +436,6 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   def getObjsAsOf(date: Date)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
     getObjs(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
 
-
   /** Get Future with List of n rows as objects matching a molecule as of date.
    * <br><br>
    * Get data at a human point in time (a java.util.Date).
@@ -425,12 +471,15 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
    *
    * @group getAsOf
    * @param date java.util.Date
-   * @param n    Int Number of rows returned
+   * @param limit    Int Number of rows returned
    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
    */
-  def getObjsAsOf(date: Date, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjs(n)(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
+  def getObjsAsOf(date: Date, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
+    getObjs(limit)(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
+
+  def getObjsAsOf(date: Date, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Obj])] =
+    getObjs(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
 
 
   // get since ================================================================================================
@@ -476,7 +525,6 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   def getObjsSince(t: Long)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
     getObjs(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
-
   /** Get Future with List of n rows as objects matching a molecule since transaction time `t`.
    * <br><br>
    * Transaction time `t` is an auto-incremented transaction number assigned internally by Datomic.
@@ -509,12 +557,15 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
    *
    * @group getSince
    * @param t    Transaction time t
-   * @param n    Int Number of rows returned
+   * @param limit    Int Number of rows returned
    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
    */
-  def getObjsSince(t: Long, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjs(n)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
+  def getObjsSince(t: Long, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
+    getObjs(limit)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
+
+  def getObjsSince(t: Long, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Obj])] =
+    getObjs(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
 
   /** Get Future with List of all rows as objects matching a molecule since tx.
@@ -560,7 +611,6 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   def getObjsSince(tx: TxReport)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
     getObjs(conn.map(_.usingAdhocDbView(Since(TxLong(tx.t)))), ec)
 
-
   /** Get Future with List of n rows as objects matching a molecule since tx.
    * <br><br>
    * Datomic's internal `since` can take a transaction entity id as argument to retrieve a database
@@ -595,12 +645,15 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
    *
    * @group getSince
    * @param tx   [[molecule.datomic.base.facade.TxReport TxReport]]
-   * @param n    Int Number of rows returned
+   * @param limit    Int Number of rows returned
    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
    */
-  def getObjsSince(tx: TxReport, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjs(n)(conn.map(_.usingAdhocDbView(Since(TxLong(tx.t)))), ec)
+  def getObjsSince(tx: TxReport, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
+    getObjs(limit)(conn.map(_.usingAdhocDbView(Since(TxLong(tx.t)))), ec)
+
+  def getObjsSince(tx: TxReport, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Obj])] =
+    getObjs(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxLong(tx.t)))), ec)
 
 
   /** Get Future with List of all rows as objects matching a molecule since date.
@@ -641,7 +694,6 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   def getObjsSince(date: Date)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
     getObjs(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
 
-
   /** Get Future with List of n rows as objects matching a molecule since date.
    * <br><br>
    * Get data added/retracted since a human point in time (a java.util.Date).
@@ -671,12 +723,15 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
    *
    * @group getSince
    * @param date java.util.Date
-   * @param n    Int Number of rows returned
+   * @param limit    Int Number of rows returned
    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
    */
-  def getObjsSince(date: Date, n: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjs(n)(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
+  def getObjsSince(date: Date, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
+    getObjs(limit)(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
+
+  def getObjsSince(date: Date, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Obj])] =
+    getObjs(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
 
 
   // get with ================================================================================================
@@ -775,20 +830,31 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
    * }}}
    *
    * @group getWith
-   * @param n           Int Number of rows returned
+   * @param limit           Int Number of rows returned
    * @param txMolecules Transaction statements from applied Molecules with test data
    * @param conn        Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
    * @note Note how the `n` parameter has to come before the `txMolecules` vararg.
    */
-  def getObjsWith(n: Int, txMolecules: Future[Seq[Statement]]*)
+  def getObjsWith(limit: Int, txMolecules: Future[Seq[Statement]]*)
                  (implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] = {
     Future.sequence(txMolecules).flatMap { stmtss =>
       val connWith = conn.map { conn =>
         val (stmtsEdn, uriAttrs) = Stmts2Edn(stmtss.flatten, conn)
         conn.usingAdhocDbView(With(stmtsEdn, uriAttrs))
       }
-      getObjs(n)(connWith, ec)
+      getObjs(limit)(connWith, ec)
+    }
+  }
+
+  def getObjsWith(limit: Int, offset: Int, txMolecules: Future[Seq[Statement]]*)
+                 (implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Obj])] = {
+    Future.sequence(txMolecules).flatMap { stmtss =>
+      val connWith = conn.map { conn =>
+        val (stmtsEdn, uriAttrs) = Stmts2Edn(stmtss.flatten, conn)
+        conn.usingAdhocDbView(With(stmtsEdn, uriAttrs))
+      }
+      getObjs(limit, offset)(connWith, ec)
     }
   }
 

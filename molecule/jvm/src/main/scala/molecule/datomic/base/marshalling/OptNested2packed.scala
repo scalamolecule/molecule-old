@@ -1,6 +1,7 @@
 package molecule.datomic.base.marshalling
 
-import java.util.{Collection => jCollection, Iterator => jIterator, List => jList, Map => jMap}
+import java.util
+import java.util.{Arrays, Collection => jCollection, Iterator => jIterator, List => jList, Map => jMap}
 import molecule.core.macros.rowAttr.JsonBase
 import molecule.core.marshalling.ast.SortCoordinate
 import molecule.core.marshalling.ast.nodes._
@@ -10,11 +11,16 @@ import molecule.datomic.base.marshalling.sorting.ExtractFlatValues
 private[molecule] case class OptNested2packed(
   obj: Obj,
   sortedRows: jCollection[jList[AnyRef]],
-  maxRows: Int,
+  limit: Int,
+  offset: Int,
   refIndexes: List[List[Int]],
   tacitIndexes: List[List[Int]],
   sortCoordinates: List[List[SortCoordinate]]
 ) extends ResolverOptNested with JsonBase {
+
+  lazy private val flatRowCount: Int = sortedRows.size()
+  lazy private val maxRows     : Int = flatRowCount.min(offset + limit)
+
 
   def getList(nestedData: Any): jList[AnyRef] = {
     if (nestedData.isInstanceOf[jList[_]])
@@ -24,15 +30,13 @@ private[molecule] case class OptNested2packed(
   }
 
   def getPacked: String = {
-    if (sortedRows.isEmpty) {
-      return ""
-    }
-    // Recursively build lambda to process each row of nested data
-    val rowLambda: (StringBuffer, jIterator[_]) => StringBuffer = packNested(obj.props, 0, deeper = true)
+    // Recursive packer for nested data
+    val packNestedData: (StringBuffer, jIterator[_]) => StringBuffer = packNested(obj.props, 0, deeper = true)
 
     // Process data with lambda
     val sb = new StringBuffer()
-    rowLambda(sb, sortedRows.iterator)
+    val it = if (offset == 0) sortedRows.iterator else sortedRows.stream.skip(offset).iterator
+    packNestedData(sb, it)
     sb.toString
   }
 
@@ -143,7 +147,7 @@ private[molecule] case class OptNested2packed(
   def packNested1(attrs: List[Node], level: Int, deeper: Boolean): (StringBuffer, jIterator[_]) => StringBuffer = {
     val pack0 = packNode(attrs.head, level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             // Iterator on top level is immutable to not be affected by nested iterators assigned to mutable `it`
@@ -185,7 +189,7 @@ private[molecule] case class OptNested2packed(
     val pack0 = packNode(attrs.head, level)
     val pack1 = packNode(attrs(1), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -228,7 +232,7 @@ private[molecule] case class OptNested2packed(
     val pack1 = packNode(attrs(1), level)
     val pack2 = packNode(attrs(2), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -275,7 +279,7 @@ private[molecule] case class OptNested2packed(
     val pack2 = packNode(attrs(2), level)
     val pack3 = packNode(attrs(3), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -326,7 +330,7 @@ private[molecule] case class OptNested2packed(
     val pack3 = packNode(attrs(3), level)
     val pack4 = packNode(attrs(4), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -381,7 +385,7 @@ private[molecule] case class OptNested2packed(
     val pack4 = packNode(attrs(4), level)
     val pack5 = packNode(attrs(5), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -440,7 +444,7 @@ private[molecule] case class OptNested2packed(
     val pack5 = packNode(attrs(5), level)
     val pack6 = packNode(attrs(6), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -503,7 +507,7 @@ private[molecule] case class OptNested2packed(
     val pack6 = packNode(attrs(6), level)
     val pack7 = packNode(attrs(7), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -570,7 +574,7 @@ private[molecule] case class OptNested2packed(
     val pack7 = packNode(attrs(7), level)
     val pack8 = packNode(attrs(8), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -641,7 +645,7 @@ private[molecule] case class OptNested2packed(
     val pack8 = packNode(attrs(8), level)
     val pack9 = packNode(attrs(9), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -716,7 +720,7 @@ private[molecule] case class OptNested2packed(
     val pack9  = packNode(attrs(9), level)
     val pack10 = packNode(attrs(10), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -795,7 +799,7 @@ private[molecule] case class OptNested2packed(
     val pack10 = packNode(attrs(10), level)
     val pack11 = packNode(attrs(11), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -878,7 +882,7 @@ private[molecule] case class OptNested2packed(
     val pack11 = packNode(attrs(11), level)
     val pack12 = packNode(attrs(12), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -965,7 +969,7 @@ private[molecule] case class OptNested2packed(
     val pack12 = packNode(attrs(12), level)
     val pack13 = packNode(attrs(13), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -1056,7 +1060,7 @@ private[molecule] case class OptNested2packed(
     val pack13 = packNode(attrs(13), level)
     val pack14 = packNode(attrs(14), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -1151,7 +1155,7 @@ private[molecule] case class OptNested2packed(
     val pack14 = packNode(attrs(14), level)
     val pack15 = packNode(attrs(15), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -1250,7 +1254,7 @@ private[molecule] case class OptNested2packed(
     val pack15 = packNode(attrs(15), level)
     val pack16 = packNode(attrs(16), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -1353,7 +1357,7 @@ private[molecule] case class OptNested2packed(
     val pack16 = packNode(attrs(16), level)
     val pack17 = packNode(attrs(17), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -1460,7 +1464,7 @@ private[molecule] case class OptNested2packed(
     val pack17 = packNode(attrs(17), level)
     val pack18 = packNode(attrs(18), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -1571,7 +1575,7 @@ private[molecule] case class OptNested2packed(
     val pack18 = packNode(attrs(18), level)
     val pack19 = packNode(attrs(19), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -1686,7 +1690,7 @@ private[molecule] case class OptNested2packed(
     val pack19 = packNode(attrs(19), level)
     val pack20 = packNode(attrs(20), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator
@@ -1805,7 +1809,7 @@ private[molecule] case class OptNested2packed(
     val pack20 = packNode(attrs(20), level)
     val pack21 = packNode(attrs(21), level)
     if (level == 0) {
-      if (maxRows == -1)
+      if (limit == -1)
         (sb: StringBuffer, rows: jIterator[_]) => {
           while (rows.hasNext) {
             val it = rows.next.asInstanceOf[jList[Any]].iterator

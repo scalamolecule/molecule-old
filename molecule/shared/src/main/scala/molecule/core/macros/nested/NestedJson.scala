@@ -1,7 +1,8 @@
 package molecule.core.macros.nested
 
 import java.lang.{Long => jLong}
-import java.util.{List => jList}
+import java.util
+import java.util.{Collection => jCollection, List => jList}
 import molecule.core.api.Molecule_0
 import molecule.core.macros.rowAttr.JsonBase
 import molecule.datomic.base.facade.Conn
@@ -38,9 +39,11 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
   protected var firstLevel0      = true
   protected val firstJsonObjects = new Array[Boolean](7)
 
+  protected var totalCount = 1
+
   protected def resetJsonVars(): Unit = {
     resetVars()
-    
+
     // Traverse forward through rows (tuples require traversing backwards)
     isNestedTuples = false
     firstLevel0 = true
@@ -132,36 +135,118 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
     sb.append(indent(tabs))
     sb.append("}")
   }
+
+  def outerJson(totalCount: Int, limit: Int, offset: Int, sb: StringBuffer): String = {
+    s"""{
+       |  "totalCount": $totalCount,
+       |  "limit"     : $limit,
+       |  "offset"    : $offset,
+       |  "data": {
+       |    "${firstNs(_model)}": ${sb.toString}
+       |  }
+       |}""".stripMargin
+  }
+
+
+  // Pagination .............................
+
+  final def getCountAndSelectedRowsAsc(
+    allSortedRows: jCollection[jList[AnyRef]],
+    limit: Int,
+    offset: Int
+  ): (Int, jCollection[jList[AnyRef]]) = {
+    //    allSortedRows.forEach(row => println(row))
+    //    println("----------")
+    //    println("limit   : " + limit)
+    //    println("offset  : " + offset)
+
+    var topRowIndex   = -1
+    var curId : jLong = 0
+    var prevId: jLong = 0
+    val sortedRows    = if (limit == -1) {
+      // All rows (offset is 0)
+      allSortedRows.forEach { row =>
+        curId = row.get(0).asInstanceOf[jLong]
+        if (curId != prevId) {
+          topRowIndex += 1
+        }
+        //        println(s"$i  $topRowIndex   $curId  $prevId")
+        prevId = curId
+      }
+
+      //      println("----------")
+      //      allSortedRows.forEach(row => println(row))
+      allSortedRows
+
+    } else {
+      val flatTotalCount     = allSortedRows.size
+      val rowArray           = new util.ArrayList[jList[AnyRef]](allSortedRows)
+      val selectedSortedRows = new util.ArrayList[jList[AnyRef]]()
+      var flatRowIndex       = 0
+      //      val last               = offset + limit
+      val last               = if (limit == -1) Int.MaxValue else offset + limit
+      var row: jList[AnyRef] = null
+      while (flatRowIndex != flatTotalCount) {
+        row = rowArray.get(flatRowIndex)
+        curId = row.get(0).asInstanceOf[jLong]
+        if (curId != prevId) {
+          topRowIndex += 1
+        }
+        if (topRowIndex >= offset && topRowIndex < last) {
+          selectedSortedRows.add(row)
+        }
+        //                println(s"$flatRowIndex  $topRowIndex   $curId  $prevId  $row")
+        prevId = curId
+        flatRowIndex += 1
+      }
+
+      //          println("----------")
+      //      selectedSortedRows.forEach(row => println(row))
+      selectedSortedRows
+    }
+    (topRowIndex + 1, sortedRows)
+  }
+
+  final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    getJson(-1, 0)
+  }
+
+  final override def getJson(limit: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    getJson(limit, 0)
+  }
 }
+
 
 object NestedJson {
 
   trait NestedJson1[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    final override def getJson(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
         conn <- futConn
         data <- conn.jvmQuery(_model, _query)
       } yield {
         resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        val last                                     = rows.size
+        val flatCount                                = rows.size
+        rows.sort(this)
+        val (totalCount, selectedRows) = getCountAndSelectedRowsAsc(rows, limit, offset)
 
-        if (last == 0) {
+        if (flatCount == 0 || offset >= totalCount) {
           // Empty result set
           sb0.append("]")
 
-        } else if (last == 1) {
-          row = rows.iterator.next
+        } else if (flatCount == 1) {
+          row = selectedRows.iterator.next
           sb0.append("\n      ")
           jsonBranch0(sb0, row,
             jsonLeaf1(sb1, row))
           sb0.append("\n    ]")
 
         } else {
-          rows.sort(this)
+          val lastFlat = selectedRows.size
+          val it       = selectedRows.iterator
           sb0.append("\n      ")
-          val it = rows.iterator
           while (it.hasNext) {
             i += 1
             row = it.next
@@ -172,7 +257,7 @@ object NestedJson {
                 jsonBranch0(sb0, prevRow, sb1)
               }
               jsonLeaf1(sb1, row)
-              if (i == last) {
+              if (i == lastFlat) {
                 jsonBranch0(sb0, row, sb1)
               }
             } else {
@@ -185,32 +270,29 @@ object NestedJson {
           }
           sb0.append("\n    ]")
         }
-
-        s"""{
-           |  "data": {
-           |    "${firstNs(_model)}": ${sb0.toString}
-           |  }
-           |}""".stripMargin
+        outerJson(totalCount, if (limit == -1) totalCount else limit, offset, sb0)
       }
     }
   }
 
   trait NestedJson2[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    final override def getJson(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
         conn <- futConn
         data <- conn.jvmQuery(_model, _query)
       } yield {
         resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        val last                                     = rows.size
+        val flatCount                                = rows.size
+        rows.sort(this)
+        val (totalCount, selectedRows) = getCountAndSelectedRowsAsc(rows, limit, offset)
 
-        if (last == 0) {
+        if (flatCount == 0 || offset >= totalCount) {
           // Empty result set
           sb0.append("]")
 
-        } else if (last == 1) {
+        } else if (flatCount == 1) {
           row = rows.iterator.next
           sb0.append("\n      ")
           jsonBranch0(sb0, row,
@@ -220,8 +302,9 @@ object NestedJson {
 
         } else {
           rows.sort(this)
+          val lastFlat = selectedRows.size
+          val it       = selectedRows.iterator
           sb0.append("\n      ")
-          val it = rows.iterator
           while (it.hasNext) {
             i += 1
             row = it.next
@@ -236,7 +319,7 @@ object NestedJson {
                 jsonBranch1(sb1, prevRow, sb2)
               }
               jsonLeaf2(sb2, row)
-              if (i == last) {
+              if (i == lastFlat) {
                 jsonBranch1(sb1, row, sb2)
                 jsonBranch0(sb0, row, sb1)
               }
@@ -251,32 +334,29 @@ object NestedJson {
           }
           sb0.append("\n    ]")
         }
-
-        s"""{
-           |  "data": {
-           |    "${firstNs(_model)}": ${sb0.toString}
-           |  }
-           |}""".stripMargin
+        outerJson(totalCount, if (limit == -1) totalCount else limit, offset, sb0)
       }
     }
   }
 
   trait NestedJson3[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    final override def getJson(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
         conn <- futConn
         data <- conn.jvmQuery(_model, _query)
       } yield {
         resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        val last                                     = rows.size
+        val flatCount                                = rows.size
+        rows.sort(this)
+        val (totalCount, selectedRows) = getCountAndSelectedRowsAsc(rows, limit, offset)
 
-        if (last == 0) {
+        if (flatCount == 0 || offset >= totalCount) {
           // Empty result set
           sb0.append("]")
 
-        } else if (last == 1) {
+        } else if (flatCount == 1) {
           row = rows.iterator.next
           sb0.append("\n      ")
           jsonBranch0(sb0, row,
@@ -287,8 +367,9 @@ object NestedJson {
 
         } else {
           rows.sort(this)
+          val lastFlat = selectedRows.size
+          val it       = selectedRows.iterator
           sb0.append("\n      ")
-          val it = rows.iterator
           while (it.hasNext) {
             i += 1
             row = it.next
@@ -308,7 +389,7 @@ object NestedJson {
                 jsonBranch2(sb2, prevRow, sb3)
               }
               jsonLeaf3(sb3, row)
-              if (i == last) {
+              if (i == lastFlat) {
                 jsonBranch2(sb2, row, sb3)
                 jsonBranch1(sb1, row, sb2)
                 jsonBranch0(sb0, row, sb1)
@@ -325,32 +406,29 @@ object NestedJson {
           }
           sb0.append("\n    ]")
         }
-
-        s"""{
-           |  "data": {
-           |    "${firstNs(_model)}": ${sb0.toString}
-           |  }
-           |}""".stripMargin
+        outerJson(totalCount, if (limit == -1) totalCount else limit, offset, sb0)
       }
     }
   }
 
   trait NestedJson4[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    final override def getJson(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
         conn <- futConn
         data <- conn.jvmQuery(_model, _query)
       } yield {
         resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        val last                                     = rows.size
+        val flatCount                                = rows.size
+        rows.sort(this)
+        val (totalCount, selectedRows) = getCountAndSelectedRowsAsc(rows, limit, offset)
 
-        if (last == 0) {
+        if (flatCount == 0 || offset >= totalCount) {
           // Empty result set
           sb0.append("]")
 
-        } else if (last == 1) {
+        } else if (flatCount == 1) {
           row = rows.iterator.next
           sb0.append("\n      ")
           jsonBranch0(sb0, row,
@@ -362,8 +440,9 @@ object NestedJson {
 
         } else {
           rows.sort(this)
+          val lastFlat = selectedRows.size
+          val it       = selectedRows.iterator
           sb0.append("\n      ")
-          val it = rows.iterator
           while (it.hasNext) {
             i += 1
             row = it.next
@@ -389,7 +468,7 @@ object NestedJson {
                 jsonBranch3(sb3, prevRow, sb4)
               }
               jsonLeaf4(sb4, row)
-              if (i == last) {
+              if (i == lastFlat) {
                 jsonBranch3(sb3, row, sb4)
                 jsonBranch2(sb2, row, sb3)
                 jsonBranch1(sb1, row, sb2)
@@ -408,32 +487,29 @@ object NestedJson {
           }
           sb0.append("\n    ]")
         }
-
-        s"""{
-           |  "data": {
-           |    "${firstNs(_model)}": ${sb0.toString}
-           |  }
-           |}""".stripMargin
+        outerJson(totalCount, if (limit == -1) totalCount else limit, offset, sb0)
       }
     }
   }
 
   trait NestedJson5[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    final override def getJson(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
         conn <- futConn
         data <- conn.jvmQuery(_model, _query)
       } yield {
         resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        val last                                     = rows.size
+        val flatCount                                = rows.size
+        rows.sort(this)
+        val (totalCount, selectedRows) = getCountAndSelectedRowsAsc(rows, limit, offset)
 
-        if (last == 0) {
+        if (flatCount == 0 || offset >= totalCount) {
           // Empty result set
           sb0.append("]")
 
-        } else if (last == 1) {
+        } else if (flatCount == 1) {
           row = rows.iterator.next
           sb0.append("\n      ")
           jsonBranch0(sb0, row,
@@ -446,8 +522,9 @@ object NestedJson {
 
         } else {
           rows.sort(this)
+          val lastFlat = selectedRows.size
+          val it       = selectedRows.iterator
           sb0.append("\n      ")
-          val it = rows.iterator
           while (it.hasNext) {
             i += 1
             row = it.next
@@ -480,7 +557,7 @@ object NestedJson {
                 jsonBranch4(sb4, prevRow, sb5)
               }
               jsonLeaf5(sb5, row)
-              if (i == last) {
+              if (i == lastFlat) {
                 jsonBranch4(sb4, row, sb5)
                 jsonBranch3(sb3, row, sb4)
                 jsonBranch2(sb2, row, sb3)
@@ -501,32 +578,29 @@ object NestedJson {
           }
           sb0.append("\n    ]")
         }
-
-        s"""{
-           |  "data": {
-           |    "${firstNs(_model)}": ${sb0.toString}
-           |  }
-           |}""".stripMargin
+        outerJson(totalCount, if (limit == -1) totalCount else limit, offset, sb0)
       }
     }
   }
 
   trait NestedJson6[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    final override def getJson(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
         conn <- futConn
         data <- conn.jvmQuery(_model, _query)
       } yield {
         resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        val last                                     = rows.size
+        val flatCount                                = rows.size
+        rows.sort(this)
+        val (totalCount, selectedRows) = getCountAndSelectedRowsAsc(rows, limit, offset)
 
-        if (last == 0) {
+        if (flatCount == 0 || offset >= totalCount) {
           // Empty result set
           sb0.append("]")
 
-        } else if (last == 1) {
+        } else if (flatCount == 1) {
           row = rows.iterator.next
           sb0.append("\n      ")
           jsonBranch0(sb0, row,
@@ -540,8 +614,9 @@ object NestedJson {
 
         } else {
           rows.sort(this)
+          val lastFlat = selectedRows.size
+          val it       = selectedRows.iterator
           sb0.append("\n      ")
-          val it = rows.iterator
           while (it.hasNext) {
             i += 1
             row = it.next
@@ -582,7 +657,7 @@ object NestedJson {
                 jsonBranch5(sb5, prevRow, sb6)
               }
               jsonLeaf6(sb6, row)
-              if (i == last) {
+              if (i == lastFlat) {
                 jsonBranch5(sb5, row, sb6)
                 jsonBranch4(sb4, row, sb5)
                 jsonBranch3(sb3, row, sb4)
@@ -605,32 +680,29 @@ object NestedJson {
           }
           sb0.append("\n    ]")
         }
-
-        s"""{
-           |  "data": {
-           |    "${firstNs(_model)}": ${sb0.toString}
-           |  }
-           |}""".stripMargin
+        outerJson(totalCount, if (limit == -1) totalCount else limit, offset, sb0)
       }
     }
   }
 
   trait NestedJson7[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    final override def getJson(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
       for {
         conn <- futConn
         data <- conn.jvmQuery(_model, _query)
       } yield {
         resetJsonVars()
         val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        val last                                     = rows.size
+        val flatCount                                = rows.size
+        rows.sort(this)
+        val (totalCount, selectedRows) = getCountAndSelectedRowsAsc(rows, limit, offset)
 
-        if (last == 0) {
+        if (flatCount == 0 || offset >= totalCount) {
           // Empty result set
           sb0.append("]")
 
-        } else if (last == 1) {
+        } else if (flatCount == 1) {
           row = rows.iterator.next
           sb0.append("\n      ")
           jsonBranch0(sb0, row,
@@ -645,8 +717,9 @@ object NestedJson {
 
         } else {
           rows.sort(this)
+          val lastFlat = selectedRows.size
+          val it       = selectedRows.iterator
           sb0.append("\n      ")
-          val it = rows.iterator
           while (it.hasNext) {
             i += 1
             row = it.next
@@ -696,7 +769,7 @@ object NestedJson {
                 jsonBranch6(sb6, prevRow, sb7)
               }
               jsonLeaf7(sb7, row)
-              if (i == last) {
+              if (i == lastFlat) {
                 jsonBranch6(sb6, row, sb7)
                 jsonBranch5(sb5, row, sb6)
                 jsonBranch4(sb4, row, sb5)
@@ -721,12 +794,7 @@ object NestedJson {
           }
           sb0.append("\n    ]")
         }
-
-        s"""{
-           |  "data": {
-           |    "${firstNs(_model)}": ${sb0.toString}
-           |  }
-           |}""".stripMargin
+        outerJson(totalCount, if (limit == -1) totalCount else limit, offset, sb0)
       }
     }
   }

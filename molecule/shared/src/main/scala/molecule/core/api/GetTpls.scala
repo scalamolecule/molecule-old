@@ -17,32 +17,6 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
 
   // get ================================================================================================
 
-  private def rows2tuples(rows: jCollection[jList[AnyRef]], limit: Int, offset: Int = 0): List[Tpl] = {
-    limit match {
-      case 0 => List.empty[Tpl]
-      case 1 => List(row2tpl(rows.iterator.next))
-      case _ =>
-        val tuples = List.newBuilder[Tpl]
-        var i      = offset
-        if (sortRows) {
-          val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
-          sortedRows.sort(this) // using macro-implemented `compare` method
-          while (i != limit) {
-            tuples += row2tpl(sortedRows.get(i))
-            i += 1
-          }
-          tuples.result()
-        } else {
-          val rowsIterator = rows.iterator
-          while (i != limit) { // No need to check hasNext since (offset + limit) will not exceed total count
-            tuples += row2tpl(rowsIterator.next)
-            i += 1
-          }
-          tuples.result()
-        }
-    }
-  }
-
   /** Get Future with List of all rows as tuples matching a molecule.
    * <br><br>
    * {{{
@@ -63,18 +37,15 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
     _inputThrowable.fold(
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
-          // println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-          // println(_model)
-          // println("----------------")
-          // println(_query)
-          // println("----------------")
-          // println(_datalog)
           conn.jsQuery(
-            _model, _query, _datalog, -1,
+            _model, _query, _datalog, -1, 0,
             obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2tpl
-          )
+          ).map(_._2)
         } else {
-          conn.jvmQuery(_model, _query).map(rows => rows2tuples(rows, rows.size))
+          conn.jvmQuery(_model, _query).map { rows =>
+            val totalCount = rows.size
+            rows2tuples(totalCount, rows, totalCount, 0)
+          }
         }
       }
     )(Future.failed) // Wrap exception from input failure in Future
@@ -103,11 +74,14 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
         futConn.flatMap { conn =>
           if (conn.isJsPlatform) {
             conn.jsQuery(
-              _model, _query, _datalog, limit,
+              _model, _query, _datalog, limit, 0,
               obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2tpl
-            )
+            ).map(_._2)
           } else {
-            conn.jvmQuery(_model, _query).map(rows => rows2tuples(rows, rows.size.min(limit)))
+            conn.jvmQuery(_model, _query).map { rows =>
+              val totalCount = rows.size
+              rows2tuples(totalCount, rows, totalCount.min(limit), 0)
+            }
           }
         }
       )(Future.failed) // Wrap exception from input failure in Future
@@ -140,19 +114,14 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
       _inputThrowable.fold(
         futConn.flatMap { conn =>
           if (conn.isJsPlatform) {
-            //          conn.jsQueryTpl(
-            //            _model, _query, _datalog, limit, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
-            //          )
-            // todo
-            Future((42, List.empty[Tpl]))
+            conn.jsQuery(
+              _model, _query, _datalog, limit, offset,
+              obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2tpl
+            )
           } else {
             conn.jvmQuery(_model, _query).map { rows =>
               val totalCount = rows.size
-              if (offset > totalCount) {
-                (totalCount, List.empty[Tpl])
-              } else {
-                (totalCount, rows2tuples(rows, totalCount.min(offset + limit), offset))
-              }
+              (totalCount, rows2tuples(totalCount, rows, totalCount.min(offset + limit), offset))
             }
           }
         }
@@ -189,8 +158,8 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
         } else {
           conn.jvmQuery(_model, _query).map { jColl =>
             val totalCount = jColl.size
-            val max        = if (totalCount < limit) totalCount else limit
-            val res        = max match {
+            val maxRows    = if (totalCount < limit) totalCount else limit
+            val tuples     = maxRows match {
               case 0 => List.empty[Tpl]
               case 1 => List(row2tpl(jColl.iterator().next()))
               case _ =>
@@ -203,31 +172,43 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
                 }
                 val list = List.newBuilder[Tpl]
                 var i    = 0
-                while (it.hasNext && i < max) {
+                while (it.hasNext && i < maxRows) {
                   list += row2tpl(it.next)
                   i += 1
                 }
                 list.result()
             }
-            (totalCount, res)
+            (totalCount, tuples)
           }
         }
       }
     )(Future.failed) // Wrap exception from input failure in Future
   }
 
-  def getHistory(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-    _model.elements.head match {
-      case Generic("Schema", _, _, _, _) =>
-        futConn.flatMap { conn =>
-          if (conn.isJsPlatform) {
-            conn.jsSchemaHistoryQuery(_model, obj, sortCoordinates, packed2tpl)
-          } else {
-            conn.jvmSchemaHistoryQuery(_model).map(rows => rows2tuples(rows, rows.size))
-          }
-        }
 
-      case _ => get(futConn.map(_.usingAdhocDbView(History)), ec)
+  // Helpers ...............................
+
+  private def rows2tuples(totalCount: Int, rows: jCollection[jList[AnyRef]], maxRows: Int, offset: Int): List[Tpl] = {
+    if (totalCount == 0 || offset >= totalCount) {
+      return List.empty[Tpl]
+    }
+    val tuples = List.newBuilder[Tpl]
+    var i      = offset
+    if (sortRows) {
+      val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
+      sortedRows.sort(this) // using macro-implemented `compare` method
+      while (i != maxRows) {
+        tuples += row2tpl(sortedRows.get(i))
+        i += 1
+      }
+      tuples.result()
+    } else {
+      val rowsIterator = rows.iterator
+      while (i != maxRows) {
+        tuples += row2tpl(rowsIterator.next)
+        i += 1
+      }
+      tuples.result()
     }
   }
 
@@ -913,10 +894,23 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return List[Tpl] where Tpl is tuple of data matching molecule
    */
-  //  def getHistory(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-  //    get(conn.map(_.usingAdhocDbView(History)), ec)
-  //  }
+  def getHistory(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
+    _model.elements.head match {
+      case Generic("Schema", _, _, _, _) =>
+        futConn.flatMap { conn =>
+          if (conn.isJsPlatform) {
+            conn.jsSchemaHistoryQuery(_model, obj, sortCoordinates, packed2tpl).map(_._2)
+          } else {
+            conn.jvmSchemaHistoryQuery(_model).map { rows =>
+              val totalCount = rows.size
+              rows2tuples(totalCount, rows, totalCount, 0)
+            }
+          }
+        }
 
+      case _ => get(futConn.map(_.usingAdhocDbView(History)), ec)
+    }
+  }
 
   // `getHistory(limit: Int, offset: Int = 0)` is not implemented since the whole data set normally needs to be sorted
   // to give chronologically meaningful information.

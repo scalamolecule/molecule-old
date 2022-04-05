@@ -695,10 +695,10 @@ case class QuerySchemaHistory(conn: Conn_Jvm)(implicit ec: ExecutionContext) ext
       Collections.sort(rows, new SchemaComparator())
 
       val last       = rows.size()
-      var rowCounter = 0
+      var totalCount = 0
       var first      = true
       rows.forEach { row =>
-        rowCounter += 1
+        totalCount += 1
         add = row.get(op_).asInstanceOf[jBoolean]
         tx = row.get(tx_)
         attrId = row.get(attrId_)
@@ -713,7 +713,7 @@ case class QuerySchemaHistory(conn: Conn_Jvm)(implicit ec: ExecutionContext) ext
           val hasRequired  = requireAttrs.intersect(processedAttrs) == requireAttrs
           val allValidated = validateAttrs.intersect(validatedAttrs) == validateAttrs
           val noExcluded   = excludeAttrs.intersect(processedAttrs).isEmpty
-          if (rowCounter != 1 && hasRequired && allValidated && noExcluded) {
+          if (totalCount != 1 && hasRequired && allValidated && noExcluded) {
             // add prev collected row if all is ok
             coll.add(list)
           }
@@ -746,7 +746,7 @@ case class QuerySchemaHistory(conn: Conn_Jvm)(implicit ec: ExecutionContext) ext
         }
         first = false
 
-        if (rowCounter == last) {
+        if (totalCount == last) {
           val hasRequired  = requireAttrs.intersect(processedAttrs) == requireAttrs
           val allValidated = validateAttrs.intersect(validatedAttrs) == validateAttrs
           val noExcluded   = excludeAttrs.intersect(processedAttrs).isEmpty

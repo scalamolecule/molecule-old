@@ -2,100 +2,657 @@ package moleculeTests.tests.core.pagination
 
 import molecule.core.exceptions.MoleculeException
 import molecule.core.util.Executor._
-import molecule.datomic.api.out2._
+import molecule.datomic.api.out5._
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
-import scala.math.ceil
 
 
 object OffsetPagination extends AsyncTestSuite {
 
-
   lazy val tests = Tests {
 
-    "limit" - core { implicit conn =>
+    "flat" - core { implicit conn =>
       for {
         _ <- Ns.int.insert(1, 2, 3)
 
-        // Simply taking the first 2 rows
-        // Note that only the data is returned (without a total count of rows)
-        // asc
+        _ <- Ns.int.a1.get.map(_ ==> List(1, 2, 3))
         _ <- Ns.int.a1.get(2).map(_ ==> List(1, 2))
 
-        // Using limit as above is more efficient than taking subset of all data
-        _ <- Ns.int.a1.get.map(_.take(2) ==> List(1, 2))
+        _ <- Ns.int.a1.get(2, 0).map(_ ==> (3, List(1, 2)))
+        _ <- Ns.int.a1.get(2, 2).map(_ ==> (3, List(3)))
 
-        // desc
-        _ <- Ns.int.d1.get(2).map(_ ==> List(3, 2))
-      } yield ()
-    }
+        _ <- Ns.int.d1.get(2, 0).map(_ ==> (3, List(3, 2)))
+        _ <- Ns.int.d1.get(2, 2).map(_ ==> (3, List(1)))
+
+        // offset beyond totalCount. Row count still returned
+        _ <- Ns.int.get(2, 4).map(_ ==> (3, Nil))
+
+        // Empty result set
+        _ <- Ns.str.get(2, 4).map(_ ==> (0, Nil))
 
 
-    "Total count, page number" - core { implicit conn =>
-      for {
-        _ <- Ns.int.insert(1, 2, 3)
-
-        limit = 2
-
-        // Add offset to fetch total count too
-
-        // Page 1
-        offset0 = 0
-        _ <- Ns.int.get(limit, offset0).map {
-          // Tuple of (totalCount, pageRows) returned
-          case (totalCount, data) =>
-            totalCount ==> 3
-            data ==> List(1, 2)
-
-            // Calculate page numbers from totalCount and limit size:
-            val totalPages = (totalCount / limit.toDouble).ceil.round
-            totalPages ==> 2
-
-            // Calculate current page number from offset and limit
-            val page = offset0 / limit + 1
-            page ==> 1
+        _ <- Ns.int.a1.getObjs.collect { case List(o1, o2, o3) =>
+          o1.int ==> 1
+          o2.int ==> 2
+          o3.int ==> 3
+        }
+        _ <- Ns.int.a1.getObjs(2).collect { case List(o1, o2) =>
+          o1.int ==> 1
+          o2.int ==> 2
         }
 
-        // todo
-//        // Page 2
-//        offset2 = 2
-//        _ <- Ns.int.get(limit, offset2).map {
-//          case (totalCount, data) =>
-//            totalCount ==> 3
-//            data ==> List(3)
-//            val page = offset2 / limit + 1
-//            page ==> 2
-//        }
+        _ <- Ns.int.a1.getObjs(2, 0).collect { case (totalCount, List(o1, o2)) =>
+          totalCount ==> 3
+          o1.int ==> 1
+          o2.int ==> 2
+        }
+        _ <- Ns.int.a1.getObjs(2, 2).collect { case (totalCount, List(o1)) =>
+          totalCount ==> 3
+          o1.int ==> 3
+        }
+
+        _ <- Ns.int.d1.getObjs(2, 0).collect { case (totalCount, List(o1, o2)) =>
+          totalCount ==> 3
+          o1.int ==> 3
+          o2.int ==> 2
+        }
+        _ <- Ns.int.d1.getObjs(2, 2).collect { case (totalCount, List(o1)) =>
+          totalCount ==> 3
+          o1.int ==> 1
+        }
+        _ <- Ns.int.getObjs(2, 4).map(_ ==> (3, Nil))
+        _ <- Ns.str.getObjs(2, 4).map(_ ==> (0, Nil))
+
+
+        _ <- Ns.int.a1.getJson.map(_ ==>
+          """{
+            |  "totalCount": 3,
+            |  "limit"     : 3,
+            |  "offset"    : 0,
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1
+            |      },
+            |      {
+            |        "int": 2
+            |      },
+            |      {
+            |        "int": 3
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+        _ <- Ns.int.a1.getJson(2).map(_ ==>
+          """{
+            |  "totalCount": 3,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1
+            |      },
+            |      {
+            |        "int": 2
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.a1.getJson(2, 0).map(_ ==>
+          """{
+            |  "totalCount": 3,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1
+            |      },
+            |      {
+            |        "int": 2
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.a1.getJson(2, 2).map(_ ==>
+          """{
+            |  "totalCount": 3,
+            |  "limit"     : 2,
+            |  "offset"    : 2,
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 3
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+
+        _ <- Ns.int.d1.getJson(2, 0).map(_ ==>
+          """{
+            |  "totalCount": 3,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 3
+            |      },
+            |      {
+            |        "int": 2
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.d1.getJson(2, 2).map(_ ==>
+          """{
+            |  "totalCount": 3,
+            |  "limit"     : 2,
+            |  "offset"    : 2,
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.getJson(2, 4).map(_ ==>
+          """{
+            |  "totalCount": 3,
+            |  "limit"     : 2,
+            |  "offset"    : 4,
+            |  "data": {
+            |    "Ns": []
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.str.getJson(2, 4).map(_ ==>
+          """{
+            |  "totalCount": 0,
+            |  "limit"     : 2,
+            |  "offset"    : 4,
+            |  "data": {
+            |    "Ns": []
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
 
-    "Limit + offset" - core { implicit conn =>
+    "nested" - core { implicit conn =>
       for {
-        _ <- Ns.int.insert(1, 2, 3)
+        _ <- Ns.int.Refs1.*(Ref1.int1) insert List(
+          (1, List(11, 12)),
+          (2, List(21, 22)),
+          (3, List(31, 32)),
+          (4, Nil),
+        )
 
-        // Page 1, asc
-        _ <- Ns.int.a1.get(2, 0).map(_._2 ==> List(1, 2))
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).get.map(_ ==> List(
+          (1, List(11, 12)),
+          (2, List(21, 22)),
+          (3, List(31, 32)),
+        ))
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).get(2).map(_ ==> List(
+          (1, List(11, 12)),
+          (2, List(21, 22)),
+        ))
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).get(2, 0).map(_ ==> (3, List(
+          (1, List(11, 12)),
+          (2, List(21, 22)),
+        )))
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).get(2, 2).map(_ ==> (3, List(
+          (3, List(31, 32)),
+        )))
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).get(2, 4).map(_ ==> (3, Nil))
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1).get(2, 4).map(_ ==> (0, Nil))
 
-        // Page 2, asc
-        _ <- Ns.int.a1.get(2, 2).map(_._2 ==> List(3))
 
-        // Page 1, desc
-        _ <- Ns.int.d1.get(2, 0).map(_._2 ==> List(3, 2))
+        // Opt nested
 
-        // Page 2, desc
-        _ <- Ns.int.d1.get(2, 2).map(_._2 ==> List(1))
-      } yield ()
-    }
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).get.map(_ ==> List(
+          (1, List(11, 12)),
+          (2, List(21, 22)),
+          (3, List(31, 32)),
+          (4, Nil),
+        ))
+
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).get(2).map(_ ==> List(
+          (1, List(11, 12)),
+          (2, List(21, 22)),
+        ))
+
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).get(2, 0).map(_ ==> (4, List(
+          (1, List(11, 12)),
+          (2, List(21, 22)),
+        )))
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).get(2, 2).map(_ ==> (4, List(
+          (3, List(31, 32)),
+          (4, Nil),
+        )))
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).get(2, 4).map(_ ==> (4, Nil))
+        _ <- Ns.str.a1.Refs1.*?(Ref1.int1).get(2, 4).map(_ ==> (0, Nil))
 
 
-    "Offset beyond total count" - core { implicit conn =>
-      for {
-        _ <- Ns.int.insert(1, 2, 3)
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getObjs.collect { case List(o1, o2, o3) =>
+          o1.int ==> 1
+          o1.Refs1.head.int1 ==> 11
+          o1.Refs1.last.int1 ==> 12
+          o2.int ==> 2
+          o2.Refs1.head.int1 ==> 21
+          o2.Refs1.last.int1 ==> 22
+          o3.int ==> 3
+          o3.Refs1.head.int1 ==> 31
+          o3.Refs1.last.int1 ==> 32
+        }
 
-        // Empty result set returned for offset exceeding total count
-        _ <- Ns.int.a1.get(2, 4).map(_ ==> (3, Nil))
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getObjs(2).collect { case List(o1, o2) =>
+          o1.int ==> 1
+          o1.Refs1.head.int1 ==> 11
+          o1.Refs1.last.int1 ==> 12
+          o2.int ==> 2
+          o2.Refs1.head.int1 ==> 21
+          o2.Refs1.last.int1 ==> 22
+        }
+
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getObjs(2, 0).collect { case (totalCount, List(o1, o2)) =>
+          totalCount ==> 3
+          o1.int ==> 1
+          o1.Refs1.head.int1 ==> 11
+          o1.Refs1.last.int1 ==> 12
+          o2.int ==> 2
+          o2.Refs1.head.int1 ==> 21
+          o2.Refs1.last.int1 ==> 22
+        }
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getObjs(2, 2).collect { case (totalCount, List(o1)) =>
+          totalCount ==> 3
+          o1.int ==> 3
+          o1.Refs1.head.int1 ==> 31
+          o1.Refs1.last.int1 ==> 32
+        }
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getObjs(2, 4).collect { case (totalCount, data) =>
+          totalCount ==> 3
+          data ==> Nil
+        }
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1).getObjs(2, 4).collect { case (totalCount, data) =>
+          totalCount ==> 0
+          data ==> Nil
+        }
+
+
+        // Opt nested
+
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getObjs.collect { case List(o1, o2, o3, o4) =>
+          o1.int ==> 1
+          o1.Refs1.head.int1 ==> 11
+          o1.Refs1.last.int1 ==> 12
+          o2.int ==> 2
+          o2.Refs1.head.int1 ==> 21
+          o2.Refs1.last.int1 ==> 22
+          o3.int ==> 3
+          o3.Refs1.head.int1 ==> 31
+          o3.Refs1.last.int1 ==> 32
+          o4.int ==> 4
+          o4.Refs1 ==> Nil
+        }
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getObjs(2).collect { case List(o1, o2) =>
+          o1.int ==> 1
+          o1.Refs1.head.int1 ==> 11
+          o1.Refs1.last.int1 ==> 12
+          o2.int ==> 2
+          o2.Refs1.head.int1 ==> 21
+          o2.Refs1.last.int1 ==> 22
+        }
+
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getObjs(2, 0).collect { case (totalCount, List(o1, o2)) =>
+          totalCount ==> 4
+          o1.int ==> 1
+          o1.Refs1.head.int1 ==> 11
+          o1.Refs1.last.int1 ==> 12
+          o2.int ==> 2
+          o2.Refs1.head.int1 ==> 21
+          o2.Refs1.last.int1 ==> 22
+        }
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getObjs(2, 2).collect { case (totalCount, List(o1, o2)) =>
+          totalCount ==> 4
+          o1.int ==> 3
+          o1.Refs1.head.int1 ==> 31
+          o1.Refs1.last.int1 ==> 32
+          o2.int ==> 4
+          o2.Refs1 ==> Nil
+        }
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getObjs(2, 4).collect { case (totalCount, data) =>
+          totalCount ==> 4
+          data ==> Nil
+        }
+        _ <- Ns.str.a1.Refs1.*?(Ref1.int1).getObjs(2, 4).collect { case (totalCount, data) =>
+          totalCount ==> 0
+          data ==> Nil
+        }
+
+
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getJson.map(_ ==>
+          """{
+            |  "totalCount": 3,
+            |  "limit"     : 3,
+            |  "offset"    : 0,
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1,
+            |        "Refs1": [
+            |          {
+            |            "int1": 11
+            |          },
+            |          {
+            |            "int1": 12
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 2,
+            |        "Refs1": [
+            |          {
+            |            "int1": 21
+            |          },
+            |          {
+            |            "int1": 22
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 3,
+            |        "Refs1": [
+            |          {
+            |            "int1": 31
+            |          },
+            |          {
+            |            "int1": 32
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getJson(2).map(_ ==>
+          """{
+            |  "totalCount": 3,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1,
+            |        "Refs1": [
+            |          {
+            |            "int1": 11
+            |          },
+            |          {
+            |            "int1": 12
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 2,
+            |        "Refs1": [
+            |          {
+            |            "int1": 21
+            |          },
+            |          {
+            |            "int1": 22
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getJson(2, 0).map(_ ==>
+          """{
+            |  "totalCount": 3,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1,
+            |        "Refs1": [
+            |          {
+            |            "int1": 11
+            |          },
+            |          {
+            |            "int1": 12
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 2,
+            |        "Refs1": [
+            |          {
+            |            "int1": 21
+            |          },
+            |          {
+            |            "int1": 22
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getJson(2, 2).map(_ ==>
+          """{
+            |  "totalCount": 3,
+            |  "limit"     : 2,
+            |  "offset"    : 2,
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 3,
+            |        "Refs1": [
+            |          {
+            |            "int1": 31
+            |          },
+            |          {
+            |            "int1": 32
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getJson(2, 4).map(_ ==>
+          """{
+            |  "totalCount": 3,
+            |  "limit"     : 2,
+            |  "offset"    : 4,
+            |  "data": {
+            |    "Ns": []
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1).getJson(2, 4).map(_ ==>
+          """{
+            |  "totalCount": 0,
+            |  "limit"     : 2,
+            |  "offset"    : 4,
+            |  "data": {
+            |    "Ns": []
+            |  }
+            |}""".stripMargin)
+
+
+        // Opt nested
+
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getJson.map(_ ==>
+          """{
+            |  "totalCount": 4,
+            |  "limit"     : 4,
+            |  "offset"    : 0,
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1,
+            |        "Refs1": [
+            |          {
+            |            "int1": 11
+            |          },
+            |          {
+            |            "int1": 12
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 2,
+            |        "Refs1": [
+            |          {
+            |            "int1": 21
+            |          },
+            |          {
+            |            "int1": 22
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 3,
+            |        "Refs1": [
+            |          {
+            |            "int1": 31
+            |          },
+            |          {
+            |            "int1": 32
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 4,
+            |        "Refs1": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getJson(2).map(_ ==>
+          """{
+            |  "totalCount": 4,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1,
+            |        "Refs1": [
+            |          {
+            |            "int1": 11
+            |          },
+            |          {
+            |            "int1": 12
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 2,
+            |        "Refs1": [
+            |          {
+            |            "int1": 21
+            |          },
+            |          {
+            |            "int1": 22
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getJson(2, 0).map(_ ==>
+          """{
+            |  "totalCount": 4,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1,
+            |        "Refs1": [
+            |          {
+            |            "int1": 11
+            |          },
+            |          {
+            |            "int1": 12
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 2,
+            |        "Refs1": [
+            |          {
+            |            "int1": 21
+            |          },
+            |          {
+            |            "int1": 22
+            |          }
+            |        ]
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getJson(2, 2).map(_ ==>
+          """{
+            |  "totalCount": 4,
+            |  "limit"     : 2,
+            |  "offset"    : 2,
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 3,
+            |        "Refs1": [
+            |          {
+            |            "int1": 31
+            |          },
+            |          {
+            |            "int1": 32
+            |          }
+            |        ]
+            |      },
+            |      {
+            |        "int": 4,
+            |        "Refs1": []
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getJson(2, 4).map(_ ==>
+          """{
+            |  "totalCount": 4,
+            |  "limit"     : 2,
+            |  "offset"    : 4,
+            |  "data": {
+            |    "Ns": []
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.str.a1.Refs1.*?(Ref1.int1).getJson(2, 4).map(_ ==>
+          """{
+            |  "totalCount": 0,
+            |  "limit"     : 2,
+            |  "offset"    : 4,
+            |  "data": {
+            |    "Ns": []
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
@@ -105,7 +662,7 @@ object OffsetPagination extends AsyncTestSuite {
         _ <- Ns.str.insert("a", "a", "b", "c")
 
         // Empty result set returned for offset exceeding total count
-        _ <- Ns.str.str.apply(count).get.map(_ ==> List(("a", 2), ("b", 1), ("c", 1) ))
+        _ <- Ns.str.str.apply(count).get.map(_ ==> List(("a", 2), ("b", 1), ("c", 1)))
       } yield ()
     }
 
@@ -127,7 +684,7 @@ object OffsetPagination extends AsyncTestSuite {
     }
 
 
-    // Problems with offset pagination:
+    // General problems with offset pagination (for any db system):
 
     "Re-seen data" - core { implicit conn =>
       for {

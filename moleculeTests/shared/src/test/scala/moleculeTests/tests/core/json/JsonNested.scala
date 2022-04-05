@@ -21,6 +21,9 @@ object JsonNested extends AsyncTestSuite {
 
         _ <- Ns.str.a1.Refs1.int1.a2.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 3,
+             |  "limit"     : 3,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -48,6 +51,9 @@ object JsonNested extends AsyncTestSuite {
 
         _ <- Ns.str.a1.Refs1.*?(Ref1.int1.a1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 3,
+             |  "limit"     : 3,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -81,6 +87,9 @@ object JsonNested extends AsyncTestSuite {
 
         _ <- Ns.str.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -130,6 +139,9 @@ object JsonNested extends AsyncTestSuite {
 
         _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.*(Ref2.int2)).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -181,6 +193,9 @@ object JsonNested extends AsyncTestSuite {
         _ <- m(Ns.str.Refs1 * Ref1.enum1) insert List(("a", List("enum11")))
         _ <- m(Ns.str.Refs1 * Ref1.enum1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -207,6 +222,9 @@ object JsonNested extends AsyncTestSuite {
 
         _ <- m(Ns.str.Refs1 * Ref1.int1_.Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -236,6 +254,9 @@ object JsonNested extends AsyncTestSuite {
         // We can omit tacit attribute between Ref1 and Ref2
         _ <- m(Ns.str.Refs1 * Ref1.Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -273,6 +294,9 @@ object JsonNested extends AsyncTestSuite {
         )
         _ <- m(Ns.str.Refs1 * Ref1.Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -316,6 +340,9 @@ object JsonNested extends AsyncTestSuite {
 
         _ <- m(Ns.str.Refs1 * Ref1.int1$.Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -363,6 +390,9 @@ object JsonNested extends AsyncTestSuite {
         // mandatory int1
         _ <- m(Ns.str.Refs1.int1.Refs2 * Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -383,6 +413,9 @@ object JsonNested extends AsyncTestSuite {
         // optional int1$
         _ <- m(Ns.str.Refs1.int1$.Refs2 * Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -417,6 +450,9 @@ object JsonNested extends AsyncTestSuite {
         // relationship exists despite not having attribute values
         _ <- m(Ns.str.Refs1.Refs2 * Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -459,6 +495,9 @@ object JsonNested extends AsyncTestSuite {
         // mandatory int1
         _ <- m(Ns.str.Ref1.int1.Refs2 * Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -479,6 +518,9 @@ object JsonNested extends AsyncTestSuite {
         // optional int1$
         _ <- m(Ns.str.Ref1.int1$.Refs2 * Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -513,6 +555,9 @@ object JsonNested extends AsyncTestSuite {
         // relationship exists despite not having attribute values
         _ <- m(Ns.str.Ref1.Refs2 * Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -551,6 +596,9 @@ object JsonNested extends AsyncTestSuite {
 
         _ <- m(Ns.str.Ref1.int1.Refs2 * Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -570,6 +618,9 @@ object JsonNested extends AsyncTestSuite {
 
         _ <- m(Ns.str.Ref1.Refs2 * Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -595,6 +646,9 @@ object JsonNested extends AsyncTestSuite {
 
         _ <- m(Ns.str.Ref1.int1.Refs2 * Ref2.ints2).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -624,6 +678,9 @@ object JsonNested extends AsyncTestSuite {
 
         _ <- m(Ns.str.Refs1.int1.Refs2 * Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -643,6 +700,9 @@ object JsonNested extends AsyncTestSuite {
 
         _ <- m(Ns.str.Refs1.Refs2 * Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -668,6 +728,9 @@ object JsonNested extends AsyncTestSuite {
 
         _ <- Ns.str.Refs1.int1.Refs2.int2.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -685,6 +748,9 @@ object JsonNested extends AsyncTestSuite {
 
         _ <- m(Ns.str.Refs1.int1.Refs2 * Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -704,6 +770,9 @@ object JsonNested extends AsyncTestSuite {
 
         _ <- m(Ns.str_("a").Refs1.int1.Refs2 * Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -722,6 +791,9 @@ object JsonNested extends AsyncTestSuite {
 
         _ <- m(Ns.str.Refs1.Refs2 * Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -740,6 +812,9 @@ object JsonNested extends AsyncTestSuite {
 
         _ <- m(Ns.str_("a").Refs1.Refs2 * Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -768,6 +843,9 @@ object JsonNested extends AsyncTestSuite {
 
         _ <- m(Ns.str.Refs1.int1.str1.Refs2 * Ref2.int2.str2).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -817,6 +895,9 @@ object JsonNested extends AsyncTestSuite {
 
         _ <- m(Ns.str.Refs1.Refs2 * Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -850,6 +931,9 @@ object JsonNested extends AsyncTestSuite {
         // Fully nested
         _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.*(Ref2.int2)).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -913,6 +997,9 @@ object JsonNested extends AsyncTestSuite {
 
         _ <- Ns.str.a1.Refs1.*(Ref1.int1.a1.Refs2.int2.a2).getJson.map(_ ==>
             s"""{
+               |  "totalCount": 2,
+               |  "limit"     : 2,
+               |  "offset"    : 0,
                |  "data": {
                |    "Ns": [
                |      {
@@ -982,6 +1069,9 @@ object JsonNested extends AsyncTestSuite {
         // Semi-nested A without intermediary attr `int1`
         _ <- Ns.str.a1.Refs1.*(Ref1.Refs2.int2.a1).getJson.map(_ ==>
             s"""{
+               |  "totalCount": 2,
+               |  "limit"     : 2,
+               |  "offset"    : 0,
                |  "data": {
                |    "Ns": [
                |      {
@@ -1043,6 +1133,9 @@ object JsonNested extends AsyncTestSuite {
         // Semi-nested B
         _ <- Ns.str.a1.Refs1.int1.a2.Refs2.*(Ref2.int2.a1).getJson.map(_ ==>
           """{
+            |  "totalCount": 4,
+            |  "limit"     : 4,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1109,6 +1202,9 @@ object JsonNested extends AsyncTestSuite {
         // Semi-nested B without intermediary attr `int1`
         _ <- Ns.str.a1.Refs1.Refs2.*(Ref2.int2.a1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1157,6 +1253,9 @@ object JsonNested extends AsyncTestSuite {
         // Tacit filter
         _ <- m(Ns.str_("a").Refs1.int1.a1.Refs2 * Ref2.int2.a1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1192,6 +1291,9 @@ object JsonNested extends AsyncTestSuite {
         // Tacit filters
         _ <- m(Ns.str_("a").Refs1.int1_(2).Refs2 * Ref2.int2.a1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1213,6 +1315,9 @@ object JsonNested extends AsyncTestSuite {
         // Flat
         _ <- m(Ns.str.a1.Refs1.int1.a2.Refs2.int2.a3).getJson.map(_ ==>
           """{
+            |  "totalCount": 8,
+            |  "limit"     : 8,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1294,6 +1399,9 @@ object JsonNested extends AsyncTestSuite {
         // Flat without intermediary attr `int1`
         _ <- m(Ns.str.a1.Refs1.Refs2.int2.a2).getJson.map(_ ==>
           """{
+            |  "totalCount": 8,
+            |  "limit"     : 8,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1375,6 +1483,9 @@ object JsonNested extends AsyncTestSuite {
 
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1).getJson.map(_ ==>
             """{
+              |  "totalCount": 1,
+              |  "limit"     : 1,
+              |  "offset"    : 0,
               |  "data": {
               |    "Ns": [
               |      {
@@ -1394,6 +1505,9 @@ object JsonNested extends AsyncTestSuite {
 
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1.str1).getJson.map(_ ==>
             """{
+              |  "totalCount": 1,
+              |  "limit"     : 1,
+              |  "offset"    : 0,
               |  "data": {
               |    "Ns": [
               |      {
@@ -1419,6 +1533,9 @@ object JsonNested extends AsyncTestSuite {
 
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * Ref1.str1.Refs2.str2).getJson.map(_ ==>
             """{
+              |  "totalCount": 1,
+              |  "limit"     : 1,
+              |  "offset"    : 0,
               |  "data": {
               |    "Ns": [
               |      {
@@ -1441,6 +1558,9 @@ object JsonNested extends AsyncTestSuite {
 
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1.str1.Refs2.str2).getJson.map(_ ==>
             """{
+              |  "totalCount": 1,
+              |  "limit"     : 1,
+              |  "offset"    : 0,
               |  "data": {
               |    "Ns": [
               |      {
@@ -1469,6 +1589,9 @@ object JsonNested extends AsyncTestSuite {
 
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1 * (Ref1.str1.Refs2 * Ref2.str2)).getJson.map(_ ==>
             """{
+              |  "totalCount": 1,
+              |  "limit"     : 1,
+              |  "offset"    : 0,
               |  "data": {
               |    "Ns": [
               |      {
@@ -1493,6 +1616,9 @@ object JsonNested extends AsyncTestSuite {
 
           _ <- m(Ns.str.Ref1.str1._Ns.Refs1.str1.Refs2.str2).getJson.map(_ ==>
             """{
+              |  "totalCount": 1,
+              |  "limit"     : 1,
+              |  "offset"    : 0,
               |  "data": {
               |    "Ns": [
               |      {
@@ -1520,6 +1646,9 @@ object JsonNested extends AsyncTestSuite {
         eid <- Ns.str.Refs1.*(Ref1.int1).insert("a", List(1, 2)).map(_.eid)
         _ <- Ns(eid).Refs1.*(Ref1.int1.a1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1555,6 +1684,9 @@ object JsonNested extends AsyncTestSuite {
         // Without Ns
         _ <- Ref1.str1.a1.Refs2.*(Ref2.str2.a1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1589,6 +1721,9 @@ object JsonNested extends AsyncTestSuite {
         // This excludes "r1b" since no Ns entities reference it.
         _ <- Ns.Refs1.str1.Refs2.*(Ref2.str2.a1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {

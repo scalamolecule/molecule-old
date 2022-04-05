@@ -17,6 +17,9 @@ object JsonNested2 extends AsyncTestSuite {
         )
         _ <- Ns.int.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -47,6 +50,9 @@ object JsonNested2 extends AsyncTestSuite {
         )
         _ <- Ns.int.str.Refs1.*(Ref1.int1.str1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -81,6 +87,9 @@ object JsonNested2 extends AsyncTestSuite {
         )
         _ <- Ns.int.str.Refs1.*(Ref1.int1.Ref2.str2).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -119,6 +128,9 @@ object JsonNested2 extends AsyncTestSuite {
         )
         _ <- Ns.int.str.Refs1.*(Ref1.Ref2.int2.str2).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -154,6 +166,9 @@ object JsonNested2 extends AsyncTestSuite {
         )
         _ <- Ns.int.Ref1.str1.Refs2.*(Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -186,6 +201,9 @@ object JsonNested2 extends AsyncTestSuite {
         )
         _ <- Ns.int.Ref1.str1.Ref2.int2.Refs3.*(Ref3.int3).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -222,6 +240,9 @@ object JsonNested2 extends AsyncTestSuite {
 
         _ <- m(Ns.str.Refs1 * Ref1.int1.Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -269,6 +290,9 @@ object JsonNested2 extends AsyncTestSuite {
 
         _ <- Ns.str.Refs1.*(Ref1.int1.str1.Refs2.*(Ref2.int2)).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -341,6 +365,9 @@ object JsonNested2 extends AsyncTestSuite {
 
         _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.str2.Refs3.*(Ref3.int3)).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -428,6 +455,9 @@ object JsonNested2 extends AsyncTestSuite {
 
         _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.Refs3.*(Ref3.int3.Ref4.int4)).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -517,6 +547,9 @@ object JsonNested2 extends AsyncTestSuite {
 
         _ <- Ns.str.Ref1.int1.Refs2.*(Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -549,6 +582,9 @@ object JsonNested2 extends AsyncTestSuite {
 
         _ <- Ns.str.Ref1.int1._Ns.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -580,6 +616,9 @@ object JsonNested2 extends AsyncTestSuite {
         )
         _ <- Ns.str.Ref1.int1.Ref2.int2.Refs3.*(Ref3.int3).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -614,6 +653,9 @@ object JsonNested2 extends AsyncTestSuite {
         )
         _ <- Ns.str.Ref1.int1.Ref2.int2._Ref1.Refs2.*(Ref2.int2).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -648,6 +690,9 @@ object JsonNested2 extends AsyncTestSuite {
         )
         _ <- Ns.str.Ref1.int1.Ref2.int2._Ref1._Ns.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -692,6 +737,9 @@ object JsonNested2 extends AsyncTestSuite {
         )
         _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2._Ref1.Refs2.*(Ref2.int2)).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -749,6 +797,9 @@ object JsonNested2 extends AsyncTestSuite {
         )
         _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.Ref3.int3._Ref2._Ref1.Refs2.*(Ref2.int2)).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -812,6 +863,9 @@ object JsonNested2 extends AsyncTestSuite {
         )
         _ <- Ns.str.Refs1.*(Ref1.int1.Ref2.int2.Ref3.int3._Ref2.Refs3.*(Ref3.int3)).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -873,6 +927,9 @@ object JsonNested2 extends AsyncTestSuite {
         )
         _ <- Ns.str.Refs1.*(Ref1.int1.Refs2.*(Ref2.int2.Ref3.int3._Ref2.str2)).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -921,6 +978,9 @@ object JsonNested2 extends AsyncTestSuite {
         _ <- Ns.str.Ref1.int1.Ref2.int2._Ref1._Ns
           .Refs1.*(Ref1.int1.Ref2.int2.Refs3.*(Ref3.int3.Ref4.int4)).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {

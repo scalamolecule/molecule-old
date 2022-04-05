@@ -25,18 +25,22 @@ case class SortDatoms_Peer(
 )(implicit ec: ExecutionContext) extends Comparator[jList[AnyRef]]
   with JavaHelpers with PackBase with JavaConversions {
 
-  def getPacked: Future[StringBuffer] = {
-    val datom2row = getDatom2row
-    val rows      = new util.ArrayList[jList[AnyRef]]()
+  def getPacked: Future[(Int, StringBuffer)] = {
+    val datom2row  = getDatom2row
+    val rows       = new util.ArrayList[jList[AnyRef]]()
+    var totalCount = 0
     datoms.asScala
-      .foldLeft(Future(rows))((futRows, datom) => futRows.flatMap(rows => datom2row(rows, datom)))
+      .foldLeft(Future(rows))((futRows, datom) => futRows.flatMap { rows =>
+        totalCount += 1
+        datom2row(rows, datom)
+      })
       .map { rows =>
         val sb         = new StringBuffer()
         val row2packed = getRow2Packed
         sortRows(rows).forEach(row =>
           row2packed(sb, row)
         )
-        sb
+        (totalCount, sb)
       }
   }
 

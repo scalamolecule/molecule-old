@@ -120,7 +120,8 @@ case class Conn_Js(
     model: Model,
     query: Query,
     datalog: String,
-    n: Int,
+    limit: Int,
+    offset: Int,
     obj: Obj,
     nestedLevels: Int,
     isOptNested: Boolean,
@@ -128,10 +129,10 @@ case class Conn_Js(
     tacitIndexes: List[List[Int]],
     sortCoordinates: List[List[SortCoordinate]],
     unpacker: Iterator[String] => T
-  )(implicit ec: ExecutionContext): Future[List[T]] = withDbView(
+  )(implicit ec: ExecutionContext): Future[(Int, List[T])] = withDbView(
     jsMoleculeQuery(
-      model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
-    ).map(packed => unpack(packed, unpacker))
+      model, query, datalog, limit, offset, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
+    ).map{ case (totalCount, packed) => (totalCount, unpack(packed, unpacker))}
   )
 
   private def unpack[T](packed: String, unpacker: Iterator[String] => T): List[T] = {
@@ -152,15 +153,18 @@ case class Conn_Js(
     model: Model,
     query: Query,
     datalog: String,
-    n: Int,
+    limit: Int,
+    offset: Int,
     obj: nodes.Obj,
     nestedLevels: Int,
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
     sortCoordinates: List[List[SortCoordinate]]
-  )(implicit ec: ExecutionContext): Future[String] = withDbView(
-    jsMoleculeQuery(model, query, datalog, n, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates)
+  )(implicit ec: ExecutionContext): Future[(Int, String)] = withDbView(
+    jsMoleculeQuery(
+      model, query, datalog, limit, offset, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
+    )
   )
 
   private[molecule] final override def jsSchemaHistoryQuery[T](
@@ -168,17 +172,18 @@ case class Conn_Js(
     obj: Obj,
     sortCoordinates: List[List[SortCoordinate]],
     unpacker: Iterator[String] => T
-  )(implicit ec: ExecutionContext): Future[List[T]] = {
+  )(implicit ec: ExecutionContext): Future[(Int, List[T])] = {
     val queryString = Model2Query(model, schemaHistory0 = true, optimize = false)._2
     val schemaAttrs = model2schemaAttrs(model)
     rpc.schemaHistoryQuery2packed(connProxy, queryString, obj, schemaAttrs, sortCoordinates)
-      .map(packed => unpack(packed, unpacker))
+      .map{ case (totalCount, packed) => (totalCount, unpack(packed, unpacker))}
   }
+
   private[molecule] final override def jsSchemaHistoryQueryJson(
     model: Model,
     obj: Obj,
     sortCoordinates: List[List[SortCoordinate]]
-  )(implicit ec: ExecutionContext): Future[String] = {
+  )(implicit ec: ExecutionContext): Future[(Int, String)] = {
     val queryString = Model2Query(model, schemaHistory0 = true, optimize = false)._2
     val schemaAttrs = model2schemaAttrs(model)
     rpc.schemaHistoryQuery2packed(connProxy, queryString, obj, schemaAttrs, sortCoordinates)
@@ -188,18 +193,19 @@ case class Conn_Js(
     model: Model,
     query: Query,
     datalog: String,
-    maxRows: Int,
+    limit: Int,
+    offset: Int,
     obj: Obj,
     nestedLevels: Int,
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
     sortCoordinates: List[List[SortCoordinate]]
-  ): Future[String] = {
+  ): Future[(Int, String)] = {
     model.elements.head match {
       case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _, _) => indexQuery(model, sortCoordinates)
       case _                                                              => datalogQuery(
-        query, datalog, maxRows, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
+        query, datalog, limit, offset, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
       )
     }
   }
@@ -207,7 +213,7 @@ case class Conn_Js(
   private final def indexQuery(
     model: Model,
     sortCoordinates: List[List[SortCoordinate]]
-  ): Future[String] = {
+  ): Future[(Int, String)] = {
     def p(v: Any): (String, String) = v match {
       case _: String     => (v.toString, "String")
       case _: Int        => (v.toString, "Int")
@@ -360,14 +366,15 @@ case class Conn_Js(
   private final def datalogQuery(
     query: Query,
     datalog: String,
-    maxRows: Int,
+    limit: Int,
+    offset: Int,
     obj: Obj,
     nestedLevels: Int,
     isOptNested: Boolean,
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
     sortCoordinates: List[List[SortCoordinate]]
-  ): Future[String] = {
+  ): Future[(Int, String)] = {
     val q2s          = Query2String(query)
     val p            = q2s.p
     val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString "\n ") + "]")
@@ -387,7 +394,7 @@ case class Conn_Js(
     //    println("lll: " + lll)
 
     rpc.query2packed(
-      connProxy, datalog, rules, l, ll, lll, maxRows,
+      connProxy, datalog, rules, l, ll, lll, limit, offset,
       obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
     )
   }

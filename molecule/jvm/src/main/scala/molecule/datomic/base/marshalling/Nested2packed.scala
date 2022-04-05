@@ -1,33 +1,77 @@
 package molecule.datomic.base.marshalling
 
+import java.util
+import java.lang.{Long => jLong}
 import java.util.{ArrayList => jArrayList, Collection => jCollection, Iterator => jIterator, List => jList}
 import molecule.core.marshalling.ast.nodes._
 import molecule.datomic.base.marshalling.packers.ResolverFlat
 
 private[molecule] case class Nested2packed(
   obj: Obj,
-  sortedRows: jCollection[jList[AnyRef]],
+  allSortedRows: jCollection[jList[AnyRef]],
+  flatTotalCount: Int,
+  limit: Int,
+  offset: Int,
   nestedLevels: Int
 ) extends ResolverFlat {
 
-  //  println(obj)
-  //  println("--- Nested2packed " + nestedLevels)
+  // Extract flat rows within offset and limit to be nested
+  private val (totalCount, sortedRows) = {
+    var topRowIndex   = -1
+    var curId : jLong = 0
+    var prevId: jLong = 0
+    val sortedRows    = if (limit == -1) {
+      // All rows (offset is 0)
+      allSortedRows.forEach { row =>
+        curId = row.get(0).asInstanceOf[jLong]
+        if (curId != prevId) {
+          topRowIndex += 1
+        }
+        //        println(s"$i  $topRowIndex   $curId  $prevId")
+        prevId = curId
+      }
+      allSortedRows
 
-  val last                           = sortedRows.size
-  val rows: jIterator[jList[AnyRef]] = sortedRows.iterator
+    } else {
+      val rowArray           = new util.ArrayList[jList[AnyRef]](allSortedRows)
+      val selectedSortedRows = new util.ArrayList[jList[AnyRef]]()
+      var flatRowIndex       = 0
+      val last               = offset + limit
+      var row: jList[AnyRef] = null
+      while (flatRowIndex != flatTotalCount) {
+        row = rowArray.get(flatRowIndex)
+        curId = row.get(0).asInstanceOf[jLong]
+        if (curId != prevId) {
+          topRowIndex += 1
+        }
+        if (topRowIndex >= offset && topRowIndex < last) {
+          selectedSortedRows.add(row)
+        }
+        //        println(s"$flatRowIndex  $topRowIndex   $curId  $prevId  $row")
+        prevId = curId
+        flatRowIndex += 1
+      }
+      selectedSortedRows
+    }
+    (topRowIndex + 1, sortedRows)
+  }
 
-  protected var row   : jList[AnyRef] = new jArrayList[AnyRef]()
-  protected var topRow: jList[AnyRef] = new jArrayList[AnyRef]()
+  private val sb   = new StringBuffer()
+  private val last = sortedRows.size
+  private var i    = 0
 
-  protected var e0: AnyRef = 0.asInstanceOf[AnyRef]
-  protected var e1: AnyRef = 0.asInstanceOf[AnyRef]
-  protected var e2: AnyRef = 0.asInstanceOf[AnyRef]
-  protected var e3: AnyRef = 0.asInstanceOf[AnyRef]
-  protected var e4: AnyRef = 0.asInstanceOf[AnyRef]
-  protected var e5: AnyRef = 0.asInstanceOf[AnyRef]
-  protected var e6: AnyRef = 0.asInstanceOf[AnyRef]
+  private val rows: jIterator[jList[AnyRef]] = sortedRows.iterator
 
-  protected var i = 0
+  private var row   : jList[AnyRef] = new jArrayList[AnyRef]()
+  private var topRow: jList[AnyRef] = new jArrayList[AnyRef]()
+
+  private var e0: AnyRef = 0.asInstanceOf[AnyRef]
+  private var e1: AnyRef = 0.asInstanceOf[AnyRef]
+  private var e2: AnyRef = 0.asInstanceOf[AnyRef]
+  private var e3: AnyRef = 0.asInstanceOf[AnyRef]
+  private var e4: AnyRef = 0.asInstanceOf[AnyRef]
+  private var e5: AnyRef = 0.asInstanceOf[AnyRef]
+  private var e6: AnyRef = 0.asInstanceOf[AnyRef]
 
   private var colIndex = nestedLevels
 
@@ -51,17 +95,13 @@ private[molecule] case class Nested2packed(
     case 7 => (_: AnyRef) => // no need for identification on last level
   }
 
-  val sb = new StringBuffer()
 
-  def getPacked: String = {
+  def getRowCountAndPacked: (Int, String) = {
     if (sortedRows.isEmpty) {
-      return ""
+      return (totalCount, "")
     }
-
-    //    val flatObj = flattenTxMetaProps(obj)
-    //    println(flatObj)
     packRows(flattenTxMetaProps(obj).props)
-    sb.toString
+    (totalCount, sb.toString)
   }
 
   def packNode(node: Node, level: Int): jList[_] => StringBuffer = {

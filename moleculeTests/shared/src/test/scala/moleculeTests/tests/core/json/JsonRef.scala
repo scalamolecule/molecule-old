@@ -17,6 +17,9 @@ object JsonRef extends AsyncTestSuite {
 
         _ <- Ns.str.a1.Ref1.int1.a2.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -48,6 +51,9 @@ object JsonRef extends AsyncTestSuite {
 
         _ <- Ns.str.a1.Refs1.int1.getJson.map(_ ==>
           """{
+            |  "totalCount": 3,
+            |  "limit"     : 3,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -75,6 +81,9 @@ object JsonRef extends AsyncTestSuite {
 
         _ <- Ns.str.Refs1.*(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -113,6 +122,9 @@ object JsonRef extends AsyncTestSuite {
         // Ref namespace
         _ <- Ns.int.a1.Ref1.str1.getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -135,6 +147,9 @@ object JsonRef extends AsyncTestSuite {
         // Ref attr
         _ <- Ns.int.a1.ref1.getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -164,6 +179,9 @@ object JsonRef extends AsyncTestSuite {
 
         _ <- Ns.int.Ref1.int1.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -178,6 +196,9 @@ object JsonRef extends AsyncTestSuite {
 
         _ <- Ns.int.Ref1.int1._Ns.str.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -193,6 +214,9 @@ object JsonRef extends AsyncTestSuite {
 
         _ <- Ns.int.Ref1.int1._Ns.Refs1.int1.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -210,6 +234,9 @@ object JsonRef extends AsyncTestSuite {
 
         _ <- Ns.int.Ref1.int1.Ref2.int2._Ref1.str1.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -228,6 +255,9 @@ object JsonRef extends AsyncTestSuite {
 
         _ <- Ns.int.Ref1.Ref2.int2._Ref1.int1.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -245,6 +275,9 @@ object JsonRef extends AsyncTestSuite {
 
         _ <- Ns.int.Ref1.int1.Ref2.int2._Ref1.Refs2.int2.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -265,6 +298,9 @@ object JsonRef extends AsyncTestSuite {
 
         _ <- Ns.int.Ref1.Ref2.int2._Ref1.Refs2.int2.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -284,6 +320,9 @@ object JsonRef extends AsyncTestSuite {
 
         _ <- Ns.int.Ref1.int1.Ref2.int2._Ref1.str1._Ns.str.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -303,6 +342,9 @@ object JsonRef extends AsyncTestSuite {
 
         _ <- Ns.int.Ref1.int1.Ref2.int2._Ref1._Ns.str.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -321,6 +363,9 @@ object JsonRef extends AsyncTestSuite {
 
         _ <- Ns.int.Ref1.Ref2.int2._Ref1._Ns.str.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -338,6 +383,9 @@ object JsonRef extends AsyncTestSuite {
 
         _ <- Ns.int.Ref1.int1.Ref2.int2._Ref1.str1._Ns.Refs1.int1.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -359,6 +407,9 @@ object JsonRef extends AsyncTestSuite {
 
         _ <- Ns.int.Ref1.int1.Ref2.int2._Ref1._Ns.Refs1.int1.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -379,6 +430,9 @@ object JsonRef extends AsyncTestSuite {
 
         _ <- Ns.int.Ref1.Ref2.int2._Ref1._Ns.Refs1.int1.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -398,6 +452,9 @@ object JsonRef extends AsyncTestSuite {
 
         _ <- Ns.Ref1.Ref2.int2._Ref1._Ns.Refs1.int1.getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
