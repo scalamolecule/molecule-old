@@ -1,10 +1,9 @@
 package molecule.datomic.base.marshalling
 
 import java.io.StringReader
-import java.lang.{Long => jLong}
 import java.net.URI
 import java.util
-import java.util.{Collections, Date, UUID, List => jList, Collection => jCollection}
+import java.util.{Collections, Date, UUID, List => jList}
 import datomic.Util._
 import datomic.{Util, Datom => PeerDatom}
 import datomicClient.ClojureBridge
@@ -45,7 +44,6 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
   ): Future[TxReportRPC] = {
     for {
       conn <- getConn(connProxy)
-      //      _ = println("DatomicRpc.transact -------\n" + stmtsEdn)
       javaStmts = getJavaStmts(stmtsEdn, uriAttrs)
 
       _ = javaStmts.forEach(s => println(s))
@@ -106,18 +104,6 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
     try {
       val log = new log
       val t   = TimerPrint("DatomicRpc")
-
-      //    println("------------------------------")
-      //      println("================================================================================")
-      //      println(datalogQuery)
-      //      if (rules.nonEmpty) {
-      //        println("Rules:")
-      //        rules foreach println
-      //      }
-      //      println("l  : " + l)
-      //      println("ll : " + ll)
-      //      println("lll: " + lll)
-
       val inputs    = unmarshallInputs(l ++ ll ++ lll)
       val allInputs = if (rules.nonEmpty) rules ++ inputs else inputs
       for {
@@ -125,7 +111,6 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
         rawRows <- conn.rawQuery(datalogQuery, allInputs)
       } yield {
         val flatTotalCount = rawRows.size
-        //        val maxRows      = if (limit == -1 || flatRowCount < limit) flatRowCount else limit
         val queryTime      = t.delta
         val space          = " " * (70 - datalogQuery.split('\n').last.length)
         val time           = qTime(queryTime)
@@ -135,28 +120,8 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
         log(datalogQuery + space + timeRight)
         if (allInputs.nonEmpty)
           log(allInputs.mkString("Inputs:\n", "\n", ""))
-
-        //      log(datalogQuery + space + timeRight + "  " + conn.asInstanceOf[Conn_Peer].peerConn.db)
-        //      log(s"\n---- Querying Datomic... --------------------")
-        //      log(datalogQuery)
-        //      log(qTime(queryTime) + "  " + datalogQuery)
-        //      log("connProxy uuid: " + connProxy.uuid)
-        //      log("Query time  : " + thousands(queryTime) + " ms")
-        //        log("flatTotalCount: " + flatTotalCount)
-        //        log("limit         : " + limit)
-        //        log("offset        : " + offset)
-        //        log("maxRows     : " + (if (maxRows == -1) "all" else maxRows))
-
         log("-------------------------------")
-        //      log(obj.toString)
-        //      log("-------------------------------")
-        //      log(refIndexes.mkString("\n"))
-        //      log("-------------------------------")
-        //      log(tacitIndexes.mkString("\n"))
-        //      log("-------------------------------")
         rawRows.forEach(row => log(row.toString))
-        //        log("-------------------------------")
-        //        sortCoordinates.foreach(level => log(level.mkString("List(\n  ", ",\n  ", ")")))
         log.print()
 
         val (totalCount, packed) = if (flatTotalCount == 0) {
@@ -190,7 +155,6 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
         }
 
         //        println(s"-------------------------------" + packed)
-        //        log("Sending data to client... Total server time: " + t.msTotal)
         (totalCount, packed)
       }
     } catch {

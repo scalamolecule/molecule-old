@@ -29,6 +29,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
 
         _ <- Ns.int(1).str.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -42,6 +45,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(2).strs.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -57,6 +63,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(3).strMap.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -72,6 +81,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(4, 5).str$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -90,6 +102,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(6, 7).strs$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -110,6 +125,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(8, 9).strMap$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -146,6 +164,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
 
         _ <- Ns.int(1).enumm.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -159,6 +180,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(2).enums.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -175,6 +199,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
 
         _ <- Ns.int(4, 5).enumm$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -193,6 +220,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(6, 7).enums$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -233,6 +263,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
 
         _ <- Ns.long(1).int.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -246,6 +279,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.long(2).ints.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -261,6 +297,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.long(3).intMap.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -276,6 +315,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.long(4, 5).int$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -294,6 +336,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.long(6, 7).ints$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -314,6 +359,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.long(8, 9).intMap$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -354,6 +402,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
 
         _ <- Ns.int(1).long.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -367,6 +418,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(2).longs.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -382,6 +436,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(3).longMap.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -397,6 +454,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(4, 5).long$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -415,6 +475,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(6, 7).longs$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -435,6 +498,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(8, 9).longMap$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -470,6 +536,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
 
         _ <- Ns.int(1).ref1.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -483,6 +552,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(2).refs1.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -498,6 +570,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(4, 5).ref1$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -516,6 +591,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(6, 7).refs1$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -556,6 +634,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
 
         _ <- Ns.int(1).double.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -569,6 +650,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(2).doubles.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -584,6 +668,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(3).doubleMap.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -599,6 +686,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(4, 5).double$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -617,6 +707,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(6, 7).doubles$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -637,6 +730,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(8, 9).doubleMap$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -677,6 +773,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
 
         _ <- Ns.int(1).bool.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -690,6 +789,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(2).bools.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -705,6 +807,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(3).boolMap.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -720,6 +825,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(4, 5).bool$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -738,6 +846,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(6, 7).bools$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -758,6 +869,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(8, 9).boolMap$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -798,6 +912,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
 
         _ <- Ns.int(1).date.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -811,6 +928,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(2).dates.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -826,6 +946,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(3).dateMap.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -841,6 +964,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(4, 5).date$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -859,6 +985,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(6, 7).dates$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -879,6 +1008,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(8, 9).dateMap$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -919,6 +1051,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
 
         _ <- Ns.int(1).uuid.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -932,6 +1067,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(2).uuids.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -947,6 +1085,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(3).uuidMap.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -962,6 +1103,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(4, 5).uuid$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -980,6 +1124,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(6, 7).uuids$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -1000,6 +1147,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(8, 9).uuidMap$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -1040,6 +1190,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
 
         _ <- Ns.int(1).uri.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -1053,6 +1206,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(2).uris.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -1068,6 +1224,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(3).uriMap.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -1083,6 +1242,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(4, 5).uri$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -1101,6 +1263,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(6, 7).uris$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -1121,6 +1286,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(8, 9).uriMap$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {
@@ -1161,6 +1329,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
 
         _ <- Ns.int(1).bigInt.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1174,6 +1345,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(2).bigInts.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1189,6 +1363,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(3).bigIntMap.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1204,6 +1381,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(4, 5).bigInt$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1222,6 +1402,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(6, 7).bigInts$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1242,6 +1425,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(8, 9).bigIntMap$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1282,6 +1468,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
 
         _ <- Ns.int(1).bigDec.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1295,6 +1484,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(2).bigDecs.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1310,6 +1502,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(3).bigDecMap.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1325,6 +1520,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(4, 5).bigDec$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1343,6 +1541,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(6, 7).bigDecs$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -1363,6 +1564,9 @@ object OptNestedAttrsLevel0 extends AsyncTestSuite {
         )
         _ <- Ns.int(8, 9).bigDecMap$.Refs1.*?(Ref1.int1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {

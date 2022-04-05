@@ -379,20 +379,6 @@ case class Conn_Js(
     val p            = q2s.p
     val rules        = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString "\n ") + "]")
     val (l, ll, lll) = marshallInputs(query)
-
-    //    //    println("================================================================================")
-    ////    //    println(query)
-    ////    //    println(datalog)
-    //    if (rules.nonEmpty) {
-    //      println("Rules:")
-    //      rules foreach println
-    //    }
-
-    //    println("--------------------------")
-    //    println("l  : " + l)
-    //    println("ll : " + ll)
-    //    println("lll: " + lll)
-
     rpc.query2packed(
       connProxy, datalog, rules, l, ll, lll, limit, offset,
       obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates

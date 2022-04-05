@@ -52,6 +52,9 @@ object NestedMultipleLevels extends AsyncTestSuite {
 
         _ <- Ns.str.a1.Refs1.*?(Ref1.int1.Refs2.*?(Ref2.int2)).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ns": [
              |      {

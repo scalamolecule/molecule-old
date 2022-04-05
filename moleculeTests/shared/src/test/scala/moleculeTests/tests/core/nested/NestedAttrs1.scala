@@ -88,6 +88,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.str$).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -113,6 +116,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.str$).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -134,6 +140,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.str).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -155,6 +164,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.str).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -173,6 +185,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.str_).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -193,6 +208,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.str_).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -242,6 +260,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.enumm$).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -267,6 +288,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.enumm$).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -288,6 +312,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.enumm).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -309,6 +336,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.enumm).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -327,6 +357,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.enumm_).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -347,6 +380,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.enumm_).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -397,6 +433,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.str.int$).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -422,6 +461,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.str.int$).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -443,6 +485,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.str.int).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -464,6 +509,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.str.int).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -482,6 +530,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.str.int_).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -502,6 +553,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.str.int_).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -552,6 +606,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.long$).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -577,6 +634,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.long$).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -598,6 +658,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.long).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -619,6 +682,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.long).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -637,6 +703,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.long_).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -657,6 +726,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.long_).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -707,6 +779,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.ref1$).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -732,6 +807,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.ref1$).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -753,6 +831,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.ref1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -774,6 +855,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.ref1).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -792,6 +876,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.ref1_).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -812,6 +899,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.ref1_).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -862,6 +952,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.double$).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -887,6 +980,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.double$).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -908,6 +1004,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.double).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -929,6 +1028,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.double).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -947,6 +1049,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.double_).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -967,6 +1072,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.double_).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1017,6 +1125,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.bool$).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1042,6 +1153,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.bool$).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1063,6 +1177,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.bool).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1084,6 +1201,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.bool).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1102,6 +1222,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.bool_).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1122,6 +1245,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.bool_).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1172,6 +1298,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.date$).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1197,6 +1326,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.date$).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1218,6 +1350,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.date).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1239,6 +1374,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.date).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1257,6 +1395,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.date_).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1277,6 +1418,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.date_).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1327,6 +1471,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.uuid$).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ref1": [
              |      {
@@ -1352,6 +1499,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.uuid$).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ref1": [
              |      {
@@ -1373,6 +1523,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.uuid).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ref1": [
              |      {
@@ -1394,6 +1547,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.uuid).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ref1": [
              |      {
@@ -1412,6 +1568,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.uuid_).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 2,
+             |  "limit"     : 2,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ref1": [
              |      {
@@ -1432,6 +1591,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.uuid_).getJson.map(_ ==>
           s"""{
+             |  "totalCount": 1,
+             |  "limit"     : 1,
+             |  "offset"    : 0,
              |  "data": {
              |    "Ref1": [
              |      {
@@ -1482,6 +1644,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.uri$).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1507,6 +1672,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.uri$).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1528,6 +1696,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.uri).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1549,6 +1720,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.uri).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1567,6 +1741,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.uri_).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1587,6 +1764,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.uri_).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1637,6 +1817,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.bigInt$).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1662,6 +1845,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.bigInt$).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1683,6 +1869,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.bigInt).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1704,6 +1893,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.bigInt).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1722,6 +1914,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.bigInt_).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1742,6 +1937,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.bigInt_).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1792,6 +1990,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.bigDec$).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1817,6 +2018,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.bigDec$).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1838,6 +2042,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.bigDec).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1859,6 +2066,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.bigDec).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1877,6 +2087,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss *? Ns.int.bigDec_).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {
@@ -1897,6 +2110,9 @@ object NestedAttrs1 extends AsyncTestSuite {
 
         _ <- m(Ref1.str1.Nss * Ns.int.bigDec_).getJson.map(_ ==>
           """{
+            |  "totalCount": 1,
+            |  "limit"     : 1,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ref1": [
             |      {

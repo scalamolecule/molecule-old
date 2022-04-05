@@ -271,6 +271,9 @@ object SortNested extends AsyncTestSuite {
 
         _ <- Ns.str.a1.Refs1.*(Ref1.int1.a1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -302,6 +305,9 @@ object SortNested extends AsyncTestSuite {
 
         _ <- Ns.str.a1.Refs1.*(Ref1.int1.d1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -333,6 +339,9 @@ object SortNested extends AsyncTestSuite {
 
         _ <- Ns.str.d1.Refs1.*(Ref1.int1.a1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -364,6 +373,9 @@ object SortNested extends AsyncTestSuite {
 
         _ <- Ns.str.d1.Refs1.*(Ref1.int1.d1).getJson.map(_ ==>
           """{
+            |  "totalCount": 2,
+            |  "limit"     : 2,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {
@@ -574,6 +586,9 @@ object SortNested extends AsyncTestSuite {
         // d1 *? d2/d1
         _ <- Ns.int.str$.d1.Refs1.*?(Ref1.int1.d2.str1$.d1).getJson.map(_ ==>
           """{
+            |  "totalCount": 4,
+            |  "limit"     : 4,
+            |  "offset"    : 0,
             |  "data": {
             |    "Ns": [
             |      {

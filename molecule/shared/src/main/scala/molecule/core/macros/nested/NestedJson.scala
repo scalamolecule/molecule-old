@@ -155,11 +155,6 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
     limit: Int,
     offset: Int
   ): (Int, jCollection[jList[AnyRef]]) = {
-    //    allSortedRows.forEach(row => println(row))
-    //    println("----------")
-    //    println("limit   : " + limit)
-    //    println("offset  : " + offset)
-
     var topRowIndex   = -1
     var curId : jLong = 0
     var prevId: jLong = 0
@@ -170,12 +165,8 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
         if (curId != prevId) {
           topRowIndex += 1
         }
-        //        println(s"$i  $topRowIndex   $curId  $prevId")
         prevId = curId
       }
-
-      //      println("----------")
-      //      allSortedRows.forEach(row => println(row))
       allSortedRows
 
     } else {
@@ -183,7 +174,6 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
       val rowArray           = new util.ArrayList[jList[AnyRef]](allSortedRows)
       val selectedSortedRows = new util.ArrayList[jList[AnyRef]]()
       var flatRowIndex       = 0
-      //      val last               = offset + limit
       val last               = if (limit == -1) Int.MaxValue else offset + limit
       var row: jList[AnyRef] = null
       while (flatRowIndex != flatTotalCount) {
@@ -195,13 +185,9 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
         if (topRowIndex >= offset && topRowIndex < last) {
           selectedSortedRows.add(row)
         }
-        //                println(s"$flatRowIndex  $topRowIndex   $curId  $prevId  $row")
         prevId = curId
         flatRowIndex += 1
       }
-
-      //          println("----------")
-      //      selectedSortedRows.forEach(row => println(row))
       selectedSortedRows
     }
     (topRowIndex + 1, sortedRows)

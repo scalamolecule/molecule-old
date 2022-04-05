@@ -85,10 +85,6 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj
     if (limit == -1) {
       return (allCount, allSortedRows)
     }
-
-    //    allSortedRows.forEach(row => println(row))
-    //    println("----------")
-
     var topRowIndex   = -1
     var curId : jLong = 0
     var prevId: jLong = 0
@@ -98,13 +94,6 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj
       var acc                = List.empty[jList[AnyRef]]
       var flatRowIndex       = allCount - 1 // Start from back
       val last               = offset + limit
-      //      val last               = if(limit == -1) allCount else offset + limit
-
-      //      println("allCount: " + allCount)
-      //      println("limit   : " + limit)
-      //      println("offset  : " + offset)
-      //      println("last    : " + last)
-
       var row: jList[AnyRef] = null
       while (flatRowIndex != -1) {
         row = rowArray.get(flatRowIndex)
@@ -112,8 +101,6 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj
         if (curId != prevId) {
           topRowIndex += 1
         }
-        //        println(s"$flatRowIndex  $topRowIndex   $curId  $prevId  $row")
-
         if (topRowIndex >= offset && topRowIndex < last) {
           // prepend rows from backwards
           acc = row :: acc
@@ -121,9 +108,6 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj
         prevId = curId
         flatRowIndex -= 1
       }
-
-      //      acc.foreach(println)
-
       // Make java list with selected reversed rows
       acc.foreach(row => selectedSortedRows.add(row))
       selectedSortedRows
