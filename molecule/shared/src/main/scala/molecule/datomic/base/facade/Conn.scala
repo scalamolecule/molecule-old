@@ -408,7 +408,7 @@ trait Conn extends Conversions with BooPicklers {
     tacitIndexes: List[List[Int]],
     sortCoordinates: List[List[SortCoordinate]],
     unpacker: Iterator[String] => T
-  )(implicit ec: ExecutionContext): Future[(Int, List[T])] = Future.failed(jsOnly("jsQuery"))
+  )(implicit ec: ExecutionContext): Future[(List[T], Int)] = Future.failed(jsOnly("jsQuery"))
 
   private[molecule] def jsQueryJson(
     model: Model,
@@ -422,20 +422,20 @@ trait Conn extends Conversions with BooPicklers {
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
     sortCoordinates: List[List[SortCoordinate]]
-  )(implicit ec: ExecutionContext): Future[(Int, String)] = Future.failed(jsOnly("jsQueryJson"))
+  )(implicit ec: ExecutionContext): Future[(String, Int)] = Future.failed(jsOnly("jsQueryJson"))
 
   private[molecule] def jsSchemaHistoryQuery[T](
     model: Model,
     obj: Obj,
     sortCoordinates: List[List[SortCoordinate]],
     unpacker: Iterator[String] => T
-  )(implicit ec: ExecutionContext): Future[(Int, List[T])] = Future.failed(jsOnly("jsSchemaHistoryQuery"))
+  )(implicit ec: ExecutionContext): Future[(List[T], Int)] = Future.failed(jsOnly("jsSchemaHistoryQuery"))
 
   private[molecule] def jsSchemaHistoryQueryJson(
     model: Model,
     obj: Obj,
     sortCoordinates: List[List[SortCoordinate]]
-  )(implicit ec: ExecutionContext): Future[(Int, String)] = Future.failed(jsOnly("jsSchemaHistoryQuery"))
+  )(implicit ec: ExecutionContext): Future[(String, Int)] = Future.failed(jsOnly("jsSchemaHistoryQuery"))
 
 
   private[molecule] def entity(id: Any)(implicit ec: ExecutionContext): Future[DatomicEntity]

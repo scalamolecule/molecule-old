@@ -177,7 +177,7 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
       conn.jsQuery(
         _model, _query, _datalog, -1, 0,
         obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2tpl
-      ).map { case (totalCount, listOfTuples) =>
+      ).map { case (listOfTuples, totalCount) =>
         listOfTuples.map {
           case tpl: Product => Collections.list(tpl.productIterator.asJavaEnumeration)
           case v            =>

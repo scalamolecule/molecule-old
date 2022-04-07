@@ -1,6 +1,7 @@
 package molecule.core.api
 
 import java.util.{Date, Collection => jCollection, List => jList}
+import molecule.core.ast.elements.Generic
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
@@ -40,7 +41,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
         if (conn.isJsPlatform) {
           conn.jsQuery(_model, _query, _datalog, -1, 0,
             obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2obj
-          ).map(_._2)
+          ).map(_._1)
         } else {
           conn.jvmQuery(_model, _query).map { rows =>
             val totalCount = rows.size
@@ -74,7 +75,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
           if (conn.isJsPlatform) {
             conn.jsQuery(_model, _query, _datalog, limit, 0,
               obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2obj
-            ).map(_._2)
+            ).map(_._1)
           } else {
             conn.jvmQuery(_model, _query).map { rows =>
               val totalCount = rows.size
@@ -101,7 +102,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
    * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
    */
-  def getObjs(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Obj])] = {
+  def getObjs(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Obj], Int)] = {
     if (limit < 1) {
       Future.failed(MoleculeException("Limit has to be a positive number. Found " + limit))
     } else if (offset < 0) {
@@ -116,7 +117,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
           } else {
             conn.jvmQuery(_model, _query).map { rows =>
               val totalCount = rows.size
-              (totalCount, rows2objs(totalCount, rows, totalCount.min(offset + limit), offset))
+              (rows2objs(totalCount, rows, totalCount.min(offset + limit), offset), totalCount)
             }
           }
         }
@@ -148,6 +149,8 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   private def rows2objs(totalCount: Int, rows: jCollection[jList[AnyRef]], maxRows: Int, offset: Int): List[Obj] = {
     if (totalCount == 0 || offset >= totalCount) {
       return List.empty[Obj]
+    } else if (totalCount == 1) {
+      return List(row2obj(rows.iterator.next))
     }
     val objs = List.newBuilder[Obj]
     var i    = offset
@@ -275,7 +278,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   def getObjsAsOf(t: Long, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
     getObjs(limit)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
-  def getObjsAsOf(t: Long, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Obj])] =
+  def getObjsAsOf(t: Long, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Obj], Int)] =
     getObjs(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
 
@@ -376,7 +379,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   def getObjsAsOf(tx: TxReport, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
     getObjs(limit)(conn.map(_.usingAdhocDbView(AsOf(TxLong(tx.t)))), ec)
 
-  def getObjsAsOf(tx: TxReport, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Obj])] =
+  def getObjsAsOf(tx: TxReport, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Obj], Int)] =
     getObjs(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxLong(tx.t)))), ec)
 
 
@@ -478,7 +481,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   def getObjsAsOf(date: Date, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
     getObjs(limit)(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
 
-  def getObjsAsOf(date: Date, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Obj])] =
+  def getObjsAsOf(date: Date, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Obj], Int)] =
     getObjs(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
 
 
@@ -564,7 +567,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   def getObjsSince(t: Long, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
     getObjs(limit)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
-  def getObjsSince(t: Long, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Obj])] =
+  def getObjsSince(t: Long, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Obj], Int)] =
     getObjs(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
 
@@ -652,7 +655,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   def getObjsSince(tx: TxReport, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
     getObjs(limit)(conn.map(_.usingAdhocDbView(Since(TxLong(tx.t)))), ec)
 
-  def getObjsSince(tx: TxReport, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Obj])] =
+  def getObjsSince(tx: TxReport, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Obj], Int)] =
     getObjs(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxLong(tx.t)))), ec)
 
 
@@ -730,7 +733,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   def getObjsSince(date: Date, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
     getObjs(limit)(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
 
-  def getObjsSince(date: Date, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Obj])] =
+  def getObjsSince(date: Date, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Obj], Int)] =
     getObjs(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
 
 
@@ -848,7 +851,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   }
 
   def getObjsWith(limit: Int, offset: Int, txMolecules: Future[Seq[Statement]]*)
-                 (implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Obj])] = {
+                 (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Obj], Int)] = {
     Future.sequence(txMolecules).flatMap { stmtss =>
       val connWith = conn.map { conn =>
         val (stmtsEdn, uriAttrs) = Stmts2Edn(stmtss.flatten, conn)
@@ -905,10 +908,26 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
    */
-  def getObjsHistory(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] =
-    getObjs(conn.map(_.usingAdhocDbView(History)), ec)
+  def getObjsHistory(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] = {
+    _model.elements.head match {
+      case Generic("Schema", _, _, _, _) =>
+        futConn.flatMap { conn =>
+          if (conn.isJsPlatform) {
+            conn.jsSchemaHistoryQuery(_model, obj, sortCoordinates, packed2obj).map(_._1)
+          } else {
+            conn.jvmSchemaHistoryQuery(_model).map { rows =>
+              val totalCount = rows.size
+              rows2objs(totalCount, rows, totalCount, 0)
+            }
+          }
+        }
 
+      case _ => getObjs(futConn.map(_.usingAdhocDbView(History)), ec)
+    }
+  }
 
-  // `getHistory(n: Int)` is not implemented since the whole data set normally needs to be sorted
-  // to give chronological meaningful information.
+  // `getObjsHistory(limit: Int)`
+  // `getObjsHistory(limit: Int, offset: Int)`
+  // `getObjsHistory(limit: Int, cursor: String)`
+  // are not implemented since the whole data set is normally only relevant for the whole history of a single attribute.
 }

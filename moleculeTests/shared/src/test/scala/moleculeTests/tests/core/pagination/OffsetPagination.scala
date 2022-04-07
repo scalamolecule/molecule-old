@@ -19,17 +19,17 @@ object OffsetPagination extends AsyncTestSuite {
         _ <- Ns.int.a1.get.map(_ ==> List(1, 2, 3))
         _ <- Ns.int.a1.get(2).map(_ ==> List(1, 2))
 
-        _ <- Ns.int.a1.get(2, 0).map(_ ==> (3, List(1, 2)))
-        _ <- Ns.int.a1.get(2, 2).map(_ ==> (3, List(3)))
+        _ <- Ns.int.a1.get(2, 0).map(_ ==> (List(1, 2), 3))
+        _ <- Ns.int.a1.get(2, 2).map(_ ==> (List(3), 3))
 
-        _ <- Ns.int.d1.get(2, 0).map(_ ==> (3, List(3, 2)))
-        _ <- Ns.int.d1.get(2, 2).map(_ ==> (3, List(1)))
+        _ <- Ns.int.d1.get(2, 0).map(_ ==> (List(3, 2), 3))
+        _ <- Ns.int.d1.get(2, 2).map(_ ==> (List(1), 3))
 
         // offset beyond totalCount. Row count still returned
-        _ <- Ns.int.get(2, 4).map(_ ==> (3, Nil))
+        _ <- Ns.int.get(2, 4).map(_ ==> (Nil, 3))
 
         // Empty result set
-        _ <- Ns.str.get(2, 4).map(_ ==> (0, Nil))
+        _ <- Ns.str.get(2, 4).map(_ ==> (Nil, 0))
 
 
         _ <- Ns.int.a1.getObjs.collect { case List(o1, o2, o3) =>
@@ -42,27 +42,27 @@ object OffsetPagination extends AsyncTestSuite {
           o2.int ==> 2
         }
 
-        _ <- Ns.int.a1.getObjs(2, 0).collect { case (totalCount, List(o1, o2)) =>
+        _ <- Ns.int.a1.getObjs(2, 0).collect { case (List(o1, o2), totalCount) =>
           totalCount ==> 3
           o1.int ==> 1
           o2.int ==> 2
         }
-        _ <- Ns.int.a1.getObjs(2, 2).collect { case (totalCount, List(o1)) =>
+        _ <- Ns.int.a1.getObjs(2, 2).collect { case (List(o1), totalCount) =>
           totalCount ==> 3
           o1.int ==> 3
         }
 
-        _ <- Ns.int.d1.getObjs(2, 0).collect { case (totalCount, List(o1, o2)) =>
+        _ <- Ns.int.d1.getObjs(2, 0).collect { case (List(o1, o2), totalCount) =>
           totalCount ==> 3
           o1.int ==> 3
           o2.int ==> 2
         }
-        _ <- Ns.int.d1.getObjs(2, 2).collect { case (totalCount, List(o1)) =>
+        _ <- Ns.int.d1.getObjs(2, 2).collect { case (List(o1), totalCount) =>
           totalCount ==> 3
           o1.int ==> 1
         }
-        _ <- Ns.int.getObjs(2, 4).map(_ ==> (3, Nil))
-        _ <- Ns.str.getObjs(2, 4).map(_ ==> (0, Nil))
+        _ <- Ns.int.getObjs(2, 4).map(_ ==> (Nil, 3))
+        _ <- Ns.str.getObjs(2, 4).map(_ ==> (Nil, 0))
 
 
         _ <- Ns.int.a1.getJson.map(_ ==>
@@ -205,15 +205,21 @@ object OffsetPagination extends AsyncTestSuite {
           (1, List(11, 12)),
           (2, List(21, 22)),
         ))
-        _ <- Ns.int.a1.Refs1.*(Ref1.int1).get(2, 0).map(_ ==> (3, List(
-          (1, List(11, 12)),
-          (2, List(21, 22)),
-        )))
-        _ <- Ns.int.a1.Refs1.*(Ref1.int1).get(2, 2).map(_ ==> (3, List(
-          (3, List(31, 32)),
-        )))
-        _ <- Ns.int.a1.Refs1.*(Ref1.int1).get(2, 4).map(_ ==> (3, Nil))
-        _ <- Ns.str.a1.Refs1.*(Ref1.int1).get(2, 4).map(_ ==> (0, Nil))
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).get(2, 0).map(_ ==> (
+          List(
+            (1, List(11, 12)),
+            (2, List(21, 22)),
+          ),
+          3
+        ))
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).get(2, 2).map(_ ==> (
+          List(
+            (3, List(31, 32)),
+          ),
+          3
+        ))
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).get(2, 4).map(_ ==> (Nil, 3))
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1).get(2, 4).map(_ ==> (Nil, 0))
 
 
         // Opt nested
@@ -230,16 +236,22 @@ object OffsetPagination extends AsyncTestSuite {
           (2, List(21, 22)),
         ))
 
-        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).get(2, 0).map(_ ==> (4, List(
-          (1, List(11, 12)),
-          (2, List(21, 22)),
-        )))
-        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).get(2, 2).map(_ ==> (4, List(
-          (3, List(31, 32)),
-          (4, Nil),
-        )))
-        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).get(2, 4).map(_ ==> (4, Nil))
-        _ <- Ns.str.a1.Refs1.*?(Ref1.int1).get(2, 4).map(_ ==> (0, Nil))
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).get(2, 0).map(_ ==> (
+          List(
+            (1, List(11, 12)),
+            (2, List(21, 22)),
+          ),
+          4
+        ))
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).get(2, 2).map(_ ==> (
+          List(
+            (3, List(31, 32)),
+            (4, Nil),
+          ),
+          4
+        ))
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).get(2, 4).map(_ ==> (Nil, 4))
+        _ <- Ns.str.a1.Refs1.*?(Ref1.int1).get(2, 4).map(_ ==> (Nil, 0))
 
 
         _ <- Ns.int.a1.Refs1.*(Ref1.int1).getObjs.collect { case List(o1, o2, o3) =>
@@ -263,7 +275,7 @@ object OffsetPagination extends AsyncTestSuite {
           o2.Refs1.last.int1 ==> 22
         }
 
-        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getObjs(2, 0).collect { case (totalCount, List(o1, o2)) =>
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getObjs(2, 0).collect { case (List(o1, o2), totalCount) =>
           totalCount ==> 3
           o1.int ==> 1
           o1.Refs1.head.int1 ==> 11
@@ -272,17 +284,17 @@ object OffsetPagination extends AsyncTestSuite {
           o2.Refs1.head.int1 ==> 21
           o2.Refs1.last.int1 ==> 22
         }
-        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getObjs(2, 2).collect { case (totalCount, List(o1)) =>
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getObjs(2, 2).collect { case (List(o1), totalCount) =>
           totalCount ==> 3
           o1.int ==> 3
           o1.Refs1.head.int1 ==> 31
           o1.Refs1.last.int1 ==> 32
         }
-        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getObjs(2, 4).collect { case (totalCount, data) =>
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getObjs(2, 4).collect { case (data, totalCount) =>
           totalCount ==> 3
           data ==> Nil
         }
-        _ <- Ns.str.a1.Refs1.*(Ref1.int1).getObjs(2, 4).collect { case (totalCount, data) =>
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1).getObjs(2, 4).collect { case (data, totalCount) =>
           totalCount ==> 0
           data ==> Nil
         }
@@ -312,7 +324,7 @@ object OffsetPagination extends AsyncTestSuite {
           o2.Refs1.last.int1 ==> 22
         }
 
-        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getObjs(2, 0).collect { case (totalCount, List(o1, o2)) =>
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getObjs(2, 0).collect { case (List(o1, o2), totalCount) =>
           totalCount ==> 4
           o1.int ==> 1
           o1.Refs1.head.int1 ==> 11
@@ -321,7 +333,7 @@ object OffsetPagination extends AsyncTestSuite {
           o2.Refs1.head.int1 ==> 21
           o2.Refs1.last.int1 ==> 22
         }
-        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getObjs(2, 2).collect { case (totalCount, List(o1, o2)) =>
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getObjs(2, 2).collect { case (List(o1, o2), totalCount) =>
           totalCount ==> 4
           o1.int ==> 3
           o1.Refs1.head.int1 ==> 31
@@ -329,11 +341,11 @@ object OffsetPagination extends AsyncTestSuite {
           o2.int ==> 4
           o2.Refs1 ==> Nil
         }
-        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getObjs(2, 4).collect { case (totalCount, data) =>
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getObjs(2, 4).collect { case (data, totalCount) =>
           totalCount ==> 4
           data ==> Nil
         }
-        _ <- Ns.str.a1.Refs1.*?(Ref1.int1).getObjs(2, 4).collect { case (totalCount, data) =>
+        _ <- Ns.str.a1.Refs1.*?(Ref1.int1).getObjs(2, 4).collect { case (data, totalCount) =>
           totalCount ==> 0
           data ==> Nil
         }
@@ -662,7 +674,7 @@ object OffsetPagination extends AsyncTestSuite {
         _ <- Ns.str.insert("a", "a", "b", "c")
 
         // Empty result set returned for offset exceeding total count
-        _ <- Ns.str.str.apply(count).get.map(_ ==> List(("a", 2), ("b", 1), ("c", 1)))
+        _ <- Ns.str.str(count).get.map(_ ==> List(("a", 2), ("b", 1), ("c", 1)))
       } yield ()
     }
 
@@ -690,13 +702,13 @@ object OffsetPagination extends AsyncTestSuite {
       for {
         _ <- Ns.int.insert(1, 3, 5)
 
-        _ <- Ns.int.a1.get(2, 0).map(_._2 ==> List(1, 3))
+        _ <- Ns.int.a1.get(2, 0).map(_._1 ==> List(1, 3))
 
         // Data added before next page is fetched
         _ <- Ns.int(2).save
 
         // 3 is shown again!
-        _ <- Ns.int.a1.get(2, 2).map(_._2 ==> List(3, 5))
+        _ <- Ns.int.a1.get(2, 2).map(_._1 ==> List(3, 5))
       } yield ()
     }
 
@@ -705,13 +717,13 @@ object OffsetPagination extends AsyncTestSuite {
 
         eids <- Ns.int.insert(1, 2, 3, 4).map(_.eids)
 
-        _ <- Ns.int.a1.get(2, 0).map(_._2 ==> List(1, 2))
+        _ <- Ns.int.a1.get(2, 0).map(_._1 ==> List(1, 2))
 
         // First row (1) retracted before next page is fetched
         _ <- eids.head.retract
 
         // 3 is never shown!
-        _ <- Ns.int.a1.get(2, 2).map(_._2 ==> List(4))
+        _ <- Ns.int.a1.get(2, 2).map(_._1 ==> List(4))
       } yield ()
     }
   }

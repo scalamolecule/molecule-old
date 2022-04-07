@@ -40,7 +40,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
           conn.jsQuery(
             _model, _query, _datalog, -1, 0,
             obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2tpl
-          ).map(_._2)
+          ).map(_._1)
         } else {
           conn.jvmQuery(_model, _query).map { rows =>
             val totalCount = rows.size
@@ -76,7 +76,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
             conn.jsQuery(
               _model, _query, _datalog, limit, 0,
               obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2tpl
-            ).map(_._2)
+            ).map(_._1)
           } else {
             conn.jvmQuery(_model, _query).map { rows =>
               val totalCount = rows.size
@@ -105,7 +105,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
    * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
    */
-  def get(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Tpl])] = {
+  def get(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] = {
     if (limit < 1) {
       Future.failed(MoleculeException("Limit has to be a positive number. Found: " + limit))
     } else if (offset < 0) {
@@ -121,7 +121,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
           } else {
             conn.jvmQuery(_model, _query).map { rows =>
               val totalCount = rows.size
-              (totalCount, rows2tuples(totalCount, rows, totalCount.min(offset + limit), offset))
+              (rows2tuples(totalCount, rows, totalCount.min(offset + limit), offset), totalCount)
             }
           }
         }
@@ -146,7 +146,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
    * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
    */
-  def get(limit: Int, cursor: String)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Tpl])] = {
+  def get(limit: Int, cursor: String)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], String, String)] = {
     _inputThrowable.fold(
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
@@ -154,14 +154,14 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
           //            _model, _query, _datalog, limit, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
           //          )
           // todo
-          Future((42, List.empty[Tpl]))
+          Future((List.empty[Tpl], "prevCursor...", "nextCursor..."))
         } else {
           conn.jvmQuery(_model, _query).map { jColl =>
             val totalCount = jColl.size
-            val maxRows    = if (totalCount < limit) totalCount else limit
+            val maxRows    = totalCount.min(limit)
             val tuples     = maxRows match {
               case 0 => List.empty[Tpl]
-              case 1 => List(row2tpl(jColl.iterator().next()))
+              case 1 => List(row2tpl(jColl.iterator.next))
               case _ =>
                 val it   = if (sortRows) {
                   val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
@@ -178,7 +178,10 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
                 }
                 list.result()
             }
-            (totalCount, tuples)
+            
+
+
+            (tuples, "prevCursor...", "nextCursor...")
           }
         }
       }
@@ -191,6 +194,8 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
   private def rows2tuples(totalCount: Int, rows: jCollection[jList[AnyRef]], maxRows: Int, offset: Int): List[Tpl] = {
     if (totalCount == 0 || offset >= totalCount) {
       return List.empty[Tpl]
+    } else if (totalCount == 1) {
+      return List(row2tpl(rows.iterator.next))
     }
     val tuples = List.newBuilder[Tpl]
     var i      = offset
@@ -316,7 +321,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
   def getAsOf(t: Long, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
     get(limit)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
-  def getAsOf(t: Long, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Tpl])] =
+  def getAsOf(t: Long, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
     get(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
 
@@ -417,7 +422,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
   def getAsOf(txR: TxReport, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
     get(limit)(conn.map(_.usingAdhocDbView(AsOf(TxLong(txR.t)))), ec)
 
-  def getAsOf(txR: TxReport, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Tpl])] =
+  def getAsOf(txR: TxReport, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
     get(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxLong(txR.t)))), ec)
 
 
@@ -516,7 +521,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
   def getAsOf(date: Date, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
     get(limit)(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
 
-  def getAsOf(date: Date, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Tpl])] =
+  def getAsOf(date: Date, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
     get(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
 
 
@@ -591,7 +596,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
   def getSince(t: Long, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
     get(limit)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
-  def getSince(t: Long, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Tpl])] =
+  def getSince(t: Long, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
     get(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
 
@@ -674,7 +679,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
   def getSince(txR: TxReport, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
     get(limit)(conn.map(_.usingAdhocDbView(Since(TxLong(txR.t)))), ec)
 
-  def getSince(txR: TxReport, limit: Int, offset: Int = 0)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Tpl])] =
+  def getSince(txR: TxReport, limit: Int, offset: Int = 0)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
     get(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxLong(txR.t)))), ec)
 
 
@@ -741,7 +746,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
   def getSince(date: Date, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
     get(limit)(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
 
-  def getSince(date: Date, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Tpl])] =
+  def getSince(date: Date, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
     get(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
 
 
@@ -839,7 +844,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
   }
 
   def getWith(limit: Int, offset: Int, txData: Future[Seq[Statement]]*)
-             (implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Tpl])] = {
+             (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] = {
     Future.sequence(txData).flatMap { stmtss =>
       val connWith = conn.map { conn =>
         val (stmtsEdn, uriAttrs) = Stmts2Edn(stmtss.flatten, conn)
@@ -899,7 +904,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
       case Generic("Schema", _, _, _, _) =>
         futConn.flatMap { conn =>
           if (conn.isJsPlatform) {
-            conn.jsSchemaHistoryQuery(_model, obj, sortCoordinates, packed2tpl).map(_._2)
+            conn.jsSchemaHistoryQuery(_model, obj, sortCoordinates, packed2tpl).map(_._1)
           } else {
             conn.jvmSchemaHistoryQuery(_model).map { rows =>
               val totalCount = rows.size
@@ -912,6 +917,8 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
     }
   }
 
-  // `getHistory(limit: Int, offset: Int = 0)` is not implemented since the whole data set normally needs to be sorted
-  // to give chronologically meaningful information.
+  // `getHistory(limit: Int)`
+  // `getHistory(limit: Int, offset: Int)`
+  // `getHistory(limit: Int, cursor: String)`
+  // are not implemented since the whole data set is normally only relevant for the whole history of a single attribute.
 }

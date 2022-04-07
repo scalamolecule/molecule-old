@@ -75,13 +75,13 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
     obj: Obj,
     schemaAttrs: Seq[SchemaAttr],
     sortCoordinates: List[List[SortCoordinate]]
-  ): Future[(Int, String)] = {
+  ): Future[(String, Int)] = {
     for {
       conn <- getConn(connProxy)
       rawRows <- QuerySchemaHistory(conn).fetchSchemaHistory(schemaAttrs, datalogQuery)
     } yield {
       val rows = if (sortCoordinates.nonEmpty) SortRows(rawRows, sortCoordinates).get else rawRows
-      (rawRows.size, Flat2packed(obj, rows, -1, 0).getPacked)
+      (Flat2packed(obj, rows, -1, 0).getPacked, rawRows.size)
     }
   }
 
@@ -100,7 +100,7 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
     sortCoordinates: List[List[SortCoordinate]]
-  ): Future[(Int, String)] = Future {
+  ): Future[(String, Int)] = Future {
     try {
       val log = new log
       val t   = TimerPrint("DatomicRpc")
@@ -124,28 +124,28 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
         rawRows.forEach(row => log(row.toString))
         log.print()
 
-        val (totalCount, packed) = if (flatTotalCount == 0) {
-          (0, "")
+        val (packed, totalCount) = if (flatTotalCount == 0) {
+          ("", 0)
         } else if (isOptNested) {
           // Optional nested
           if (offset > flatTotalCount) {
-            (flatTotalCount, "")
+            ("", flatTotalCount)
           } else {
             val sortedRows = if (sortCoordinates.nonEmpty && sortCoordinates.head.nonEmpty)
               SortRows(rawRows, sortCoordinates).get else rawRows
             (
-              flatTotalCount,
-              OptNested2packed(obj, sortedRows, limit, offset, refIndexes, tacitIndexes, sortCoordinates).getPacked
+              OptNested2packed(obj, sortedRows, limit, offset, refIndexes, tacitIndexes, sortCoordinates).getPacked,
+              flatTotalCount
             )
           }
 
         } else if (nestedLevels == 0) {
           // Flat
           if (offset > flatTotalCount) {
-            (flatTotalCount, "")
+            ("", flatTotalCount)
           } else {
             val sortedRows = if (sortCoordinates.flatten.nonEmpty) SortRows(rawRows, sortCoordinates).get else rawRows
-            (flatTotalCount, Flat2packed(obj, sortedRows, limit, offset).getPacked)
+            (Flat2packed(obj, sortedRows, limit, offset).getPacked, flatTotalCount)
           }
 
         } else {
@@ -155,7 +155,7 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
         }
 
         //        println(s"-------------------------------" + packed)
-        (totalCount, packed)
+        (packed, totalCount)
       }
     } catch {
       case NonFatal(exc) => Future.failed(exc)
@@ -170,7 +170,7 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
     indexArgs: IndexArgs,
     attrs: Seq[String],
     sortCoordinates: List[List[SortCoordinate]]
-  ): Future[(Int, String)] = {
+  ): Future[(String, Int)] = {
     var totalCount = 0
     for {
       conn <- getConn(connProxy)
@@ -337,7 +337,7 @@ case class DatomicRpc()(implicit ec: ExecutionContext) extends MoleculeRpc
       //      val s = sb.toString
       //      println("--------------- packed ----------------" + s)
       //      s
-      (totalCount, sb.toString)
+      (sb.toString, totalCount)
     }
   }
 

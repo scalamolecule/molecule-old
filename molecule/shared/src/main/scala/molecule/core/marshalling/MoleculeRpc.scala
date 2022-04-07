@@ -36,7 +36,7 @@ trait MoleculeRpc {
     refIndexes: List[List[Int]],
     tacitIndexes: List[List[Int]],
     sortCoordinates: List[List[SortCoordinate]]
-  ): Future[(Int, String)]
+  ): Future[(String, Int)]
 
   def schemaHistoryQuery2packed(
     connProxy: ConnProxy,
@@ -44,7 +44,7 @@ trait MoleculeRpc {
     obj: Obj,
     schemaAttrs: Seq[SchemaAttr],
     sortCoordinates: List[List[SortCoordinate]]
-  ): Future[(Int, String)]
+  ): Future[(String, Int)]
 
   def index2packed(
     connProxy: ConnProxy,
@@ -53,7 +53,7 @@ trait MoleculeRpc {
     indexArgs: IndexArgs,
     attrs: Seq[String],
     sortCoordinates: List[List[SortCoordinate]]
-  ): Future[(Int, String)]
+  ): Future[(String, Int)]
 
 
   // Schema ...............................

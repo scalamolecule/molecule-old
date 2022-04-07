@@ -1,7 +1,7 @@
 package molecule.core.api
 
-import java.util.{Date, List => jList, Collection => jCollection}
-import molecule.core.ast.elements.Composite
+import java.util.{Date, Collection => jCollection, List => jList}
+import molecule.core.ast.elements.{Composite, Generic}
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
@@ -41,7 +41,7 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
         if (conn.isJsPlatform) {
           conn.jsQueryJson(
             _model, _query, _datalog, -1, 0, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
-          ).map { case (totalCount, packed) => packed2json(totalCount, totalCount, 0, packed) }
+          ).map { case (packed, totalCount) => packed2json(totalCount, totalCount, 0, packed) }
         } else {
           conn.jvmQuery(_model, _query).map { rows =>
             val totalCount = rows.size
@@ -76,7 +76,7 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
           if (conn.isJsPlatform) {
             conn.jsQueryJson(
               _model, _query, _datalog, limit, 0, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
-            ).map { case (totalCount, packed) => packed2json(totalCount, limit, 0, packed) }
+            ).map { case (packed, totalCount) => packed2json(totalCount, limit, 0, packed) }
           } else {
             conn.jvmQuery(_model, _query).map { rows =>
               val totalCount = rows.size
@@ -114,7 +114,7 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
           if (conn.isJsPlatform) {
             conn.jsQueryJson(
               _model, _query, _datalog, limit, offset, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
-            ).map { case (totalCount, packed) => packed2json(totalCount, limit, offset, packed) }
+            ).map { case (packed, totalCount) => packed2json(totalCount, limit, offset, packed) }
           } else {
             conn.jvmQuery(_model, _query).map { rows =>
               val totalCount = rows.size
@@ -178,20 +178,19 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
   }
 
   private def packed2json(totalCount: Int, limit: Int, offset: Int, packed: String): String = {
-    val sb   = new StringBuffer()
-    var next = false
-    if (packed.isEmpty) {
-      outerJson(totalCount, limit, offset, "")
-    } else {
-      val lines = packed.linesIterator
-      lines.next() // skip first empty line
-      while (lines.hasNext) {
-        if (next) sb.append(",") else next = true
-        packed2json(lines, sb)
-      }
-      sb.append("\n    ")
-      outerJson(totalCount, limit, offset, sb.toString)
+    if (totalCount == 0 || offset >= totalCount) {
+      return outerJson(totalCount, limit, offset, "")
     }
+    val sb    = new StringBuffer()
+    var next  = false
+    val lines = packed.linesIterator
+    lines.next() // skip first empty line
+    while (lines.hasNext) {
+      if (next) sb.append(",") else next = true
+      packed2json(lines, sb)
+    }
+    sb.append("\n    ")
+    outerJson(totalCount, limit, offset, sb.toString)
   }
 
 
@@ -877,6 +876,70 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
 
   // get history ================================================================================================
 
-  // Only `getHistory` (returning a List) is implemented since it is only meaningful
-  // to track the history of one attribute at a time and a sortable List is therefore preferred.
+  /** Get `Future` with history of operations as `List` on an attribute in the db.
+   * <br><br>
+   * Generic datom attributes that can be called when `getHistory` is called:
+   * <br>
+   * <br> `e` - Entity id
+   * <br> `a` - Attribute name
+   * <br> `v` - Attribute value
+   * <br> `ns` - Namespace name
+   * <br> `tx` - [[molecule.datomic.base.facade.TxReport TxReport]]
+   * <br> `t` - Transaction time t
+   * <br> `txInstant` - Transaction time as java.util.Date
+   * <br> `op` - Operation: true (add) or false (retract)
+   * <br><br>
+   * Example:
+   * {{{
+   * for {
+   *   // Insert (t 1028)
+   *   List(ben, liz) <- Person.name.age insert List(
+   *     ("Ben", 42),
+   *     ("Liz", 37),
+   *   ) eids
+   *
+   *   // Update (t 1031)
+   *   _ <- Person(ben).age(43).update
+   *
+   *   // Retract (t 1032)
+   *   _ <- ben.retract
+   *
+   *   // History of Ben
+   *   _ <- Person(ben).age.t.op.getObjsHistory.map(_
+   *     .sortBy(o => (o.t, o.op))
+   *     .map(o => "" + o.age + " " + o.t + " " + o.op) ==> List(
+   *     "42 1028 true",  // Insert:  42 asserted
+   *     "42 1031 false", // Update:  42 retracted
+   *     "43 1031 true",  //          43 asserted
+   *     "43 1032 false"  // Retract: 43 retracted
+   *   ))
+   * } yield ()
+   * }}}
+   *
+   * @group getHistory
+   * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
+   * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
+   */
+  def getJsonHistory(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    _model.elements.head match {
+      case Generic("Schema", _, _, _, _) =>
+        futConn.flatMap { conn =>
+          if (conn.isJsPlatform) {
+            conn.jsSchemaHistoryQueryJson(_model, obj, sortCoordinates).map(_._1)
+          } else {
+            conn.jvmSchemaHistoryQuery(_model).map { rows =>
+              val totalCount = rows.size
+              rows2json(totalCount, rows, totalCount, totalCount, 0)
+            }
+          }
+        }
+
+      case _ => getJson(futConn.map(_.usingAdhocDbView(History)), ec)
+    }
+  }
+
+  // `getJsonHistory(limit: Int)`
+  // `getJsonHistory(limit: Int, offset: Int)`
+  // `getJsonHistory(limit: Int, cursor: String)`
+  // are not implemented since the whole data set is normally only relevant for the whole history of a single attribute.
 }

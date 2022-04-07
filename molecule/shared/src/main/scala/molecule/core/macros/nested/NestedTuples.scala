@@ -69,8 +69,8 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj
     get(limit).map(_.map(outerTpl2obj))
   }
 
-  final override def getObjs(limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(Int, List[Obj])] = {
-    get(limit, offset).map { case (totalCount, rows) => (totalCount, rows.map(outerTpl2obj)) }
+  final override def getObjs(limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Obj], Int)] = {
+    get(limit, offset).map { case (rows, totalCount) => (rows.map(outerTpl2obj), totalCount) }
   }
 
 
@@ -116,11 +116,11 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj
   }
 
   final override def get(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-    get(-1, 0).map(_._2)
+    get(-1, 0).map(_._1)
   }
 
   final override def get(limit: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-    get(limit, 0).map(_._2)
+    get(limit, 0).map(_._1)
   }
 }
 
@@ -130,7 +130,7 @@ object NestedTuples {
   trait NestedTuples1[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(limit: Int, offset: Int)
-                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(Int, List[OuterTpl])] = {
+                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[OuterTpl], Int)] = {
       for {
         conn <- futConn
         data <- conn.jvmQuery(_model, _query)
@@ -142,14 +142,14 @@ object NestedTuples {
         val (totalCount, selectedRows) = getCountAndSelectedRowsDesc(rows, limit, offset)
 
         if (flatCount == 0 || offset >= totalCount) {
-          (totalCount, List.empty[OuterTpl])
+          (List.empty[OuterTpl], totalCount)
 
         } else if (flatCount == 1) {
           row = rows.iterator.next
           (
-            1,
             List(tplBranch0(row,
-              List(tplLeaf1(row))))
+              List(tplLeaf1(row)))),
+            1
           )
 
         } else {
@@ -189,7 +189,7 @@ object NestedTuples {
             prevRow = row
             p0 = e0
           }
-          (totalCount, acc0)
+          (acc0, totalCount)
         }
       }
     }
@@ -199,7 +199,7 @@ object NestedTuples {
   trait NestedTuples2[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(limit: Int, offset: Int)
-                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(Int, List[OuterTpl])] = {
+                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[OuterTpl], Int)] = {
       for {
         conn <- futConn
         data <- conn.jvmQuery(_model, _query)
@@ -211,15 +211,15 @@ object NestedTuples {
         val (totalCount, selectedRows) = getCountAndSelectedRowsDesc(rows, limit, offset)
 
         if (flatCount == 0 || offset >= totalCount) {
-          (0, List.empty[OuterTpl])
+          (List.empty[OuterTpl], totalCount)
 
         } else if (flatCount == 1) {
           row = rows.iterator.next
           (
-            1,
             List(tplBranch0(row,
               List(tplBranch1(row,
-                List(tplLeaf2(row))))))
+                List(tplLeaf2(row)))))),
+            1
           )
 
         } else {
@@ -278,7 +278,7 @@ object NestedTuples {
             p0 = e0
             p1 = e1
           }
-          (totalCount, acc0)
+          (acc0, totalCount)
         }
       }
     }
@@ -287,7 +287,7 @@ object NestedTuples {
   trait NestedTuples3[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(limit: Int, offset: Int)
-                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(Int, List[OuterTpl])] = {
+                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[OuterTpl], Int)] = {
       for {
         conn <- futConn
         data <- conn.jvmQuery(_model, _query)
@@ -299,16 +299,16 @@ object NestedTuples {
         val (totalCount, selectedRows) = getCountAndSelectedRowsDesc(rows, limit, offset)
 
         if (flatCount == 0 || offset >= totalCount) {
-          (0, List.empty[OuterTpl])
+          (List.empty[OuterTpl], totalCount)
 
         } else if (flatCount == 1) {
           row = rows.iterator.next
           (
-            1,
             List(tplBranch0(row,
               List(tplBranch1(row,
                 List(tplBranch2(row,
-                  List(tplLeaf3(row))))))))
+                  List(tplLeaf3(row)))))))),
+            1
           )
 
         } else {
@@ -391,7 +391,7 @@ object NestedTuples {
             p1 = e1
             p2 = e2
           }
-          (totalCount, acc0)
+          (acc0, totalCount)
         }
       }
     }
@@ -401,7 +401,7 @@ object NestedTuples {
   trait NestedTuples4[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(limit: Int, offset: Int)
-                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(Int, List[OuterTpl])] = {
+                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[OuterTpl], Int)] = {
       for {
         conn <- futConn
         data <- conn.jvmQuery(_model, _query)
@@ -413,17 +413,17 @@ object NestedTuples {
         val (totalCount, selectedRows) = getCountAndSelectedRowsDesc(rows, limit, offset)
 
         if (flatCount == 0 || offset >= totalCount) {
-          (0, List.empty[OuterTpl])
+          (List.empty[OuterTpl], totalCount)
 
         } else if (flatCount == 1) {
           row = rows.iterator.next
           (
-            1,
             List(tplBranch0(row,
               List(tplBranch1(row,
                 List(tplBranch2(row,
                   List(tplBranch3(row,
-                    List(tplLeaf4(row))))))))))
+                    List(tplLeaf4(row)))))))))),
+            1
           )
 
         } else {
@@ -535,7 +535,7 @@ object NestedTuples {
             p2 = e2
             p3 = e3
           }
-          (totalCount, acc0)
+          (acc0, totalCount)
         }
       }
     }
@@ -545,7 +545,7 @@ object NestedTuples {
   trait NestedTuples5[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(limit: Int, offset: Int)
-                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(Int, List[OuterTpl])] = {
+                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[OuterTpl], Int)] = {
       for {
         conn <- futConn
         data <- conn.jvmQuery(_model, _query)
@@ -557,18 +557,18 @@ object NestedTuples {
         val (totalCount, selectedRows) = getCountAndSelectedRowsDesc(rows, limit, offset)
 
         if (flatCount == 0 || offset >= totalCount) {
-          (0, List.empty[OuterTpl])
+          (List.empty[OuterTpl], totalCount)
 
         } else if (flatCount == 1) {
           row = rows.iterator.next
           (
-            1,
             List(tplBranch0(row,
               List(tplBranch1(row,
                 List(tplBranch2(row,
                   List(tplBranch3(row,
                     List(tplBranch4(row,
-                      List(tplLeaf5(row))))))))))))
+                      List(tplLeaf5(row)))))))))))),
+            1
           )
 
         } else {
@@ -714,7 +714,7 @@ object NestedTuples {
             p3 = e3
             p4 = e4
           }
-          (totalCount, acc0)
+          (acc0, totalCount)
         }
       }
     }
@@ -724,7 +724,7 @@ object NestedTuples {
   trait NestedTuples6[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(limit: Int, offset: Int)
-                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(Int, List[OuterTpl])] = {
+                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[OuterTpl], Int)] = {
       for {
         conn <- futConn
         data <- conn.jvmQuery(_model, _query)
@@ -736,19 +736,19 @@ object NestedTuples {
         val (totalCount, selectedRows) = getCountAndSelectedRowsDesc(rows, limit, offset)
 
         if (flatCount == 0 || offset >= totalCount) {
-          (0, List.empty[OuterTpl])
+          (List.empty[OuterTpl], totalCount)
 
         } else if (flatCount == 1) {
           row = rows.iterator.next
           (
-            1,
             List(tplBranch0(row,
               List(tplBranch1(row,
                 List(tplBranch2(row,
                   List(tplBranch3(row,
                     List(tplBranch4(row,
                       List(tplBranch5(row,
-                        List(tplLeaf6(row))))))))))))))
+                        List(tplLeaf6(row)))))))))))))),
+            1
           )
 
         } else {
@@ -933,7 +933,7 @@ object NestedTuples {
             p4 = e4
             p5 = e5
           }
-          (totalCount, acc0)
+          (acc0, totalCount)
         }
       }
     }
@@ -943,7 +943,7 @@ object NestedTuples {
   trait NestedTuples7[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
     final override def get(limit: Int, offset: Int)
-                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(Int, List[OuterTpl])] = {
+                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[OuterTpl], Int)] = {
       for {
         conn <- futConn
         data <- conn.jvmQuery(_model, _query)
@@ -955,12 +955,11 @@ object NestedTuples {
         val (totalCount, selectedRows) = getCountAndSelectedRowsDesc(rows, limit, offset)
 
         if (flatCount == 0 || offset >= totalCount) {
-          (0, List.empty[OuterTpl])
+          (List.empty[OuterTpl], totalCount)
 
         } else if (flatCount == 1) {
           row = rows.iterator.next
           (
-            1,
             List(tplBranch0(row,
               List(tplBranch1(row,
                 List(tplBranch2(row,
@@ -968,7 +967,8 @@ object NestedTuples {
                     List(tplBranch4(row,
                       List(tplBranch5(row,
                         List(tplBranch6(row,
-                          List(tplLeaf7(row))))))))))))))))
+                          List(tplLeaf7(row)))))))))))))))),
+            1
           )
 
         } else {
@@ -1197,7 +1197,7 @@ object NestedTuples {
             p5 = e5
             p6 = e6
           }
-          (totalCount, acc0)
+          (acc0, totalCount)
         }
       }
     }

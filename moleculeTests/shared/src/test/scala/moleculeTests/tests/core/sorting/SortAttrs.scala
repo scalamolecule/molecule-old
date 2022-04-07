@@ -534,23 +534,62 @@ object SortAttrs extends AsyncTestSuite {
       for {
         _ <- Ns.int.insert(3, 1, 2)
 
-        _ <- Ns.int.a1.get.map(_ ==> List(1, 2, 3))
-        _ <- Ns.int.d1.get.map(_ ==> List(3, 2, 1))
+        _ <- Ns.int.a1.getJson.map(_ ==>
+          """{
+            |  "totalCount": 3,
+            |  "limit"     : 3,
+            |  "offset"    : 0,
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 1
+            |      },
+            |      {
+            |        "int": 2
+            |      },
+            |      {
+            |        "int": 3
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
+
+        _ <- Ns.int.d1.getJson.map(_ ==>
+          """{
+            |  "totalCount": 3,
+            |  "limit"     : 3,
+            |  "offset"    : 0,
+            |  "data": {
+            |    "Ns": [
+            |      {
+            |        "int": 3
+            |      },
+            |      {
+            |        "int": 2
+            |      },
+            |      {
+            |        "int": 1
+            |      }
+            |    ]
+            |  }
+            |}""".stripMargin)
       } yield ()
     }
 
 
     "Obj" - core { implicit conn =>
       for {
-        _ <- Ns.int.insert(1, 2)
+        _ <- Ns.int.insert(3, 1, 2)
 
-        _ <- Ns.int.a1.getObjs.collect { case List(o1, o2) =>
+        _ <- Ns.int.a1.getObjs.collect { case List(o1, o2, o3) =>
           o1.int ==> 1
           o2.int ==> 2
+          o3.int ==> 3
         }
-        _ <- Ns.int.d1.getObjs.collect { case List(o1, o2) =>
-          o1.int ==> 2
-          o2.int ==> 1
+        _ <- Ns.int.d1.getObjs.collect { case List(o1, o2, o3) =>
+          o1.int ==> 3
+          o2.int ==> 2
+          o3.int ==> 1
         }
       } yield ()
     }

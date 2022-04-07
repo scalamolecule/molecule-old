@@ -161,42 +161,42 @@ object Settings extends SettingsDatomic {
       "moleculeTests/dataModels/examples/gremlin/gettingStarted"
     ),
 
-//    // Temporarily limit number of tests to be compiled by sbt (comment out this whole sbt setting to test all)
-//    // Note that intellij doesn't recognize this setting - here you can right click on files and exclude
-//    unmanagedSources / excludeFilter := {
-//      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
-//      val allowed     = Seq(
-//        //        sharedTests + "/core/attr",
-//        //        sharedTests + "/core/attrMap",
-//        //        sharedTests + "/core/bidirectionals",
-//        //        sharedTests + "/core/crud",
-//        //        sharedTests + "/core/equality",
-//        //        sharedTests + "/core/expression",
-//        //        sharedTests + "/core/input1",
-//        //        sharedTests + "/core/input2",
-//        //        sharedTests + "/core/input3",
-//                sharedTests + "/core/json",
-//        //        sharedTests + "/core/nested",
-//        //        sharedTests + "/core/obj",
-//        sharedTests + "/core/pagination",
-//        //        sharedTests + "/core/ref",
-//        //        sharedTests + "/core/sorting",
-//        //        sharedTests + "/db/datomic/composite",
-//        //        sharedTests + "/db/datomic/entity",
-//        //        sharedTests + "/db/datomic/generic",
-//        //        sharedTests + "/db/datomic/partitions",
-//        //        sharedTests + "/db/datomic/time",
-//        //        sharedTests + "/db/datomic/txMetaData",
-//        //        sharedTests + "/examples/datomic/dayOfDatomic",
-//        //        sharedTests + "/examples/datomic/mbrainz",
-//        //        sharedTests + "/examples/datomic/seattle",
-//        //        sharedTests + "/examples/gremlin/gettingStarted",
-//        sharedTests + "/Adhoc.scala",
-//      )
-//      new SimpleFileFilter(f =>
-//        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
-//      )
-//    },
+    // Temporarily limit number of tests to be compiled by sbt (comment out this whole sbt setting to test all)
+    // Note that intellij doesn't recognize this setting - here you can right click on files and exclude
+    unmanagedSources / excludeFilter := {
+      val sharedTests = (baseDirectory.value / "../shared/src/test/scala/moleculeTests/tests").getCanonicalPath
+      val allowed     = Seq(
+        //        sharedTests + "/core/attr",
+        //        sharedTests + "/core/attrMap",
+        //        sharedTests + "/core/bidirectionals",
+        //        sharedTests + "/core/crud",
+        //        sharedTests + "/core/equality",
+        //        sharedTests + "/core/expression",
+        //        sharedTests + "/core/input1",
+        //        sharedTests + "/core/input2",
+        //        sharedTests + "/core/input3",
+        //        sharedTests + "/core/json",
+        //        sharedTests + "/core/nested",
+        //        sharedTests + "/core/obj",
+        sharedTests + "/core/pagination",
+        //        sharedTests + "/core/ref",
+        //        sharedTests + "/core/sorting",
+        //        sharedTests + "/db/datomic/composite",
+        //        sharedTests + "/db/datomic/entity",
+        //        sharedTests + "/db/datomic/generic",
+        //        sharedTests + "/db/datomic/partitions",
+        //        sharedTests + "/db/datomic/time",
+        //        sharedTests + "/db/datomic/txMetaData",
+        //        sharedTests + "/examples/datomic/dayOfDatomic",
+        //        sharedTests + "/examples/datomic/mbrainz",
+        //        sharedTests + "/examples/datomic/seattle",
+        //        sharedTests + "/examples/gremlin/gettingStarted",
+        sharedTests + "/Adhoc.scala",
+      )
+      new SimpleFileFilter(f =>
+        f.getCanonicalPath.startsWith(sharedTests) && !allowed.exists(p => f.getCanonicalPath.startsWith(p))
+      )
+    },
 
     // Allow resolving local dependencies if using Datomic proprietary dev-local or pro
     resolvers += Resolver.mavenLocal,

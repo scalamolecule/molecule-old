@@ -96,12 +96,12 @@ private[molecule] case class Nested2packed(
   }
 
 
-  def getRowCountAndPacked: (Int, String) = {
+  def getRowCountAndPacked: (String, Int) = {
     if (sortedRows.isEmpty) {
-      return (totalCount, "")
+      return ("", totalCount)
     }
     packRows(flattenTxMetaProps(obj).props)
-    (totalCount, sb.toString)
+    (sb.toString, totalCount)
   }
 
   def packNode(node: Node, level: Int): jList[_] => StringBuffer = {
