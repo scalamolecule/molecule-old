@@ -27,7 +27,7 @@ case class Conn_Client(
   override val defaultConnProxy: ConnProxy,
   dbName: String,
   system: String = "",
-) extends Conn_Jvm with QueryIndex {
+) extends Conn_Jvm with QueryIndex_Client {
 
   // Molecule api --------------------------------------------------------------
 
@@ -143,7 +143,7 @@ case class Conn_Client(
   // Schema --------------------------------------------------------------------
 
   private[molecule] def historyQuery(query: String, inputs: Seq[jList[AnyRef]] = Nil)
-                            (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
+                                    (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     db.map { db =>
       clientDatomic.q(
         query,
@@ -331,6 +331,15 @@ case class Conn_Client(
     query: Query
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     model.elements.head match {
+      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _, _) => indexQuery(model).map(_._1)
+      case _                                                              => datalogQuery(model, query).map(_._1)
+    }
+  }
+  private[molecule] final override def jvmQueryT(
+    model: Model,
+    query: Query
+  )(implicit ec: ExecutionContext): Future[(jCollection[jList[AnyRef]], Long)] = {
+    model.elements.head match {
       case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _, _) => indexQuery(model)
       case _                                                              => datalogQuery(model, query)
     }
@@ -339,18 +348,17 @@ case class Conn_Client(
 
   private[molecule] override def datalogQuery(
     model: Model,
-    query: Query,
-    _db: Option[DatomicDb]
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
+    query: Query
+  )(implicit ec: ExecutionContext): Future[(jCollection[jList[AnyRef]], Long)] = {
     db.flatMap { db =>
       try {
         val p               = Query2String(query).p
         val rules           = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
         val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
         val allInputs       = rules ++ inputsEvaluated
-        val clientDb        = _db.getOrElse(db).asInstanceOf[DatomicDb_Client].clientDb
+        val clientDb        = db.asInstanceOf[DatomicDb_Client].clientDb
         val result          = clientDatomic.q(query.toMap, clientDb, allInputs: _*)
-        Future(result)
+        Future((result, clientDb.t))
       } catch {
         case NonFatal(exc) => Future.failed(QueryException(exc, model, query))
       }

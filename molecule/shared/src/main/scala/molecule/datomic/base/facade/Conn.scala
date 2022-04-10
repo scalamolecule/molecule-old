@@ -260,7 +260,6 @@ trait Conn extends Conversions with BooPicklers {
     Future.failed(jvmOnly("retractEnum"))
 
 
-
   def getEnumHistory(implicit ec: ExecutionContext): Future[List[(String, Int, Long, Date, String, Boolean)]]
 
 
@@ -378,16 +377,21 @@ trait Conn extends Conversions with BooPicklers {
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] =
     Future.failed(jvmOnly("jvmQuery(model: Model, query: Query)"))
 
+  private[molecule] def jvmQueryT(
+    model: Model,
+    query: Query
+  )(implicit ec: ExecutionContext): Future[(jCollection[jList[AnyRef]], Long)] =
+    Future.failed(jvmOnly("jvmQuery2(model: Model, query: Query)"))
+
   private[molecule] def indexQuery(
     model: Model
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] =
+  )(implicit ec: ExecutionContext): Future[(jCollection[jList[AnyRef]], Long)] =
     Future.failed(jvmOnly("indexQuery(model: Model)"))
 
   private[molecule] def datalogQuery(
     model: Model,
-    query: Query,
-    _db: Option[DatomicDb] = None
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] =
+    query: Query
+  )(implicit ec: ExecutionContext): Future[(jCollection[jList[AnyRef]], Long)] =
     Future.failed(jvmOnly("datalogQuery(model: Model, query: Query, _db: Option[DatomicDb] = None)"))
 
   private[molecule] def jvmSchemaHistoryQuery(

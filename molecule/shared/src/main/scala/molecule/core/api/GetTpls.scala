@@ -1,6 +1,6 @@
 package molecule.core.api
 
-import java.util.{Date, List => jList, Collection => jCollection}
+import java.util.{Base64, Date, Collection => jCollection, List => jList}
 import molecule.core.ast.elements.Generic
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.Marshalling
@@ -105,7 +105,8 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
    * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
    */
-  def get(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] = {
+  def get(limit: Int, offset: Int)
+         (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] = {
     if (limit < 1) {
       Future.failed(MoleculeException("Limit has to be a positive number. Found: " + limit))
     } else if (offset < 0) {
@@ -119,7 +120,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
               obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2tpl
             )
           } else {
-            conn.jvmQuery(_model, _query).map { rows =>
+            conn.jvmQuery(_model, _query).map { case rows =>
               val totalCount = rows.size
               (rows2tuples(totalCount, rows, totalCount.min(offset + limit), offset), totalCount)
             }
@@ -146,52 +147,168 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
    * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
    */
-  def get(limit: Int, cursor: String)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], String, String)] = {
+  def get(limit: Int, cursor: String)
+         (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], String, String)] = {
+    // 0: default fixed offsetting by row count of same stable asOf snapshot for all pages
+    // 1: live offsetting by single non-changing sorted column with unique (or semi-unique) values
+
+    val strat = if(cursor.isEmpty){
+
+    } else {
+      val cursorStr = Base64.getDecoder.decode(cursor)
+
+    }
+    //    val strategy = if (cursor.headOption.contains('1')) 1 else 0
+    val strategy = cursor match {
+      case ""                                          => "snapshot"
+      case strategy@("snapshot" | "unique" | "merged") => strategy
+      case cursor                                      =>
+        // Extract strategy from digit prefix to base64 encoding
+        cursor.head match {
+          case '0' => "snapshot"
+          case '1' => "unique"
+          case '2' => "merged"
+        }
+    }
+
     _inputThrowable.fold(
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
-          //          conn.jsQueryTpl(
-          //            _model, _query, _datalog, limit, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, packed2tpl
+          //          conn.jsQuery(
+          //            _model, _query, _datalog, limit, obj,
+          //            nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2tpl
           //          )
           // todo
           Future((List.empty[Tpl], "prevCursor...", "nextCursor..."))
         } else {
-          conn.jvmQuery(_model, _query).map { jColl =>
-            val totalCount = jColl.size
-            val maxRows    = totalCount.min(limit)
-            val tuples     = maxRows match {
-              case 0 => List.empty[Tpl]
-              case 1 => List(row2tpl(jColl.iterator.next))
-              case _ =>
-                val it   = if (sortRows) {
-                  val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(jColl)
-                  rows.sort(this) // using macro-implemented `compare` method
-                  rows.iterator
-                } else {
-                  jColl.iterator()
-                }
-                val list = List.newBuilder[Tpl]
-                var i    = 0
-                while (it.hasNext && i < maxRows) {
-                  list += row2tpl(it.next)
-                  i += 1
-                }
-                list.result()
-            }
-            
-
-
-            (tuples, "prevCursor...", "nextCursor...")
+          strategy match {
+            case "snapshot" => paginateSnapshot(conn, limit, cursor)
+            case "unique"   => paginateUnique(conn, limit, cursor)
+            case "merged"   => paginateMerged(conn, limit, cursor)
           }
         }
       }
     )(Future.failed) // Wrap exception from input failure in Future
   }
 
+  private def paginateSnapshot(conn: Conn, limit: Int, cursor: String)
+                              (implicit ec: ExecutionContext): Future[(List[Tpl], String, String)] = {
+    val strategy    = "0"
+    val (t, offset) = if (cursor == "snapshot") {
+      (0L, 0)
+    } else {
+      //              val Array(offset, prevT, nextT) = new String(Base64.getDecoder.decode(cursor)).split(',')
+      println(cursor)
+      val Array(_, t, offset) = cursor.split(',')
+      (t.toLong, offset.toInt)
+    }
+    println(s"$t, $offset")
+
+    if (t == 0L) {
+      //      for {
+      //        rows <- conn.jvmQuery(_model, _query)
+      //      } yield {
+      //        val totalCount = rows.size
+      //
+      //        //              val offset = offset
+      //        println(s"A  $totalCount  $offset  $limit  ${totalCount.min(offset + limit)}")
+      //
+      //        val tuples = rows2tuples(totalCount, rows, totalCount.min(offset + limit), offset)
+      //
+      //        (tuples, "0,0,0", "2,0,1030")
+      //      }
+      conn.jvmQueryT(_model, _query).map { case (rows, fetchedT) =>
+        val totalCount = rows.size
+        val data       = rows2tuples(totalCount, rows, totalCount.min(limit), 0)
+        (data, s"first", s"$strategy,$fetchedT,$limit")
+      }
+    } else {
+      conn.usingAdhocDbView(AsOf(TxLong(t))).jvmQueryT(_model, _query).map { case (rows, _) =>
+        val totalCount = rows.size
+        val data       = rows2tuples(totalCount, rows, totalCount.min(offset + limit), offset)
+
+//        val encoded = Base64.getEncoder.encodeToString("0,0,0".getBytes)
+        (data, strategy + s"$t,$offset", s"$strategy,$t,${offset + limit}")
+      }
+    }
+    //          conn.jvmQuery(_model, _query).map { rows =>
+    //            val totalCount = rows.size
+    //
+    //            val offset = prevOffset
+    //            println(s"A  $totalCount  $offset  $limit  ${totalCount.min(offset + limit)}")
+    //
+    //            val tuples = rows2tuples(totalCount, rows, totalCount.min(offset + limit), offset)
+    //
+    ////            val maxRows    = totalCount.min(limit)
+    ////            val tuples     = maxRows match {
+    ////              case 0 => List.empty[Tpl]
+    ////              case 1 => List(row2tpl(rows.iterator.next))
+    ////              case _ =>
+    ////                val it   = if (sortRows) {
+    ////                  val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
+    ////                  rows.sort(this) // using macro-implemented `compare` method
+    ////                  rows.iterator
+    ////                } else {
+    ////                  rows.iterator()
+    ////                }
+    ////                val list = List.newBuilder[Tpl]
+    ////                var i    = 0
+    ////                while (it.hasNext && i < maxRows) {
+    ////                  list += row2tpl(it.next)
+    ////                  i += 1
+    ////                }
+    ////                list.result()
+    ////            }
+    //
+    //
+
+//                            val prev1 = Base64.getEncoder.encodeToString("0,0,0".getBytes)
+//                            val next1 = Base64.getEncoder.encodeToString("0,0,1030".getBytes)
+//                            val next1 = Base64.getEncoder.encodeToString("0,0,1030".getBytes)
+    //            //
+    //            ////            val offset =
+    //            //                        val prev2 = Base64.getEncoder.encodeToString("0,1030,0".getBytes)
+    //            //            val next2 = Base64.getEncoder.encodeToString(s"$limit,0,1035".getBytes)
+    //            //
+    //            //            val t = 1030L
+    //            //            import java.nio.charset.StandardCharsets
+    //            //
+    //            //            val (password, expected) = ("user:pass".getBytes(StandardCharsets.UTF_8), "dXNlcjpwYXNz")
+    //            //
+    //            //            assume(java.util.Base64.getEncoder.encodeToString(password) == expected)
+    //            //
+    //            //            val a    = "next@" + t
+    //            //            val next = encoder.encodeToString(a.getBytes)
+    //            //
+    //            //            println("1 " + a)
+    //            //            println("2 " + next)
+    //            //
+    //            //
+    //            //            println("3 " + new String(decoder.decode(next)))
+    //            //
+    //            //            val Array(x, y) = new String(decoder.decode(next)).split('@')
+    //            //            println("x " + x)
+    //            //            println("y " + y)
+    //
+    //            (tuples, "0,0,0", "2,0,1030")
+    //          }
+
+  }
+
+  private def paginateMerged(conn: Conn, limit: Int, cursor: String)
+                            (implicit ec: ExecutionContext): Future[(List[Tpl], String, String)] = ???
+
+  private def paginateUnique(conn: Conn, limit: Int, cursor: String)
+                            (implicit ec: ExecutionContext): Future[(List[Tpl], String, String)] = ???
 
   // Helpers ...............................
 
-  private def rows2tuples(totalCount: Int, rows: jCollection[jList[AnyRef]], maxRows: Int, offset: Int): List[Tpl] = {
+  private def rows2tuples(
+    totalCount: Int,
+    rows: jCollection[jList[AnyRef]],
+    maxRows: Int,
+    offset: Int
+  ): List[Tpl] = {
     if (totalCount == 0 || offset >= totalCount) {
       return List.empty[Tpl]
     } else if (totalCount == 1) {
@@ -207,10 +324,17 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
         i += 1
       }
       tuples.result()
-    } else {
+    } else if (offset == 0) {
       val rowsIterator = rows.iterator
       while (i != maxRows) {
         tuples += row2tpl(rowsIterator.next)
+        i += 1
+      }
+      tuples.result()
+    } else {
+      val arrayOfRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
+      while (i != maxRows) {
+        tuples += row2tpl(arrayOfRows.get(i))
         i += 1
       }
       tuples.result()
@@ -318,10 +442,12 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
    */
-  def getAsOf(t: Long, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
+  def getAsOf(t: Long, limit: Int)
+             (implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
     get(limit)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
-  def getAsOf(t: Long, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
+  def getAsOf(t: Long, limit: Int, offset: Int)
+             (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
     get(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
 
@@ -419,10 +545,12 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
    * */
-  def getAsOf(txR: TxReport, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
+  def getAsOf(txR: TxReport, limit: Int)
+             (implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
     get(limit)(conn.map(_.usingAdhocDbView(AsOf(TxLong(txR.t)))), ec)
 
-  def getAsOf(txR: TxReport, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
+  def getAsOf(txR: TxReport, limit: Int, offset: Int)
+             (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
     get(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxLong(txR.t)))), ec)
 
 
@@ -518,10 +646,12 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
    */
-  def getAsOf(date: Date, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
+  def getAsOf(date: Date, limit: Int)
+             (implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
     get(limit)(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
 
-  def getAsOf(date: Date, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
+  def getAsOf(date: Date, limit: Int, offset: Int)
+             (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
     get(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
 
 
@@ -593,10 +723,12 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
    */
-  def getSince(t: Long, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
+  def getSince(t: Long, limit: Int)
+              (implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
     get(limit)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
-  def getSince(t: Long, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
+  def getSince(t: Long, limit: Int, offset: Int)
+              (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
     get(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
 
@@ -676,10 +808,12 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
    */
-  def getSince(txR: TxReport, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
+  def getSince(txR: TxReport, limit: Int)
+              (implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
     get(limit)(conn.map(_.usingAdhocDbView(Since(TxLong(txR.t)))), ec)
 
-  def getSince(txR: TxReport, limit: Int, offset: Int = 0)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
+  def getSince(txR: TxReport, limit: Int, offset: Int)
+              (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
     get(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxLong(txR.t)))), ec)
 
 
@@ -743,10 +877,12 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
    * @param conn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
    */
-  def getSince(date: Date, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
+  def getSince(date: Date, limit: Int)
+              (implicit conn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] =
     get(limit)(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
 
-  def getSince(date: Date, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
+  def getSince(date: Date, limit: Int, offset: Int)
+              (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
     get(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
 
 
@@ -919,6 +1055,5 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
 
   // `getHistory(limit: Int)`
   // `getHistory(limit: Int, offset: Int)`
-  // `getHistory(limit: Int, cursor: String)`
   // are not implemented since the whole data set is normally only relevant for the whole history of a single attribute.
 }

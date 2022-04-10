@@ -1,7 +1,7 @@
 package molecule.core.macros.nested
 
 import java.lang.{Long => jLong}
-import java.util.{ArrayList => jArrayList, Comparator => jComparator, List => jList}
+import java.util.{ArrayList => jArrayList, List => jList}
 import molecule.core.api.Molecule_0
 
 

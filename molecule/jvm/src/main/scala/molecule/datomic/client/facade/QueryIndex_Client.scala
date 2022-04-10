@@ -13,13 +13,13 @@ import scala.util.control.NonFatal
 
 /** Facade to Datomic connection for peer api.
  * */
-trait QueryIndex { self: Conn_Client =>
+trait QueryIndex_Client { self: Conn_Client =>
 
 
   // Datoms API providing direct access to indexes
   private[molecule] final override def indexQuery(
     model: Model
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
+  )(implicit ec: ExecutionContext): Future[(jCollection[jList[AnyRef]], Long)] = Future {
     try {
       val (api, index, args) = model.elements.head match {
         case Generic("EAVT", _, _, value, _) =>
@@ -303,41 +303,51 @@ trait QueryIndex { self: Conn_Client =>
       api match {
         case "datoms" =>
           val datom2row_ = datom2row(None)
-          db.flatMap(db =>
-            db.asInstanceOf[DatomicDb_Client].datoms(index, args, limit = -1).flatMap { datoms =>
+          db.flatMap { db =>
+            val datomicDb = db.asInstanceOf[DatomicDb_Client]
+            val t = datomicDb.clientDb.t
+            datomicDb.datoms(index, args, limit = -1).flatMap { datoms =>
               datoms.forEach(datom =>
                 rows = rows :+ datom2row_(datom)
               )
-              Future.sequence(rows).map(_.asJavaCollection)
+              Future.sequence(rows).map(_.asJavaCollection).map(data => (data, t))
             }
-          )
+          }
 
         case "indexRange" =>
           val datom2row_ = datom2row(None)
           val attrId     = args.head.toString
           val startValue = args(1).asInstanceOf[Option[Any]]
           val endValue   = args(2).asInstanceOf[Option[Any]]
-          db.flatMap(db =>
-            db.asInstanceOf[DatomicDb_Client].indexRange(attrId, startValue, endValue, limit = -1).flatMap { datoms =>
+          db.flatMap { db =>
+            val datomicDb = db.asInstanceOf[DatomicDb_Client]
+            val t = datomicDb.clientDb.t
+            datomicDb.indexRange(attrId, startValue, endValue, limit = -1).flatMap { datoms =>
               datoms.forEach(datom =>
                 rows = rows :+ datom2row_(datom)
               )
-              Future.sequence(rows).map(_.asJavaCollection)
+              Future.sequence(rows).map(_.asJavaCollection).map(data => (data, t))
             }
-          )
+          }
 
         case "txRange" =>
           val from  = args.head.asInstanceOf[Option[Any]]
           val until = args(1).asInstanceOf[Option[Any]]
+          var first = true
+          var t0     = 0L
           // Flatten transaction maps
           clientConn.txRangeArray(from, until, limit = -1).foreach {
             case (t, datoms) =>
+              if (first) {
+                t0 = t
+                first = false
+              }
               val datom2row_ = datom2row(Some(t))
               datoms.foreach(datom =>
                 rows = rows :+ datom2row_(datom)
               )
           }
-          Future.sequence(rows).map(_.asJavaCollection)
+          Future.sequence(rows).map(_.asJavaCollection).map(data => (data, t0))
       }
     } catch {
       case NonFatal(ex) => Future.failed(ex)

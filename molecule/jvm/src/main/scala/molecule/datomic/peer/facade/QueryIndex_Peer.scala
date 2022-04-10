@@ -23,13 +23,13 @@ import scala.util.control.NonFatal
 
 /** Facade to Datomic connection for peer api.
  * */
-trait QueryIndex { self: Conn_Peer =>
+trait QueryIndex_Peer { self: Conn_Peer =>
 
 
   // Datoms API providing direct access to indexes
   private[molecule] final override def indexQuery(
     model: Model
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = Future {
+  )(implicit ec: ExecutionContext): Future[(jCollection[jList[AnyRef]], Long)] = Future {
     try {
       val (api, index, args) = model.elements.head match {
         case Generic("EAVT", _, _, value, _) =>
@@ -131,15 +131,15 @@ trait QueryIndex { self: Conn_Peer =>
       }
 
       // Important with stable db (when mixing filters with getHistory)!
-      val stableDb = db
+      val stableDb: Future[DatomicDb] = db
+      lazy val datomicDb = stableDb.map(_.getDatomicDb.asInstanceOf[Database])
 
       def datomElement(
         tOpt: Option[Long],
         attr: String
       )(implicit ec: ExecutionContext): Datom => Future[Any] = attr match {
         case "e"                   => (d: Datom) => Future(d.e)
-        case "a"                   => (d: Datom) =>
-          stableDb.map(_.getDatomicDb.asInstanceOf[Database].ident(d.a).toString)
+        case "a"                   => (d: Datom) => datomicDb.map(_.ident(d.a).toString)
         case "v"                   => (d: Datom) => Future(d.v)
         case "t" if tOpt.isDefined => (_: Datom) => Future(tOpt.get)
         case "t"                   => (d: Datom) => Future(toT(d.tx))
@@ -294,39 +294,49 @@ trait QueryIndex { self: Conn_Peer =>
       val res  = api match {
         case "datoms" =>
           val datom2row_ = datom2row(None)
-          stableDb.flatMap(db =>
-            db.asInstanceOf[DatomicDb_Peer].datoms(index, args: _*).flatMap { datoms =>
+          stableDb.flatMap { db =>
+            val datomicDb = db.asInstanceOf[DatomicDb_Peer]
+            val t         = datomicDb.getDatomicDb.asInstanceOf[Database].basisT
+            datomicDb.datoms(index, args: _*).flatMap { datoms =>
               datoms.forEach(datom =>
                 rows = rows :+ datom2row_(datom)
               )
-              Future.sequence(rows).map(_.asJavaCollection)
+              Future.sequence(rows).map(_.asJavaCollection).map(data => (data, t))
             }
-          )
+          }
 
         case "indexRange" =>
           val datom2row_ = datom2row(None)
           val attrId     = args.head.toString
           val startValue = args(1)
           val endValue   = args(2)
-          stableDb.flatMap(db =>
-            db.asInstanceOf[DatomicDb_Peer].indexRange(attrId, startValue, endValue).flatMap { datoms =>
+          stableDb.flatMap { db =>
+            val datomicDb = db.asInstanceOf[DatomicDb_Peer]
+            val t         = datomicDb.getDatomicDb.asInstanceOf[Database].basisT
+            datomicDb.indexRange(attrId, startValue, endValue).flatMap { datoms =>
               datoms.forEach(datom =>
                 rows = rows :+ datom2row_(datom)
               )
-              Future.sequence(rows).map(_.asJavaCollection)
+              Future.sequence(rows).map(_.asJavaCollection).map(data => (data, t))
             }
-          )
+          }
 
         case "txRange" =>
+          var first = true
+          var t     = 0L
           // Loop transactions
           peerConn.log.txRange(args.head, args(1)).forEach { txMap =>
+            if (first) {
+              t = txMap.get(datomic.Log.T).asInstanceOf[Long]
+              first = false
+            }
             // Flatten transaction datoms to uniform tuples return type
             val datom2row_ = datom2row(Some(txMap.get(datomic.Log.T).asInstanceOf[Long]))
             txMap.get(datomic.Log.DATA).asInstanceOf[jList[Datom]].forEach(datom =>
               rows = rows :+ datom2row_(datom)
             )
           }
-          Future.sequence(rows).map(_.asJavaCollection)
+          Future.sequence(rows).map(_.asJavaCollection).map(data => (data, t))
       }
       res
     } catch {

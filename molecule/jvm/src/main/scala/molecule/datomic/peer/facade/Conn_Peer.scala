@@ -27,7 +27,7 @@ case class Conn_Peer(
   peerConn: datomic.Connection,
   override val defaultConnProxy: ConnProxy,
   system: String = ""
-) extends Conn_Jvm with QueryIndex {
+) extends Conn_Jvm with QueryIndex_Peer {
 
   // Molecule api --------------------------------------------------------------
 
@@ -246,7 +246,7 @@ case class Conn_Peer(
   // Schema --------------------------------------------------------------------
 
   private[molecule] def historyQuery(query: String, inputs: Seq[jList[AnyRef]] = Nil)
-                            (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
+                                    (implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     db.map(db => Peer.q(
       query,
       Seq(
@@ -409,6 +409,15 @@ case class Conn_Peer(
     query: Query
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     model.elements.head match {
+      case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _, _) => indexQuery(model).map(_._1)
+      case _                                                              => datalogQuery(model, query).map(_._1)
+    }
+  }
+  private[molecule] final override def jvmQueryT(
+    model: Model,
+    query: Query
+  )(implicit ec: ExecutionContext): Future[(jCollection[jList[AnyRef]], Long)] = {
+    model.elements.head match {
       case Generic("Log" | "EAVT" | "AEVT" | "AVET" | "VAET", _, _, _, _) => indexQuery(model)
       case _                                                              => datalogQuery(model, query)
     }
@@ -417,18 +426,17 @@ case class Conn_Peer(
 
   private[molecule] final override def datalogQuery(
     model: Model,
-    query: Query,
-    _db: Option[DatomicDb] = None
-  )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
+    query: Query
+  )(implicit ec: ExecutionContext): Future[(jCollection[jList[AnyRef]], Long)] = {
     db.flatMap { db =>
       try {
         val p               = Query2String(query).p
         val rules           = if (query.i.rules.isEmpty) Nil else Seq("[" + (query.i.rules map p mkString " ") + "]")
         val inputsEvaluated = QueryOpsClojure(query).inputsWithKeyword
-        val peerDb          = _db.getOrElse(db).getDatomicDb
+        val peerDb          = db.getDatomicDb
         val allInputs       = Seq(peerDb) ++ rules ++ inputsEvaluated
         val result          = Peer.q(query.toMap, allInputs: _*)
-        Future(result)
+        Future((result, peerDb.asInstanceOf[Database].basisT))
       } catch {
         case NonFatal(exc) => Future.failed(QueryException(exc, model, query))
       }

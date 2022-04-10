@@ -168,7 +168,7 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
 
       for {
         conn <- futConn
-        rows <- if (conn.isJsPlatform) jsRows(conn) else conn.indexQuery(_model)
+        rows <- if (conn.isJsPlatform) jsRows(conn) else conn.indexQuery(_model).map(_._1)
       } yield render(rows)
     }
 
@@ -177,7 +177,7 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
       conn.jsQuery(
         _model, _query, _datalog, -1, 0,
         obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2tpl
-      ).map { case (listOfTuples, totalCount) =>
+      ).map { case (listOfTuples, _, _) =>
         listOfTuples.map {
           case tpl: Product => Collections.list(tpl.productIterator.asJavaEnumeration)
           case v            =>
@@ -348,8 +348,7 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
         val ins = QueryOps(_query).inputs
 
         for {
-          db <- conn.db
-          rawRows <- if (conn.isJsPlatform) jsRows(conn) else conn.datalogQuery(_model, _query, Some(db))
+          rawRows <- if (conn.isJsPlatform) jsRows(conn) else conn.datalogQuery(_model, _query).map(_._1)
           rows = resolve(rawRows)
         } yield {
           val rulesOut: String = if (_query.i.rules.isEmpty)
@@ -383,7 +382,7 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
 
           // Usually we want to analyse the raw query only
           println(
-            "\n--------------------------------------------------------------------------\n" +
+            "\n--------------------------------------------------------------------------X\n" +
               _model + "\n\n" +
               _query + "\n\n" +
               _query.datalog + "\n\n" +

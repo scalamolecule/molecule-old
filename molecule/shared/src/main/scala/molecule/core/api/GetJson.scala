@@ -40,7 +40,8 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
           conn.jsQueryJson(
-            _model, _query, _datalog, -1, 0, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
+            _model, _query, _datalog, -1, 0, obj,
+            nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
           ).map { case (packed, totalCount) => packed2json(totalCount, totalCount, 0, packed) }
         } else {
           conn.jvmQuery(_model, _query).map { rows =>
@@ -75,7 +76,8 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
         futConn.flatMap { conn =>
           if (conn.isJsPlatform) {
             conn.jsQueryJson(
-              _model, _query, _datalog, limit, 0, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
+              _model, _query, _datalog, limit, 0, obj,
+              nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
             ).map { case (packed, totalCount) => packed2json(totalCount, limit, 0, packed) }
           } else {
             conn.jvmQuery(_model, _query).map { rows =>
@@ -113,7 +115,8 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
         futConn.flatMap { conn =>
           if (conn.isJsPlatform) {
             conn.jsQueryJson(
-              _model, _query, _datalog, limit, offset, obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
+              _model, _query, _datalog, limit, offset, obj,
+              nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates
             ).map { case (packed, totalCount) => packed2json(totalCount, limit, offset, packed) }
           } else {
             conn.jvmQuery(_model, _query).map { rows =>
@@ -150,7 +153,13 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
     }
   }
 
-  private def rows2json(totalCount: Int, rows: jCollection[jList[AnyRef]], maxRows: Int, limit: Int, offset: Int): String = {
+  private def rows2json(
+    totalCount: Int,
+    rows: jCollection[jList[AnyRef]],
+    maxRows: Int,
+    limit: Int,
+    offset: Int
+  ): String = {
     if (totalCount == 0 || offset >= totalCount) {
       return outerJson(totalCount, limit, offset, "")
     }
@@ -299,10 +308,12 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
    * @param conn  Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return String of json
    */
-  def getJsonAsOf(t: Long, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+  def getJsonAsOf(t: Long, limit: Int)
+                 (implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
     getJson(limit)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
-  def getJsonAsOf(t: Long, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+  def getJsonAsOf(t: Long, limit: Int, offset: Int)
+                 (implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
     getJson(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
 
@@ -402,10 +413,12 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
    * @param conn  Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return String of json
    */
-  def getJsonAsOf(tx: TxReport, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+  def getJsonAsOf(tx: TxReport, limit: Int)
+                 (implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
     getJson(limit)(conn.map(_.usingAdhocDbView(AsOf(TxLong(tx.t)))), ec)
 
-  def getJsonAsOf(tx: TxReport, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+  def getJsonAsOf(tx: TxReport, limit: Int, offset: Int)
+                 (implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
     getJson(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxLong(tx.t)))), ec)
 
 
@@ -505,10 +518,12 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
    * @param conn  Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return String of json
    */
-  def getJsonAsOf(date: java.util.Date, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+  def getJsonAsOf(date: java.util.Date, limit: Int)
+                 (implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
     getJson(limit)(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
 
-  def getJsonAsOf(date: java.util.Date, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+  def getJsonAsOf(date: java.util.Date, limit: Int, offset: Int)
+                 (implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
     getJson(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
 
 
@@ -593,10 +608,12 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
    * @param conn  Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return String of json
    */
-  def getJsonSince(t: Long, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+  def getJsonSince(t: Long, limit: Int)
+                  (implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
     getJson(limit)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
-  def getJsonSince(t: Long, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+  def getJsonSince(t: Long, limit: Int, offset: Int)
+                  (implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
     getJson(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
 
@@ -683,10 +700,12 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
    * @param conn  Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return String of json
    */
-  def getJsonSince(tx: TxReport, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+  def getJsonSince(tx: TxReport, limit: Int)
+                  (implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
     getJson(limit)(conn.map(_.usingAdhocDbView(Since(TxLong(tx.t)))), ec)
 
-  def getJsonSince(tx: TxReport, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+  def getJsonSince(tx: TxReport, limit: Int, offset: Int)
+                  (implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
     getJson(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxLong(tx.t)))), ec)
 
 
@@ -763,10 +782,12 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
    * @param conn  Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return String of json
    */
-  def getJsonSince(date: java.util.Date, limit: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+  def getJsonSince(date: java.util.Date, limit: Int)
+                  (implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
     getJson(limit)(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
 
-  def getJsonSince(date: java.util.Date, limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
+  def getJsonSince(date: java.util.Date, limit: Int, offset: Int)
+                  (implicit conn: Future[Conn], ec: ExecutionContext): Future[String] =
     getJson(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
 
 
@@ -940,6 +961,5 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
 
   // `getJsonHistory(limit: Int)`
   // `getJsonHistory(limit: Int, offset: Int)`
-  // `getJsonHistory(limit: Int, cursor: String)`
   // are not implemented since the whole data set is normally only relevant for the whole history of a single attribute.
 }

@@ -69,7 +69,8 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj
     get(limit).map(_.map(outerTpl2obj))
   }
 
-  final override def getObjs(limit: Int, offset: Int)(implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Obj], Int)] = {
+  final override def getObjs(limit: Int, offset: Int)
+                            (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Obj], Int)] = {
     get(limit, offset).map { case (rows, totalCount) => (rows.map(outerTpl2obj), totalCount) }
   }
 
