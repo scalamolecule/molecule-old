@@ -35,6 +35,7 @@ class MakeComposite(val c: blackbox.Context) extends MakeBase {
         final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = ${tplComposite(castss, txMetas)}
         final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
         final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
+        ..${sortCoordinatesFlat(model, doSort)}
         ..${compareFlat(model, doSort)}
       """
     }
@@ -44,7 +45,7 @@ class MakeComposite(val c: blackbox.Context) extends MakeBase {
       q"""
         ..$imports
         private val _resolvedModel: Model = resolveIdentifiers($model, $identifiers)
-        final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel)) {
+        final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel).get) {
           ..$transformers
         }
         new $outMolecule
@@ -52,7 +53,7 @@ class MakeComposite(val c: blackbox.Context) extends MakeBase {
     } else {
       q"""
         ..$imports
-        final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model, ${Model2Query(model)}) {
+        final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model, ${Model2Query(model).get}) {
           ..$transformers
         }
         new $outMolecule

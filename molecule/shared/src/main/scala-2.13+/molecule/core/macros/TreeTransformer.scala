@@ -4,6 +4,7 @@ import scala.reflect.macros.blackbox
 
 trait TreeTransformer {
   val c: blackbox.Context
+
   import c.universe._
 
   object transformer extends Transformer {

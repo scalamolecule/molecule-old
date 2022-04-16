@@ -150,7 +150,7 @@ trait Conn_Jvm extends Conn with JavaConversions with Helpers with ModelOps with
     model: Model
   )(implicit ec: ExecutionContext): Future[jCollection[jList[AnyRef]]] = {
     val schemaAttrs = model2schemaAttrs(model)
-    val queryString = Model2Query(model, schemaHistory0 = true, optimize = false)._2
+    val queryString = Model2Query(model, schemaHistory = true, optimize = false).get._2
     QuerySchemaHistory(this).fetchSchemaHistory(schemaAttrs, queryString)
   }
 

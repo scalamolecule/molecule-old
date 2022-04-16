@@ -66,15 +66,6 @@ case class NsArityLevel(
     s"final def $backRefNsPrefixed: $backRef_0_0_L0[$concatLast${`, I1, A`}] = ???"
   }
 
-
-  def indexedFirst(opts: Seq[Optional]): Seq[String] = {
-    val classes = opts.filter(_.clazz.nonEmpty).map(_.clazz)
-    if (classes.contains("Index"))
-      "Index" +: classes.filterNot(_ == "Index")
-    else
-      classes
-  }
-
   val man = List.newBuilder[String]
   val opt = List.newBuilder[String]
   val tac = List.newBuilder[String]

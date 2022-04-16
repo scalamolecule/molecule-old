@@ -151,7 +151,8 @@ object VerifyRawModel extends Helpers {
             case _: Nested =>
               abort("Nested molecules in composites are not implemented")
 
-            case Atom(nsFull, name, _, _, _, _, _, _, _) =>
+            // allow setting sort value on tacit attribute in composites
+            case Atom(nsFull, name, _, _, _, _, _, _, _) if name.last != '_' =>
               if (compLevel == 0) {
                 if (compTopLevelAttrs.contains(nsFull + "/" + clean(name)))
                   abort(s"Composite molecules can't contain the same attribute more than once. Found multiple instances of `:$nsFull/${clean(name)}`")

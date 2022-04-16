@@ -47,6 +47,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
           final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = ${tplFlat(castss, txMetas)}
           final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
           final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
+          ..${sortCoordinatesFlat(model, doSort)}
           ..${compareFlat(model, doSort)}
         """
       }
@@ -56,13 +57,13 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
         val identifiers = mapIdentifiers(model.elements).toMap
         q"""
           final private val _resolvedModel: Model = resolveIdentifiers($model, $identifiers)
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel)) {
+          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel).get) {
             ..$transformers
           }
         """
       } else {
         q"""
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model, ${Model2Query(model)}) {
+          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model, ${Model2Query(model).get}) {
             ..$transformers
           }
         """
@@ -71,7 +72,6 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
 
 
     def mkOptNested = {
-      val sortCoordinates = sortCoordinatesOptNested(model, doSort)
       val transformers = if (isJsPlatform) {
         q"""
           final override def packed2tpl(vs: Iterator[String]): (..$OutTypes) = ${packed2tplNested(typess, obj, txMetas)}
@@ -81,7 +81,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
           final override def isOptNested: Boolean = true
           final override def refIndexes  : List[List[Int]] = $refIndexes
           final override def tacitIndexes: List[List[Int]] = $tacitIndexes
-          ..$sortCoordinates
+          ..${sortCoordinatesOptNested(model, doSort)}
         """
       } else {
         val (topLevelComparisons, orderings) = compareOptNested(model, doSort)
@@ -96,7 +96,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
             ${jsonOptNested(obj, refIndexes, tacitIndexes)}
 
           ..$topLevelComparisons
-          ..$sortCoordinates
+          ..${sortCoordinatesOptNested(model, doSort)}
         """
       }
 
@@ -104,13 +104,13 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
         val identifiers = mapIdentifiers(model.elements).toMap
         q"""
           final private val _resolvedModel: Model = resolveIdentifiers($model, $identifiers)
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel)) {
+          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel).get) {
             ..$transformers
           }
         """
       } else {
         q"""
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model, ${Model2Query(model)}) {
+          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model, ${Model2Query(model).get}) {
             ..$transformers
           }
         """
@@ -132,13 +132,13 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
         val identifiers = mapIdentifiers(model.elements).toMap
         q"""
           final private val _resolvedModel: Model = resolveIdentifiers($model, $identifiers)
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel)) {
+          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel).get) {
             ..$transformers
           }
         """
       } else {
         q"""
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model, ${Model2Query(model)}) {
+          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model, ${Model2Query(model).get}) {
             ..$transformers
           }
         """
@@ -156,13 +156,14 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
           final override def outerTpl2obj(tpl0: (..$OutTypes)): $ObjType = ${objTree(obj, tpl)}
           final override def nestedLevels: Int = ${levels - 1}
           ..${compareNested(model, levels, doSort)}
+          ..${sortCoordinatesNested(model, levels)}
          """
 
       if (hasVariables) {
         val identifiers = mapIdentifiers(model.elements).toMap
         q"""
           final private val _resolvedModel: Model = resolveIdentifiers($model, $identifiers)
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel))
+          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_resolvedModel, Model2Query(_resolvedModel).get)
             with $nestedTupleClass[$ObjType, (..$OutTypes)]
             with $nestedJsonClass[$ObjType, (..$OutTypes)] {
             ..$transformers
@@ -170,7 +171,7 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
         """
       } else {
         q"""
-          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model, ${Model2Query(model)})
+          final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes]($model, ${Model2Query(model).get})
             with $nestedTupleClass[$ObjType, (..$OutTypes)]
             with $nestedJsonClass[$ObjType, (..$OutTypes)] {
             ..$transformers

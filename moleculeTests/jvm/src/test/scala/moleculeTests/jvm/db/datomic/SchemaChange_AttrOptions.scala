@@ -952,7 +952,7 @@ object SchemaChange_AttrOptions extends AsyncTestSuite {
           // enabled with unique identity, no new entity is created when trying to assert
           // `1` again.
           // This is where unique value/identity differ:
-          // uniqueValue would reject transacting the duplicate value
+          // uniqueValue would reject transacting the redundant value
           _ <- conn.transact("""[[:db/add "-3" :Foo/bar 1]]""").map(_.eids ==> Nil)
 
           _ <- conn.query("[:find ?a ?b :where [?a :Foo/bar ?b]]")

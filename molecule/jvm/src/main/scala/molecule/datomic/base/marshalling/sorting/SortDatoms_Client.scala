@@ -12,7 +12,6 @@ import molecule.core.util.JavaConversions
 import molecule.datomic.base.facade.{Conn, DatomicDb}
 import molecule.datomic.base.marshalling.PackBase
 import molecule.datomic.base.util.JavaHelpers
-import scala.collection.StringOps
 import scala.concurrent.{ExecutionContext, Future}
 
 case class SortDatoms_Client(
@@ -223,11 +222,7 @@ case class SortDatoms_Client(
         x.get(i).asInstanceOf[Boolean].compareTo(y.get(i).asInstanceOf[Boolean])
 
       case "v" => (x: jList[AnyRef], y: jList[AnyRef]) =>
-        // compare string values without type prefix
-        new StringOps(x.get(i).asInstanceOf[String]).drop(10)
-          .compareTo(
-            new StringOps(y.get(i).asInstanceOf[String]).drop(10)
-          )
+        x.get(i).asInstanceOf[String].drop(10).compareTo(y.get(i).asInstanceOf[String].drop(10))
 
       // e, t, tx
       case _ => (x: jList[AnyRef], y: jList[AnyRef]) =>
@@ -249,7 +244,7 @@ case class SortDatoms_Client(
 
       case "v" => (sb: StringBuffer, row: jList[AnyRef]) =>
         val s = row.get(i).toString
-        new StringOps(s).take(10) match {
+        s.take(10) match {
           case "String    " => add(sb, s); end(sb)
           case _            => add(sb, s)
         }

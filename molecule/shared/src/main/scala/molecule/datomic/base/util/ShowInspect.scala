@@ -177,7 +177,7 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
       conn.jsQuery(
         _model, _query, _datalog, -1, 0,
         obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2tpl
-      ).map { case (listOfTuples, _, _) =>
+      ).map { case (listOfTuples, _) =>
         listOfTuples.map {
           case tpl: Product => Collections.list(tpl.productIterator.asJavaEnumeration)
           case v            =>
@@ -343,7 +343,7 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
         // Also do Model2Query transformation at runtime to be able to debug it.
         // Note though that input variables are bound in the macro at compile
         // time and are therefore not present in this runtime process.
-        Model2Query(_model)
+        Model2Query(_model).get
 
         val ins = QueryOps(_query).inputs
 
@@ -382,7 +382,7 @@ trait ShowInspect[Obj, Tpl] extends JavaConversions { self: Marshalling[Obj, Tpl
 
           // Usually we want to analyse the raw query only
           println(
-            "\n--------------------------------------------------------------------------X\n" +
+            "\n--------------------------------------------------------------------------\n" +
               _model + "\n\n" +
               _query + "\n\n" +
               _query.datalog + "\n\n" +

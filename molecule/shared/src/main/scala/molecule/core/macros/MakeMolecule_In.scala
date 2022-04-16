@@ -107,7 +107,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
       q"""
         private val _resolvedModel: Model = resolveIdentifiers($model, $identifiers)
         final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$OutTypes](
-          _resolvedModel, Model2Query(_resolvedModel, optimize = false) // Optimize after binding input variables
+          _resolvedModel, Model2Query(_resolvedModel, optimize = false).get // Optimize after binding input variables
         ) {
           val isJsPlatform = $isJsPlatform
           ${getApplyValues(outMoleculeClass)}
@@ -117,7 +117,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
     } else {
       q"""
         final class $inputMolecule extends $InputMoleculeTpe[$ObjType, ..$InTypes, ..$OutTypes](
-          $model, ${Model2Query(model, optimize = false)}
+          $model, ${Model2Query(model, optimize = false).get}
         ) {
           val isJsPlatform = $isJsPlatform
           ${getApplyValues(outMoleculeClass)}
@@ -150,6 +150,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
             final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $tplCasts
             final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
             final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
+            ..${sortCoordinatesFlat(model, doSort)}
             ..${compareFlat(model, doSort)}
           }
         """
@@ -180,6 +181,7 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
             ..${buildJsonNested(obj, nestedRefs, txMetas, postJsons).get}
             final override def outerTpl2obj(tpl0: (..$OutTypes)): $ObjType = ${objTree(obj, tpl)}
             final override def nestedLevels: Int = ${levels - 1}
+            ..${sortCoordinatesNested(model, levels)}
             ..${compareNested(model, levels, doSort)}
           }
         """

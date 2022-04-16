@@ -10,12 +10,11 @@ import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
 import molecule.datomic.base.transform.Model2Query
-import sbtmolecule.ast.schemaModel.Optional
 import scala.concurrent.{ExecutionContext, Future}
 
 
 /** Default data getter methods on molecules that return data as lists of tuples. */
-private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshalling[Obj, Tpl] =>
+private[molecule] trait GetTplsOLD[Obj, Tpl] extends Conversions { self: Marshalling[Obj, Tpl] =>
 
   // get ================================================================================================
 
@@ -46,7 +45,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
         } else {
           conn.jvmQuery(_model, _query).map { rows =>
             val totalCount = rows.size
-            rows2tuples(rows, totalCount, 0, totalCount)
+            rows2tuples2(rows, totalCount, 0, totalCount)
             //            rows2tuples(totalCount, rows, totalCount, 0)
           }
         }
@@ -89,7 +88,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
                 // (limit is negative)
                 ((totalCount + limit).max(0), totalCount)
               }
-              rows2tuples(rows, totalCount, from, until)
+              rows2tuples2(rows, totalCount, from, until)
             }
           }
         }
@@ -138,7 +137,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
                 // (limit is negative)
                 ((totalCount - offset + limit).max(0), (totalCount - offset).max(0))
               }
-              (rows2tuples(rows, totalCount, from, until), totalCount)
+              (rows2tuples2(rows, totalCount, from, until), totalCount)
             }
           }
         }
@@ -177,213 +176,334 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
           //          )
           Future((List.empty[Tpl], "cursor...", 42))
         } else {
-          //          paginate(conn, limit, cursor)
-          cursorRows2tuples(conn, limit, cursor)
+          paginate(conn, limit, cursor)
         }
       }
     )(Future.failed) // Wrap exception from input failure in Future
   }
 
-  private def cursorRows2tuples(
-    conn: Conn,
-    limit: Int,
-    cursor: String
-  )(implicit ec: ExecutionContext): Future[(List[Tpl], String, Int)] = {
-    val tuples = List.newBuilder[Tpl]
-    val log    = new log
-    log("=========================================================================")
+  private def paginate(conn: Conn, limit: Int, cursor: String)
+                      (implicit ec: ExecutionContext): Future[(List[Tpl], String, Int)] = {
     if (cursor.isEmpty) {
-
-      conn.jvmQuery(_model, _query).map { rows =>
-        val totalCount                                     = rows.size
-        val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
-        sortedRows.sort(this) // using macro-implemented `compare` method
-
-        log(_model)
-        sortedRows.forEach(row => log(row))
-        log("----------------- first")
-
-        var i     = 0
-        val until = limit.min(totalCount)
-        while (i != limit) {
-          tuples += row2tpl(sortedRows.get(i))
-          i += 1
-        }
-        val first           = sortedRows.get(0)
-        val last            = sortedRows.get(i - 1)
-        val firstSortValues = sortCoordinates.head.map(sc => first.get(sc.i).toString)
-        val lastSortValues  = sortCoordinates.head.map(sc => last.get(sc.i).toString)
-        val firstRow        = first.toString
-        val lastRow         = last.toString
-        val more            = totalCount - limit.min(totalCount)
-
-        log("from    : 0")
-        log("until   : " + until)
-        log("firstRow: " + firstRow)
-        log("lastRow : " + lastRow)
-        //      log("firstSortValues: " + firstSortValues)
-        //      log("lastSortValues : " + lastSortValues)
-        log.print()
-
-        val encodedCursor = encode(0, until, firstRow, lastRow, firstSortValues, lastSortValues)
-        (tuples.result(), encodedCursor, more)
-      }
+      // // todo: get from Dsl2Model at compile time
+      //    val primarySortUnique = true
+      //    val nsMap = conn.connProxy.nsMap
+      //    def unique(ns: String, attr: String): Boolean = nsMap(ns).attrs.find(_.name == attr).exists {
+      //      _.options.collectFirst(Seq("unique").contains(_)).nonEmpty
+      //      // use this when recompiled with updated sbt-molecule parsing
+      //      //      _.options.collectFirst(Seq("uniqueValue", "uniqueIdentity").contains(_)).nonEmpty
+      //    }
+      //      var uniqueIndex = -1
+      //      var i           = -1
+      //      def setUniqueIndex(elements: Seq[Element]): Unit = elements.foreach {
+      //        case Atom(ns, attr, _, _, _, _, _, _, "a1" | "d1") if unique(ns, attr) => i += 1; uniqueIndex = i
+      //        case Generic(ns, attr, _, _, "a1" | "d1") if unique(ns, attr)          => i += 1; uniqueIndex = i
+      //        case a: GenericAtom if a.attr.last != '$'                              => i += 1
+      //        case TxMetaData(elements)                                              => setUniqueIndex(elements)
+      //        case Composite(elements)                                               => setUniqueIndex(elements)
+      //        case _                                                                 =>
+      //      }
+      //      setUniqueIndex(_model.elements)
+      //
+      //      def offsetQuery(elements: Seq[Element]): Unit = elements.map {
+      //        case a@Atom(ns, attr, _, _, NoValue, _, _, _, "a1") if unique(ns, attr) =>
+      //          i += 1;
+      //          uniqueIndex = i
+      //          Seq(a.copy(value = ))
+      //
+      //        case a@Atom(ns, attr, _, _, NoValue, _, _, _, "d1") if unique(ns, attr) =>
+      //
+      //        case Generic(ns, attr, _, _, "a1" | "d1") if unique(ns, attr)          => i += 1; uniqueIndex = i
+      //        case a: GenericAtom if a.attr.last != '$'                              => i += 1
+      //        case TxMetaData(elements)                                              => setUniqueIndex(elements)
+      //        case Composite(elements)                                               => setUniqueIndex(elements)
+      //        case _                                                                 =>
+      //      }
+      //      if (uniqueIndex > -1) {
+      //      if (true) { // get primarySortUnique from Dsl2Model
+      //        paginateUnique(conn, limit, cursor)
+      //      } else {
+      //        null // todo
+      //      }
+      paginateUnique(conn, limit, Nil)
 
     } else {
-      val (from, until, prevFirstRow, prevLastRow, prevFirstSortValues, prevLastSortValues) = decode(cursor)
-
-      val forward     = limit > 0
-      val offsetModel = getOffsetModel(forward, prevFirstSortValues, prevLastSortValues)
-
-      conn.jvmQuery(offsetModel, Model2Query(offsetModel).get._1).map { rows =>
-
-        log(offsetModel)
-
-        val totalCount = rows.size
-        if (totalCount == 0) {
-          (List.empty[Tpl], ",", 0)
-        } else if (totalCount == 1) {
-          (List(row2tpl(rows.iterator.next)), ",", 0)
-
-        } else {
-          val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
-          sortedRows.sort(this) // using macro-implemented `compare` method
-
-          sortedRows.forEach(row => log(row))
-
-          val (newCursor, more) = if (forward) {
-            log("----------------- A -->")
-
-            // Walk forward to find row index of previous last row
-            var i = 0
-            while (sortedRows.get(i).toString != prevLastRow && i != limit) {
-              i += 1
-            }
-            val from  = i + 1 // Go from the row after
-            val until = (from + limit).min(totalCount)
-
-            log("from    : " + from)
-            log("until   : " + until)
-
-            i = from
-            while (i != until) {
-              tuples += row2tpl(sortedRows.get(i))
-              i += 1
-            }
-            val first           = sortedRows.get(from)
-            val last            = sortedRows.get(until - 1)
-            val firstRow        = first.toString
-            val lastRow         = last.toString
-            val firstSortValues = sortCoordinates.head.map(sc => first.get(sc.i).toString)
-            val lastSortValues  = sortCoordinates.head.map(sc => last.get(sc.i).toString)
-            val newCursor       = encode(from, until, firstRow, lastRow, firstSortValues, lastSortValues)
-            val more            = totalCount - i
-
-            log("firstRow: " + firstRow)
-            log("lastRow : " + lastRow)
-            //      log("firstSortValues: " + firstSortValues)
-            //      log("lastSortValues : " + lastSortValues)
-            log.print()
-
-            (newCursor, more)
-
-          } else {
-            log("----------------- A <--")
-
-            // Walk backwards to find row index of previous first row
-            var i     = totalCount - 1
-            val lower = i + limit // (limit is negative)
-            while (sortedRows.get(i).toString != prevFirstRow && i != lower) {
-              i -= 1
-            }
-            val until = i // Go from the row before
-            val from  = (until + limit).max(0) // (limit is negative)
-
-            log("from    : " + from)
-            log("until   : " + until)
-
-            i = from
-            while (i != until) {
-              tuples += row2tpl(sortedRows.get(i))
-              i += 1
-            }
-            val first           = sortedRows.get(from)
-            val last            = sortedRows.get(until)
-            val firstRow        = first.toString
-            val lastRow         = last.toString
-            val firstSortValues = sortCoordinates.head.map(sc => first.get(sc.i).toString)
-            val lastSortValues  = sortCoordinates.head.map(sc => last.get(sc.i).toString)
-            val newCursor       = encode(from, until, firstRow, lastRow, firstSortValues, lastSortValues)
-            val more            = (totalCount - from).min(from)
-
-            log("firstRow: " + firstRow)
-            log("lastRow : " + lastRow)
-            //      log("firstSortValues: " + firstSortValues)
-            //      log("lastSortValues : " + lastSortValues)
-            log.print()
-
-            (newCursor, more)
-          }
-          (tuples.result(), newCursor, more)
-        }
+      // todo: escape `,` in String values (like csv)
+      //      val tokens = new String(Base64.getDecoder.decode(cursor)).split(",").toSeq
+      val tokens = decode(cursor)
+      tokens.head match {
+        case "unique" => paginateUnique(conn, limit, tokens)
       }
     }
   }
 
   // todo: let macro find value extraction indexes at compile time
-  private def getOffsetModel(forward: Boolean, prevTokens: List[String], nextTokens: List[String]): Model = {
-    def addLimit(e: GenericAtom): Seq[Element] = {
-      val (asc, i)   = (e.sort.head == 'a', e.sort.last.toString.toInt - 1)
-      val token      = if (forward) nextTokens(i) else prevTokens(i)
-      val typedValue = e.tpe match {
-        case "Int"    => token.toInt
-        case "String" => token
-        case other    => throw MoleculeException("Unexpected sort attribute type: " + other)
-      }
-      val limitExpr  = if (forward && asc || !forward && !asc) Ge(typedValue) else Le(typedValue)
+  private def getOffsetModel(conn: Conn, forward: Boolean, tokens: Seq[String]): (Model, Int, Int) = {
+    var t    = -1 // top index
+    var s    = -1 // sub index
+    var i    = -1 // cur index
+    var sub  = false
+    var done = false
+
+    def addLimit(e: GenericAtom, ns: String, attr: String, rawValue: Any, asc: Boolean): Seq[Element] = {
+      i += 1
+      if (sub) s = i else t = i
+      val typedValue = conn.connProxy.nsMap(ns).attrs.find(_.name == attr)
+        .fold(throw MoleculeException(s"Couldn't find attribute `$attr` in nsMap")) {
+          x =>
+            x.tpe match {
+              case "Int"    => rawValue.toString.toInt
+              case "String" => rawValue.toString
+              case other    => throw MoleculeException("Unexpected sort attribute type: " + other)
+            }
+        }
+      val limitExpr  = if (asc) Gt(typedValue) else Lt(typedValue)
       e match {
-        case a: Atom    => Seq(a, a.copy(attr = a.attr + "_", value = limitExpr, sort = ""))
-        case g: Generic => Seq(g, g.copy(attr = g.attr + "_", value = limitExpr, sort = ""))
+        case a: Atom    => Seq(a, a.copy(attr = a.attr + "_", value = limitExpr))
+        case g: Generic => Seq(g, g.copy(attr = g.attr + "_", value = limitExpr))
       }
     }
-    def resolve(elements: Seq[Element]): Seq[Element] = elements.flatMap {
-      case e: GenericAtom if e.sort.nonEmpty => addLimit(e)
-      case e: GenericAtom                    => Seq(e)
-      case Composite(elements)               => Seq(Composite(resolve(elements)))
-      case TxMetaData(elements)              => Seq(TxMetaData(resolve(elements)))
-      case e                                 => Seq(e)
+
+    val offsetModel = if (forward && tokens.nonEmpty && tokens(2).nonEmpty) {
+      // Forward
+      val rawValue = tokens(2)
+      def resolve(elements: Seq[Element]): Seq[Element] = elements.flatMap {
+        case e@Atom(ns, attr, _, _, _, _, _, _, "a1")      => addLimit(e, ns, attr, rawValue, true)
+        case e@Atom(ns, attr, _, _, _, _, _, _, "d1")      => addLimit(e, ns, attr, rawValue, false)
+        case e@Generic(ns, attr, _, _, "a1")               => addLimit(e, ns, attr, rawValue, true)
+        case e@Generic(ns, attr, _, _, "d1")               => addLimit(e, ns, attr, rawValue, false)
+        case e: GenericAtom if !done && e.attr.last != '_' => i += 1; Seq(e)
+        case Composite(elements) if !done                  =>
+          sub = true
+          t = i + 1
+          i = -1
+          val resolvedElements = Seq(Composite(resolve(elements)))
+          if (s != -1) {
+            // Sort attribute was in this composite sub tuple
+            // Stop updating i and let it tell how many attributes there were in the sub tuple
+            done = true
+          }
+          if (i == 0) {
+            // Rollback presumption of multiple sub attributes
+            // only the sort attr in the sub tuple and t will already point it
+            s = -1 // cancel sub index
+          }
+          i = t // return to top level indexing
+          resolvedElements
+
+        case TxMetaData(elements) if !done =>
+          sub = true
+          t = i + 1
+          i = -1
+          val resolvedElements = Seq(TxMetaData(resolve(elements)))
+          if (s != -1) {
+            // Sort attribute was in this composite sub tuple
+            // Stop updating i and let it tell how many attributes there were in the sub tuple
+            done = true
+          }
+          if (i == 0) {
+            // Rollback presumption of multiple sub attributes
+            // only the sort attr in the sub tuple and t will already point it
+            s = -1 // cancel sub index
+          }
+          i = t // return to top level indexing
+          resolvedElements
+        case e                             => Seq(e)
+      }
+      Model(resolve(_model.elements))
+
+    } else if (tokens.nonEmpty && tokens(1).nonEmpty) {
+      // Backward
+      val rawValue = tokens(1)
+      def resolve(elements: Seq[Element]): Seq[Element] = elements.flatMap {
+        case e@Atom(ns, attr, _, _, _, _, _, _, "a1")      =>
+          addLimit(e, ns, attr, rawValue, false)
+        case e@Atom(ns, attr, _, _, _, _, _, _, "d1")      => addLimit(e, ns, attr, rawValue, true)
+        case e@Generic(ns, attr, _, _, "a1")               => addLimit(e, ns, attr, rawValue, false)
+        case e@Generic(ns, attr, _, _, "d1")               => addLimit(e, ns, attr, rawValue, true)
+        case e: GenericAtom if !done && e.attr.last != '_' => i += 1; Seq(e)
+        case Composite(elements) if !done                  =>
+          sub = true
+          t = i + 1
+          i = -1
+          val resolvedElements = Seq(Composite(resolve(elements)))
+          if (s != -1) {
+            // Sort attribute was in this composite sub tuple
+            // Stop updating i and let it tell how many attributes there were in the sub tuple
+            done = true
+          }
+          if (i == 0) {
+            // Rollback presumption of multiple sub attributes
+            // only the sort attr in the sub tuple and t will already point it
+            s = -1 // cancel sub index
+          }
+          i = t // return to top level indexing
+          resolvedElements
+
+        case TxMetaData(elements) if !done =>
+          sub = true
+          t = i + 1
+          i = -1
+          val resolvedElements = Seq(TxMetaData(resolve(elements)))
+          if (s != -1) {
+            // Sort attribute was in this composite sub tuple
+            // Stop updating i and let it tell how many attributes there were in the sub tuple
+            done = true
+          }
+          if (i == 0) {
+            // Rollback presumption of multiple sub attributes
+            // only the sort attr in the sub tuple and t will already point it
+            s = -1 // cancel sub index
+          }
+          i = t // return to top level indexing
+          resolvedElements
+        case e                             => Seq(e)
+      }
+      Model(resolve(_model.elements))
+
+    } else {
+      // Initial
+      def setIndexes(elements: Seq[Element]): Unit = elements.foreach {
+        case Atom(_, _, _, _, _, _, _, _, "a1" | "d1")     => i += 1; if (sub) s = i else t = i
+        case Generic(_, _, _, _, "a1" | "d1")              => i += 1; if (sub) s = i else t = i
+        case e: GenericAtom if !done && e.attr.last != '_' => i += 1
+        case Composite(elements) if !done                  =>
+          sub = true
+          // Presuming multiple composite attribute values in sub tuple
+          t = i + 1 // top level index of sub tuple
+          i = -1 // index attributes in sub tuple
+          setIndexes(elements)
+          if (s != -1) {
+            // Sort attribute was in this composite sub tuple
+            // Stop updating i and let it tell how many attributes there were in the sub tuple
+            done = true
+          }
+          if (i == 0) {
+            // Rollback presumption of multiple sub attributes
+            // only the sort attr in the sub tuple and t will already point it
+            s = -1 // cancel sub index
+          }
+          i = t // return to top level indexing
+
+        case TxMetaData(elements) if !done =>
+          sub = true
+          // Presuming multiple composite attribute values in sub tuple
+          t = i + 1 // top level index of sub tuple
+          i = -1 // index attributes in sub tuple
+          setIndexes(elements)
+          if (s != -1) {
+            // Sort attribute was in this composite sub tuple
+            // Stop updating i and let it tell how many attributes there were in the sub tuple
+            done = true
+          }
+          if (i == 0) {
+            // Rollback presumption of multiple sub attributes
+            // only the sort attr in the sub tuple and t will already point it
+            s = -1 // cancel sub index
+          }
+          i = t // return to top level indexing
+        case _                             => // no indexing when done indexing the sort attr
+      }
+      setIndexes(_model.elements)
+      _model
     }
-    Model(resolve(_model.elements))
+
+    val s1 = if (!sub && t == 0 && s == -1) -2 else s
+//    println("=======================================")
+//    println(s"$sub  $i  $t  $s  $s1")
+    (offsetModel, t, s1)
   }
+
+  private def output(data: List[Tpl], topIndex: Int, subIndex: Int, more0: Int): (List[Tpl], String, Int) = {
+    println("--------------------------------")
+    //    println(_model)
+    data foreach println
+    println("topIndex: " + topIndex)
+    println("subIndex: " + subIndex)
+
+    val (startValue, endValue, more) = if (data.isEmpty) {
+      ("", "", 0)
+
+    } else if (subIndex == -2) {
+      // Only one value
+      (data.head, data.last, more0)
+
+    } else if (subIndex == -1) {
+      // Top level
+      (
+        data.head.asInstanceOf[Product].productElement(topIndex),
+        data.last.asInstanceOf[Product].productElement(topIndex),
+        more0
+      )
+
+    } else {
+      // Composite sub tuple
+      (
+        data.head.asInstanceOf[Product].productElement(topIndex).asInstanceOf[Product].productElement(subIndex),
+        data.last.asInstanceOf[Product].productElement(topIndex).asInstanceOf[Product].productElement(subIndex),
+        more0
+      )
+    }
+
+    println("startValue: " + startValue)
+    println("endValue  : " + endValue)
+    (data, encode(s"unique,$startValue,$endValue"), more)
+  }
+
+  private def paginateUnique(conn: Conn, limit: Int, tokens: Seq[String])
+                            (implicit ec: ExecutionContext): Future[(List[Tpl], String, Int)] = {
+    val forward                           = limit > 0
+    val (offsetModel, topIndex, subIndex) = getOffsetModel(conn, forward, tokens)
+
+    if (tokens.isEmpty) {
+      conn.jvmQuery(_model, _query).map { rows =>
+        val totalCount = rows.size
+        val from       = 0
+        val until      = limit.min(totalCount)
+        val data       = rows2tuples2(rows, totalCount, from, until)
+        val more       = totalCount - until
+        output(data, topIndex, subIndex, more)
+      }
+
+    } else {
+
+      println("-----------------")
+      tokens foreach println
+      println(offsetModel)
+      sortCoordinates.headOption.fold(())(topCoordinates => topCoordinates foreach println)
+
+      conn.jvmQuery(offsetModel, Model2Query(offsetModel).get._1).map { rows =>
+        val totalCount = rows.size
+        if (forward) {
+          val from  = 0
+          val until = limit.min(totalCount)
+          val data  = rows2tuples2(rows, totalCount, from, until)
+          val more  = totalCount - until
+          output(data, topIndex, subIndex, more)
+        } else {
+          val from  = (totalCount + limit).max(0)
+          val until = totalCount
+          val data  = rows2tuples2(rows, totalCount, from, until)
+          val more  = (totalCount - from).min(from)
+          output(data, topIndex, subIndex, more)
+        }
+      }
+    }
+  }
+
+  private def paginateMerged(conn: Conn, limit: Int, tokens: Seq[String])
+                            (implicit ec: ExecutionContext): Future[(List[Tpl], String, Int)] = ???
 
 
   // Helpers ...............................
 
-  private def encode(
-    from: Int,
-    to: Int,
-    firstRow: String,
-    lastRow: String,
-    prevSortValues: List[String],
-    nextSortValues: List[String]
-  ): String = {
-    val cleanStrings = Seq(firstRow, lastRow) ++ prevSortValues ++ nextSortValues
-    Base64.getEncoder.encodeToString(
-      (Seq(from.toString, to.toString) ++ cleanStrings).mkString("__~~__").getBytes
-    )
+  private def encode(s: String): String = Base64.getEncoder.encodeToString(s.getBytes)
+  private def decode(s: String): Seq[String] = {
+    // todo: escape `,` in String values (like csv)
+    new String(Base64.getDecoder.decode(s)).split(",", -1).toSeq
   }
 
-  private def decode(cursor: String): (Int, Int, String, String, List[String], List[String]) = {
-    val values = new String(Base64.getDecoder.decode(cursor)).split("__~~__", -1).toList
-
-    val (from, until, firstRow, lastRow) = (values.head.toInt, values(1).toInt, values(2), values(3))
-    val size                             = sortCoordinates.head.size
-    val prevSortValues                   = values.slice(4, 4 + size)
-    val nextSortValues                   = values.takeRight(size)
-    (from, until, firstRow, lastRow, prevSortValues, nextSortValues)
-  }
-
-  private def rows2tuples(
+  private def rows2tuples2(
     rows: jCollection[jList[AnyRef]],
     totalCount: Int,
     from: Int, // first row index (inclusive)
@@ -1125,7 +1245,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
           } else {
             conn.jvmSchemaHistoryQuery(_model).map { rows =>
               val totalCount = rows.size
-              rows2tuples(rows, totalCount, 0, totalCount)
+              rows2tuples2(rows, totalCount, 0, totalCount)
             }
           }
         }

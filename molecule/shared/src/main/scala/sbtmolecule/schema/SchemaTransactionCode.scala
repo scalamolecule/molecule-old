@@ -71,7 +71,7 @@ case class SchemaTransactionCode(d: Model) extends MetaSchemaData {
       case a: DefAttr if a.clazz.take(3) == "One"                                => Seq(tpe("ref"), card("one")) ++ opts(a.options)
       case a: DefAttr                                                            => Seq(tpe("ref"), card("many")) ++ opts(a.options)
       case unexpected                                                            =>
-        throw new DataModelException(s"Unexpected attribute statement:\n" + unexpected)
+        throw DataModelException(s"Unexpected attribute statement:\n" + unexpected)
     }
     s"{${(ident +: stmts).mkString("\n        ")}}"
   }

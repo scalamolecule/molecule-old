@@ -173,7 +173,7 @@ case class Conn_Js(
     sortCoordinates: List[List[SortCoordinate]],
     unpacker: Iterator[String] => T
   )(implicit ec: ExecutionContext): Future[(List[T], Int)] = {
-    val queryString = Model2Query(model, schemaHistory0 = true, optimize = false)._2
+    val queryString = Model2Query(model, schemaHistory = true, optimize = false).get._2
     val schemaAttrs = model2schemaAttrs(model)
     rpc.schemaHistoryQuery2packed(connProxy, queryString, obj, schemaAttrs, sortCoordinates)
       .map{ case (packed, totalCount) => (unpack(packed, unpacker), totalCount)}
@@ -184,7 +184,7 @@ case class Conn_Js(
     obj: Obj,
     sortCoordinates: List[List[SortCoordinate]]
   )(implicit ec: ExecutionContext): Future[(String, Int)] = {
-    val queryString = Model2Query(model, schemaHistory0 = true, optimize = false)._2
+    val queryString = Model2Query(model, schemaHistory = true, optimize = false).get._2
     val schemaAttrs = model2schemaAttrs(model)
     rpc.schemaHistoryQuery2packed(connProxy, queryString, obj, schemaAttrs, sortCoordinates)
   }

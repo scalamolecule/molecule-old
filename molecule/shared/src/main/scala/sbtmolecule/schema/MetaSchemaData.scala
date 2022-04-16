@@ -1,7 +1,6 @@
 package sbtmolecule.schema
 
 import sbtmolecule.Helpers
-//import sbtmolecule.ast.metaSchema._
 import molecule.datomic.base.ast.metaSchema._
 import sbtmolecule.ast.schemaModel._
 
@@ -40,11 +39,12 @@ trait MetaSchemaData extends Helpers {
               case "Map" => 3
             }
             val opts: Seq[String]    = a.options
-              .map(_.datomicKeyValue)
-              .filterNot(o => o.startsWith(":db/index") || o.startsWith(":db/doc"))
+              .filterNot(o => o.datomicKeyValue.startsWith(":db/index") || o.datomicKeyValue.startsWith(":db/doc"))
               .flatMap {
-                case r":db/(.*)$opt\s+.*" => Some(opt.trim)
-                case "alias"              => None
+                case Optional(r":db/unique\s+.*", opt) => Some(s"${opt.head.toLower}" + opt.tail)
+                case Optional(r":db/(.*)$opt\s+.*", _) => Some(opt.trim)
+                case Optional("alias", _)              => None
+                case other                             => throw DataModelException("Unexpected Optional: " + other)
               }
             val doc : Option[String] = opts.collectFirst {
               case r":db/doc(.*)$txt" => txt.trim.tail.init

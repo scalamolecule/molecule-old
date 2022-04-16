@@ -1,10 +1,10 @@
 package molecule.datomic.base.transform
 
 import molecule.core.ast.elements._
+import molecule.core.util.Helpers
 import molecule.datomic.base.ast.query._
 import molecule.datomic.base.ops.QueryOps._
 import molecule.datomic.base.transform.exception.Model2QueryException
-import molecule.core.util.Helpers
 import scala.annotation.tailrec
 
 
@@ -16,36 +16,24 @@ import scala.annotation.tailrec
  * Custom DSL molecule --> Model --> Query --> Datomic query string
  *
  * */
-object Model2Query extends Helpers {
+case class Model2Query(
+  model: Model,
+  schemaHistory: Boolean = false,
+  optimize: Boolean = true
+) extends Helpers {
 
   private var nestedEntityClauses: List[FunctClause] = List.empty[FunctClause]
   private var nestedEntityVars   : List[Var]         = List.empty[Var]
   private var nestedLevel        : Int               = 1
-  private var _model             : Model             = _
   private var txMeta             : Boolean           = false
   private var txMetaComposite    : Boolean           = false
-  private var schemaHistory      : Boolean           = false
   private val datomGeneric       : Seq[String]       = Seq(
     "e", "e_", "tx", "t", "txInstant", "op", "tx_", "t_", "txInstant_", "op_", "a", "a_", "v", "v_"
   )
 
   def abort(msg: String): Nothing = throw Model2QueryException(msg)
 
-
-  def apply(
-    model: Model,
-    schemaHistory0: Boolean = false,
-    optimize: Boolean = true
-  ): (Query, String, Option[Throwable]) = {
-    schemaHistory = schemaHistory0
-
-    // reset on each apply
-    nestedEntityClauses = Nil
-    nestedLevel = 1
-    _model = model
-    txMeta = false
-    txMetaComposite = false
-
+  def get: (Query, String, Option[Throwable]) = {
     // Resolve elements
     val query = model.elements.foldLeft((Query(), "a", "b", "", "", "")) {
       case ((query_, e, v, prevNs, prevAttr, prevRefNs), element) =>
@@ -186,6 +174,7 @@ object Model2Query extends Helpers {
   def makeTxMetaData(model: Model, query0: Query, txMetaData: TxMetaData, w: String, prevNs: String, prevAttr: String, prevRefNs: String)
   : (Query, String, String, String, String, String) = {
     txMeta = true
+
     // Ensure tx variable is present in previous DataClause
     val (query, txV)                                 = {
       val (cls1, txV) = query0.wh.clauses.foldRight(Seq.empty[Clause], "") {
@@ -266,8 +255,9 @@ object Model2Query extends Helpers {
 
   def makeComposite(model: Model, query: Query, composite: Composite, e: String, v0: String, prevNs: String, prevAttr: String, prevRefNs: String)
   : (Query, String, String, String, String, String) = {
-    if (txMeta)
+    if (txMeta) {
       txMetaComposite = true
+    }
 
     @tailrec
     def getFirstEid(clauses: Seq[Clause]): String = clauses.head match {
@@ -555,7 +545,7 @@ object Model2Query extends Helpers {
 
   def resolveDatom(q: Query, e: String, g: Generic, v: String, v1: String): Query = g.attr match {
     case "e"         =>
-      val q1 = q.datomE(e, v, v1, _model.elements.size == 1)
+      val q1 = q.datomE(e, v, v1, model.elements.size == 1)
       val w  = if (q1.wh.clauses.exists {
         case DataClause(_, Var(`e`), KW(_, _, refNs), _, _, _) if refNs.nonEmpty => true
         case _                                                                   => false

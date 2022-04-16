@@ -12,6 +12,56 @@ object OffsetPagination extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
+    "From start/end" - core { implicit conn =>
+      for {
+        _ <- Ns.int.insert(1, 2, 3)
+
+        // From start ...............
+
+        // Positive limit returns data from start
+        _ <- Ns.int.get(2).map(_ ==> List(1, 2))
+
+        // Limit+offset returns data + total row count (for calculating number of expected pages)
+        _ <- Ns.int.get(2, 0).map(_ ==> (List(1, 2), 3))
+
+        // Offset/skip rows
+        _ <- Ns.int.get(2, 1).map(_ ==> (List(2, 3), 3))
+        _ <- Ns.int.get(2, 2).map(_ ==> (List(3), 3))
+        _ <- Ns.int.get(2, 3).map(_ ==> (Nil, 3))
+        _ <- Ns.int.get(2, 4).map(_ ==> (Nil, 3))
+
+
+        // From end ...............
+
+        // Negative limit returns data from end
+        _ <- Ns.int.get(-2).map(_ ==> List(2, 3))
+        _ <- Ns.int.get(-2, 0).map(_ ==> (List(2, 3), 3))
+
+        // Offset/skip rows from back
+        _ <- Ns.int.get(-2, 1).map(_ ==> (List(1, 2), 3))
+        _ <- Ns.int.get(-2, 2).map(_ ==> (List(1), 3))
+        _ <- Ns.int.get(-2, 3).map(_ ==> (Nil, 3))
+        _ <- Ns.int.get(-2, 4).map(_ ==> (Nil, 3))
+
+
+        // Wrong limit/offset ...............
+
+        _ <- Ns.int.a1.get(0, 10)
+          .map(_ ==> "Unexpected success")
+          .recover { case MoleculeException(msg, _) =>
+            msg ==> "Limit cannot be 0. Please use a positive number to get rows " +
+              "from start, or a negative number to get rows from end."
+          }
+
+        _ <- Ns.int.a1.get(20, -10)
+          .map(_ ==> "Unexpected success")
+          .recover { case MoleculeException(msg, _) =>
+            msg ==> "Offset has to be >= 0. Found: -10"
+          }
+      } yield ()
+    }
+
+
     "flat" - core { implicit conn =>
       for {
         _ <- Ns.int.insert(1, 2, 3)
@@ -675,23 +725,6 @@ object OffsetPagination extends AsyncTestSuite {
 
         // Empty result set returned for offset exceeding total count
         _ <- Ns.str.str(count).get.map(_ ==> List(("a", 2), ("b", 1), ("c", 1)))
-      } yield ()
-    }
-
-
-    "Wrong offset/limit" - core { implicit conn =>
-      for {
-        _ <- Ns.int.a1.get(0, 10)
-          .map(_ ==> "Unexpected success")
-          .recover { case MoleculeException(msg, _) =>
-            msg ==> "Limit has to be a positive number. Found: 0"
-          }
-
-        _ <- Ns.int.a1.get(10, -10)
-          .map(_ ==> "Unexpected success")
-          .recover { case MoleculeException(msg, _) =>
-            msg ==> "Offset has to be >= 0. Found: -10"
-          }
       } yield ()
     }
 

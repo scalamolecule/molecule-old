@@ -4,7 +4,7 @@ import sbtmolecule.Helpers
 
 object schemaModel extends Helpers {
 
-  class DataModelException(message: String) extends RuntimeException(message)
+  case class DataModelException(message: String) extends RuntimeException(message)
 
   case class Model(pkg: String, maxIn: Int, maxOut: Int, domain: String, curPart: String, curPartDescr: String, nss: Seq[Namespace]) {
     def addAttr(attr: DefAttr): Model = {
