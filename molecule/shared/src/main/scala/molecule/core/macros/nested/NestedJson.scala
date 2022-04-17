@@ -5,11 +5,13 @@ import java.util
 import java.util.{Collection => jCollection, List => jList}
 import molecule.core.api.Molecule_0
 import molecule.core.macros.rowAttr.JsonBase
+import molecule.core.pagination.CursorJson
 import molecule.datomic.base.facade.Conn
 import scala.concurrent.{ExecutionContext, Future}
 
 /** Nested json builder classes of various levels. */
-trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Molecule_0[Obj, Tpl] =>
+trait NestedJson[Obj, Tpl]
+  extends NestedBase[Obj, Tpl] with CursorJson[Obj, Tpl] with JsonBase { self: Molecule_0[Obj, Tpl] =>
 
   protected def jsonBranch0(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = ???
   protected def jsonBranch1(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = ???
@@ -148,77 +150,7 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
   }
 
 
-  // Pagination .............................
-
-  final def selectRows(
-    sortedRows: util.ArrayList[jList[AnyRef]],
-    limit: Int,
-    offset: Int
-  ): (jCollection[jList[AnyRef]], Int) = {
-    var topRowIndex   = -1
-    var curId : jLong = 0
-    var prevId: jLong = 0
-    if (limit == 0) {
-      // All rows (offset is 0)
-      sortedRows.forEach { row =>
-        curId = row.get(0).asInstanceOf[jLong]
-        if (curId != prevId) {
-          topRowIndex += 1
-        }
-        prevId = curId
-      }
-      return (sortedRows, topRowIndex + 1)
-    }
-
-    val totalCount         = sortedRows.size
-    val selectedRows       = new util.ArrayList[jList[AnyRef]]()
-    var row: jList[AnyRef] = null
-    var continue           = true
-
-    if (limit > 0) {
-      // From start ..........
-      val until = offset + limit
-      var i     = 0
-      while (continue && i != totalCount) {
-        row = sortedRows.get(i)
-        curId = row.get(0).asInstanceOf[jLong]
-        if (curId != prevId) {
-          topRowIndex += 1
-        }
-        if (topRowIndex >= offset && topRowIndex < until) {
-          selectedRows.add(row)
-        } else if (topRowIndex == until) {
-          continue = false
-        }
-        prevId = curId
-        i += 1
-      }
-      (selectedRows, topRowIndex + 1)
-
-    } else {
-      // From end ..........
-      var acc   = List.empty[jList[AnyRef]]
-      val until = offset - limit // (limit is negative)
-      var i     = totalCount - 1
-      while (continue && i != -1) {
-        row = sortedRows.get(i)
-        curId = row.get(0).asInstanceOf[jLong]
-        if (curId != prevId) {
-          topRowIndex += 1
-        }
-        if (topRowIndex >= offset && topRowIndex < until) {
-          acc = row :: acc
-        } else if (topRowIndex == until) {
-          continue = false
-        }
-        prevId = curId
-        i -= 1
-      }
-      // Make java list with selected reversed rows
-      acc.foreach(row => selectedRows.add(row))
-      (selectedRows, topRowIndex + 1)
-    }
-  }
+  // Nested json ................................
 
   final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
     getNestedJson(0, 0)
@@ -253,7 +185,7 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
       val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
       sortedRows.sort(this)
       val flatCount                  = sortedRows.size
-      val (selectedRows, totalCount) = selectRows(sortedRows, limit, offset)
+      val (selectedRows, totalCount) = selectJsonRows(sortedRows, limit, offset)
       if (flatCount == 0 || offset >= totalCount) {
         sb0.append("]")
       } else {
