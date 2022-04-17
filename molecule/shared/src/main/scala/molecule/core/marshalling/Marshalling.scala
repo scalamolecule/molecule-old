@@ -3,9 +3,11 @@ package molecule.core.marshalling
 import java.util.{Comparator, List => jList}
 import molecule.core.api.Molecule
 import molecule.core.ast.elements.Model
+import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.ast.{SortCoordinate, nodes}
 import molecule.core.util.Helpers
 import molecule.datomic.base.ast.query.Query
+import scala.concurrent.Future
 
 
 /** Marshalling methods
@@ -41,4 +43,12 @@ abstract class Marshalling[Obj, Tpl](model: Model, queryData: (Query, String, Op
   protected def packed2tpl(vs: Iterator[String]): Tpl = ???
   protected def packed2obj(vs: Iterator[String]): Obj = ???
   protected def packed2json(vs: Iterator[String], sb: StringBuffer): StringBuffer = ???
+
+
+  def offsetException(offset: Int): Future[Nothing] = Future.failed(
+    MoleculeException("Offset has to be >= 0. Found: " + offset))
+
+  def limit0exception: Future[Nothing] = Future.failed(
+    MoleculeException("Limit cannot be 0. " +
+      "Please use a positive number to get rows from start, or a negative number to get rows from end."))
 }

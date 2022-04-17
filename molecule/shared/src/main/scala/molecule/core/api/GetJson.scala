@@ -70,8 +70,7 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
    */
   def getJson(limit: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
     if (limit == 0) {
-      Future.failed(MoleculeException("Limit cannot be 0. " +
-        "Please use a positive number to get rows from start, or a negative number to get rows from end."))
+      limit0exception
     } else {
       _inputThrowable.fold(
         futConn.flatMap { conn =>
@@ -114,10 +113,9 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
    */
   def getJson(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
     if (limit == 1) {
-      Future.failed(MoleculeException("Limit cannot be 0. " +
-        "Please use a positive number to get rows from start, or a negative number to get rows from end."))
+      limit0exception
     } else if (offset < 0) {
-      Future.failed(MoleculeException("Offset has to be >= 0. Found: " + offset))
+      offsetException(offset)
     } else {
       _inputThrowable.fold(
         futConn.flatMap { conn =>

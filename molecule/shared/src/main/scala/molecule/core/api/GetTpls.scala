@@ -69,8 +69,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
    */
   def get(limit: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
     if (limit == 0) {
-      Future.failed(MoleculeException("Limit cannot be 0. " +
-        "Please use a positive number to get rows from start, or a negative number to get rows from end."))
+      limit0exception
     } else {
       _inputThrowable.fold(
         futConn.flatMap { conn =>
@@ -96,7 +95,6 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
     }
   }
 
-
   /** Get Future with List of n rows as tuples matching a molecule.
    * {{{
    * Person.name.age.get(1).map(_ ==> List(
@@ -116,10 +114,9 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
   def get(limit: Int, offset: Int)
          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] = {
     if (limit == 0) {
-      Future.failed(MoleculeException("Limit cannot be 0. " +
-        "Please use a positive number to get rows from start, or a negative number to get rows from end."))
+      limit0exception
     } else if (offset < 0) {
-      Future.failed(MoleculeException("Offset has to be >= 0. Found: " + offset))
+      offsetException(offset)
     } else {
       _inputThrowable.fold(
         futConn.flatMap { conn =>
@@ -165,7 +162,9 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
    */
   def get(limit: Int, cursor: String)
          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], String, Int)] = {
-    if (!sortRows) {
+    if (limit == 0) {
+      limit0exception
+    } else if (!sortRows) {
       return Future.failed(MoleculeException("Molecule needs to be sorted to use cursor pagination."))
     }
     _inputThrowable.fold(
@@ -177,7 +176,6 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
           //          )
           Future((List.empty[Tpl], "cursor...", 42))
         } else {
-          //          paginate(conn, limit, cursor)
           cursorRows2tuples(conn, limit, cursor)
         }
       }
