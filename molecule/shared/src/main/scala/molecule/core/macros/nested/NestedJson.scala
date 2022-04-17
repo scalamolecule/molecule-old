@@ -154,11 +154,11 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
     allSortedRows: jCollection[jList[AnyRef]],
     limit: Int,
     offset: Int
-  ): (Int, jCollection[jList[AnyRef]]) = {
+  ): (jCollection[jList[AnyRef]], Int) = {
     var topRowIndex   = -1
     var curId : jLong = 0
     var prevId: jLong = 0
-    val sortedRows    = if (limit == -1) {
+    val sortedRows    = if (limit == 0) {
       // All rows (offset is 0)
       allSortedRows.forEach { row =>
         curId = row.get(0).asInstanceOf[jLong]
@@ -174,7 +174,7 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
       val rowArray           = new util.ArrayList[jList[AnyRef]](allSortedRows)
       val selectedSortedRows = new util.ArrayList[jList[AnyRef]]()
       var flatRowIndex       = 0
-      val last               = if (limit == -1) Int.MaxValue else offset + limit
+      val until               = if (limit == 0) Int.MaxValue else offset + limit
       var row: jList[AnyRef] = null
       while (flatRowIndex != flatTotalCount) {
         row = rowArray.get(flatRowIndex)
@@ -182,7 +182,7 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
         if (curId != prevId) {
           topRowIndex += 1
         }
-        if (topRowIndex >= offset && topRowIndex < last) {
+        if (topRowIndex >= offset && topRowIndex < until) {
           selectedSortedRows.add(row)
         }
         prevId = curId
@@ -190,597 +190,510 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
       }
       selectedSortedRows
     }
-    (topRowIndex + 1, sortedRows)
+    (sortedRows, topRowIndex + 1)
   }
 
   final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
-    getJson(-1, 0)
+    getNestedJson(0, 0)
   }
 
   final override def getJson(limit: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
-    getJson(limit, 0)
+    getNestedJson(limit, 0)
+  }
+
+  final override def getJson(limit: Int, offset: Int)
+                            (implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    getNestedJson(limit, offset)
+  }
+
+  final private def getNestedJson(limit: Int, offset: Int)
+                                 (implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
+    for {
+      conn <- futConn
+      rows <- conn.jvmQuery(_model, _query)
+    } yield {
+      resetJsonVars()
+      val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
+      sortedRows.sort(this)
+      val flatCount                  = sortedRows.size
+      val (selectedRows, totalCount) = getCountAndSelectedRowsAsc(sortedRows, limit, offset)
+      if (flatCount == 0 || offset >= totalCount) {
+        sb0.append("]")
+      } else {
+        flat2json(selectedRows, flatCount)
+      }
+      outerJson(totalCount, if (limit == 0) totalCount else limit, offset, sb0)
+    }
   }
 }
 
 
 object NestedJson {
 
-  trait NestedJson1[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedJson1[Obj, Tpl] extends NestedJson[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-    final override def getJson(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
-      for {
-        conn <- futConn
-        data <- conn.jvmQuery(_model, _query)
-      } yield {
-        resetJsonVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        val flatCount                                = rows.size
-        rows.sort(this)
-        val (totalCount, selectedRows) = getCountAndSelectedRowsAsc(rows, limit, offset)
+    final override def flat2json(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): Unit = {
+      if (flatCount == 1) {
+        row = selectedRows.iterator.next
+        sb0.append("\n      ")
+        jsonBranch0(sb0, row,
+          jsonLeaf1(sb1, row))
+        sb0.append("\n    ]")
 
-        if (flatCount == 0 || offset >= totalCount) {
-          // Empty result set
-          sb0.append("]")
+      } else {
+        val lastFlat = selectedRows.size
+        val it       = selectedRows.iterator
+        sb0.append("\n      ")
+        while (it.hasNext) {
+          i += 1
+          row = it.next
+          e0 = row.get(0).asInstanceOf[jLong]
 
-        } else if (flatCount == 1) {
-          row = selectedRows.iterator.next
-          sb0.append("\n      ")
-          jsonBranch0(sb0, row,
-            jsonLeaf1(sb1, row))
-          sb0.append("\n    ]")
-
-        } else {
-          val lastFlat = selectedRows.size
-          val it       = selectedRows.iterator
-          sb0.append("\n      ")
-          while (it.hasNext) {
-            i += 1
-            row = it.next
-            e0 = row.get(0).asInstanceOf[jLong]
-
-            if (nextRow) {
-              if (e0 != p0) {
-                jsonBranch0(sb0, prevRow, sb1)
-              }
-              jsonLeaf1(sb1, row)
-              if (i == lastFlat) {
-                jsonBranch0(sb0, row, sb1)
-              }
-            } else {
-              jsonLeaf1(sb1, row)
-              nextRow = true
+          if (nextRow) {
+            if (e0 != p0) {
+              jsonBranch0(sb0, prevRow, sb1)
             }
-
-            prevRow = row
-            p0 = e0
+            jsonLeaf1(sb1, row)
+            if (i == lastFlat) {
+              jsonBranch0(sb0, row, sb1)
+            }
+          } else {
+            jsonLeaf1(sb1, row)
+            nextRow = true
           }
-          sb0.append("\n    ]")
+
+          prevRow = row
+          p0 = e0
         }
-        outerJson(totalCount, if (limit == -1) totalCount else limit, offset, sb0)
+        sb0.append("\n    ]")
       }
     }
   }
 
-  trait NestedJson2[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
-      for {
-        conn <- futConn
-        data <- conn.jvmQuery(_model, _query)
-      } yield {
-        resetJsonVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        val flatCount                                = rows.size
-        rows.sort(this)
-        val (totalCount, selectedRows) = getCountAndSelectedRowsAsc(rows, limit, offset)
+  trait NestedJson2[Obj, Tpl] extends NestedJson[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-        if (flatCount == 0 || offset >= totalCount) {
-          // Empty result set
-          sb0.append("]")
+    final override def flat2json(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): Unit = {
+      if (flatCount == 1) {
+        row = selectedRows.iterator.next
+        sb0.append("\n      ")
+        jsonBranch0(sb0, row,
+          jsonBranch1(sb1, row,
+            jsonLeaf2(sb2, row)))
+        sb0.append("\n    ]")
 
-        } else if (flatCount == 1) {
-          row = rows.iterator.next
-          sb0.append("\n      ")
-          jsonBranch0(sb0, row,
-            jsonBranch1(sb1, row,
-              jsonLeaf2(sb2, row)))
-          sb0.append("\n    ]")
+      } else {
+        val lastFlat = selectedRows.size
+        val it       = selectedRows.iterator
+        sb0.append("\n      ")
+        while (it.hasNext) {
+          i += 1
+          row = it.next
+          e0 = row.get(0).asInstanceOf[jLong]
+          e1 = row.get(1).asInstanceOf[jLong]
 
-        } else {
-          rows.sort(this)
-          val lastFlat = selectedRows.size
-          val it       = selectedRows.iterator
-          sb0.append("\n      ")
-          while (it.hasNext) {
-            i += 1
-            row = it.next
-            e0 = row.get(0).asInstanceOf[jLong]
-            e1 = row.get(1).asInstanceOf[jLong]
-
-            if (nextRow) {
-              if (e0 != p0) {
-                jsonBranch1(sb1, prevRow, sb2)
-                jsonBranch0(sb0, prevRow, sb1)
-              } else if (e1 != p1) {
-                jsonBranch1(sb1, prevRow, sb2)
-              }
-              jsonLeaf2(sb2, row)
-              if (i == lastFlat) {
-                jsonBranch1(sb1, row, sb2)
-                jsonBranch0(sb0, row, sb1)
-              }
-            } else {
-              jsonLeaf2(sb2, row)
-              nextRow = true
+          if (nextRow) {
+            if (e0 != p0) {
+              jsonBranch1(sb1, prevRow, sb2)
+              jsonBranch0(sb0, prevRow, sb1)
+            } else if (e1 != p1) {
+              jsonBranch1(sb1, prevRow, sb2)
             }
-
-            prevRow = row
-            p0 = e0
-            p1 = e1
+            jsonLeaf2(sb2, row)
+            if (i == lastFlat) {
+              jsonBranch1(sb1, row, sb2)
+              jsonBranch0(sb0, row, sb1)
+            }
+          } else {
+            jsonLeaf2(sb2, row)
+            nextRow = true
           }
-          sb0.append("\n    ]")
+
+          prevRow = row
+          p0 = e0
+          p1 = e1
         }
-        outerJson(totalCount, if (limit == -1) totalCount else limit, offset, sb0)
+        sb0.append("\n    ]")
       }
     }
   }
 
-  trait NestedJson3[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
-      for {
-        conn <- futConn
-        data <- conn.jvmQuery(_model, _query)
-      } yield {
-        resetJsonVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        val flatCount                                = rows.size
-        rows.sort(this)
-        val (totalCount, selectedRows) = getCountAndSelectedRowsAsc(rows, limit, offset)
+  trait NestedJson3[Obj, Tpl] extends NestedJson[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-        if (flatCount == 0 || offset >= totalCount) {
-          // Empty result set
-          sb0.append("]")
+    final override def flat2json(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): Unit = {
+      if (flatCount == 1) {
+        row = selectedRows.iterator.next
+        sb0.append("\n      ")
+        jsonBranch0(sb0, row,
+          jsonBranch1(sb1, row,
+            jsonBranch2(sb2, row,
+              jsonLeaf3(sb3, row))))
+        sb0.append("\n    ]")
 
-        } else if (flatCount == 1) {
-          row = rows.iterator.next
-          sb0.append("\n      ")
-          jsonBranch0(sb0, row,
-            jsonBranch1(sb1, row,
-              jsonBranch2(sb2, row,
-                jsonLeaf3(sb3, row))))
-          sb0.append("\n    ]")
+      } else {
+        val lastFlat = selectedRows.size
+        val it       = selectedRows.iterator
+        sb0.append("\n      ")
+        while (it.hasNext) {
+          i += 1
+          row = it.next
+          e0 = row.get(0).asInstanceOf[jLong]
+          e1 = row.get(1).asInstanceOf[jLong]
+          e2 = row.get(2).asInstanceOf[jLong]
 
-        } else {
-          rows.sort(this)
-          val lastFlat = selectedRows.size
-          val it       = selectedRows.iterator
-          sb0.append("\n      ")
-          while (it.hasNext) {
-            i += 1
-            row = it.next
-            e0 = row.get(0).asInstanceOf[jLong]
-            e1 = row.get(1).asInstanceOf[jLong]
-            e2 = row.get(2).asInstanceOf[jLong]
-
-            if (nextRow) {
-              if (e0 != p0) {
-                jsonBranch2(sb2, prevRow, sb3)
-                jsonBranch1(sb1, prevRow, sb2)
-                jsonBranch0(sb0, prevRow, sb1)
-              } else if (e1 != p1) {
-                jsonBranch2(sb2, prevRow, sb3)
-                jsonBranch1(sb1, prevRow, sb2)
-              } else if (e2 != p2) {
-                jsonBranch2(sb2, prevRow, sb3)
-              }
-              jsonLeaf3(sb3, row)
-              if (i == lastFlat) {
-                jsonBranch2(sb2, row, sb3)
-                jsonBranch1(sb1, row, sb2)
-                jsonBranch0(sb0, row, sb1)
-              }
-            } else {
-              jsonLeaf3(sb3, row)
-              nextRow = true
+          if (nextRow) {
+            if (e0 != p0) {
+              jsonBranch2(sb2, prevRow, sb3)
+              jsonBranch1(sb1, prevRow, sb2)
+              jsonBranch0(sb0, prevRow, sb1)
+            } else if (e1 != p1) {
+              jsonBranch2(sb2, prevRow, sb3)
+              jsonBranch1(sb1, prevRow, sb2)
+            } else if (e2 != p2) {
+              jsonBranch2(sb2, prevRow, sb3)
             }
-
-            prevRow = row
-            p0 = e0
-            p1 = e1
-            p2 = e2
+            jsonLeaf3(sb3, row)
+            if (i == lastFlat) {
+              jsonBranch2(sb2, row, sb3)
+              jsonBranch1(sb1, row, sb2)
+              jsonBranch0(sb0, row, sb1)
+            }
+          } else {
+            jsonLeaf3(sb3, row)
+            nextRow = true
           }
-          sb0.append("\n    ]")
+
+          prevRow = row
+          p0 = e0
+          p1 = e1
+          p2 = e2
         }
-        outerJson(totalCount, if (limit == -1) totalCount else limit, offset, sb0)
+        sb0.append("\n    ]")
       }
     }
   }
 
-  trait NestedJson4[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
-      for {
-        conn <- futConn
-        data <- conn.jvmQuery(_model, _query)
-      } yield {
-        resetJsonVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        val flatCount                                = rows.size
-        rows.sort(this)
-        val (totalCount, selectedRows) = getCountAndSelectedRowsAsc(rows, limit, offset)
+  trait NestedJson4[Obj, Tpl] extends NestedJson[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-        if (flatCount == 0 || offset >= totalCount) {
-          // Empty result set
-          sb0.append("]")
+    final override def flat2json(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): Unit = {
+      if (flatCount == 1) {
+        row = selectedRows.iterator.next
+        sb0.append("\n      ")
+        jsonBranch0(sb0, row,
+          jsonBranch1(sb1, row,
+            jsonBranch2(sb2, row,
+              jsonBranch3(sb3, row,
+                jsonLeaf4(sb4, row)))))
+        sb0.append("\n    ]")
 
-        } else if (flatCount == 1) {
-          row = rows.iterator.next
-          sb0.append("\n      ")
-          jsonBranch0(sb0, row,
-            jsonBranch1(sb1, row,
-              jsonBranch2(sb2, row,
-                jsonBranch3(sb3, row,
-                  jsonLeaf4(sb4, row)))))
-          sb0.append("\n    ]")
+      } else {
+        val lastFlat = selectedRows.size
+        val it       = selectedRows.iterator
+        sb0.append("\n      ")
+        while (it.hasNext) {
+          i += 1
+          row = it.next
+          e0 = row.get(0).asInstanceOf[jLong]
+          e1 = row.get(1).asInstanceOf[jLong]
+          e2 = row.get(2).asInstanceOf[jLong]
+          e3 = row.get(3).asInstanceOf[jLong]
 
-        } else {
-          rows.sort(this)
-          val lastFlat = selectedRows.size
-          val it       = selectedRows.iterator
-          sb0.append("\n      ")
-          while (it.hasNext) {
-            i += 1
-            row = it.next
-            e0 = row.get(0).asInstanceOf[jLong]
-            e1 = row.get(1).asInstanceOf[jLong]
-            e2 = row.get(2).asInstanceOf[jLong]
-            e3 = row.get(3).asInstanceOf[jLong]
-
-            if (nextRow) {
-              if (e0 != p0) {
-                jsonBranch3(sb3, prevRow, sb4)
-                jsonBranch2(sb2, prevRow, sb3)
-                jsonBranch1(sb1, prevRow, sb2)
-                jsonBranch0(sb0, prevRow, sb1)
-              } else if (e1 != p1) {
-                jsonBranch3(sb3, prevRow, sb4)
-                jsonBranch2(sb2, prevRow, sb3)
-                jsonBranch1(sb1, prevRow, sb2)
-              } else if (e2 != p2) {
-                jsonBranch3(sb3, prevRow, sb4)
-                jsonBranch2(sb2, prevRow, sb3)
-              } else if (e3 != p3) {
-                jsonBranch3(sb3, prevRow, sb4)
-              }
-              jsonLeaf4(sb4, row)
-              if (i == lastFlat) {
-                jsonBranch3(sb3, row, sb4)
-                jsonBranch2(sb2, row, sb3)
-                jsonBranch1(sb1, row, sb2)
-                jsonBranch0(sb0, row, sb1)
-              }
-            } else {
-              jsonLeaf4(sb4, row)
-              nextRow = true
+          if (nextRow) {
+            if (e0 != p0) {
+              jsonBranch3(sb3, prevRow, sb4)
+              jsonBranch2(sb2, prevRow, sb3)
+              jsonBranch1(sb1, prevRow, sb2)
+              jsonBranch0(sb0, prevRow, sb1)
+            } else if (e1 != p1) {
+              jsonBranch3(sb3, prevRow, sb4)
+              jsonBranch2(sb2, prevRow, sb3)
+              jsonBranch1(sb1, prevRow, sb2)
+            } else if (e2 != p2) {
+              jsonBranch3(sb3, prevRow, sb4)
+              jsonBranch2(sb2, prevRow, sb3)
+            } else if (e3 != p3) {
+              jsonBranch3(sb3, prevRow, sb4)
             }
-
-            prevRow = row
-            p0 = e0
-            p1 = e1
-            p2 = e2
-            p3 = e3
+            jsonLeaf4(sb4, row)
+            if (i == lastFlat) {
+              jsonBranch3(sb3, row, sb4)
+              jsonBranch2(sb2, row, sb3)
+              jsonBranch1(sb1, row, sb2)
+              jsonBranch0(sb0, row, sb1)
+            }
+          } else {
+            jsonLeaf4(sb4, row)
+            nextRow = true
           }
-          sb0.append("\n    ]")
+
+          prevRow = row
+          p0 = e0
+          p1 = e1
+          p2 = e2
+          p3 = e3
         }
-        outerJson(totalCount, if (limit == -1) totalCount else limit, offset, sb0)
+        sb0.append("\n    ]")
       }
     }
   }
 
-  trait NestedJson5[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
-      for {
-        conn <- futConn
-        data <- conn.jvmQuery(_model, _query)
-      } yield {
-        resetJsonVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        val flatCount                                = rows.size
-        rows.sort(this)
-        val (totalCount, selectedRows) = getCountAndSelectedRowsAsc(rows, limit, offset)
+  trait NestedJson5[Obj, Tpl] extends NestedJson[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-        if (flatCount == 0 || offset >= totalCount) {
-          // Empty result set
-          sb0.append("]")
+    final override def flat2json(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): Unit = {
+      if (flatCount == 1) {
+        row = selectedRows.iterator.next
+        sb0.append("\n      ")
+        jsonBranch0(sb0, row,
+          jsonBranch1(sb1, row,
+            jsonBranch2(sb2, row,
+              jsonBranch3(sb3, row,
+                jsonBranch4(sb4, row,
+                  jsonLeaf5(sb5, row))))))
+        sb0.append("\n    ]")
 
-        } else if (flatCount == 1) {
-          row = rows.iterator.next
-          sb0.append("\n      ")
-          jsonBranch0(sb0, row,
-            jsonBranch1(sb1, row,
-              jsonBranch2(sb2, row,
-                jsonBranch3(sb3, row,
-                  jsonBranch4(sb4, row,
-                    jsonLeaf5(sb5, row))))))
-          sb0.append("\n    ]")
+      } else {
+        val lastFlat = selectedRows.size
+        val it       = selectedRows.iterator
+        sb0.append("\n      ")
+        while (it.hasNext) {
+          i += 1
+          row = it.next
+          e0 = row.get(0).asInstanceOf[jLong]
+          e1 = row.get(1).asInstanceOf[jLong]
+          e2 = row.get(2).asInstanceOf[jLong]
+          e3 = row.get(3).asInstanceOf[jLong]
+          e4 = row.get(4).asInstanceOf[jLong]
 
-        } else {
-          rows.sort(this)
-          val lastFlat = selectedRows.size
-          val it       = selectedRows.iterator
-          sb0.append("\n      ")
-          while (it.hasNext) {
-            i += 1
-            row = it.next
-            e0 = row.get(0).asInstanceOf[jLong]
-            e1 = row.get(1).asInstanceOf[jLong]
-            e2 = row.get(2).asInstanceOf[jLong]
-            e3 = row.get(3).asInstanceOf[jLong]
-            e4 = row.get(4).asInstanceOf[jLong]
-
-            if (nextRow) {
-              if (e0 != p0) {
-                jsonBranch4(sb4, prevRow, sb5)
-                jsonBranch3(sb3, prevRow, sb4)
-                jsonBranch2(sb2, prevRow, sb3)
-                jsonBranch1(sb1, prevRow, sb2)
-                jsonBranch0(sb0, prevRow, sb1)
-              } else if (e1 != p1) {
-                jsonBranch4(sb4, prevRow, sb5)
-                jsonBranch3(sb3, prevRow, sb4)
-                jsonBranch2(sb2, prevRow, sb3)
-                jsonBranch1(sb1, prevRow, sb2)
-              } else if (e2 != p2) {
-                jsonBranch4(sb4, prevRow, sb5)
-                jsonBranch3(sb3, prevRow, sb4)
-                jsonBranch2(sb2, prevRow, sb3)
-              } else if (e3 != p3) {
-                jsonBranch4(sb4, prevRow, sb5)
-                jsonBranch3(sb3, prevRow, sb4)
-              } else if (e4 != p4) {
-                jsonBranch4(sb4, prevRow, sb5)
-              }
-              jsonLeaf5(sb5, row)
-              if (i == lastFlat) {
-                jsonBranch4(sb4, row, sb5)
-                jsonBranch3(sb3, row, sb4)
-                jsonBranch2(sb2, row, sb3)
-                jsonBranch1(sb1, row, sb2)
-                jsonBranch0(sb0, row, sb1)
-              }
-            } else {
-              jsonLeaf5(sb5, row)
-              nextRow = true
+          if (nextRow) {
+            if (e0 != p0) {
+              jsonBranch4(sb4, prevRow, sb5)
+              jsonBranch3(sb3, prevRow, sb4)
+              jsonBranch2(sb2, prevRow, sb3)
+              jsonBranch1(sb1, prevRow, sb2)
+              jsonBranch0(sb0, prevRow, sb1)
+            } else if (e1 != p1) {
+              jsonBranch4(sb4, prevRow, sb5)
+              jsonBranch3(sb3, prevRow, sb4)
+              jsonBranch2(sb2, prevRow, sb3)
+              jsonBranch1(sb1, prevRow, sb2)
+            } else if (e2 != p2) {
+              jsonBranch4(sb4, prevRow, sb5)
+              jsonBranch3(sb3, prevRow, sb4)
+              jsonBranch2(sb2, prevRow, sb3)
+            } else if (e3 != p3) {
+              jsonBranch4(sb4, prevRow, sb5)
+              jsonBranch3(sb3, prevRow, sb4)
+            } else if (e4 != p4) {
+              jsonBranch4(sb4, prevRow, sb5)
             }
-
-            prevRow = row
-            p0 = e0
-            p1 = e1
-            p2 = e2
-            p3 = e3
-            p4 = e4
+            jsonLeaf5(sb5, row)
+            if (i == lastFlat) {
+              jsonBranch4(sb4, row, sb5)
+              jsonBranch3(sb3, row, sb4)
+              jsonBranch2(sb2, row, sb3)
+              jsonBranch1(sb1, row, sb2)
+              jsonBranch0(sb0, row, sb1)
+            }
+          } else {
+            jsonLeaf5(sb5, row)
+            nextRow = true
           }
-          sb0.append("\n    ]")
+
+          prevRow = row
+          p0 = e0
+          p1 = e1
+          p2 = e2
+          p3 = e3
+          p4 = e4
         }
-        outerJson(totalCount, if (limit == -1) totalCount else limit, offset, sb0)
+        sb0.append("\n    ]")
       }
     }
   }
 
-  trait NestedJson6[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
-      for {
-        conn <- futConn
-        data <- conn.jvmQuery(_model, _query)
-      } yield {
-        resetJsonVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        val flatCount                                = rows.size
-        rows.sort(this)
-        val (totalCount, selectedRows) = getCountAndSelectedRowsAsc(rows, limit, offset)
+  trait NestedJson6[Obj, Tpl] extends NestedJson[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-        if (flatCount == 0 || offset >= totalCount) {
-          // Empty result set
-          sb0.append("]")
+    final override def flat2json(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): Unit = {
+      if (flatCount == 1) {
+        row = selectedRows.iterator.next
+        sb0.append("\n      ")
+        jsonBranch0(sb0, row,
+          jsonBranch1(sb1, row,
+            jsonBranch2(sb2, row,
+              jsonBranch3(sb3, row,
+                jsonBranch4(sb4, row,
+                  jsonBranch5(sb5, row,
+                    jsonLeaf6(sb6, row)))))))
+        sb0.append("\n    ]")
 
-        } else if (flatCount == 1) {
-          row = rows.iterator.next
-          sb0.append("\n      ")
-          jsonBranch0(sb0, row,
-            jsonBranch1(sb1, row,
-              jsonBranch2(sb2, row,
-                jsonBranch3(sb3, row,
-                  jsonBranch4(sb4, row,
-                    jsonBranch5(sb5, row,
-                      jsonLeaf6(sb6, row)))))))
-          sb0.append("\n    ]")
+      } else {
+        val lastFlat = selectedRows.size
+        val it       = selectedRows.iterator
+        sb0.append("\n      ")
+        while (it.hasNext) {
+          i += 1
+          row = it.next
+          e0 = row.get(0).asInstanceOf[jLong]
+          e1 = row.get(1).asInstanceOf[jLong]
+          e2 = row.get(2).asInstanceOf[jLong]
+          e3 = row.get(3).asInstanceOf[jLong]
+          e4 = row.get(4).asInstanceOf[jLong]
+          e5 = row.get(5).asInstanceOf[jLong]
 
-        } else {
-          rows.sort(this)
-          val lastFlat = selectedRows.size
-          val it       = selectedRows.iterator
-          sb0.append("\n      ")
-          while (it.hasNext) {
-            i += 1
-            row = it.next
-            e0 = row.get(0).asInstanceOf[jLong]
-            e1 = row.get(1).asInstanceOf[jLong]
-            e2 = row.get(2).asInstanceOf[jLong]
-            e3 = row.get(3).asInstanceOf[jLong]
-            e4 = row.get(4).asInstanceOf[jLong]
-            e5 = row.get(5).asInstanceOf[jLong]
-
-            if (nextRow) {
-              if (e0 != p0) {
-                jsonBranch5(sb5, prevRow, sb6)
-                jsonBranch4(sb4, prevRow, sb5)
-                jsonBranch3(sb3, prevRow, sb4)
-                jsonBranch2(sb2, prevRow, sb3)
-                jsonBranch1(sb1, prevRow, sb2)
-                jsonBranch0(sb0, prevRow, sb1)
-              } else if (e1 != p1) {
-                jsonBranch5(sb5, prevRow, sb6)
-                jsonBranch4(sb4, prevRow, sb5)
-                jsonBranch3(sb3, prevRow, sb4)
-                jsonBranch2(sb2, prevRow, sb3)
-                jsonBranch1(sb1, prevRow, sb2)
-              } else if (e2 != p2) {
-                jsonBranch5(sb5, prevRow, sb6)
-                jsonBranch4(sb4, prevRow, sb5)
-                jsonBranch3(sb3, prevRow, sb4)
-                jsonBranch2(sb2, prevRow, sb3)
-              } else if (e3 != p3) {
-                jsonBranch5(sb5, prevRow, sb6)
-                jsonBranch4(sb4, prevRow, sb5)
-                jsonBranch3(sb3, prevRow, sb4)
-              } else if (e4 != p4) {
-                jsonBranch5(sb5, prevRow, sb6)
-                jsonBranch4(sb4, prevRow, sb5)
-              } else if (e5 != p5) {
-                jsonBranch5(sb5, prevRow, sb6)
-              }
-              jsonLeaf6(sb6, row)
-              if (i == lastFlat) {
-                jsonBranch5(sb5, row, sb6)
-                jsonBranch4(sb4, row, sb5)
-                jsonBranch3(sb3, row, sb4)
-                jsonBranch2(sb2, row, sb3)
-                jsonBranch1(sb1, row, sb2)
-                jsonBranch0(sb0, row, sb1)
-              }
-            } else {
-              jsonLeaf6(sb6, row)
-              nextRow = true
+          if (nextRow) {
+            if (e0 != p0) {
+              jsonBranch5(sb5, prevRow, sb6)
+              jsonBranch4(sb4, prevRow, sb5)
+              jsonBranch3(sb3, prevRow, sb4)
+              jsonBranch2(sb2, prevRow, sb3)
+              jsonBranch1(sb1, prevRow, sb2)
+              jsonBranch0(sb0, prevRow, sb1)
+            } else if (e1 != p1) {
+              jsonBranch5(sb5, prevRow, sb6)
+              jsonBranch4(sb4, prevRow, sb5)
+              jsonBranch3(sb3, prevRow, sb4)
+              jsonBranch2(sb2, prevRow, sb3)
+              jsonBranch1(sb1, prevRow, sb2)
+            } else if (e2 != p2) {
+              jsonBranch5(sb5, prevRow, sb6)
+              jsonBranch4(sb4, prevRow, sb5)
+              jsonBranch3(sb3, prevRow, sb4)
+              jsonBranch2(sb2, prevRow, sb3)
+            } else if (e3 != p3) {
+              jsonBranch5(sb5, prevRow, sb6)
+              jsonBranch4(sb4, prevRow, sb5)
+              jsonBranch3(sb3, prevRow, sb4)
+            } else if (e4 != p4) {
+              jsonBranch5(sb5, prevRow, sb6)
+              jsonBranch4(sb4, prevRow, sb5)
+            } else if (e5 != p5) {
+              jsonBranch5(sb5, prevRow, sb6)
             }
-
-            prevRow = row
-            p0 = e0
-            p1 = e1
-            p2 = e2
-            p3 = e3
-            p4 = e4
-            p5 = e5
+            jsonLeaf6(sb6, row)
+            if (i == lastFlat) {
+              jsonBranch5(sb5, row, sb6)
+              jsonBranch4(sb4, row, sb5)
+              jsonBranch3(sb3, row, sb4)
+              jsonBranch2(sb2, row, sb3)
+              jsonBranch1(sb1, row, sb2)
+              jsonBranch0(sb0, row, sb1)
+            }
+          } else {
+            jsonLeaf6(sb6, row)
+            nextRow = true
           }
-          sb0.append("\n    ]")
+
+          prevRow = row
+          p0 = e0
+          p1 = e1
+          p2 = e2
+          p3 = e3
+          p4 = e4
+          p5 = e5
         }
-        outerJson(totalCount, if (limit == -1) totalCount else limit, offset, sb0)
+        sb0.append("\n    ]")
       }
     }
   }
 
-  trait NestedJson7[Obj, OuterTpl] extends NestedJson[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
 
-    final override def getJson(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
-      for {
-        conn <- futConn
-        data <- conn.jvmQuery(_model, _query)
-      } yield {
-        resetJsonVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        val flatCount                                = rows.size
-        rows.sort(this)
-        val (totalCount, selectedRows) = getCountAndSelectedRowsAsc(rows, limit, offset)
+  trait NestedJson7[Obj, Tpl] extends NestedJson[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-        if (flatCount == 0 || offset >= totalCount) {
-          // Empty result set
-          sb0.append("]")
+    final override def flat2json(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): Unit = {
+      if (flatCount == 1) {
+        row = selectedRows.iterator.next
+        sb0.append("\n      ")
+        jsonBranch0(sb0, row,
+          jsonBranch1(sb1, row,
+            jsonBranch2(sb2, row,
+              jsonBranch3(sb3, row,
+                jsonBranch4(sb4, row,
+                  jsonBranch5(sb5, row,
+                    jsonBranch6(sb6, row,
+                      jsonLeaf7(sb7, row))))))))
+        sb0.append("\n    ]")
 
-        } else if (flatCount == 1) {
-          row = rows.iterator.next
-          sb0.append("\n      ")
-          jsonBranch0(sb0, row,
-            jsonBranch1(sb1, row,
-              jsonBranch2(sb2, row,
-                jsonBranch3(sb3, row,
-                  jsonBranch4(sb4, row,
-                    jsonBranch5(sb5, row,
-                      jsonBranch6(sb6, row,
-                        jsonLeaf7(sb7, row))))))))
-          sb0.append("\n    ]")
+      } else {
+        val lastFlat = selectedRows.size
+        val it       = selectedRows.iterator
+        sb0.append("\n      ")
+        while (it.hasNext) {
+          i += 1
+          row = it.next
+          e0 = row.get(0).asInstanceOf[jLong]
+          e1 = row.get(1).asInstanceOf[jLong]
+          e2 = row.get(2).asInstanceOf[jLong]
+          e3 = row.get(3).asInstanceOf[jLong]
+          e4 = row.get(4).asInstanceOf[jLong]
+          e5 = row.get(5).asInstanceOf[jLong]
+          e6 = row.get(6).asInstanceOf[jLong]
 
-        } else {
-          rows.sort(this)
-          val lastFlat = selectedRows.size
-          val it       = selectedRows.iterator
-          sb0.append("\n      ")
-          while (it.hasNext) {
-            i += 1
-            row = it.next
-            e0 = row.get(0).asInstanceOf[jLong]
-            e1 = row.get(1).asInstanceOf[jLong]
-            e2 = row.get(2).asInstanceOf[jLong]
-            e3 = row.get(3).asInstanceOf[jLong]
-            e4 = row.get(4).asInstanceOf[jLong]
-            e5 = row.get(5).asInstanceOf[jLong]
-            e6 = row.get(6).asInstanceOf[jLong]
-
-            if (nextRow) {
-              if (e0 != p0) {
-                jsonBranch6(sb6, prevRow, sb7)
-                jsonBranch5(sb5, prevRow, sb6)
-                jsonBranch4(sb4, prevRow, sb5)
-                jsonBranch3(sb3, prevRow, sb4)
-                jsonBranch2(sb2, prevRow, sb3)
-                jsonBranch1(sb1, prevRow, sb2)
-                jsonBranch0(sb0, prevRow, sb1)
-              } else if (e1 != p1) {
-                jsonBranch6(sb6, prevRow, sb7)
-                jsonBranch5(sb5, prevRow, sb6)
-                jsonBranch4(sb4, prevRow, sb5)
-                jsonBranch3(sb3, prevRow, sb4)
-                jsonBranch2(sb2, prevRow, sb3)
-                jsonBranch1(sb1, prevRow, sb2)
-              } else if (e2 != p2) {
-                jsonBranch6(sb6, prevRow, sb7)
-                jsonBranch5(sb5, prevRow, sb6)
-                jsonBranch4(sb4, prevRow, sb5)
-                jsonBranch3(sb3, prevRow, sb4)
-                jsonBranch2(sb2, prevRow, sb3)
-              } else if (e3 != p3) {
-                jsonBranch6(sb6, prevRow, sb7)
-                jsonBranch5(sb5, prevRow, sb6)
-                jsonBranch4(sb4, prevRow, sb5)
-                jsonBranch3(sb3, prevRow, sb4)
-              } else if (e4 != p4) {
-                jsonBranch6(sb6, prevRow, sb7)
-                jsonBranch5(sb5, prevRow, sb6)
-                jsonBranch4(sb4, prevRow, sb5)
-              } else if (e5 != p5) {
-                jsonBranch6(sb6, prevRow, sb7)
-                jsonBranch5(sb5, prevRow, sb6)
-              } else if (e6 != p6) {
-                jsonBranch6(sb6, prevRow, sb7)
-              }
-              jsonLeaf7(sb7, row)
-              if (i == lastFlat) {
-                jsonBranch6(sb6, row, sb7)
-                jsonBranch5(sb5, row, sb6)
-                jsonBranch4(sb4, row, sb5)
-                jsonBranch3(sb3, row, sb4)
-                jsonBranch2(sb2, row, sb3)
-                jsonBranch1(sb1, row, sb2)
-                jsonBranch0(sb0, row, sb1)
-              }
-            } else {
-              jsonLeaf7(sb7, row)
-              nextRow = true
+          if (nextRow) {
+            if (e0 != p0) {
+              jsonBranch6(sb6, prevRow, sb7)
+              jsonBranch5(sb5, prevRow, sb6)
+              jsonBranch4(sb4, prevRow, sb5)
+              jsonBranch3(sb3, prevRow, sb4)
+              jsonBranch2(sb2, prevRow, sb3)
+              jsonBranch1(sb1, prevRow, sb2)
+              jsonBranch0(sb0, prevRow, sb1)
+            } else if (e1 != p1) {
+              jsonBranch6(sb6, prevRow, sb7)
+              jsonBranch5(sb5, prevRow, sb6)
+              jsonBranch4(sb4, prevRow, sb5)
+              jsonBranch3(sb3, prevRow, sb4)
+              jsonBranch2(sb2, prevRow, sb3)
+              jsonBranch1(sb1, prevRow, sb2)
+            } else if (e2 != p2) {
+              jsonBranch6(sb6, prevRow, sb7)
+              jsonBranch5(sb5, prevRow, sb6)
+              jsonBranch4(sb4, prevRow, sb5)
+              jsonBranch3(sb3, prevRow, sb4)
+              jsonBranch2(sb2, prevRow, sb3)
+            } else if (e3 != p3) {
+              jsonBranch6(sb6, prevRow, sb7)
+              jsonBranch5(sb5, prevRow, sb6)
+              jsonBranch4(sb4, prevRow, sb5)
+              jsonBranch3(sb3, prevRow, sb4)
+            } else if (e4 != p4) {
+              jsonBranch6(sb6, prevRow, sb7)
+              jsonBranch5(sb5, prevRow, sb6)
+              jsonBranch4(sb4, prevRow, sb5)
+            } else if (e5 != p5) {
+              jsonBranch6(sb6, prevRow, sb7)
+              jsonBranch5(sb5, prevRow, sb6)
+            } else if (e6 != p6) {
+              jsonBranch6(sb6, prevRow, sb7)
             }
-
-            prevRow = row
-            p0 = e0
-            p1 = e1
-            p2 = e2
-            p3 = e3
-            p4 = e4
-            p5 = e5
-            p6 = e6
+            jsonLeaf7(sb7, row)
+            if (i == lastFlat) {
+              jsonBranch6(sb6, row, sb7)
+              jsonBranch5(sb5, row, sb6)
+              jsonBranch4(sb4, row, sb5)
+              jsonBranch3(sb3, row, sb4)
+              jsonBranch2(sb2, row, sb3)
+              jsonBranch1(sb1, row, sb2)
+              jsonBranch0(sb0, row, sb1)
+            }
+          } else {
+            jsonLeaf7(sb7, row)
+            nextRow = true
           }
-          sb0.append("\n    ]")
+
+          prevRow = row
+          p0 = e0
+          p1 = e1
+          p2 = e2
+          p3 = e3
+          p4 = e4
+          p5 = e5
+          p6 = e6
         }
-        outerJson(totalCount, if (limit == -1) totalCount else limit, offset, sb0)
+        sb0.append("\n    ]")
       }
     }
   }

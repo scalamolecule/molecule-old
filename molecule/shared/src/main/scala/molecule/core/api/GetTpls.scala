@@ -146,7 +146,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
     }
   }
 
-  private[molecule] def flat2nested(rows: jCollection[jList[AnyRef]], flatCount: Int): List[Tpl] = ???
+  private[molecule] def flat2nested(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): List[Tpl] = ???
 
   /** Get Future with List of n rows as tuples matching a molecule.
    * {{{

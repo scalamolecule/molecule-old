@@ -129,29 +129,10 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
     }
   }
 
-  private def outerJson(totalCount: Int, limit: Int, offset: Int, json: String): String = {
-    _model.elements.head match {
-      case _: Composite =>
-        s"""{
-           |  "totalCount": $totalCount,
-           |  "limit"     : $limit,
-           |  "offset"    : $offset,
-           |  "data": {
-           |    "composite": [$json]
-           |  }
-           |}""".stripMargin
+  private[molecule] def flat2json(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): Unit = ???
 
-      case _ =>
-        s"""{
-           |  "totalCount": $totalCount,
-           |  "limit"     : $limit,
-           |  "offset"    : $offset,
-           |  "data": {
-           |    "${firstNs(_model)}": [$json]
-           |  }
-           |}""".stripMargin
-    }
-  }
+
+  // Helpers ...............................
 
   private def rows2json(
     totalCount: Int,
@@ -186,6 +167,7 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
     outerJson(totalCount, limit, offset, sb.toString)
   }
 
+
   private def packed2json(totalCount: Int, limit: Int, offset: Int, packed: String): String = {
     if (totalCount == 0 || offset >= totalCount) {
       return outerJson(totalCount, limit, offset, "")
@@ -200,6 +182,31 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
     }
     sb.append("\n    ")
     outerJson(totalCount, limit, offset, sb.toString)
+  }
+
+
+  private def outerJson(totalCount: Int, limit: Int, offset: Int, json: String): String = {
+    _model.elements.head match {
+      case _: Composite =>
+        s"""{
+           |  "totalCount": $totalCount,
+           |  "limit"     : $limit,
+           |  "offset"    : $offset,
+           |  "data": {
+           |    "composite": [$json]
+           |  }
+           |}""".stripMargin
+
+      case _ =>
+        s"""{
+           |  "totalCount": $totalCount,
+           |  "limit"     : $limit,
+           |  "offset"    : $offset,
+           |  "data": {
+           |    "${firstNs(_model)}": [$json]
+           |  }
+           |}""".stripMargin
+    }
   }
 
 

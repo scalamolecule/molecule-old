@@ -81,10 +81,10 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj
     allSortedRows: jCollection[jList[AnyRef]],
     limit: Int,
     offset: Int
-  ): (Int, jCollection[jList[AnyRef]]) = {
+  ): (jCollection[jList[AnyRef]], Int) = {
     val allCount = allSortedRows.size
-    if (limit == -1) {
-      return (allCount, allSortedRows)
+    if (limit == 0) {
+      return (allSortedRows, allCount)
     }
     var topRowIndex   = -1
     var curId : jLong = 0
@@ -93,6 +93,13 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj
       val rowArray           = new util.ArrayList[jList[AnyRef]](allSortedRows)
       val selectedSortedRows = new util.ArrayList[jList[AnyRef]]()
       var acc                = List.empty[jList[AnyRef]]
+
+      if(limit > 0) {
+
+      } else {
+
+      }
+
       var flatRowIndex       = allCount - 1 // Start from back
       val last               = offset + limit
       var row: jList[AnyRef] = null
@@ -113,23 +120,23 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj
       acc.foreach(row => selectedSortedRows.add(row))
       selectedSortedRows
     }
-    (topRowIndex + 1, sortedRows)
+    (sortedRows, topRowIndex + 1)
   }
 
   final override def get(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-    getNested(-1, 0).map(_._1)
+    getNestedTpls(0, 0).map(_._1)
   }
 
   final override def get(limit: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-    getNested(limit, 0).map(_._1)
+    getNestedTpls(limit, 0).map(_._1)
   }
 
   final override def get(limit: Int, offset: Int)
                         (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] = {
-    getNested(limit, offset)
+    getNestedTpls(limit, offset)
   }
 
-  final private def getNested(limit: Int, offset: Int)
+  final private def getNestedTpls(limit: Int, offset: Int)
                      (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] = {
     for {
       conn <- futConn
@@ -139,7 +146,7 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj
       val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
       sortedRows.sort(this)
       val flatCount                  = sortedRows.size
-      val (totalCount, selectedRows) = getCountAndSelectedRowsDesc(sortedRows, limit, offset)
+      val (selectedRows, totalCount) = getCountAndSelectedRowsDesc(sortedRows, limit, offset)
       val tuples                     = if (flatCount == 0 || offset >= totalCount) {
         List.empty[Tpl]
       } else {
@@ -202,6 +209,7 @@ object NestedTuples {
       }
     }
   }
+
 
   trait NestedTuples2[Obj, Tpl] extends NestedTuples[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
@@ -272,6 +280,7 @@ object NestedTuples {
       }
     }
   }
+
 
   trait NestedTuples3[Obj, Tpl] extends NestedTuples[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 

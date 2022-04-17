@@ -251,6 +251,8 @@ object OffsetPagination extends AsyncTestSuite {
           (2, List(21, 22)),
           (3, List(31, 32)),
         ))
+
+        // Forward
         _ <- Ns.int.a1.Refs1.*(Ref1.int1).get(2).map(_ ==> List(
           (1, List(11, 12)),
           (2, List(21, 22)),
@@ -270,6 +272,28 @@ object OffsetPagination extends AsyncTestSuite {
         ))
         _ <- Ns.int.a1.Refs1.*(Ref1.int1).get(2, 4).map(_ ==> (Nil, 3))
         _ <- Ns.str.a1.Refs1.*(Ref1.int1).get(2, 4).map(_ ==> (Nil, 0))
+
+
+        // Backwards
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).get(-2).map(_ ==> List(
+          (1, List(11, 12)),
+          (2, List(21, 22)),
+        ))
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).get(-2, 0).map(_ ==> (
+          List(
+            (1, List(11, 12)),
+            (2, List(21, 22)),
+          ),
+          3
+        ))
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).get(-2, 2).map(_ ==> (
+          List(
+            (3, List(31, 32)),
+          ),
+          3
+        ))
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).get(-2, 4).map(_ ==> (Nil, 3))
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1).get(-2, 4).map(_ ==> (Nil, 0))
 
 
         // Opt nested
