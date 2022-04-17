@@ -45,7 +45,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
         } else {
           conn.jvmQuery(_model, _query).map { rows =>
             val totalCount = rows.size
-            rows2objs(totalCount, rows, totalCount, 0)
+            rows2objs(totalCount, rows, 0, totalCount)
           }
         }
       }
@@ -67,8 +67,9 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
    * @return `Future[List[Obj]]` where Obj is an object type having property types matching the attributes of the molecule
    */
   def getObjs(limit: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Obj]] = {
-    if (limit < 1) {
-      Future.failed(MoleculeException("Limit has to be a positive number. Found " + limit))
+    if (limit == 0) {
+      Future.failed(MoleculeException("Limit cannot be 0. " +
+        "Please use a positive number to get rows from start, or a negative number to get rows from end."))
     } else {
       _inputThrowable.fold(
         futConn.flatMap { conn =>
@@ -79,7 +80,13 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
           } else {
             conn.jvmQuery(_model, _query).map { rows =>
               val totalCount = rows.size
-              rows2objs(totalCount, rows, totalCount.min(limit), 0)
+              val (from, until) = if (limit > 0) {
+                (0, limit.min(totalCount))
+              } else {
+                // (limit is negative)
+                ((totalCount + limit).max(0), totalCount)
+              }
+              rows2objs(totalCount, rows, from, until)
             }
           }
         }
@@ -104,8 +111,9 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
    */
   def getObjs(limit: Int, offset: Int)
              (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Obj], Int)] = {
-    if (limit < 1) {
-      Future.failed(MoleculeException("Limit has to be a positive number. Found " + limit))
+    if (limit == 0) {
+      Future.failed(MoleculeException("Limit cannot be 0. " +
+        "Please use a positive number to get rows from start, or a negative number to get rows from end."))
     } else if (offset < 0) {
       Future.failed(MoleculeException("Offset has to be >= 0. Found: " + offset))
     } else {
@@ -118,7 +126,13 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
           } else {
             conn.jvmQuery(_model, _query).map { rows =>
               val totalCount = rows.size
-              (rows2objs(totalCount, rows, totalCount.min(offset + limit), offset), totalCount)
+              val (from, until) = if (limit > 0) {
+                (offset, (offset + limit).min(totalCount))
+              } else {
+                // (limit is negative)
+                ((totalCount - offset + limit).max(0), (totalCount - offset).max(0))
+              }
+              (rows2objs(totalCount, rows, from, until), totalCount)
             }
           }
         }
@@ -150,27 +164,27 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   private def rows2objs(
     totalCount: Int,
     rows: jCollection[jList[AnyRef]],
-    maxRows: Int,
-    offset: Int
+    from: Int, // first row index (inclusive)
+    until: Int, // last row index (exclusive)
   ): List[Obj] = {
-    if (totalCount == 0 || offset >= totalCount) {
+    if (totalCount == 0 || from >= totalCount) {
       return List.empty[Obj]
     } else if (totalCount == 1) {
       return List(row2obj(rows.iterator.next))
     }
     val objs = List.newBuilder[Obj]
-    var i    = offset
+    var i    = from
     if (sortRows) {
       val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
       sortedRows.sort(this) // using macro-implemented `compare` method
-      while (i != maxRows) {
+      while (i != until) {
         objs += row2obj(sortedRows.get(i))
         i += 1
       }
       objs.result()
     } else {
       val rowsIterator = rows.iterator
-      while (i != maxRows) {
+      while (i != until) {
         objs += row2obj(rowsIterator.next)
         i += 1
       }
@@ -935,7 +949,7 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
           } else {
             conn.jvmSchemaHistoryQuery(_model).map { rows =>
               val totalCount = rows.size
-              rows2objs(totalCount, rows, totalCount, 0)
+              rows2objs(totalCount, rows, 0, totalCount)
             }
           }
         }
@@ -946,5 +960,6 @@ trait GetObjs[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
 
   // `getObjsHistory(limit: Int)`
   // `getObjsHistory(limit: Int, offset: Int)`
-  // are not implemented since the whole data set is normally only relevant for the whole history of a single attribute.
+  // are not implemented since the whole data set is normally only relevant for
+  // the whole history of a single attribute.
 }

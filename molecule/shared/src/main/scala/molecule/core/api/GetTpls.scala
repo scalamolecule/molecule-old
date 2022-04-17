@@ -10,7 +10,6 @@ import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
 import molecule.datomic.base.transform.Model2Query
-import sbtmolecule.ast.schemaModel.Optional
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -47,7 +46,6 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
           conn.jvmQuery(_model, _query).map { rows =>
             val totalCount = rows.size
             rows2tuples(rows, totalCount, 0, totalCount)
-            //            rows2tuples(totalCount, rows, totalCount, 0)
           }
         }
       }
@@ -71,7 +69,8 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
    */
   def get(limit: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
     if (limit == 0) {
-      Future.failed(MoleculeException("Limit can't be 0"))
+      Future.failed(MoleculeException("Limit cannot be 0. " +
+        "Please use a positive number to get rows from start, or a negative number to get rows from end."))
     } else {
       _inputThrowable.fold(
         futConn.flatMap { conn =>
@@ -388,7 +387,7 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
     rows: jCollection[jList[AnyRef]],
     totalCount: Int,
     from: Int, // first row index (inclusive)
-    until: Int, //   last row index (exclusive)
+    until: Int, // last row index (exclusive)
   ): List[Tpl] = {
     //    println(s"$from  $until")
     if (totalCount == 0 || from > totalCount) {
@@ -1137,5 +1136,6 @@ private[molecule] trait GetTpls[Obj, Tpl] extends Conversions { self: Marshallin
 
   // `getHistory(limit: Int)`
   // `getHistory(limit: Int, offset: Int)`
-  // are not implemented since the whole data set is normally only relevant for the whole history of a single attribute.
+  // are not implemented since the whole data set is normally only relevant for
+  // the whole history of a single attribute.
 }

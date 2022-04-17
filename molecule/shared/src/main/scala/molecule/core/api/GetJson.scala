@@ -46,7 +46,7 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
         } else {
           conn.jvmQuery(_model, _query).map { rows =>
             val totalCount = rows.size
-            rows2json(totalCount, rows, totalCount, totalCount, 0)
+            rows2json(rows, totalCount, 0, totalCount, 0, totalCount)
           }
         }
       }
@@ -69,8 +69,9 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
    * @return String of json
    */
   def getJson(limit: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
-    if (limit < 1) {
-      Future.failed(MoleculeException("Limit has to be a positive number. Found " + limit))
+    if (limit == 0) {
+      Future.failed(MoleculeException("Limit cannot be 0. " +
+        "Please use a positive number to get rows from start, or a negative number to get rows from end."))
     } else {
       _inputThrowable.fold(
         futConn.flatMap { conn =>
@@ -82,7 +83,13 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
           } else {
             conn.jvmQuery(_model, _query).map { rows =>
               val totalCount = rows.size
-              rows2json(totalCount, rows, totalCount.min(limit), limit, 0)
+              val (from, until) = if (limit > 0) {
+                (0, limit.min(totalCount))
+              } else {
+                // (limit is negative)
+                ((totalCount + limit).max(0), totalCount)
+              }
+              rows2json(rows, totalCount, from, until, 0, limit)
             }
           }
         }
@@ -106,8 +113,9 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
    * @return String of json
    */
   def getJson(limit: Int, offset: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
-    if (limit < 1) {
-      Future.failed(MoleculeException("Limit has to be a positive number. Found " + limit))
+    if (limit == 1) {
+      Future.failed(MoleculeException("Limit cannot be 0. " +
+        "Please use a positive number to get rows from start, or a negative number to get rows from end."))
     } else if (offset < 0) {
       Future.failed(MoleculeException("Offset has to be >= 0. Found: " + offset))
     } else {
@@ -121,7 +129,13 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
           } else {
             conn.jvmQuery(_model, _query).map { rows =>
               val totalCount = rows.size
-              rows2json(totalCount, rows, totalCount.min(offset + limit), limit, offset)
+              val (from, until) = if (limit > 0) {
+                (offset, (offset + limit).min(totalCount))
+              } else {
+                // (limit is negative)
+                ((totalCount - offset + limit).max(0), (totalCount - offset).max(0))
+              }
+              rows2json(rows, totalCount, from, until, offset, limit)
             }
           }
         }
@@ -135,29 +149,30 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
   // Helpers ...............................
 
   private def rows2json(
-    totalCount: Int,
     rows: jCollection[jList[AnyRef]],
-    maxRows: Int,
+    totalCount: Int,
+    from: Int, // first row index (inclusive)
+    until: Int, // last row index (exclusive)
+    offset: Int,
     limit: Int,
-    offset: Int
   ): String = {
     if (totalCount == 0 || offset >= totalCount) {
       return outerJson(totalCount, limit, offset, "")
     }
     val sb   = new StringBuffer()
     var next = false
-    var i    = offset
+    var i    = from
     if (sortRows) {
       val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
       sortedRows.sort(this) // using macro-implemented `compare` method
-      while (i != maxRows) { // No need to check hasNext since (offset + limit) will not exceed total count
+      while (i != until) { // No need to check hasNext since (offset + limit) will not exceed total count
         if (next) sb.append(",") else next = true
         row2json(sortedRows.get(i), sb)
         i += 1
       }
     } else {
       val rowsIterator = rows.iterator
-      while (i != maxRows) {
+      while (i != until) {
         if (next) sb.append(",") else next = true
         row2json(rowsIterator.next, sb)
         i += 1
@@ -957,7 +972,7 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
           } else {
             conn.jvmSchemaHistoryQuery(_model).map { rows =>
               val totalCount = rows.size
-              rows2json(totalCount, rows, totalCount, totalCount, 0)
+              rows2json(rows, totalCount, 0, totalCount, 0, totalCount)
             }
           }
         }
@@ -968,5 +983,6 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
 
   // `getJsonHistory(limit: Int)`
   // `getJsonHistory(limit: Int, offset: Int)`
-  // are not implemented since the whole data set is normally only relevant for the whole history of a single attribute.
+  // are not implemented since the whole data set is normally only relevant for
+  // the whole history of a single attribute.
 }

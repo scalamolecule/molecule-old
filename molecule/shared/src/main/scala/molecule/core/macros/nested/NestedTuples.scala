@@ -78,49 +78,70 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj
   // Pagination .............................
 
   final def getCountAndSelectedRowsDesc(
-    allSortedRows: jCollection[jList[AnyRef]],
+    sortedRows: util.ArrayList[jList[AnyRef]],
     limit: Int,
     offset: Int
   ): (jCollection[jList[AnyRef]], Int) = {
-    val allCount = allSortedRows.size
+    //    println("------")
+    //    sortedRows.forEach(row => println(row))
+
+    val totalCount = sortedRows.size
     if (limit == 0) {
-      return (allSortedRows, allCount)
+      return (sortedRows, totalCount)
     }
-    var topRowIndex   = -1
-    var curId : jLong = 0
-    var prevId: jLong = 0
-    val sortedRows    = {
-      val rowArray           = new util.ArrayList[jList[AnyRef]](allSortedRows)
-      val selectedSortedRows = new util.ArrayList[jList[AnyRef]]()
-      var acc                = List.empty[jList[AnyRef]]
+    var curId : jLong         = 0
+    var prevId: jLong         = 0
+    val selectedRows          = new util.ArrayList[jList[AnyRef]]()
+    var row   : jList[AnyRef] = null
+    var continue              = true
 
-      if(limit > 0) {
-
-      } else {
-
-      }
-
-      var flatRowIndex       = allCount - 1 // Start from back
-      val last               = offset + limit
-      var row: jList[AnyRef] = null
-      while (flatRowIndex != -1) {
-        row = rowArray.get(flatRowIndex)
+    if (limit > 0) {
+      // From start ..........
+      var acc         = List.empty[jList[AnyRef]]
+      var topRowIndex = -1
+      val until       = offset + limit
+      var i           = totalCount - 1 // Start from back
+      while (continue && i != -1) {
+        row = sortedRows.get(i)
         curId = row.get(0).asInstanceOf[jLong]
         if (curId != prevId) {
           topRowIndex += 1
         }
-        if (topRowIndex >= offset && topRowIndex < last) {
-          // prepend rows from backwards
+        if (topRowIndex >= offset && topRowIndex < until) {
+          // prepend rows from end
           acc = row :: acc
+        } else if (topRowIndex == until) {
+          continue = false
         }
         prevId = curId
-        flatRowIndex -= 1
+        i -= 1
       }
       // Make java list with selected reversed rows
-      acc.foreach(row => selectedSortedRows.add(row))
-      selectedSortedRows
+      acc.foreach(row => selectedRows.add(row))
+      (selectedRows, topRowIndex + 1)
+
+    } else {
+      // From end ..........
+      var topRowIndex = -1
+      val until       = offset - limit // (limit is negative)
+      var i           = 0 // Start from beginning
+      while (continue && i != totalCount) {
+        row = sortedRows.get(i)
+        curId = row.get(0).asInstanceOf[jLong]
+        if (curId != prevId) {
+          topRowIndex += 1
+        }
+        if (topRowIndex >= offset && topRowIndex < until) {
+          // append rows from start
+          selectedRows.add(row)
+        } else if (topRowIndex == until) {
+          continue = false
+        }
+        prevId = curId
+        i += 1
+      }
+      (selectedRows, topRowIndex + 1)
     }
-    (sortedRows, topRowIndex + 1)
   }
 
   final override def get(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
@@ -137,7 +158,7 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj
   }
 
   final private def getNestedTpls(limit: Int, offset: Int)
-                     (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] = {
+                                 (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] = {
     for {
       conn <- futConn
       rows <- conn.jvmQuery(_model, _query)

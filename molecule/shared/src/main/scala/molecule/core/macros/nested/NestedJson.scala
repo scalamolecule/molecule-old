@@ -151,46 +151,73 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
   // Pagination .............................
 
   final def getCountAndSelectedRowsAsc(
-    allSortedRows: jCollection[jList[AnyRef]],
+    sortedRows: util.ArrayList[jList[AnyRef]],
     limit: Int,
     offset: Int
   ): (jCollection[jList[AnyRef]], Int) = {
     var topRowIndex   = -1
     var curId : jLong = 0
     var prevId: jLong = 0
-    val sortedRows    = if (limit == 0) {
+    if (limit == 0) {
       // All rows (offset is 0)
-      allSortedRows.forEach { row =>
+      sortedRows.forEach { row =>
         curId = row.get(0).asInstanceOf[jLong]
         if (curId != prevId) {
           topRowIndex += 1
         }
         prevId = curId
       }
-      allSortedRows
+      return (sortedRows, topRowIndex + 1)
+    }
 
-    } else {
-      val flatTotalCount     = allSortedRows.size
-      val rowArray           = new util.ArrayList[jList[AnyRef]](allSortedRows)
-      val selectedSortedRows = new util.ArrayList[jList[AnyRef]]()
-      var flatRowIndex       = 0
-      val until               = if (limit == 0) Int.MaxValue else offset + limit
-      var row: jList[AnyRef] = null
-      while (flatRowIndex != flatTotalCount) {
-        row = rowArray.get(flatRowIndex)
+    val totalCount         = sortedRows.size
+    val selectedRows       = new util.ArrayList[jList[AnyRef]]()
+    var row: jList[AnyRef] = null
+    var continue              = true
+
+    if (limit > 0) {
+      // From start ..........
+      val until = offset + limit
+      var i     = 0
+      while (continue && i != totalCount) {
+        row = sortedRows.get(i)
         curId = row.get(0).asInstanceOf[jLong]
         if (curId != prevId) {
           topRowIndex += 1
         }
         if (topRowIndex >= offset && topRowIndex < until) {
-          selectedSortedRows.add(row)
+          selectedRows.add(row)
+        } else if (topRowIndex == until) {
+          continue = false
         }
         prevId = curId
-        flatRowIndex += 1
+        i += 1
       }
-      selectedSortedRows
+      (selectedRows, topRowIndex + 1)
+
+    } else {
+      // From end ..........
+      var acc         = List.empty[jList[AnyRef]]
+      val until = offset - limit // (limit is negative)
+      var i     = totalCount - 1
+      while (continue && i != -1) {
+        row = sortedRows.get(i)
+        curId = row.get(0).asInstanceOf[jLong]
+        if (curId != prevId) {
+          topRowIndex += 1
+        }
+        if (topRowIndex >= offset && topRowIndex < until) {
+          acc = row :: acc
+        } else if (topRowIndex == until) {
+          continue = false
+        }
+        prevId = curId
+        i -= 1
+      }
+      // Make java list with selected reversed rows
+      acc.foreach(row => selectedRows.add(row))
+      (selectedRows, topRowIndex + 1)
     }
-    (sortedRows, topRowIndex + 1)
   }
 
   final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
