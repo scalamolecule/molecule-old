@@ -10,48 +10,48 @@ object CursorPagination_2_change extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
-        "Asc" - core { implicit conn =>
-          for {
-            _ <- Ref2.int2.insert(1, 2, 3, 4, 5)
+    "Asc" - core { implicit conn =>
+      for {
+        _ <- Ref2.int2.insert(1, 2, 3, 4, 5)
 
-            // Page 1 (empty cursor)
-            cursor <- Ref2.int2.a1.get(2, "").map { case (page, cursor, more) =>
-              page ==> List(1, 2)
-              more ==> 3
-              cursor
-            }
-
-            // Page 2
-            cursor <- Ref2.int2.a1.get(2, cursor).map { case (page, cursor, more) =>
-              page ==> List(3, 4)
-              more ==> 1
-              cursor
-            }
-
-            // Page 3, last page
-            cursor <- Ref2.int2.a1.get(2, cursor).map { case (page, cursor, more) =>
-              page ==> List(5)
-              more ==> 0 // currently no further rows
-              cursor
-            }
-
-            // Page 2, go backwards with negative limit
-            cursor <- Ref2.int2.a1.get(-2, cursor).map { case (page, cursor, more) =>
-              page ==> List(3, 4)
-              more ==> 2
-              cursor
-            }
-
-            // Page 1
-            _ <- Ref2.int2.a1.get(-2, cursor).map { case (page, _, more) =>
-              page ==> List(1, 2)
-              more ==> 0
-            }
-          } yield ()
+        // Page 1 (empty cursor)
+        cursor <- Ref2.int2.a1.get(2, "").map { case (page, cursor, more) =>
+          page ==> List(1, 2)
+          more ==> 3
+          cursor
         }
-    //
-    //
-    //
+
+        // Page 2
+        cursor <- Ref2.int2.a1.get(2, cursor).map { case (page, cursor, more) =>
+          page ==> List(3, 4)
+          more ==> 1
+          cursor
+        }
+
+        // Page 3, last page
+        cursor <- Ref2.int2.a1.get(2, cursor).map { case (page, cursor, more) =>
+          page ==> List(5)
+          more ==> 0 // currently no further rows
+          cursor
+        }
+
+        // Page 2, go backwards with negative limit
+        cursor <- Ref2.int2.a1.get(-2, cursor).map { case (page, cursor, more) =>
+          page ==> List(3, 4)
+          more ==> 2
+          cursor
+        }
+
+        // Page 1
+        _ <- Ref2.int2.a1.get(-2, cursor).map { case (page, _, more) =>
+          page ==> List(1, 2)
+          more ==> 0
+        }
+      } yield ()
+    }
+
+
+
     //
     //    "Beyond first/last" - core { implicit conn =>
     //      for {

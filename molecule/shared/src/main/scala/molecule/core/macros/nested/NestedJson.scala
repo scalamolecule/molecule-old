@@ -185,7 +185,7 @@ trait NestedJson[Obj, Tpl]
       val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
       sortedRows.sort(this)
       val flatCount                  = sortedRows.size
-      val (selectedRows, totalCount) = selectJsonRows(sortedRows, limit, offset)
+      val (selectedRows, totalCount) = sortedRows2selectedRowsJson(sortedRows, limit, offset)
       if (flatCount == 0 || offset >= totalCount) {
         sb0.append("]")
       } else {

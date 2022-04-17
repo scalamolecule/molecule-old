@@ -135,7 +135,7 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] with CursorTpl[Obj, Tp
       val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
       sortedRows.sort(this)
       val flatCount                  = sortedRows.size
-      val (selectedRows, totalCount) = sortedRows2selectedRows(sortedRows, limit, offset)
+      val (selectedRows, totalCount) = sortedRows2selectedRowsTpl(sortedRows, limit, offset)
       val tuples                     = if (flatCount == 0 || offset >= totalCount) {
         List.empty[Tpl]
       } else {

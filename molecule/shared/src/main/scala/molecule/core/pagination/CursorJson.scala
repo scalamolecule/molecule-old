@@ -13,7 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait CursorJson[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
 
 
-  final def selectJsonRows(
+  final def sortedRows2selectedRowsJson(
     sortedRows: util.ArrayList[jList[AnyRef]],
     limit: Int,
     offset: Int

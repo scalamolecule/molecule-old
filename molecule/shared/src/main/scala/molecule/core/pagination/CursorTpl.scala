@@ -1,19 +1,18 @@
 package molecule.core.pagination
 
+import java.lang.{Long => jLong}
 import java.util
-import java.util.{Base64, List => jList}
+import java.util.{Base64, Collection => jCollection, List => jList}
 import molecule.core.ast.elements._
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.Marshalling
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.transform.Model2Query
 import scala.concurrent.{ExecutionContext, Future}
-import java.util.{Collection => jCollection, List => jList}
-import java.lang.{Long => jLong}
 
 trait CursorTpl[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
 
-  final def sortedRows2selectedRows(
+  final def sortedRows2selectedRowsTpl(
     sortedRows: util.ArrayList[jList[AnyRef]],
     limit: Int,
     offset: Int
@@ -369,7 +368,6 @@ trait CursorTpl[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   }
 
 
-  // todo: let macro find value extraction indexes at compile time
   private def getOffsetModel(forward: Boolean, prevTokens: List[String], nextTokens: List[String]): Model = {
     def addLimit(e: GenericAtom): Seq[Element] = {
       val (asc, i)   = (e.sort.head == 'a', e.sort.last.toString.toInt - 1)
