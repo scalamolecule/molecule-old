@@ -22,41 +22,57 @@ object Adhoc extends AsyncTestSuite with Helpers with JavaUtil {
           (1, List(11, 12)),
           (2, List(21, 22)),
           (3, List(31, 32)),
-          (4, Nil),
+          (4, List(41, 42)),
+          (5, List(51, 52)),
         )
 
-        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getJson(-2).map(_ ==>
-          """{
-            |  "totalCount": 3,
-            |  "limit"     : -2,
-            |  "offset"    : 0,
-            |  "data": {
-            |    "Ns": [
-            |      {
-            |        "int": 2,
-            |        "Refs1": [
-            |          {
-            |            "int1": 21
-            |          },
-            |          {
-            |            "int1": 22
-            |          }
-            |        ]
-            |      },
-            |      {
-            |        "int": 3,
-            |        "Refs1": [
-            |          {
-            |            "int1": 31
-            |          },
-            |          {
-            |            "int1": 32
-            |          }
-            |        ]
-            |      }
-            |    ]
-            |  }
-            |}""".stripMargin)
+        // Page 1
+        cursor <- Ns.int.a1.Refs1.*(Ref1.int1).get(2, "").map { case (page, cursor, more) =>
+          page ==> List(
+            (1, List(11, 12)),
+            (2, List(21, 22)),
+          )
+          more ==> 3
+          cursor
+        }
+
+//        // Page 2
+//        cursor <- Ns.int.a1.Refs1.*(Ref1.int1).get(2, cursor).map { case (page, cursor, more) =>
+//          page ==> List(
+//            (3, List(31, 32)),
+//            (4, List(41, 42)),
+//          )
+//          more ==> 1
+//          cursor
+//        }
+//
+//        // Page 3
+//        cursor <- Ns.int.a1.Refs1.*(Ref1.int1).get(2, cursor).map { case (page, cursor, more) =>
+//          page ==> List(
+//            (5, List(51, 52)),
+//          )
+//          more ==> 0
+//          cursor
+//        }
+//
+//        // Page 2
+//        cursor <- Ns.int.a1.Refs1.*(Ref1.int1).get(-2, cursor).map { case (page, cursor, more) =>
+//          page ==> List(
+//            (3, List(31, 32)),
+//            (4, List(41, 42)),
+//          )
+//          more ==> 2
+//          cursor
+//        }
+//
+//        // Page 1
+//        _ <- Ns.int.a1.Refs1.*(Ref1.int1).get(-2, cursor).map { case (page, _, more) =>
+//          page ==> List(
+//            (1, List(11, 12)),
+//            (2, List(21, 22)),
+//          )
+//          more ==> 0
+//        }
 
       } yield ()
     }

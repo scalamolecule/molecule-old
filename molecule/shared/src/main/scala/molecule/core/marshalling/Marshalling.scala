@@ -51,4 +51,7 @@ abstract class Marshalling[Obj, Tpl](model: Model, queryData: (Query, String, Op
   def limit0exception: Future[Nothing] = Future.failed(
     MoleculeException("Limit cannot be 0. " +
       "Please use a positive number to get rows from start, or a negative number to get rows from end."))
+
+  def notSortedException: Future[Nothing] = Future.failed(
+    MoleculeException("Molecule needs to be sorted to use cursor pagination."))
 }

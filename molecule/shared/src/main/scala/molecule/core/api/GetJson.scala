@@ -1,8 +1,7 @@
 package molecule.core.api
 
-import java.util.{Date, Collection => jCollection, List => jList}
+import java.util.{Collection => jCollection, List => jList}
 import molecule.core.ast.elements.{Composite, Generic}
-import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.util.JavaUtil

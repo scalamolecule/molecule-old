@@ -4,12 +4,13 @@ import java.lang.{Long => jLong}
 import java.util
 import java.util.{Collection => jCollection, List => jList}
 import molecule.core.api.Molecule_0
+import molecule.core.pagination.CursorTpl
 import molecule.datomic.base.facade.Conn
 import scala.concurrent.{ExecutionContext, Future}
 
 
 /** Nested tuple builder classes of various levels. */
-trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
+trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] with CursorTpl[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
   protected def tplBranch0(row: jList[AnyRef], leaf: List[Any]): Tpl = ???
   protected def tplBranch1(row: jList[AnyRef], leaf: List[Any]): Any = ???
@@ -77,14 +78,11 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj
 
   // Pagination .............................
 
-  final def getCountAndSelectedRowsDesc(
+  final def selectRows(
     sortedRows: util.ArrayList[jList[AnyRef]],
     limit: Int,
     offset: Int
   ): (jCollection[jList[AnyRef]], Int) = {
-    //    println("------")
-    //    sortedRows.forEach(row => println(row))
-
     val totalCount = sortedRows.size
     if (limit == 0) {
       return (sortedRows, totalCount)
@@ -149,12 +147,38 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj
   }
 
   final override def get(limit: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-    getNestedTpls(limit, 0).map(_._1)
+    if (limit == 0) {
+      limit0exception
+    } else {
+      getNestedTpls(limit, 0).map(_._1)
+    }
   }
 
   final override def get(limit: Int, offset: Int)
                         (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] = {
-    getNestedTpls(limit, offset)
+    if (limit == 0) {
+      limit0exception
+    } else if (offset < 0) {
+      offsetException(offset)
+    } else {
+      getNestedTpls(limit, offset)
+    }
+  }
+
+  final override def get(limit: Int, cursor: String)
+                        (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], String, Int)] = {
+    if (limit == 0) {
+      limit0exception
+    } else if (!sortRows) {
+      notSortedException
+    } else {
+      _inputThrowable.fold(
+        futConn.flatMap { conn =>
+          resetCastVars()
+          cursorRows2tuples(conn, limit, cursor)
+        }
+      )(Future.failed) // Wrap exception from input failure in Future
+    }
   }
 
   final private def getNestedTpls(limit: Int, offset: Int)
@@ -167,7 +191,7 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj
       val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
       sortedRows.sort(this)
       val flatCount                  = sortedRows.size
-      val (selectedRows, totalCount) = getCountAndSelectedRowsDesc(sortedRows, limit, offset)
+      val (selectedRows, totalCount) = selectRows(sortedRows, limit, offset)
       val tuples                     = if (flatCount == 0 || offset >= totalCount) {
         List.empty[Tpl]
       } else {

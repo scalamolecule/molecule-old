@@ -150,7 +150,7 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
 
   // Pagination .............................
 
-  final def getCountAndSelectedRowsAsc(
+  final def selectRows(
     sortedRows: util.ArrayList[jList[AnyRef]],
     limit: Int,
     offset: Int
@@ -173,7 +173,7 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
     val totalCount         = sortedRows.size
     val selectedRows       = new util.ArrayList[jList[AnyRef]]()
     var row: jList[AnyRef] = null
-    var continue              = true
+    var continue           = true
 
     if (limit > 0) {
       // From start ..........
@@ -197,7 +197,7 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
 
     } else {
       // From end ..........
-      var acc         = List.empty[jList[AnyRef]]
+      var acc   = List.empty[jList[AnyRef]]
       val until = offset - limit // (limit is negative)
       var i     = totalCount - 1
       while (continue && i != -1) {
@@ -225,12 +225,22 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
   }
 
   final override def getJson(limit: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
-    getNestedJson(limit, 0)
+    if (limit == 0) {
+      limit0exception
+    } else {
+      getNestedJson(limit, 0)
+    }
   }
 
   final override def getJson(limit: Int, offset: Int)
                             (implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
-    getNestedJson(limit, offset)
+    if (limit == 0) {
+      limit0exception
+    } else if (offset < 0) {
+      offsetException(offset)
+    } else {
+      getNestedJson(limit, offset)
+    }
   }
 
   final private def getNestedJson(limit: Int, offset: Int)
@@ -243,7 +253,7 @@ trait NestedJson[Obj, Tpl] extends NestedBase[Obj, Tpl] with JsonBase { self: Mo
       val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
       sortedRows.sort(this)
       val flatCount                  = sortedRows.size
-      val (selectedRows, totalCount) = getCountAndSelectedRowsAsc(sortedRows, limit, offset)
+      val (selectedRows, totalCount) = selectRows(sortedRows, limit, offset)
       if (flatCount == 0 || offset >= totalCount) {
         sb0.append("]")
       } else {
