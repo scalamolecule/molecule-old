@@ -110,8 +110,8 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] with CursorTpl[Obj, Tp
       _inputThrowable.fold(
         futConn.flatMap { conn =>
           resetCastVars()
-//          cursorRows2nestedTuples(conn, limit, cursor)
-          null
+          cursorRows2nestedTuples(conn, limit, cursor)
+//          null
         }
       )(Future.failed) // Wrap exception from input failure in Future
     }

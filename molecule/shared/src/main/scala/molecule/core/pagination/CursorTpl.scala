@@ -77,271 +77,76 @@ trait CursorTpl[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     }
   }
 
-//  protected def cursorRows2nestedTuples(
-//    conn: Conn,
-//    limit: Int,
-//    cursor: String
-//  )(implicit ec: ExecutionContext): Future[(List[Tpl], String, Int)] = {
-//    val tuples = List.newBuilder[Tpl]
-//    val log    = new log
-//    log("=========================================================================")
-//    if (cursor.isEmpty) {
-//
-//      conn.jvmQuery(_model, _query).map { rows =>
-//        val totalCount                                     = rows.size
-//        val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
-//        sortedRows.sort(this) // using macro-implemented `compare` method
-//
-//        log(_model)
-//        sortedRows.forEach(row => log(row))
-//
-//        val (newCursor, more) = if (limit > 0) {
-//          log("----------------- _ -->")
-//          val from  = 0
-//          var i     = from
-//          val until = limit.min(totalCount)
-//          while (i != until) {
-//            tuples += row2tpl(sortedRows.get(i))
-//            i += 1
-//          }
-//          val first           = sortedRows.get(from)
-//          val last            = sortedRows.get(until - 1)
-//          val firstSortValues = sortCoordinates.head.map(sc => first.get(sc.i).toString)
-//          val lastSortValues  = sortCoordinates.head.map(sc => last.get(sc.i).toString)
-//          val firstRow        = first.toString
-//          val lastRow         = last.toString
-//          val newCursor       = encode(0, until, firstRow, lastRow, firstSortValues, lastSortValues)
-//          val more            = totalCount - limit.min(totalCount)
-//
-//          log("from    : 0")
-//          log("until   : " + until)
-//          log("firstRow: " + firstRow)
-//          log("lastRow : " + lastRow)
-//          //      log("firstSortValues: " + firstSortValues)
-//          //      log("lastSortValues : " + lastSortValues)
-//          log.print()
-//
-//          (newCursor, more)
-//
-//        } else {
-//          log("----------------- _ <--")
-//          val until = totalCount - 1
-//          val from  = (until + limit).max(0) // (limit is negative)
-//
-//          log("from    : " + from)
-//          log("until   : " + until)
-//
-//          var i = from
-//          while (i != until) {
-//            tuples += row2tpl(sortedRows.get(i))
-//            i += 1
-//          }
-//
-//          val first           = sortedRows.get(from)
-//          val last            = sortedRows.get(until - 1)
-//          val firstSortValues = sortCoordinates.head.map(sc => first.get(sc.i).toString)
-//          val lastSortValues  = sortCoordinates.head.map(sc => last.get(sc.i).toString)
-//          val firstRow        = first.toString
-//          val lastRow         = last.toString
-//          val newCursor       = encode(0, until, firstRow, lastRow, firstSortValues, lastSortValues)
-//          val more            = (totalCount - from).min(from)
-//
-//          log("firstRow: " + firstRow)
-//          log("lastRow : " + lastRow)
-//          //      log("firstSortValues: " + firstSortValues)
-//          //      log("lastSortValues : " + lastSortValues)
-//          log.print()
-//
-//          (newCursor, more)
-//        }
-//
-//        (tuples.result(), newCursor, more)
-//      }
-//
-//    } else {
-//      val (from, until, prevFirstRow, prevLastRow, prevFirstSortValues, prevLastSortValues) = decode(cursor)
-//
-//      val forward     = limit > 0
-//      val offsetModel = getOffsetModel(forward, prevFirstSortValues, prevLastSortValues)
-//
-//      conn.jvmQuery(offsetModel, Model2Query(offsetModel).get._1).map { rows =>
-//
-//        log(offsetModel)
-//
-//        val totalCount = rows.size
-//        if (totalCount == 0) {
-//          (List.empty[Tpl], ",", 0)
-//        } else if (totalCount == 1) {
-//          (List(row2tpl(rows.iterator.next)), ",", 0)
-//
-//        } else {
-//          val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
-//          sortedRows.sort(this) // using macro-implemented `compare` method
-//
-//          sortedRows.forEach(row => log(row))
-//
-//          val (newCursor, more) = if (forward) {
-//            log("----------------- A -->")
-//
-//            // Walk forward to find row index of previous last row
-//            var i = 0
-//            while (sortedRows.get(i).toString != prevLastRow && i != limit) {
-//              i += 1
-//            }
-//            val from  = i + 1 // Go from the row after
-//            val until = (from + limit).min(totalCount)
-//
-//            log("from    : " + from)
-//            log("until   : " + until)
-//
-//            i = from
-//            while (i != until) {
-//              tuples += row2tpl(sortedRows.get(i))
-//              i += 1
-//            }
-//            val first           = sortedRows.get(from)
-//            val last            = sortedRows.get(until - 1)
-//            val firstRow        = first.toString
-//            val lastRow         = last.toString
-//            val firstSortValues = sortCoordinates.head.map(sc => first.get(sc.i).toString)
-//            val lastSortValues  = sortCoordinates.head.map(sc => last.get(sc.i).toString)
-//            val newCursor       = encode(from, until, firstRow, lastRow, firstSortValues, lastSortValues)
-//            val more            = totalCount - until
-//
-//            log("firstRow: " + firstRow)
-//            log("lastRow : " + lastRow)
-//            //      log("firstSortValues: " + firstSortValues)
-//            //      log("lastSortValues : " + lastSortValues)
-//            log.print()
-//
-//            (newCursor, more)
-//
-//          } else {
-//            log("----------------- A <--")
-//
-//            // Walk backwards to find row index of previous first row
-//            var i     = totalCount - 1
-//            val lower = i + limit // (limit is negative)
-//            while (sortedRows.get(i).toString != prevFirstRow && i != lower) {
-//              i -= 1
-//            }
-//            val until = i // Go from the row before
-//            val from  = (until + limit).max(0) // (limit is negative)
-//
-//            log("from    : " + from)
-//            log("until   : " + until)
-//
-//            i = from
-//            while (i != until) {
-//              tuples += row2tpl(sortedRows.get(i))
-//              i += 1
-//            }
-//            val first           = sortedRows.get(from)
-//            val last            = sortedRows.get(until)
-//            val firstRow        = first.toString
-//            val lastRow         = last.toString
-//            val firstSortValues = sortCoordinates.head.map(sc => first.get(sc.i).toString)
-//            val lastSortValues  = sortCoordinates.head.map(sc => last.get(sc.i).toString)
-//            val newCursor       = encode(from, until, firstRow, lastRow, firstSortValues, lastSortValues)
-////            val more            = (totalCount - from).min(from)
-//            val more            = from
-//
-//            log("firstRow: " + firstRow)
-//            log("lastRow : " + lastRow)
-//            //      log("firstSortValues: " + firstSortValues)
-//            //      log("lastSortValues : " + lastSortValues)
-//            log.print()
-//
-//            (newCursor, more)
-//          }
-//          (tuples.result(), newCursor, more)
-//        }
-//      }
-//    }
-//  }
 
-  protected def cursorRows2tuples(
+  protected def cursorRows2nestedTuples(
     conn: Conn,
     limit: Int,
     cursor: String
   )(implicit ec: ExecutionContext): Future[(List[Tpl], String, Int)] = {
     val tuples = List.newBuilder[Tpl]
+    var i      = 0
     val log    = new log
+
+    def resolve(
+      sortedRows: java.util.ArrayList[jList[AnyRef]],
+      from: Int,
+      until: Int,
+      more: Int
+    ): (List[Tpl], String, Int) = {
+      log("from    : " + from)
+      log("until   : " + until)
+
+      i = from
+      while (i != until) {
+        tuples += row2tpl(sortedRows.get(i))
+        i += 1
+      }
+      val first           = sortedRows.get(from)
+      val last            = sortedRows.get(until - 1)
+      val firstRow        = first.toString
+      val lastRow         = last.toString
+      val firstSortValues = sortCoordinates.head.map(sc => first.get(sc.i).toString)
+      val lastSortValues  = sortCoordinates.head.map(sc => last.get(sc.i).toString)
+      val newCursor       = encode(from, until, firstRow, lastRow, firstSortValues, lastSortValues)
+
+      log("firstRow: " + firstRow)
+      log("lastRow : " + lastRow)
+      //      log("firstSortValues: " + firstSortValues)
+      //      log("lastSortValues : " + lastSortValues)
+      log.print()
+
+      (tuples.result(), newCursor, more)
+    }
+
     log("=========================================================================")
     if (cursor.isEmpty) {
-
       conn.jvmQuery(_model, _query).map { rows =>
-        val totalCount                                     = rows.size
-        val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
-        sortedRows.sort(this) // using macro-implemented `compare` method
-
-        log(_model)
-        sortedRows.forEach(row => log(row))
-
-        val (newCursor, more) = if (limit > 0) {
-          log("----------------- _ -->")
-          val from  = 0
-          var i     = from
-          val until = limit.min(totalCount)
-          while (i != until) {
-            tuples += row2tpl(sortedRows.get(i))
-            i += 1
-          }
-          val first           = sortedRows.get(from)
-          val last            = sortedRows.get(until - 1)
-          val firstSortValues = sortCoordinates.head.map(sc => first.get(sc.i).toString)
-          val lastSortValues  = sortCoordinates.head.map(sc => last.get(sc.i).toString)
-          val firstRow        = first.toString
-          val lastRow         = last.toString
-          val newCursor       = encode(from, until, firstRow, lastRow, firstSortValues, lastSortValues)
-//          val more            = totalCount - limit.min(totalCount)
-          val more            = totalCount - until
-
-          log("from    : 0")
-          log("until   : " + until)
-          log("firstRow: " + firstRow)
-          log("lastRow : " + lastRow)
-          //      log("firstSortValues: " + firstSortValues)
-          //      log("lastSortValues : " + lastSortValues)
-          log.print()
-
-          (newCursor, more)
-
+        val totalCount = rows.size
+        if (totalCount == 0) {
+          (List.empty[Tpl], ",", 0)
+        } else if (totalCount == 1) {
+          (List(row2tpl(rows.iterator.next)), ",", 0)
         } else {
-          log("----------------- _ <--")
-          val until = totalCount
-          val from  = (until + limit).max(0) // (limit is negative)
 
-          log("from    : " + from)
-          log("until   : " + until)
+          val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
+          sortedRows.sort(this) // using macro-implemented `compare` method
 
-          var i = from
-          while (i != until) {
-            tuples += row2tpl(sortedRows.get(i))
-            i += 1
+          log(_model)
+          sortedRows.forEach(row => log(row))
+
+          if (limit > 0) {
+            log("----------------- _ -->")
+            val from  = 0
+            val until = limit.min(totalCount)
+            resolve(sortedRows, from, until, totalCount - until)
+
+          } else {
+            log("----------------- _ <--")
+            val until = totalCount
+            val from  = (until + limit).max(0) // (limit is negative)
+            resolve(sortedRows, from, until, from)
           }
-
-          val first           = sortedRows.get(from)
-          val last            = sortedRows.get(until - 1)
-          val firstSortValues = sortCoordinates.head.map(sc => first.get(sc.i).toString)
-          val lastSortValues  = sortCoordinates.head.map(sc => last.get(sc.i).toString)
-          val firstRow        = first.toString
-          val lastRow         = last.toString
-          val newCursor       = encode(from, until, firstRow, lastRow, firstSortValues, lastSortValues)
-//          val more            = totalCount - (-limit).min(totalCount)
-//          val more            = (totalCount - from).min(from)
-          val more            = from
-
-          log("firstRow: " + firstRow)
-          log("lastRow : " + lastRow)
-          //      log("firstSortValues: " + firstSortValues)
-          //      log("lastSortValues : " + lastSortValues)
-          log.print()
-
-          (newCursor, more)
         }
-
-        (tuples.result(), newCursor, more)
       }
 
     } else {
@@ -349,11 +154,7 @@ trait CursorTpl[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
 
       val forward     = limit > 0
       val offsetModel = getOffsetModel(forward, prevFirstSortValues, prevLastSortValues)
-
       conn.jvmQuery(offsetModel, Model2Query(offsetModel).get._1).map { rows =>
-
-        log(offsetModel)
-
         val totalCount = rows.size
         if (totalCount == 0) {
           (List.empty[Tpl], ",", 0)
@@ -364,83 +165,154 @@ trait CursorTpl[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
           val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
           sortedRows.sort(this) // using macro-implemented `compare` method
 
+          log(offsetModel)
           sortedRows.forEach(row => log(row))
 
-          val (newCursor, more) = if (forward) {
+          if (forward) {
             log("----------------- A -->")
 
             // Walk forward to find row index of previous last row
-            var i = 0
+            i = 0
             while (sortedRows.get(i).toString != prevLastRow && i != limit) {
               i += 1
             }
             val from  = i + 1 // Go from the row after
             val until = (from + limit).min(totalCount)
-
-            log("from    : " + from)
-            log("until   : " + until)
-
-            i = from
-            while (i != until) {
-              tuples += row2tpl(sortedRows.get(i))
-              i += 1
-            }
-            val first           = sortedRows.get(from)
-            val last            = sortedRows.get(until - 1)
-            val firstRow        = first.toString
-            val lastRow         = last.toString
-            val firstSortValues = sortCoordinates.head.map(sc => first.get(sc.i).toString)
-            val lastSortValues  = sortCoordinates.head.map(sc => last.get(sc.i).toString)
-            val newCursor       = encode(from, until, firstRow, lastRow, firstSortValues, lastSortValues)
-            val more            = totalCount - until
-
-            log("firstRow: " + firstRow)
-            log("lastRow : " + lastRow)
-            //      log("firstSortValues: " + firstSortValues)
-            //      log("lastSortValues : " + lastSortValues)
-            log.print()
-
-            (newCursor, more)
+            resolve(sortedRows, from, until, totalCount - until)
 
           } else {
             log("----------------- A <--")
 
             // Walk backwards to find row index of previous first row
-            var i     = totalCount - 1
+            i = totalCount - 1
             val lower = i + limit // (limit is negative)
             while (sortedRows.get(i).toString != prevFirstRow && i != lower) {
               i -= 1
             }
             val until = i // Go from the row before
             val from  = (until + limit).max(0) // (limit is negative)
+            resolve(sortedRows, from, until, from)
+          }
+        }
+      }
+    }
+  }
 
-            log("from    : " + from)
-            log("until   : " + until)
+  protected def cursorRows2tuples(
+    conn: Conn,
+    limit: Int,
+    cursor: String
+  )(implicit ec: ExecutionContext): Future[(List[Tpl], String, Int)] = {
+    val tuples = List.newBuilder[Tpl]
+    var i      = 0
+    val log    = new log
 
-            i = from
-            while (i != until) {
-              tuples += row2tpl(sortedRows.get(i))
+    def resolve(
+      sortedRows: java.util.ArrayList[jList[AnyRef]],
+      from: Int,
+      until: Int,
+      more: Int
+    ): (List[Tpl], String, Int) = {
+      log("from    : " + from)
+      log("until   : " + until)
+
+      i = from
+      while (i != until) {
+        tuples += row2tpl(sortedRows.get(i))
+        i += 1
+      }
+      val first           = sortedRows.get(from)
+      val last            = sortedRows.get(until - 1)
+      val firstRow        = first.toString
+      val lastRow         = last.toString
+      val firstSortValues = sortCoordinates.head.map(sc => first.get(sc.i).toString)
+      val lastSortValues  = sortCoordinates.head.map(sc => last.get(sc.i).toString)
+      val newCursor       = encode(from, until, firstRow, lastRow, firstSortValues, lastSortValues)
+
+      log("firstRow: " + firstRow)
+      log("lastRow : " + lastRow)
+      //      log("firstSortValues: " + firstSortValues)
+      //      log("lastSortValues : " + lastSortValues)
+      log.print()
+
+      (tuples.result(), newCursor, more)
+    }
+
+    log("=========================================================================")
+    if (cursor.isEmpty) {
+      conn.jvmQuery(_model, _query).map { rows =>
+        val totalCount = rows.size
+        if (totalCount == 0) {
+          (List.empty[Tpl], ",", 0)
+        } else if (totalCount == 1) {
+          (List(row2tpl(rows.iterator.next)), ",", 0)
+        } else {
+
+          val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
+          sortedRows.sort(this) // using macro-implemented `compare` method
+
+          log(_model)
+          sortedRows.forEach(row => log(row))
+
+          if (limit > 0) {
+            log("----------------- _ -->")
+            val from  = 0
+            val until = limit.min(totalCount)
+            resolve(sortedRows, from, until, totalCount - until)
+
+          } else {
+            log("----------------- _ <--")
+            val until = totalCount
+            val from  = (until + limit).max(0) // (limit is negative)
+            resolve(sortedRows, from, until, from)
+          }
+        }
+      }
+
+    } else {
+      val (from, until, prevFirstRow, prevLastRow, prevFirstSortValues, prevLastSortValues) = decode(cursor)
+
+      val forward     = limit > 0
+      val offsetModel = getOffsetModel(forward, prevFirstSortValues, prevLastSortValues)
+      conn.jvmQuery(offsetModel, Model2Query(offsetModel).get._1).map { rows =>
+        val totalCount = rows.size
+        if (totalCount == 0) {
+          (List.empty[Tpl], ",", 0)
+        } else if (totalCount == 1) {
+          (List(row2tpl(rows.iterator.next)), ",", 0)
+
+        } else {
+          val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
+          sortedRows.sort(this) // using macro-implemented `compare` method
+
+          log(offsetModel)
+          sortedRows.forEach(row => log(row))
+
+          if (forward) {
+            log("----------------- A -->")
+
+            // Walk forward to find row index of previous last row
+            i = 0
+            while (sortedRows.get(i).toString != prevLastRow && i != limit) {
               i += 1
             }
-            val first           = sortedRows.get(from)
-            val last            = sortedRows.get(until - 1)
-            val firstRow        = first.toString
-            val lastRow         = last.toString
-            val firstSortValues = sortCoordinates.head.map(sc => first.get(sc.i).toString)
-            val lastSortValues  = sortCoordinates.head.map(sc => last.get(sc.i).toString)
-            val newCursor       = encode(from, until, firstRow, lastRow, firstSortValues, lastSortValues)
-//            val more            = (totalCount - from).min(from)
-            val more            = from
+            val from  = i + 1 // Go from the row after
+            val until = (from + limit).min(totalCount)
+            resolve(sortedRows, from, until, totalCount - until)
 
-            log("firstRow: " + firstRow)
-            log("lastRow : " + lastRow)
-            //      log("firstSortValues: " + firstSortValues)
-            //      log("lastSortValues : " + lastSortValues)
-            log.print()
+          } else {
+            log("----------------- A <--")
 
-            (newCursor, more)
+            // Walk backwards to find row index of previous first row
+            i = totalCount - 1
+            val lower = i + limit // (limit is negative)
+            while (sortedRows.get(i).toString != prevFirstRow && i != lower) {
+              i -= 1
+            }
+            val until = i // Go from the row before
+            val from  = (until + limit).max(0) // (limit is negative)
+            resolve(sortedRows, from, until, from)
           }
-          (tuples.result(), newCursor, more)
         }
       }
     }
