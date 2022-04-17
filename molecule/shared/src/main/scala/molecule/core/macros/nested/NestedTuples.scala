@@ -117,389 +117,293 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] { self: Molecule_0[Obj
   }
 
   final override def get(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-    get(-1, 0).map(_._1)
+    getNested(-1, 0).map(_._1)
   }
 
   final override def get(limit: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[List[Tpl]] = {
-    get(limit, 0).map(_._1)
+    getNested(limit, 0).map(_._1)
+  }
+
+  final override def get(limit: Int, offset: Int)
+                        (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] = {
+    getNested(limit, offset)
+  }
+
+  final private def getNested(limit: Int, offset: Int)
+                     (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] = {
+    for {
+      conn <- futConn
+      rows <- conn.jvmQuery(_model, _query)
+    } yield {
+      resetCastVars()
+      val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
+      sortedRows.sort(this)
+      val flatCount                  = sortedRows.size
+      val (totalCount, selectedRows) = getCountAndSelectedRowsDesc(sortedRows, limit, offset)
+      val tuples                     = if (flatCount == 0 || offset >= totalCount) {
+        List.empty[Tpl]
+      } else {
+        flat2nested(selectedRows, flatCount)
+      }
+      (tuples, totalCount)
+    }
   }
 }
 
 
 object NestedTuples {
 
-  trait NestedTuples1[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedTuples1[Obj, Tpl] extends NestedTuples[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-    final override def get(limit: Int, offset: Int)
-                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[OuterTpl], Int)] = {
-      for {
-        conn <- futConn
-        data <- conn.jvmQuery(_model, _query)
-      } yield {
-        resetCastVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        rows.sort(this)
-        val flatCount                  = rows.size
-        val (totalCount, selectedRows) = getCountAndSelectedRowsDesc(rows, limit, offset)
+    final override def flat2nested(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): List[Tpl] = {
+      if (flatCount == 1) {
+        row = selectedRows.iterator.next
+        List(tplBranch0(row,
+          List(tplLeaf1(row))))
 
-        if (flatCount == 0 || offset >= totalCount) {
-          (List.empty[OuterTpl], totalCount)
+      } else {
+        val lastFlat = selectedRows.size
+        val it       = selectedRows.iterator
+        while (it.hasNext) {
+          i += 1
+          row = it.next
+          e0 = row.get(0).asInstanceOf[jLong]
 
-        } else if (flatCount == 1) {
-          row = rows.iterator.next
-          (
-            List(tplBranch0(row,
-              List(tplLeaf1(row)))),
-            1
-          )
-
-        } else {
-          val lastFlat = selectedRows.size
-          val it       = selectedRows.iterator
-          while (it.hasNext) {
-            i += 1
-            row = it.next
-            e0 = row.get(0).asInstanceOf[jLong]
-
-            if (nextRow) {
-              if (i == lastFlat) {
-                if (e0 != p0) {
-                  acc0 = tplBranch0(prevRow, acc1) :: acc0
-
-                  acc1 = List(tplLeaf1(row))
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else /* e1 != p1 */ {
-                  acc1 = tplLeaf1(row) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-                }
-
-              } else if (e0 != p0) {
+          if (nextRow) {
+            if (i == lastFlat) {
+              if (e0 != p0) {
                 acc0 = tplBranch0(prevRow, acc1) :: acc0
 
                 acc1 = List(tplLeaf1(row))
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else /* e1 != p1 */ {
                 acc1 = tplLeaf1(row) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
               }
-            } else {
-              acc1 = List(tplLeaf1(row))
-              nextRow = true
-            }
 
-            prevRow = row
-            p0 = e0
+            } else if (e0 != p0) {
+              acc0 = tplBranch0(prevRow, acc1) :: acc0
+
+              acc1 = List(tplLeaf1(row))
+
+            } else /* e1 != p1 */ {
+              acc1 = tplLeaf1(row) :: acc1
+            }
+          } else {
+            acc1 = List(tplLeaf1(row))
+            nextRow = true
           }
-          (acc0, totalCount)
+
+          prevRow = row
+          p0 = e0
         }
+        acc0
       }
     }
   }
 
+  trait NestedTuples2[Obj, Tpl] extends NestedTuples[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-  trait NestedTuples2[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+    final override def flat2nested(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): List[Tpl] = {
+      if (flatCount == 1) {
+        row = selectedRows.iterator.next
+        List(tplBranch0(row,
+          List(tplBranch1(row,
+            List(tplLeaf2(row))))))
 
-    final override def get(limit: Int, offset: Int)
-                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[OuterTpl], Int)] = {
-      for {
-        conn <- futConn
-        data <- conn.jvmQuery(_model, _query)
-      } yield {
-        resetCastVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        rows.sort(this)
-        val flatCount                  = rows.size
-        val (totalCount, selectedRows) = getCountAndSelectedRowsDesc(rows, limit, offset)
+      } else {
+        val lastFlat = selectedRows.size
+        val it       = selectedRows.iterator
+        while (it.hasNext) {
+          i += 1
+          row = it.next
+          e0 = row.get(0).asInstanceOf[jLong]
+          e1 = row.get(1).asInstanceOf[jLong]
 
-        if (flatCount == 0 || offset >= totalCount) {
-          (List.empty[OuterTpl], totalCount)
-
-        } else if (flatCount == 1) {
-          row = rows.iterator.next
-          (
-            List(tplBranch0(row,
-              List(tplBranch1(row,
-                List(tplLeaf2(row)))))),
-            1
-          )
-
-        } else {
-          val lastFlat = selectedRows.size
-          val it       = selectedRows.iterator
-          while (it.hasNext) {
-            i += 1
-            row = it.next
-            e0 = row.get(0).asInstanceOf[jLong]
-            e1 = row.get(1).asInstanceOf[jLong]
-
-            if (nextRow) {
-              if (i == lastFlat) {
-                if (e0 != p0) {
-                  acc1 = tplBranch1(prevRow, acc2) :: acc1
-                  acc0 = tplBranch0(prevRow, acc1) :: acc0
-
-                  acc2 = List(tplLeaf2(row))
-                  acc1 = List(tplBranch1(row, acc2))
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e1 != p1) {
-                  acc1 = tplBranch1(prevRow, acc2) :: acc1
-
-                  acc2 = List(tplLeaf2(row))
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else /* e2 != p2 */ {
-                  acc2 = tplLeaf2(row) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-                }
-
-              } else if (e0 != p0) {
+          if (nextRow) {
+            if (i == lastFlat) {
+              if (e0 != p0) {
                 acc1 = tplBranch1(prevRow, acc2) :: acc1
                 acc0 = tplBranch0(prevRow, acc1) :: acc0
 
                 acc2 = List(tplLeaf2(row))
-                acc1 = Nil
+                acc1 = List(tplBranch1(row, acc2))
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e1 != p1) {
                 acc1 = tplBranch1(prevRow, acc2) :: acc1
 
                 acc2 = List(tplLeaf2(row))
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else /* e2 != p2 */ {
                 acc2 = tplLeaf2(row) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
               }
-            } else {
-              acc2 = List(tplLeaf2(row))
-              nextRow = true
-            }
 
-            prevRow = row
-            p0 = e0
-            p1 = e1
+            } else if (e0 != p0) {
+              acc1 = tplBranch1(prevRow, acc2) :: acc1
+              acc0 = tplBranch0(prevRow, acc1) :: acc0
+
+              acc2 = List(tplLeaf2(row))
+              acc1 = Nil
+
+            } else if (e1 != p1) {
+              acc1 = tplBranch1(prevRow, acc2) :: acc1
+
+              acc2 = List(tplLeaf2(row))
+
+            } else /* e2 != p2 */ {
+              acc2 = tplLeaf2(row) :: acc2
+            }
+          } else {
+            acc2 = List(tplLeaf2(row))
+            nextRow = true
           }
-          (acc0, totalCount)
+
+          prevRow = row
+          p0 = e0
+          p1 = e1
         }
+        acc0
       }
     }
   }
 
-  trait NestedTuples3[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedTuples3[Obj, Tpl] extends NestedTuples[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-    final override def get(limit: Int, offset: Int)
-                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[OuterTpl], Int)] = {
-      for {
-        conn <- futConn
-        data <- conn.jvmQuery(_model, _query)
-      } yield {
-        resetCastVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        rows.sort(this)
-        val flatCount                  = rows.size
-        val (totalCount, selectedRows) = getCountAndSelectedRowsDesc(rows, limit, offset)
+    final override def flat2nested(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): List[Tpl] = {
+      if (flatCount == 1) {
+        row = selectedRows.iterator.next
+        List(tplBranch0(row,
+          List(tplBranch1(row,
+            List(tplBranch2(row,
+              List(tplLeaf3(row))))))))
 
-        if (flatCount == 0 || offset >= totalCount) {
-          (List.empty[OuterTpl], totalCount)
+      } else {
+        val lastFlat = selectedRows.size
+        val it       = selectedRows.iterator
+        while (it.hasNext) {
+          i += 1
+          row = it.next
+          e0 = row.get(0).asInstanceOf[jLong]
+          e1 = row.get(1).asInstanceOf[jLong]
+          e2 = row.get(2).asInstanceOf[jLong]
 
-        } else if (flatCount == 1) {
-          row = rows.iterator.next
-          (
-            List(tplBranch0(row,
-              List(tplBranch1(row,
-                List(tplBranch2(row,
-                  List(tplLeaf3(row)))))))),
-            1
-          )
-
-        } else {
-          val lastFlat = selectedRows.size
-          val it       = selectedRows.iterator
-          while (it.hasNext) {
-            i += 1
-            row = it.next
-            e0 = row.get(0).asInstanceOf[jLong]
-            e1 = row.get(1).asInstanceOf[jLong]
-            e2 = row.get(2).asInstanceOf[jLong]
-
-            if (nextRow) {
-              if (i == lastFlat) {
-                if (e0 != p0) {
-                  acc2 = tplBranch2(prevRow, acc3) :: acc2
-                  acc1 = tplBranch1(prevRow, acc2) :: acc1
-                  acc0 = tplBranch0(prevRow, acc1) :: acc0
-
-                  acc3 = List(tplLeaf3(row))
-                  acc2 = List(tplBranch2(row, acc3))
-                  acc1 = List(tplBranch1(row, acc2))
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e1 != p1) {
-                  acc2 = tplBranch2(prevRow, acc3) :: acc2
-                  acc1 = tplBranch1(prevRow, acc2) :: acc1
-
-                  acc3 = List(tplLeaf3(row))
-                  acc2 = List(tplBranch2(row, acc3))
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e2 != p2) {
-                  acc2 = tplBranch2(prevRow, acc3) :: acc2
-
-                  acc3 = List(tplLeaf3(row))
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else /* e3 != p3 */ {
-                  acc3 = tplLeaf3(row) :: acc3
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-                }
-
-              } else if (e0 != p0) {
+          if (nextRow) {
+            if (i == lastFlat) {
+              if (e0 != p0) {
                 acc2 = tplBranch2(prevRow, acc3) :: acc2
                 acc1 = tplBranch1(prevRow, acc2) :: acc1
                 acc0 = tplBranch0(prevRow, acc1) :: acc0
 
                 acc3 = List(tplLeaf3(row))
-                acc2 = Nil
-                acc1 = Nil
+                acc2 = List(tplBranch2(row, acc3))
+                acc1 = List(tplBranch1(row, acc2))
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e1 != p1) {
                 acc2 = tplBranch2(prevRow, acc3) :: acc2
                 acc1 = tplBranch1(prevRow, acc2) :: acc1
 
                 acc3 = List(tplLeaf3(row))
-                acc2 = Nil
+                acc2 = List(tplBranch2(row, acc3))
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e2 != p2) {
                 acc2 = tplBranch2(prevRow, acc3) :: acc2
 
                 acc3 = List(tplLeaf3(row))
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else /* e3 != p3 */ {
                 acc3 = tplLeaf3(row) :: acc3
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
               }
-            } else {
-              acc3 = List(tplLeaf3(row))
-              nextRow = true
-            }
 
-            prevRow = row
-            p0 = e0
-            p1 = e1
-            p2 = e2
+            } else if (e0 != p0) {
+              acc2 = tplBranch2(prevRow, acc3) :: acc2
+              acc1 = tplBranch1(prevRow, acc2) :: acc1
+              acc0 = tplBranch0(prevRow, acc1) :: acc0
+
+              acc3 = List(tplLeaf3(row))
+              acc2 = Nil
+              acc1 = Nil
+
+            } else if (e1 != p1) {
+              acc2 = tplBranch2(prevRow, acc3) :: acc2
+              acc1 = tplBranch1(prevRow, acc2) :: acc1
+
+              acc3 = List(tplLeaf3(row))
+              acc2 = Nil
+
+            } else if (e2 != p2) {
+              acc2 = tplBranch2(prevRow, acc3) :: acc2
+
+              acc3 = List(tplLeaf3(row))
+
+            } else /* e3 != p3 */ {
+              acc3 = tplLeaf3(row) :: acc3
+            }
+          } else {
+            acc3 = List(tplLeaf3(row))
+            nextRow = true
           }
-          (acc0, totalCount)
+
+          prevRow = row
+          p0 = e0
+          p1 = e1
+          p2 = e2
         }
+        acc0
       }
     }
   }
 
 
-  trait NestedTuples4[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedTuples4[Obj, Tpl] extends NestedTuples[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-    final override def get(limit: Int, offset: Int)
-                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[OuterTpl], Int)] = {
-      for {
-        conn <- futConn
-        data <- conn.jvmQuery(_model, _query)
-      } yield {
-        resetCastVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        rows.sort(this)
-        val flatCount                  = rows.size
-        val (totalCount, selectedRows) = getCountAndSelectedRowsDesc(rows, limit, offset)
+    final override def flat2nested(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): List[Tpl] = {
+      if (flatCount == 1) {
+        row = selectedRows.iterator.next
+        List(tplBranch0(row,
+          List(tplBranch1(row,
+            List(tplBranch2(row,
+              List(tplBranch3(row,
+                List(tplLeaf4(row))))))))))
 
-        if (flatCount == 0 || offset >= totalCount) {
-          (List.empty[OuterTpl], totalCount)
+      } else {
+        val lastFlat = selectedRows.size
+        val it       = selectedRows.iterator
+        while (it.hasNext) {
+          i += 1
+          row = it.next
+          e0 = row.get(0).asInstanceOf[jLong]
+          e1 = row.get(1).asInstanceOf[jLong]
+          e2 = row.get(2).asInstanceOf[jLong]
+          e3 = row.get(3).asInstanceOf[jLong]
 
-        } else if (flatCount == 1) {
-          row = rows.iterator.next
-          (
-            List(tplBranch0(row,
-              List(tplBranch1(row,
-                List(tplBranch2(row,
-                  List(tplBranch3(row,
-                    List(tplLeaf4(row)))))))))),
-            1
-          )
-
-        } else {
-          val lastFlat = selectedRows.size
-          val it       = selectedRows.iterator
-          while (it.hasNext) {
-            i += 1
-            row = it.next
-            e0 = row.get(0).asInstanceOf[jLong]
-            e1 = row.get(1).asInstanceOf[jLong]
-            e2 = row.get(2).asInstanceOf[jLong]
-            e3 = row.get(3).asInstanceOf[jLong]
-
-            if (nextRow) {
-              if (i == lastFlat) {
-                if (e0 != p0) {
-                  acc3 = tplBranch3(prevRow, acc4) :: acc3
-                  acc2 = tplBranch2(prevRow, acc3) :: acc2
-                  acc1 = tplBranch1(prevRow, acc2) :: acc1
-                  acc0 = tplBranch0(prevRow, acc1) :: acc0
-
-                  acc4 = List(tplLeaf4(row))
-                  acc3 = List(tplBranch3(row, acc4))
-                  acc2 = List(tplBranch2(row, acc3))
-                  acc1 = List(tplBranch1(row, acc2))
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e1 != p1) {
-                  acc3 = tplBranch3(prevRow, acc4) :: acc3
-                  acc2 = tplBranch2(prevRow, acc3) :: acc2
-                  acc1 = tplBranch1(prevRow, acc2) :: acc1
-
-                  acc4 = List(tplLeaf4(row))
-                  acc3 = List(tplBranch3(row, acc4))
-                  acc2 = List(tplBranch2(row, acc3))
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e2 != p2) {
-                  acc3 = tplBranch3(prevRow, acc4) :: acc3
-                  acc2 = tplBranch2(prevRow, acc3) :: acc2
-
-                  acc4 = List(tplLeaf4(row))
-                  acc3 = List(tplBranch3(row, acc4))
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e3 != p3) {
-                  acc3 = tplBranch3(prevRow, acc4) :: acc3
-
-                  acc4 = List(tplLeaf4(row))
-                  acc3 = tplBranch3(row, acc4) :: acc3
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else /* e4 != p4 */ {
-                  acc4 = tplLeaf4(row) :: acc4
-                  acc3 = tplBranch3(row, acc4) :: acc3
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-                }
-
-              } else if (e0 != p0) {
+          if (nextRow) {
+            if (i == lastFlat) {
+              if (e0 != p0) {
                 acc3 = tplBranch3(prevRow, acc4) :: acc3
                 acc2 = tplBranch2(prevRow, acc3) :: acc2
                 acc1 = tplBranch1(prevRow, acc2) :: acc1
                 acc0 = tplBranch0(prevRow, acc1) :: acc0
 
                 acc4 = List(tplLeaf4(row))
-                acc3 = Nil
-                acc2 = Nil
-                acc1 = Nil
+                acc3 = List(tplBranch3(row, acc4))
+                acc2 = List(tplBranch2(row, acc3))
+                acc1 = List(tplBranch1(row, acc2))
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e1 != p1) {
                 acc3 = tplBranch3(prevRow, acc4) :: acc3
@@ -507,155 +411,117 @@ object NestedTuples {
                 acc1 = tplBranch1(prevRow, acc2) :: acc1
 
                 acc4 = List(tplLeaf4(row))
-                acc3 = Nil
-                acc2 = Nil
+                acc3 = List(tplBranch3(row, acc4))
+                acc2 = List(tplBranch2(row, acc3))
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e2 != p2) {
                 acc3 = tplBranch3(prevRow, acc4) :: acc3
                 acc2 = tplBranch2(prevRow, acc3) :: acc2
 
                 acc4 = List(tplLeaf4(row))
-                acc3 = Nil
+                acc3 = List(tplBranch3(row, acc4))
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e3 != p3) {
                 acc3 = tplBranch3(prevRow, acc4) :: acc3
 
                 acc4 = List(tplLeaf4(row))
+                acc3 = tplBranch3(row, acc4) :: acc3
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else /* e4 != p4 */ {
                 acc4 = tplLeaf4(row) :: acc4
+                acc3 = tplBranch3(row, acc4) :: acc3
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
               }
-            } else {
-              acc4 = List(tplLeaf4(row))
-              nextRow = true
-            }
 
-            prevRow = row
-            p0 = e0
-            p1 = e1
-            p2 = e2
-            p3 = e3
+            } else if (e0 != p0) {
+              acc3 = tplBranch3(prevRow, acc4) :: acc3
+              acc2 = tplBranch2(prevRow, acc3) :: acc2
+              acc1 = tplBranch1(prevRow, acc2) :: acc1
+              acc0 = tplBranch0(prevRow, acc1) :: acc0
+
+              acc4 = List(tplLeaf4(row))
+              acc3 = Nil
+              acc2 = Nil
+              acc1 = Nil
+
+            } else if (e1 != p1) {
+              acc3 = tplBranch3(prevRow, acc4) :: acc3
+              acc2 = tplBranch2(prevRow, acc3) :: acc2
+              acc1 = tplBranch1(prevRow, acc2) :: acc1
+
+              acc4 = List(tplLeaf4(row))
+              acc3 = Nil
+              acc2 = Nil
+
+            } else if (e2 != p2) {
+              acc3 = tplBranch3(prevRow, acc4) :: acc3
+              acc2 = tplBranch2(prevRow, acc3) :: acc2
+
+              acc4 = List(tplLeaf4(row))
+              acc3 = Nil
+
+            } else if (e3 != p3) {
+              acc3 = tplBranch3(prevRow, acc4) :: acc3
+
+              acc4 = List(tplLeaf4(row))
+
+            } else /* e4 != p4 */ {
+              acc4 = tplLeaf4(row) :: acc4
+            }
+          } else {
+            acc4 = List(tplLeaf4(row))
+            nextRow = true
           }
-          (acc0, totalCount)
+
+          prevRow = row
+          p0 = e0
+          p1 = e1
+          p2 = e2
+          p3 = e3
         }
+        acc0
       }
     }
   }
 
 
-  trait NestedTuples5[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedTuples5[Obj, Tpl] extends NestedTuples[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-    final override def get(limit: Int, offset: Int)
-                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[OuterTpl], Int)] = {
-      for {
-        conn <- futConn
-        data <- conn.jvmQuery(_model, _query)
-      } yield {
-        resetCastVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        rows.sort(this)
-        val flatCount                  = rows.size
-        val (totalCount, selectedRows) = getCountAndSelectedRowsDesc(rows, limit, offset)
+    final override def flat2nested(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): List[Tpl] = {
+      if (flatCount == 1) {
+        row = selectedRows.iterator.next
+        List(tplBranch0(row,
+          List(tplBranch1(row,
+            List(tplBranch2(row,
+              List(tplBranch3(row,
+                List(tplBranch4(row,
+                  List(tplLeaf5(row))))))))))))
 
-        if (flatCount == 0 || offset >= totalCount) {
-          (List.empty[OuterTpl], totalCount)
+      } else {
+        val lastFlat = selectedRows.size
+        val it       = selectedRows.iterator
+        while (it.hasNext) {
+          i += 1
+          row = it.next
+          e0 = row.get(0).asInstanceOf[jLong]
+          e1 = row.get(1).asInstanceOf[jLong]
+          e2 = row.get(2).asInstanceOf[jLong]
+          e3 = row.get(3).asInstanceOf[jLong]
+          e4 = row.get(4).asInstanceOf[jLong]
 
-        } else if (flatCount == 1) {
-          row = rows.iterator.next
-          (
-            List(tplBranch0(row,
-              List(tplBranch1(row,
-                List(tplBranch2(row,
-                  List(tplBranch3(row,
-                    List(tplBranch4(row,
-                      List(tplLeaf5(row)))))))))))),
-            1
-          )
-
-        } else {
-          val lastFlat = selectedRows.size
-          val it       = selectedRows.iterator
-          while (it.hasNext) {
-            i += 1
-            row = it.next
-            e0 = row.get(0).asInstanceOf[jLong]
-            e1 = row.get(1).asInstanceOf[jLong]
-            e2 = row.get(2).asInstanceOf[jLong]
-            e3 = row.get(3).asInstanceOf[jLong]
-            e4 = row.get(4).asInstanceOf[jLong]
-
-            if (nextRow) {
-              if (i == lastFlat) {
-                if (e0 != p0) {
-                  acc4 = tplBranch4(prevRow, acc5) :: acc4
-                  acc3 = tplBranch3(prevRow, acc4) :: acc3
-                  acc2 = tplBranch2(prevRow, acc3) :: acc2
-                  acc1 = tplBranch1(prevRow, acc2) :: acc1
-                  acc0 = tplBranch0(prevRow, acc1) :: acc0
-
-                  acc5 = List(tplLeaf5(row))
-                  acc4 = List(tplBranch4(row, acc5))
-                  acc3 = List(tplBranch3(row, acc4))
-                  acc2 = List(tplBranch2(row, acc3))
-                  acc1 = List(tplBranch1(row, acc2))
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e1 != p1) {
-                  acc4 = tplBranch4(prevRow, acc5) :: acc4
-                  acc3 = tplBranch3(prevRow, acc4) :: acc3
-                  acc2 = tplBranch2(prevRow, acc3) :: acc2
-                  acc1 = tplBranch1(prevRow, acc2) :: acc1
-
-                  acc5 = List(tplLeaf5(row))
-                  acc4 = List(tplBranch4(row, acc5))
-                  acc3 = List(tplBranch3(row, acc4))
-                  acc2 = List(tplBranch2(row, acc3))
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e2 != p2) {
-                  acc4 = tplBranch4(prevRow, acc5) :: acc4
-                  acc3 = tplBranch3(prevRow, acc4) :: acc3
-                  acc2 = tplBranch2(prevRow, acc3) :: acc2
-
-                  acc5 = List(tplLeaf5(row))
-                  acc4 = List(tplBranch4(row, acc5))
-                  acc3 = List(tplBranch3(row, acc4))
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e3 != p3) {
-                  acc4 = tplBranch4(prevRow, acc5) :: acc4
-                  acc3 = tplBranch3(prevRow, acc4) :: acc3
-
-                  acc5 = List(tplLeaf5(row))
-                  acc4 = List(tplBranch4(row, acc5))
-                  acc3 = tplBranch3(row, acc4) :: acc3
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e4 != p4) {
-                  acc4 = tplBranch4(prevRow, acc5) :: acc4
-
-                  acc5 = List(tplLeaf5(row))
-                  acc4 = tplBranch4(row, acc5) :: acc4
-                  acc3 = tplBranch3(row, acc4) :: acc3
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else /* e5 != p5 */ {
-                  acc5 = tplLeaf5(row) :: acc5
-                  acc4 = tplBranch4(row, acc5) :: acc4
-                  acc3 = tplBranch3(row, acc4) :: acc3
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-                }
-
-              } else if (e0 != p0) {
+          if (nextRow) {
+            if (i == lastFlat) {
+              if (e0 != p0) {
                 acc4 = tplBranch4(prevRow, acc5) :: acc4
                 acc3 = tplBranch3(prevRow, acc4) :: acc3
                 acc2 = tplBranch2(prevRow, acc3) :: acc2
@@ -663,10 +529,11 @@ object NestedTuples {
                 acc0 = tplBranch0(prevRow, acc1) :: acc0
 
                 acc5 = List(tplLeaf5(row))
-                acc4 = Nil
-                acc3 = Nil
-                acc2 = Nil
-                acc1 = Nil
+                acc4 = List(tplBranch4(row, acc5))
+                acc3 = List(tplBranch3(row, acc4))
+                acc2 = List(tplBranch2(row, acc3))
+                acc1 = List(tplBranch1(row, acc2))
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e1 != p1) {
                 acc4 = tplBranch4(prevRow, acc5) :: acc4
@@ -675,9 +542,11 @@ object NestedTuples {
                 acc1 = tplBranch1(prevRow, acc2) :: acc1
 
                 acc5 = List(tplLeaf5(row))
-                acc4 = Nil
-                acc3 = Nil
-                acc2 = Nil
+                acc4 = List(tplBranch4(row, acc5))
+                acc3 = List(tplBranch3(row, acc4))
+                acc2 = List(tplBranch2(row, acc3))
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e2 != p2) {
                 acc4 = tplBranch4(prevRow, acc5) :: acc4
@@ -685,180 +554,137 @@ object NestedTuples {
                 acc2 = tplBranch2(prevRow, acc3) :: acc2
 
                 acc5 = List(tplLeaf5(row))
-                acc4 = Nil
-                acc3 = Nil
+                acc4 = List(tplBranch4(row, acc5))
+                acc3 = List(tplBranch3(row, acc4))
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e3 != p3) {
                 acc4 = tplBranch4(prevRow, acc5) :: acc4
                 acc3 = tplBranch3(prevRow, acc4) :: acc3
 
                 acc5 = List(tplLeaf5(row))
-                acc4 = Nil
+                acc4 = List(tplBranch4(row, acc5))
+                acc3 = tplBranch3(row, acc4) :: acc3
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e4 != p4) {
                 acc4 = tplBranch4(prevRow, acc5) :: acc4
 
                 acc5 = List(tplLeaf5(row))
+                acc4 = tplBranch4(row, acc5) :: acc4
+                acc3 = tplBranch3(row, acc4) :: acc3
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else /* e5 != p5 */ {
                 acc5 = tplLeaf5(row) :: acc5
+                acc4 = tplBranch4(row, acc5) :: acc4
+                acc3 = tplBranch3(row, acc4) :: acc3
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
               }
-            } else {
-              acc5 = List(tplLeaf5(row))
-              nextRow = true
-            }
 
-            prevRow = row
-            p0 = e0
-            p1 = e1
-            p2 = e2
-            p3 = e3
-            p4 = e4
+            } else if (e0 != p0) {
+              acc4 = tplBranch4(prevRow, acc5) :: acc4
+              acc3 = tplBranch3(prevRow, acc4) :: acc3
+              acc2 = tplBranch2(prevRow, acc3) :: acc2
+              acc1 = tplBranch1(prevRow, acc2) :: acc1
+              acc0 = tplBranch0(prevRow, acc1) :: acc0
+
+              acc5 = List(tplLeaf5(row))
+              acc4 = Nil
+              acc3 = Nil
+              acc2 = Nil
+              acc1 = Nil
+
+            } else if (e1 != p1) {
+              acc4 = tplBranch4(prevRow, acc5) :: acc4
+              acc3 = tplBranch3(prevRow, acc4) :: acc3
+              acc2 = tplBranch2(prevRow, acc3) :: acc2
+              acc1 = tplBranch1(prevRow, acc2) :: acc1
+
+              acc5 = List(tplLeaf5(row))
+              acc4 = Nil
+              acc3 = Nil
+              acc2 = Nil
+
+            } else if (e2 != p2) {
+              acc4 = tplBranch4(prevRow, acc5) :: acc4
+              acc3 = tplBranch3(prevRow, acc4) :: acc3
+              acc2 = tplBranch2(prevRow, acc3) :: acc2
+
+              acc5 = List(tplLeaf5(row))
+              acc4 = Nil
+              acc3 = Nil
+
+            } else if (e3 != p3) {
+              acc4 = tplBranch4(prevRow, acc5) :: acc4
+              acc3 = tplBranch3(prevRow, acc4) :: acc3
+
+              acc5 = List(tplLeaf5(row))
+              acc4 = Nil
+
+            } else if (e4 != p4) {
+              acc4 = tplBranch4(prevRow, acc5) :: acc4
+
+              acc5 = List(tplLeaf5(row))
+
+            } else /* e5 != p5 */ {
+              acc5 = tplLeaf5(row) :: acc5
+            }
+          } else {
+            acc5 = List(tplLeaf5(row))
+            nextRow = true
           }
-          (acc0, totalCount)
+
+          prevRow = row
+          p0 = e0
+          p1 = e1
+          p2 = e2
+          p3 = e3
+          p4 = e4
         }
+        acc0
       }
     }
   }
 
 
-  trait NestedTuples6[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedTuples6[Obj, Tpl] extends NestedTuples[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-    final override def get(limit: Int, offset: Int)
-                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[OuterTpl], Int)] = {
-      for {
-        conn <- futConn
-        data <- conn.jvmQuery(_model, _query)
-      } yield {
-        resetCastVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        rows.sort(this)
-        val flatCount                  = rows.size
-        val (totalCount, selectedRows) = getCountAndSelectedRowsDesc(rows, limit, offset)
+    final override def flat2nested(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): List[Tpl] = {
+      if (flatCount == 1) {
+        row = selectedRows.iterator.next
+        List(tplBranch0(row,
+          List(tplBranch1(row,
+            List(tplBranch2(row,
+              List(tplBranch3(row,
+                List(tplBranch4(row,
+                  List(tplBranch5(row,
+                    List(tplLeaf6(row))))))))))))))
 
-        if (flatCount == 0 || offset >= totalCount) {
-          (List.empty[OuterTpl], totalCount)
+      } else {
+        val lastFlat = selectedRows.size
+        val it       = selectedRows.iterator
+        while (it.hasNext) {
+          i += 1
+          row = it.next
+          e0 = row.get(0).asInstanceOf[jLong]
+          e1 = row.get(1).asInstanceOf[jLong]
+          e2 = row.get(2).asInstanceOf[jLong]
+          e3 = row.get(3).asInstanceOf[jLong]
+          e4 = row.get(4).asInstanceOf[jLong]
+          e5 = row.get(5).asInstanceOf[jLong]
 
-        } else if (flatCount == 1) {
-          row = rows.iterator.next
-          (
-            List(tplBranch0(row,
-              List(tplBranch1(row,
-                List(tplBranch2(row,
-                  List(tplBranch3(row,
-                    List(tplBranch4(row,
-                      List(tplBranch5(row,
-                        List(tplLeaf6(row)))))))))))))),
-            1
-          )
-
-        } else {
-          val lastFlat = selectedRows.size
-          val it       = selectedRows.iterator
-          while (it.hasNext) {
-            i += 1
-            row = it.next
-            e0 = row.get(0).asInstanceOf[jLong]
-            e1 = row.get(1).asInstanceOf[jLong]
-            e2 = row.get(2).asInstanceOf[jLong]
-            e3 = row.get(3).asInstanceOf[jLong]
-            e4 = row.get(4).asInstanceOf[jLong]
-            e5 = row.get(5).asInstanceOf[jLong]
-
-            if (nextRow) {
-              if (i == lastFlat) {
-                if (e0 != p0) {
-                  acc5 = tplBranch5(prevRow, acc6) :: acc5
-                  acc4 = tplBranch4(prevRow, acc5) :: acc4
-                  acc3 = tplBranch3(prevRow, acc4) :: acc3
-                  acc2 = tplBranch2(prevRow, acc3) :: acc2
-                  acc1 = tplBranch1(prevRow, acc2) :: acc1
-                  acc0 = tplBranch0(prevRow, acc1) :: acc0
-
-                  acc6 = List(tplLeaf6(row))
-                  acc5 = List(tplBranch5(row, acc6))
-                  acc4 = List(tplBranch4(row, acc5))
-                  acc3 = List(tplBranch3(row, acc4))
-                  acc2 = List(tplBranch2(row, acc3))
-                  acc1 = List(tplBranch1(row, acc2))
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e1 != p1) {
-                  acc5 = tplBranch5(prevRow, acc6) :: acc5
-                  acc4 = tplBranch4(prevRow, acc5) :: acc4
-                  acc3 = tplBranch3(prevRow, acc4) :: acc3
-                  acc2 = tplBranch2(prevRow, acc3) :: acc2
-                  acc1 = tplBranch1(prevRow, acc2) :: acc1
-
-                  acc6 = List(tplLeaf6(row))
-                  acc5 = List(tplBranch5(row, acc6))
-                  acc4 = List(tplBranch4(row, acc5))
-                  acc3 = List(tplBranch3(row, acc4))
-                  acc2 = List(tplBranch2(row, acc3))
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e2 != p2) {
-                  acc5 = tplBranch5(prevRow, acc6) :: acc5
-                  acc4 = tplBranch4(prevRow, acc5) :: acc4
-                  acc3 = tplBranch3(prevRow, acc4) :: acc3
-                  acc2 = tplBranch2(prevRow, acc3) :: acc2
-
-                  acc6 = List(tplLeaf6(row))
-                  acc5 = List(tplBranch5(row, acc6))
-                  acc4 = List(tplBranch4(row, acc5))
-                  acc3 = List(tplBranch3(row, acc4))
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e3 != p3) {
-                  acc5 = tplBranch5(prevRow, acc6) :: acc5
-                  acc4 = tplBranch4(prevRow, acc5) :: acc4
-                  acc3 = tplBranch3(prevRow, acc4) :: acc3
-
-                  acc6 = List(tplLeaf6(row))
-                  acc5 = List(tplBranch5(row, acc6))
-                  acc4 = List(tplBranch4(row, acc5))
-                  acc3 = tplBranch3(row, acc4) :: acc3
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e4 != p4) {
-                  acc5 = tplBranch5(prevRow, acc6) :: acc5
-                  acc4 = tplBranch4(prevRow, acc5) :: acc4
-
-                  acc6 = List(tplLeaf6(row))
-                  acc5 = List(tplBranch5(row, acc6))
-                  acc4 = tplBranch4(row, acc5) :: acc4
-                  acc3 = tplBranch3(row, acc4) :: acc3
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e5 != p5) {
-                  acc5 = tplBranch5(prevRow, acc6) :: acc5
-
-                  acc6 = List(tplLeaf6(row))
-                  acc5 = tplBranch5(row, acc6) :: acc5
-                  acc4 = tplBranch4(row, acc5) :: acc4
-                  acc3 = tplBranch3(row, acc4) :: acc3
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else /* e6 != p6 */ {
-                  acc6 = tplLeaf6(row) :: acc6
-                  acc5 = tplBranch5(row, acc6) :: acc5
-                  acc4 = tplBranch4(row, acc5) :: acc4
-                  acc3 = tplBranch3(row, acc4) :: acc3
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-                }
-
-              } else if (e0 != p0) {
+          if (nextRow) {
+            if (i == lastFlat) {
+              if (e0 != p0) {
                 acc5 = tplBranch5(prevRow, acc6) :: acc5
                 acc4 = tplBranch4(prevRow, acc5) :: acc4
                 acc3 = tplBranch3(prevRow, acc4) :: acc3
@@ -867,11 +693,12 @@ object NestedTuples {
                 acc0 = tplBranch0(prevRow, acc1) :: acc0
 
                 acc6 = List(tplLeaf6(row))
-                acc5 = Nil
-                acc4 = Nil
-                acc3 = Nil
-                acc2 = Nil
-                acc1 = Nil
+                acc5 = List(tplBranch5(row, acc6))
+                acc4 = List(tplBranch4(row, acc5))
+                acc3 = List(tplBranch3(row, acc4))
+                acc2 = List(tplBranch2(row, acc3))
+                acc1 = List(tplBranch1(row, acc2))
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e1 != p1) {
                 acc5 = tplBranch5(prevRow, acc6) :: acc5
@@ -881,10 +708,12 @@ object NestedTuples {
                 acc1 = tplBranch1(prevRow, acc2) :: acc1
 
                 acc6 = List(tplLeaf6(row))
-                acc5 = Nil
-                acc4 = Nil
-                acc3 = Nil
-                acc2 = Nil
+                acc5 = List(tplBranch5(row, acc6))
+                acc4 = List(tplBranch4(row, acc5))
+                acc3 = List(tplBranch3(row, acc4))
+                acc2 = List(tplBranch2(row, acc3))
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e2 != p2) {
                 acc5 = tplBranch5(prevRow, acc6) :: acc5
@@ -893,9 +722,12 @@ object NestedTuples {
                 acc2 = tplBranch2(prevRow, acc3) :: acc2
 
                 acc6 = List(tplLeaf6(row))
-                acc5 = Nil
-                acc4 = Nil
-                acc3 = Nil
+                acc5 = List(tplBranch5(row, acc6))
+                acc4 = List(tplBranch4(row, acc5))
+                acc3 = List(tplBranch3(row, acc4))
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e3 != p3) {
                 acc5 = tplBranch5(prevRow, acc6) :: acc5
@@ -903,208 +735,159 @@ object NestedTuples {
                 acc3 = tplBranch3(prevRow, acc4) :: acc3
 
                 acc6 = List(tplLeaf6(row))
-                acc5 = Nil
-                acc4 = Nil
+                acc5 = List(tplBranch5(row, acc6))
+                acc4 = List(tplBranch4(row, acc5))
+                acc3 = tplBranch3(row, acc4) :: acc3
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e4 != p4) {
                 acc5 = tplBranch5(prevRow, acc6) :: acc5
                 acc4 = tplBranch4(prevRow, acc5) :: acc4
 
                 acc6 = List(tplLeaf6(row))
-                acc5 = Nil
+                acc5 = List(tplBranch5(row, acc6))
+                acc4 = tplBranch4(row, acc5) :: acc4
+                acc3 = tplBranch3(row, acc4) :: acc3
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e5 != p5) {
                 acc5 = tplBranch5(prevRow, acc6) :: acc5
 
                 acc6 = List(tplLeaf6(row))
+                acc5 = tplBranch5(row, acc6) :: acc5
+                acc4 = tplBranch4(row, acc5) :: acc4
+                acc3 = tplBranch3(row, acc4) :: acc3
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else /* e6 != p6 */ {
                 acc6 = tplLeaf6(row) :: acc6
+                acc5 = tplBranch5(row, acc6) :: acc5
+                acc4 = tplBranch4(row, acc5) :: acc4
+                acc3 = tplBranch3(row, acc4) :: acc3
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
               }
-            } else {
-              acc6 = List(tplLeaf6(row))
-              nextRow = true
-            }
 
-            prevRow = row
-            p0 = e0
-            p1 = e1
-            p2 = e2
-            p3 = e3
-            p4 = e4
-            p5 = e5
+            } else if (e0 != p0) {
+              acc5 = tplBranch5(prevRow, acc6) :: acc5
+              acc4 = tplBranch4(prevRow, acc5) :: acc4
+              acc3 = tplBranch3(prevRow, acc4) :: acc3
+              acc2 = tplBranch2(prevRow, acc3) :: acc2
+              acc1 = tplBranch1(prevRow, acc2) :: acc1
+              acc0 = tplBranch0(prevRow, acc1) :: acc0
+
+              acc6 = List(tplLeaf6(row))
+              acc5 = Nil
+              acc4 = Nil
+              acc3 = Nil
+              acc2 = Nil
+              acc1 = Nil
+
+            } else if (e1 != p1) {
+              acc5 = tplBranch5(prevRow, acc6) :: acc5
+              acc4 = tplBranch4(prevRow, acc5) :: acc4
+              acc3 = tplBranch3(prevRow, acc4) :: acc3
+              acc2 = tplBranch2(prevRow, acc3) :: acc2
+              acc1 = tplBranch1(prevRow, acc2) :: acc1
+
+              acc6 = List(tplLeaf6(row))
+              acc5 = Nil
+              acc4 = Nil
+              acc3 = Nil
+              acc2 = Nil
+
+            } else if (e2 != p2) {
+              acc5 = tplBranch5(prevRow, acc6) :: acc5
+              acc4 = tplBranch4(prevRow, acc5) :: acc4
+              acc3 = tplBranch3(prevRow, acc4) :: acc3
+              acc2 = tplBranch2(prevRow, acc3) :: acc2
+
+              acc6 = List(tplLeaf6(row))
+              acc5 = Nil
+              acc4 = Nil
+              acc3 = Nil
+
+            } else if (e3 != p3) {
+              acc5 = tplBranch5(prevRow, acc6) :: acc5
+              acc4 = tplBranch4(prevRow, acc5) :: acc4
+              acc3 = tplBranch3(prevRow, acc4) :: acc3
+
+              acc6 = List(tplLeaf6(row))
+              acc5 = Nil
+              acc4 = Nil
+
+            } else if (e4 != p4) {
+              acc5 = tplBranch5(prevRow, acc6) :: acc5
+              acc4 = tplBranch4(prevRow, acc5) :: acc4
+
+              acc6 = List(tplLeaf6(row))
+              acc5 = Nil
+
+            } else if (e5 != p5) {
+              acc5 = tplBranch5(prevRow, acc6) :: acc5
+
+              acc6 = List(tplLeaf6(row))
+
+            } else /* e6 != p6 */ {
+              acc6 = tplLeaf6(row) :: acc6
+            }
+          } else {
+            acc6 = List(tplLeaf6(row))
+            nextRow = true
           }
-          (acc0, totalCount)
+
+          prevRow = row
+          p0 = e0
+          p1 = e1
+          p2 = e2
+          p3 = e3
+          p4 = e4
+          p5 = e5
         }
+        acc0
       }
     }
   }
 
 
-  trait NestedTuples7[Obj, OuterTpl] extends NestedTuples[Obj, OuterTpl] { self: Molecule_0[Obj, OuterTpl] =>
+  trait NestedTuples7[Obj, Tpl] extends NestedTuples[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-    final override def get(limit: Int, offset: Int)
-                          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[OuterTpl], Int)] = {
-      for {
-        conn <- futConn
-        data <- conn.jvmQuery(_model, _query)
-      } yield {
-        resetCastVars()
-        val rows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(data)
-        rows.sort(this)
-        val flatCount                  = rows.size
-        val (totalCount, selectedRows) = getCountAndSelectedRowsDesc(rows, limit, offset)
+    final override def flat2nested(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): List[Tpl] = {
+      if (flatCount == 1) {
+        row = selectedRows.iterator.next
+        List(tplBranch0(row,
+          List(tplBranch1(row,
+            List(tplBranch2(row,
+              List(tplBranch3(row,
+                List(tplBranch4(row,
+                  List(tplBranch5(row,
+                    List(tplBranch6(row,
+                      List(tplLeaf7(row))))))))))))))))
 
-        if (flatCount == 0 || offset >= totalCount) {
-          (List.empty[OuterTpl], totalCount)
+      } else {
+        val lastFlat = selectedRows.size
+        val it       = selectedRows.iterator
+        while (it.hasNext) {
+          i += 1
+          row = it.next
+          e0 = row.get(0).asInstanceOf[jLong]
+          e1 = row.get(1).asInstanceOf[jLong]
+          e2 = row.get(2).asInstanceOf[jLong]
+          e3 = row.get(3).asInstanceOf[jLong]
+          e4 = row.get(4).asInstanceOf[jLong]
+          e5 = row.get(5).asInstanceOf[jLong]
+          e6 = row.get(6).asInstanceOf[jLong]
 
-        } else if (flatCount == 1) {
-          row = rows.iterator.next
-          (
-            List(tplBranch0(row,
-              List(tplBranch1(row,
-                List(tplBranch2(row,
-                  List(tplBranch3(row,
-                    List(tplBranch4(row,
-                      List(tplBranch5(row,
-                        List(tplBranch6(row,
-                          List(tplLeaf7(row)))))))))))))))),
-            1
-          )
-
-        } else {
-          val lastFlat = selectedRows.size
-          val it       = selectedRows.iterator
-          while (it.hasNext) {
-            i += 1
-            row = it.next
-            e0 = row.get(0).asInstanceOf[jLong]
-            e1 = row.get(1).asInstanceOf[jLong]
-            e2 = row.get(2).asInstanceOf[jLong]
-            e3 = row.get(3).asInstanceOf[jLong]
-            e4 = row.get(4).asInstanceOf[jLong]
-            e5 = row.get(5).asInstanceOf[jLong]
-            e6 = row.get(6).asInstanceOf[jLong]
-
-            if (nextRow) {
-              if (i == lastFlat) {
-                if (e0 != p0) {
-                  acc6 = tplBranch6(prevRow, acc7) :: acc6
-                  acc5 = tplBranch5(prevRow, acc6) :: acc5
-                  acc4 = tplBranch4(prevRow, acc5) :: acc4
-                  acc3 = tplBranch3(prevRow, acc4) :: acc3
-                  acc2 = tplBranch2(prevRow, acc3) :: acc2
-                  acc1 = tplBranch1(prevRow, acc2) :: acc1
-                  acc0 = tplBranch0(prevRow, acc1) :: acc0
-
-                  acc7 = List(tplLeaf7(row))
-                  acc6 = List(tplBranch6(row, acc7))
-                  acc5 = List(tplBranch5(row, acc6))
-                  acc4 = List(tplBranch4(row, acc5))
-                  acc3 = List(tplBranch3(row, acc4))
-                  acc2 = List(tplBranch2(row, acc3))
-                  acc1 = List(tplBranch1(row, acc2))
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e1 != p1) {
-                  acc6 = tplBranch6(prevRow, acc7) :: acc6
-                  acc5 = tplBranch5(prevRow, acc6) :: acc5
-                  acc4 = tplBranch4(prevRow, acc5) :: acc4
-                  acc3 = tplBranch3(prevRow, acc4) :: acc3
-                  acc2 = tplBranch2(prevRow, acc3) :: acc2
-                  acc1 = tplBranch1(prevRow, acc2) :: acc1
-
-                  acc7 = List(tplLeaf7(row))
-                  acc6 = List(tplBranch6(row, acc7))
-                  acc5 = List(tplBranch5(row, acc6))
-                  acc4 = List(tplBranch4(row, acc5))
-                  acc3 = List(tplBranch3(row, acc4))
-                  acc2 = List(tplBranch2(row, acc3))
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e2 != p2) {
-                  acc6 = tplBranch6(prevRow, acc7) :: acc6
-                  acc5 = tplBranch5(prevRow, acc6) :: acc5
-                  acc4 = tplBranch4(prevRow, acc5) :: acc4
-                  acc3 = tplBranch3(prevRow, acc4) :: acc3
-                  acc2 = tplBranch2(prevRow, acc3) :: acc2
-
-                  acc7 = List(tplLeaf7(row))
-                  acc6 = List(tplBranch6(row, acc7))
-                  acc5 = List(tplBranch5(row, acc6))
-                  acc4 = List(tplBranch4(row, acc5))
-                  acc3 = List(tplBranch3(row, acc4))
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e3 != p3) {
-                  acc6 = tplBranch6(prevRow, acc7) :: acc6
-                  acc5 = tplBranch5(prevRow, acc6) :: acc5
-                  acc4 = tplBranch4(prevRow, acc5) :: acc4
-                  acc3 = tplBranch3(prevRow, acc4) :: acc3
-
-                  acc7 = List(tplLeaf7(row))
-                  acc6 = List(tplBranch6(row, acc7))
-                  acc5 = List(tplBranch5(row, acc6))
-                  acc4 = List(tplBranch4(row, acc5))
-                  acc3 = tplBranch3(row, acc4) :: acc3
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e4 != p4) {
-                  acc6 = tplBranch6(prevRow, acc7) :: acc6
-                  acc5 = tplBranch5(prevRow, acc6) :: acc5
-                  acc4 = tplBranch4(prevRow, acc5) :: acc4
-
-                  acc7 = List(tplLeaf7(row))
-                  acc6 = List(tplBranch6(row, acc7))
-                  acc5 = List(tplBranch5(row, acc6))
-                  acc4 = tplBranch4(row, acc5) :: acc4
-                  acc3 = tplBranch3(row, acc4) :: acc3
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e5 != p5) {
-                  acc6 = tplBranch6(prevRow, acc7) :: acc6
-                  acc5 = tplBranch5(prevRow, acc6) :: acc5
-
-                  acc7 = List(tplLeaf7(row))
-                  acc6 = List(tplBranch6(row, acc7))
-                  acc5 = tplBranch5(row, acc6) :: acc5
-                  acc4 = tplBranch4(row, acc5) :: acc4
-                  acc3 = tplBranch3(row, acc4) :: acc3
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else if (e6 != p6) {
-                  acc6 = tplBranch6(prevRow, acc7) :: acc6
-
-                  acc7 = List(tplLeaf7(row))
-                  acc6 = tplBranch6(row, acc7) :: acc6
-                  acc5 = tplBranch5(row, acc6) :: acc5
-                  acc4 = tplBranch4(row, acc5) :: acc4
-                  acc3 = tplBranch3(row, acc4) :: acc3
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-
-                } else /* e7 != p7 */ {
-                  acc7 = tplLeaf7(row) :: acc7
-                  acc6 = tplBranch6(row, acc7) :: acc6
-                  acc5 = tplBranch5(row, acc6) :: acc5
-                  acc4 = tplBranch4(row, acc5) :: acc4
-                  acc3 = tplBranch3(row, acc4) :: acc3
-                  acc2 = tplBranch2(row, acc3) :: acc2
-                  acc1 = tplBranch1(row, acc2) :: acc1
-                  acc0 = tplBranch0(row, acc1) :: acc0
-                }
-
-              } else if (e0 != p0) {
+          if (nextRow) {
+            if (i == lastFlat) {
+              if (e0 != p0) {
                 acc6 = tplBranch6(prevRow, acc7) :: acc6
                 acc5 = tplBranch5(prevRow, acc6) :: acc5
                 acc4 = tplBranch4(prevRow, acc5) :: acc4
@@ -1114,12 +897,13 @@ object NestedTuples {
                 acc0 = tplBranch0(prevRow, acc1) :: acc0
 
                 acc7 = List(tplLeaf7(row))
-                acc6 = Nil
-                acc5 = Nil
-                acc4 = Nil
-                acc3 = Nil
-                acc2 = Nil
-                acc1 = Nil
+                acc6 = List(tplBranch6(row, acc7))
+                acc5 = List(tplBranch5(row, acc6))
+                acc4 = List(tplBranch4(row, acc5))
+                acc3 = List(tplBranch3(row, acc4))
+                acc2 = List(tplBranch2(row, acc3))
+                acc1 = List(tplBranch1(row, acc2))
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e1 != p1) {
                 acc6 = tplBranch6(prevRow, acc7) :: acc6
@@ -1130,11 +914,13 @@ object NestedTuples {
                 acc1 = tplBranch1(prevRow, acc2) :: acc1
 
                 acc7 = List(tplLeaf7(row))
-                acc6 = Nil
-                acc5 = Nil
-                acc4 = Nil
-                acc3 = Nil
-                acc2 = Nil
+                acc6 = List(tplBranch6(row, acc7))
+                acc5 = List(tplBranch5(row, acc6))
+                acc4 = List(tplBranch4(row, acc5))
+                acc3 = List(tplBranch3(row, acc4))
+                acc2 = List(tplBranch2(row, acc3))
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e2 != p2) {
                 acc6 = tplBranch6(prevRow, acc7) :: acc6
@@ -1144,10 +930,13 @@ object NestedTuples {
                 acc2 = tplBranch2(prevRow, acc3) :: acc2
 
                 acc7 = List(tplLeaf7(row))
-                acc6 = Nil
-                acc5 = Nil
-                acc4 = Nil
-                acc3 = Nil
+                acc6 = List(tplBranch6(row, acc7))
+                acc5 = List(tplBranch5(row, acc6))
+                acc4 = List(tplBranch4(row, acc5))
+                acc3 = List(tplBranch3(row, acc4))
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e3 != p3) {
                 acc6 = tplBranch6(prevRow, acc7) :: acc6
@@ -1156,9 +945,13 @@ object NestedTuples {
                 acc3 = tplBranch3(prevRow, acc4) :: acc3
 
                 acc7 = List(tplLeaf7(row))
-                acc6 = Nil
-                acc5 = Nil
-                acc4 = Nil
+                acc6 = List(tplBranch6(row, acc7))
+                acc5 = List(tplBranch5(row, acc6))
+                acc4 = List(tplBranch4(row, acc5))
+                acc3 = tplBranch3(row, acc4) :: acc3
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e4 != p4) {
                 acc6 = tplBranch6(prevRow, acc7) :: acc6
@@ -1166,40 +959,145 @@ object NestedTuples {
                 acc4 = tplBranch4(prevRow, acc5) :: acc4
 
                 acc7 = List(tplLeaf7(row))
-                acc6 = Nil
-                acc5 = Nil
+                acc6 = List(tplBranch6(row, acc7))
+                acc5 = List(tplBranch5(row, acc6))
+                acc4 = tplBranch4(row, acc5) :: acc4
+                acc3 = tplBranch3(row, acc4) :: acc3
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e5 != p5) {
                 acc6 = tplBranch6(prevRow, acc7) :: acc6
                 acc5 = tplBranch5(prevRow, acc6) :: acc5
 
                 acc7 = List(tplLeaf7(row))
-                acc6 = Nil
+                acc6 = List(tplBranch6(row, acc7))
+                acc5 = tplBranch5(row, acc6) :: acc5
+                acc4 = tplBranch4(row, acc5) :: acc4
+                acc3 = tplBranch3(row, acc4) :: acc3
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else if (e6 != p6) {
                 acc6 = tplBranch6(prevRow, acc7) :: acc6
 
                 acc7 = List(tplLeaf7(row))
+                acc6 = tplBranch6(row, acc7) :: acc6
+                acc5 = tplBranch5(row, acc6) :: acc5
+                acc4 = tplBranch4(row, acc5) :: acc4
+                acc3 = tplBranch3(row, acc4) :: acc3
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
 
               } else /* e7 != p7 */ {
                 acc7 = tplLeaf7(row) :: acc7
+                acc6 = tplBranch6(row, acc7) :: acc6
+                acc5 = tplBranch5(row, acc6) :: acc5
+                acc4 = tplBranch4(row, acc5) :: acc4
+                acc3 = tplBranch3(row, acc4) :: acc3
+                acc2 = tplBranch2(row, acc3) :: acc2
+                acc1 = tplBranch1(row, acc2) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
               }
-            } else {
-              acc7 = List(tplLeaf7(row))
-              nextRow = true
-            }
 
-            prevRow = row
-            p0 = e0
-            p1 = e1
-            p2 = e2
-            p3 = e3
-            p4 = e4
-            p5 = e5
-            p6 = e6
+            } else if (e0 != p0) {
+              acc6 = tplBranch6(prevRow, acc7) :: acc6
+              acc5 = tplBranch5(prevRow, acc6) :: acc5
+              acc4 = tplBranch4(prevRow, acc5) :: acc4
+              acc3 = tplBranch3(prevRow, acc4) :: acc3
+              acc2 = tplBranch2(prevRow, acc3) :: acc2
+              acc1 = tplBranch1(prevRow, acc2) :: acc1
+              acc0 = tplBranch0(prevRow, acc1) :: acc0
+
+              acc7 = List(tplLeaf7(row))
+              acc6 = Nil
+              acc5 = Nil
+              acc4 = Nil
+              acc3 = Nil
+              acc2 = Nil
+              acc1 = Nil
+
+            } else if (e1 != p1) {
+              acc6 = tplBranch6(prevRow, acc7) :: acc6
+              acc5 = tplBranch5(prevRow, acc6) :: acc5
+              acc4 = tplBranch4(prevRow, acc5) :: acc4
+              acc3 = tplBranch3(prevRow, acc4) :: acc3
+              acc2 = tplBranch2(prevRow, acc3) :: acc2
+              acc1 = tplBranch1(prevRow, acc2) :: acc1
+
+              acc7 = List(tplLeaf7(row))
+              acc6 = Nil
+              acc5 = Nil
+              acc4 = Nil
+              acc3 = Nil
+              acc2 = Nil
+
+            } else if (e2 != p2) {
+              acc6 = tplBranch6(prevRow, acc7) :: acc6
+              acc5 = tplBranch5(prevRow, acc6) :: acc5
+              acc4 = tplBranch4(prevRow, acc5) :: acc4
+              acc3 = tplBranch3(prevRow, acc4) :: acc3
+              acc2 = tplBranch2(prevRow, acc3) :: acc2
+
+              acc7 = List(tplLeaf7(row))
+              acc6 = Nil
+              acc5 = Nil
+              acc4 = Nil
+              acc3 = Nil
+
+            } else if (e3 != p3) {
+              acc6 = tplBranch6(prevRow, acc7) :: acc6
+              acc5 = tplBranch5(prevRow, acc6) :: acc5
+              acc4 = tplBranch4(prevRow, acc5) :: acc4
+              acc3 = tplBranch3(prevRow, acc4) :: acc3
+
+              acc7 = List(tplLeaf7(row))
+              acc6 = Nil
+              acc5 = Nil
+              acc4 = Nil
+
+            } else if (e4 != p4) {
+              acc6 = tplBranch6(prevRow, acc7) :: acc6
+              acc5 = tplBranch5(prevRow, acc6) :: acc5
+              acc4 = tplBranch4(prevRow, acc5) :: acc4
+
+              acc7 = List(tplLeaf7(row))
+              acc6 = Nil
+              acc5 = Nil
+
+            } else if (e5 != p5) {
+              acc6 = tplBranch6(prevRow, acc7) :: acc6
+              acc5 = tplBranch5(prevRow, acc6) :: acc5
+
+              acc7 = List(tplLeaf7(row))
+              acc6 = Nil
+
+            } else if (e6 != p6) {
+              acc6 = tplBranch6(prevRow, acc7) :: acc6
+
+              acc7 = List(tplLeaf7(row))
+
+            } else /* e7 != p7 */ {
+              acc7 = tplLeaf7(row) :: acc7
+            }
+          } else {
+            acc7 = List(tplLeaf7(row))
+            nextRow = true
           }
-          (acc0, totalCount)
+
+          prevRow = row
+          p0 = e0
+          p1 = e1
+          p2 = e2
+          p3 = e3
+          p4 = e4
+          p5 = e5
+          p6 = e6
         }
+        acc0
       }
     }
   }
