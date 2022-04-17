@@ -176,7 +176,7 @@ private[molecule] trait GetTpls[Obj, Tpl]
             //          )
             Future((List.empty[Tpl], "cursor...", 42))
           } else {
-            cursorRows2tuples(conn, limit, cursor)
+            selectTplRows(conn, limit, cursor)
           }
         }
       )(Future.failed) // Wrap exception from input failure in Future
@@ -194,7 +194,6 @@ private[molecule] trait GetTpls[Obj, Tpl]
     from: Int, // first row index (inclusive)
     until: Int, // last row index (exclusive)
   ): List[Tpl] = {
-    //    println(s"$from  $until")
     if (totalCount == 0 || from > totalCount) {
       return List.empty[Tpl]
     } else if (totalCount == 1) {

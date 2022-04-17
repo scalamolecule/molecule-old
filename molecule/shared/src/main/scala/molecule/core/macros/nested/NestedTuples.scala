@@ -107,13 +107,21 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] with CursorTpl[Obj, Tp
     } else if (!sortRows) {
       notSortedException
     } else {
-      _inputThrowable.fold(
-        futConn.flatMap { conn =>
-          resetCastVars()
-          cursorRows2nestedTuples(conn, limit, cursor)
-//          null
+      _inputThrowable.fold {
+        resetCastVars()
+        for {
+          conn <- futConn
+          (selectedRows, newCursor, totalCount) <- selectedNestedTplRows(conn, limit, cursor)
+        } yield {
+          val flatCount = selectedRows.size
+          val tuples    = if (flatCount == 0) {
+            List.empty[Tpl]
+          } else {
+            flat2nested(selectedRows, flatCount)
+          }
+          (tuples, newCursor, totalCount)
         }
-      )(Future.failed) // Wrap exception from input failure in Future
+      }(Future.failed) // Wrap exception from input failure in Future
     }
   }
 
@@ -127,7 +135,7 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] with CursorTpl[Obj, Tp
       val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
       sortedRows.sort(this)
       val flatCount                  = sortedRows.size
-      val (selectedRows, totalCount) = selectTplRows(sortedRows, limit, offset)
+      val (selectedRows, totalCount) = sortedRows2selectedRows(sortedRows, limit, offset)
       val tuples                     = if (flatCount == 0 || offset >= totalCount) {
         List.empty[Tpl]
       } else {
