@@ -326,14 +326,6 @@ private[molecule] trait MakeSortingJvm extends TreeOps {
     lazy val ordering = getOrdering(comparators)
 
     // Override `compare` in NestedBase
-//    q"""
-//      final override def sortRows: Boolean = true
-//      final override def compare(x0: jList[AnyRef], y0: jList[AnyRef]): Int = {
-//        val x = if (isNestedTuples) y0 else x0
-//        val y = if (isNestedTuples) x0 else y0
-//        ..$ordering
-//      }
-//    """
     q"""
       final override def sortRows: Boolean = true
       final override def compare(x: jList[AnyRef], y: jList[AnyRef]): Int = {

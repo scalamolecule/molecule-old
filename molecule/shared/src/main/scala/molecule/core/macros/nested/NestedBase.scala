@@ -62,19 +62,10 @@ trait NestedBase[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
   override def compare(a: jList[AnyRef], b: jList[AnyRef]): Int = {
     sortIndex = 0
     result = 0
-    if (isNestedTuples) {
-      // Tuples: Sorting/building backwards by prepending each row to the list of rows
-      do {
-        result = b.get(sortIndex).asInstanceOf[jLong].compareTo(a.get(sortIndex).asInstanceOf[jLong])
-        sortIndex += 1 // 1 level deeper
-      } while (sortIndex < levels && result == 0)
-    } else {
-      // Json: Sorting/building forwards by appending each row data to the json string builder
-      do {
-        result = a.get(sortIndex).asInstanceOf[jLong].compareTo(b.get(sortIndex).asInstanceOf[jLong])
-        sortIndex += 1 // 1 level deeper
-      } while (sortIndex < levels && result == 0)
-    }
+    do {
+      result = a.get(sortIndex).asInstanceOf[jLong].compareTo(b.get(sortIndex).asInstanceOf[jLong])
+      sortIndex += 1 // 1 level deeper
+    } while (sortIndex < levels && result == 0)
     result
   }
 }

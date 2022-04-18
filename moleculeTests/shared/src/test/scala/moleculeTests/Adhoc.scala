@@ -16,21 +16,14 @@ object Adhoc extends AsyncTestSuite with Helpers with JavaUtil {
     "core" - core { implicit futConn =>
       for {
         conn <- futConn
-        _ <- Ns.int.Refs1.*(Ref1.int1) insert List(
-          (1, List(11, 12)),
-          (2, List(21, 22)),
-        )
 
-
-        _ <- Ns.int.Refs1.*(Ref1.int1).get.map(_ ==> List(
-          (1, List(11, 12)),
-          (2, List(21, 22)),
-        ))
 
 
       } yield ()
     }
+/*
 
+ */
 
     //    "Rename" - empty { implicit futConn =>
     //      for {

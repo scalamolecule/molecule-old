@@ -2,7 +2,7 @@ package molecule.core.macros.nested
 
 import java.lang.{Long => jLong}
 import java.util
-import java.util.{Collection => jCollection, List => jList}
+import java.util.{List => jList}
 import molecule.core.api.Molecule_0
 import molecule.core.macros.rowAttr.JsonBase
 import molecule.core.pagination.CursorJson
@@ -185,7 +185,7 @@ trait NestedJson[Obj, Tpl]
       val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
       sortedRows.sort(this)
       val flatCount                  = sortedRows.size
-      val (selectedRows, totalCount) = sortedRows2selectedRowsJson(sortedRows, limit, offset)
+      val (selectedRows, totalCount) = sortedRows2selectedRows(sortedRows, limit, offset)
       if (flatCount == 0 || offset >= totalCount) {
         sb0.append("]")
       } else {
@@ -201,21 +201,20 @@ object NestedJson {
 
   trait NestedJson1[Obj, Tpl] extends NestedJson[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-    final override def flat2json(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): Unit = {
+    final override def flat2json(rows: util.ArrayList[jList[AnyRef]], flatCount: Int): Unit = {
       if (flatCount == 1) {
-        row = selectedRows.iterator.next
+        row = rows.get(0)
         sb0.append("\n      ")
         jsonBranch0(sb0, row,
           jsonLeaf1(sb1, row))
         sb0.append("\n    ]")
 
       } else {
-        val lastFlat = selectedRows.size
-        val it       = selectedRows.iterator
         sb0.append("\n      ")
-        while (it.hasNext) {
+        val until = rows.size
+        while (i != until) {
+          row = rows.get(i)
           i += 1
-          row = it.next
           e0 = row.get(0).asInstanceOf[jLong]
 
           if (nextRow) {
@@ -223,7 +222,7 @@ object NestedJson {
               jsonBranch0(sb0, prevRow, sb1)
             }
             jsonLeaf1(sb1, row)
-            if (i == lastFlat) {
+            if (i == until) {
               jsonBranch0(sb0, row, sb1)
             }
           } else {
@@ -242,9 +241,9 @@ object NestedJson {
 
   trait NestedJson2[Obj, Tpl] extends NestedJson[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-    final override def flat2json(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): Unit = {
+    final override def flat2json(rows: util.ArrayList[jList[AnyRef]], flatCount: Int): Unit = {
       if (flatCount == 1) {
-        row = selectedRows.iterator.next
+        row = rows.get(0)
         sb0.append("\n      ")
         jsonBranch0(sb0, row,
           jsonBranch1(sb1, row,
@@ -252,12 +251,11 @@ object NestedJson {
         sb0.append("\n    ]")
 
       } else {
-        val lastFlat = selectedRows.size
-        val it       = selectedRows.iterator
         sb0.append("\n      ")
-        while (it.hasNext) {
+        val until = rows.size
+        while (i != until) {
+          row = rows.get(i)
           i += 1
-          row = it.next
           e0 = row.get(0).asInstanceOf[jLong]
           e1 = row.get(1).asInstanceOf[jLong]
 
@@ -269,7 +267,7 @@ object NestedJson {
               jsonBranch1(sb1, prevRow, sb2)
             }
             jsonLeaf2(sb2, row)
-            if (i == lastFlat) {
+            if (i == until) {
               jsonBranch1(sb1, row, sb2)
               jsonBranch0(sb0, row, sb1)
             }
@@ -290,9 +288,9 @@ object NestedJson {
 
   trait NestedJson3[Obj, Tpl] extends NestedJson[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-    final override def flat2json(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): Unit = {
+    final override def flat2json(rows: util.ArrayList[jList[AnyRef]], flatCount: Int): Unit = {
       if (flatCount == 1) {
-        row = selectedRows.iterator.next
+        row = rows.get(0)
         sb0.append("\n      ")
         jsonBranch0(sb0, row,
           jsonBranch1(sb1, row,
@@ -301,12 +299,11 @@ object NestedJson {
         sb0.append("\n    ]")
 
       } else {
-        val lastFlat = selectedRows.size
-        val it       = selectedRows.iterator
         sb0.append("\n      ")
-        while (it.hasNext) {
+        val until = rows.size
+        while (i != until) {
+          row = rows.get(i)
           i += 1
-          row = it.next
           e0 = row.get(0).asInstanceOf[jLong]
           e1 = row.get(1).asInstanceOf[jLong]
           e2 = row.get(2).asInstanceOf[jLong]
@@ -323,7 +320,7 @@ object NestedJson {
               jsonBranch2(sb2, prevRow, sb3)
             }
             jsonLeaf3(sb3, row)
-            if (i == lastFlat) {
+            if (i == until) {
               jsonBranch2(sb2, row, sb3)
               jsonBranch1(sb1, row, sb2)
               jsonBranch0(sb0, row, sb1)
@@ -346,9 +343,9 @@ object NestedJson {
 
   trait NestedJson4[Obj, Tpl] extends NestedJson[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-    final override def flat2json(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): Unit = {
+    final override def flat2json(rows: util.ArrayList[jList[AnyRef]], flatCount: Int): Unit = {
       if (flatCount == 1) {
-        row = selectedRows.iterator.next
+        row = rows.get(0)
         sb0.append("\n      ")
         jsonBranch0(sb0, row,
           jsonBranch1(sb1, row,
@@ -358,12 +355,11 @@ object NestedJson {
         sb0.append("\n    ]")
 
       } else {
-        val lastFlat = selectedRows.size
-        val it       = selectedRows.iterator
         sb0.append("\n      ")
-        while (it.hasNext) {
+        val until = rows.size
+        while (i != until) {
+          row = rows.get(i)
           i += 1
-          row = it.next
           e0 = row.get(0).asInstanceOf[jLong]
           e1 = row.get(1).asInstanceOf[jLong]
           e2 = row.get(2).asInstanceOf[jLong]
@@ -386,7 +382,7 @@ object NestedJson {
               jsonBranch3(sb3, prevRow, sb4)
             }
             jsonLeaf4(sb4, row)
-            if (i == lastFlat) {
+            if (i == until) {
               jsonBranch3(sb3, row, sb4)
               jsonBranch2(sb2, row, sb3)
               jsonBranch1(sb1, row, sb2)
@@ -411,9 +407,9 @@ object NestedJson {
 
   trait NestedJson5[Obj, Tpl] extends NestedJson[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-    final override def flat2json(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): Unit = {
+    final override def flat2json(rows: util.ArrayList[jList[AnyRef]], flatCount: Int): Unit = {
       if (flatCount == 1) {
-        row = selectedRows.iterator.next
+        row = rows.get(0)
         sb0.append("\n      ")
         jsonBranch0(sb0, row,
           jsonBranch1(sb1, row,
@@ -424,12 +420,11 @@ object NestedJson {
         sb0.append("\n    ]")
 
       } else {
-        val lastFlat = selectedRows.size
-        val it       = selectedRows.iterator
         sb0.append("\n      ")
-        while (it.hasNext) {
+        val until = rows.size
+        while (i != until) {
+          row = rows.get(i)
           i += 1
-          row = it.next
           e0 = row.get(0).asInstanceOf[jLong]
           e1 = row.get(1).asInstanceOf[jLong]
           e2 = row.get(2).asInstanceOf[jLong]
@@ -459,7 +454,7 @@ object NestedJson {
               jsonBranch4(sb4, prevRow, sb5)
             }
             jsonLeaf5(sb5, row)
-            if (i == lastFlat) {
+            if (i == until) {
               jsonBranch4(sb4, row, sb5)
               jsonBranch3(sb3, row, sb4)
               jsonBranch2(sb2, row, sb3)
@@ -486,9 +481,9 @@ object NestedJson {
 
   trait NestedJson6[Obj, Tpl] extends NestedJson[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-    final override def flat2json(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): Unit = {
+    final override def flat2json(rows: util.ArrayList[jList[AnyRef]], flatCount: Int): Unit = {
       if (flatCount == 1) {
-        row = selectedRows.iterator.next
+        row = rows.get(0)
         sb0.append("\n      ")
         jsonBranch0(sb0, row,
           jsonBranch1(sb1, row,
@@ -500,12 +495,11 @@ object NestedJson {
         sb0.append("\n    ]")
 
       } else {
-        val lastFlat = selectedRows.size
-        val it       = selectedRows.iterator
         sb0.append("\n      ")
-        while (it.hasNext) {
+        val until = rows.size
+        while (i != until) {
+          row = rows.get(i)
           i += 1
-          row = it.next
           e0 = row.get(0).asInstanceOf[jLong]
           e1 = row.get(1).asInstanceOf[jLong]
           e2 = row.get(2).asInstanceOf[jLong]
@@ -543,7 +537,7 @@ object NestedJson {
               jsonBranch5(sb5, prevRow, sb6)
             }
             jsonLeaf6(sb6, row)
-            if (i == lastFlat) {
+            if (i == until) {
               jsonBranch5(sb5, row, sb6)
               jsonBranch4(sb4, row, sb5)
               jsonBranch3(sb3, row, sb4)
@@ -572,9 +566,9 @@ object NestedJson {
 
   trait NestedJson7[Obj, Tpl] extends NestedJson[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
-    final override def flat2json(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): Unit = {
+    final override def flat2json(rows: util.ArrayList[jList[AnyRef]], flatCount: Int): Unit = {
       if (flatCount == 1) {
-        row = selectedRows.iterator.next
+        row = rows.get(0)
         sb0.append("\n      ")
         jsonBranch0(sb0, row,
           jsonBranch1(sb1, row,
@@ -587,12 +581,11 @@ object NestedJson {
         sb0.append("\n    ]")
 
       } else {
-        val lastFlat = selectedRows.size
-        val it       = selectedRows.iterator
         sb0.append("\n      ")
-        while (it.hasNext) {
+        val until = rows.size
+        while (i != until) {
+          row = rows.get(i)
           i += 1
-          row = it.next
           e0 = row.get(0).asInstanceOf[jLong]
           e1 = row.get(1).asInstanceOf[jLong]
           e2 = row.get(2).asInstanceOf[jLong]
@@ -639,7 +632,7 @@ object NestedJson {
               jsonBranch6(sb6, prevRow, sb7)
             }
             jsonLeaf7(sb7, row)
-            if (i == lastFlat) {
+            if (i == until) {
               jsonBranch6(sb6, row, sb7)
               jsonBranch5(sb5, row, sb6)
               jsonBranch4(sb4, row, sb5)

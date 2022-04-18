@@ -1,5 +1,6 @@
 package molecule.core.api
 
+import java.util
 import java.util.{Collection => jCollection, List => jList}
 import molecule.core.ast.elements.{Composite, Generic}
 import molecule.core.marshalling.Marshalling
@@ -140,10 +141,10 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
     }
   }
 
-  private[molecule] def flat2json(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): Unit = ???
-
 
   // Helpers ...............................
+
+  private[molecule] def flat2json(rows: util.ArrayList[jList[AnyRef]], flatCount: Int): Unit = ???
 
   private def rows2json(
     rows: jCollection[jList[AnyRef]],

@@ -10,7 +10,7 @@ object CursorPagination_1_noChange extends AsyncTestSuite {
 
   lazy val tests = Tests {
 
-    "Forward, asc" - core { implicit conn =>
+    "Forward - asc" - core { implicit conn =>
       for {
         _ <- Ref2.int2.insert(1, 2, 3, 4, 5)
 
@@ -50,7 +50,7 @@ object CursorPagination_1_noChange extends AsyncTestSuite {
       } yield ()
     }
 
-    "Forward, desc" - core { implicit conn =>
+    "Forward - desc" - core { implicit conn =>
       for {
         _ <- Ref2.int2.insert(1, 2, 3, 4, 5)
 
@@ -92,7 +92,7 @@ object CursorPagination_1_noChange extends AsyncTestSuite {
     }
 
 
-    "Backward, asc" - core { implicit conn =>
+    "Backward - asc" - core { implicit conn =>
       for {
         _ <- Ref2.int2.insert(1, 2, 3, 4, 5)
 
@@ -132,7 +132,7 @@ object CursorPagination_1_noChange extends AsyncTestSuite {
       } yield ()
     }
 
-    "Backward, desc" - core { implicit conn =>
+    "Backward - desc" - core { implicit conn =>
       for {
         _ <- Ref2.int2.insert(1, 2, 3, 4, 5)
 
@@ -599,7 +599,7 @@ object CursorPagination_1_noChange extends AsyncTestSuite {
     }
 
 
-    "Nested, forward asc" - core { implicit conn =>
+    "Nested - forward asc" - core { implicit conn =>
       for {
         _ <- Ns.int.Refs1.*(Ref1.int1) insert List(
           (1, List(11, 12)),
@@ -659,7 +659,7 @@ object CursorPagination_1_noChange extends AsyncTestSuite {
       } yield ()
     }
 
-    "Nested, forward desc" - core { implicit conn =>
+    "Nested - forward desc" - core { implicit conn =>
       for {
         _ <- Ns.int.Refs1.*(Ref1.int1) insert List(
           (1, List(11, 12)),
@@ -719,7 +719,7 @@ object CursorPagination_1_noChange extends AsyncTestSuite {
       } yield ()
     }
 
-    "Nested, backward asc" - core { implicit conn =>
+    "Nested - backward asc" - core { implicit conn =>
       for {
         _ <- Ns.int.Refs1.*(Ref1.int1) insert List(
           (1, List(11, 12)),
@@ -779,7 +779,7 @@ object CursorPagination_1_noChange extends AsyncTestSuite {
       } yield ()
     }
 
-    "Nested, backward desc" - core { implicit conn =>
+    "Nested - backward desc" - core { implicit conn =>
       for {
         _ <- Ns.int.Refs1.*(Ref1.int1) insert List(
           (1, List(11, 12)),
@@ -840,7 +840,7 @@ object CursorPagination_1_noChange extends AsyncTestSuite {
     }
 
 
-    "Optional nested, forward asc" - core { implicit conn =>
+    "Optional nested - forward asc" - core { implicit conn =>
       for {
         _ <- Ns.int.Refs1.*(Ref1.int1) insert List(
           (1, List(11, 12)),
@@ -900,7 +900,7 @@ object CursorPagination_1_noChange extends AsyncTestSuite {
       } yield ()
     }
 
-    "Optional nested, forward desc" - core { implicit conn =>
+    "Optional nested - forward desc" - core { implicit conn =>
       for {
         _ <- Ns.int.Refs1.*(Ref1.int1) insert List(
           (1, List(11, 12)),
@@ -960,7 +960,7 @@ object CursorPagination_1_noChange extends AsyncTestSuite {
       } yield ()
     }
 
-    "Optional nested, backward asc" - core { implicit conn =>
+    "Optional nested - backward asc" - core { implicit conn =>
       for {
         _ <- Ns.int.Refs1.*(Ref1.int1) insert List(
           (1, List(11, 12)),
@@ -1020,7 +1020,7 @@ object CursorPagination_1_noChange extends AsyncTestSuite {
       } yield ()
     }
 
-    "Optional nested, backward desc" - core { implicit conn =>
+    "Optional nested - backward desc" - core { implicit conn =>
       for {
         _ <- Ns.int.Refs1.*(Ref1.int1) insert List(
           (1, List(11, 12)),

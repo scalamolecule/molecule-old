@@ -1,8 +1,8 @@
 package molecule.core.api
 
-import java.util.{Base64, Date, Collection => jCollection, List => jList}
+import java.util
+import java.util.{Date, Collection => jCollection, List => jList}
 import molecule.core.ast.elements._
-import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.ops.Conversions
@@ -10,7 +10,6 @@ import molecule.core.pagination.CursorTpl
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
-import molecule.datomic.base.transform.Model2Query
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -186,8 +185,7 @@ private[molecule] trait GetTpls[Obj, Tpl]
 
   // Helpers ...............................
 
-  private[molecule] def flat2nested(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): List[Tpl] = ???
-  private[molecule] def flat2nested2(selectedRows: java.util.ArrayList[jList[AnyRef]], flatCount: Int): List[Tpl] = ???
+  private[molecule] def flat2nested(rows: util.ArrayList[jList[AnyRef]], flatCount: Int): List[Tpl] = ???
 
   private def rows2tuples(
     rows: jCollection[jList[AnyRef]],

@@ -237,7 +237,7 @@ object OffsetPagination extends AsyncTestSuite {
     }
 
 
-    "Nested, tpl" - core { implicit conn =>
+    "Nested - tpl" - core { implicit conn =>
       for {
         _ <- Ns.int.Refs1.*(Ref1.int1) insert List(
           (1, List(11, 12)),
@@ -339,7 +339,7 @@ object OffsetPagination extends AsyncTestSuite {
     }
 
 
-    "Nested, obj" - core { implicit conn =>
+    "Nested - obj" - core { implicit conn =>
       for {
         _ <- Ns.int.Refs1.*(Ref1.int1) insert List(
           (1, List(11, 12)),
@@ -395,7 +395,7 @@ object OffsetPagination extends AsyncTestSuite {
     }
 
 
-    "nested, json" - core { implicit conn =>
+    "nested - json" - core { implicit conn =>
       for {
         _ <- Ns.int.Refs1.*(Ref1.int1) insert List(
           (1, List(11, 12)),
@@ -850,7 +850,7 @@ object OffsetPagination extends AsyncTestSuite {
     }
 
 
-    "Optional nested, tpl" - core { implicit conn =>
+    "Optional nested - tpl" - core { implicit conn =>
       for {
         _ <- Ns.int.Refs1.*(Ref1.int1) insert List(
           (1, List(11, 12)),
@@ -966,7 +966,7 @@ object OffsetPagination extends AsyncTestSuite {
     }
 
 
-    "Optional nested, obj" - core { implicit conn =>
+    "Optional nested - obj" - core { implicit conn =>
       for {
         _ <- Ns.int.Refs1.*(Ref1.int1) insert List(
           (1, List(11, 12)),
@@ -1025,7 +1025,7 @@ object OffsetPagination extends AsyncTestSuite {
       } yield ()
     }
 
-    "Optional nested, json" - core { implicit conn =>
+    "Optional nested - json" - core { implicit conn =>
       for {
         _ <- Ns.int.Refs1.*(Ref1.int1) insert List(
           (1, List(11, 12)),
