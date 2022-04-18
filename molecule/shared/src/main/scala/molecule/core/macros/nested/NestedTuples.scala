@@ -1,7 +1,8 @@
 package molecule.core.macros.nested
 
 import java.lang.{Long => jLong}
-import java.util.{Collection => jCollection, List => jList}
+import java.util
+import java.util.{Collections, Collection => jCollection, List => jList}
 import molecule.core.api.Molecule_0
 import molecule.core.pagination.CursorTpl
 import molecule.datomic.base.facade.Conn
@@ -139,7 +140,7 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] with CursorTpl[Obj, Tp
       val tuples                     = if (flatCount == 0 || offset >= totalCount) {
         List.empty[Tpl]
       } else {
-        flat2nested(selectedRows, flatCount)
+        flat2nested2(selectedRows, flatCount)
       }
       (tuples, totalCount)
     }
@@ -151,6 +152,60 @@ object NestedTuples {
 
   trait NestedTuples1[Obj, Tpl] extends NestedTuples[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
+    final override def flat2nested2(rows: util.ArrayList[jList[AnyRef]], flatCount: Int): List[Tpl] = {
+      if (flatCount == 1) {
+        row = rows.iterator.next
+        List(tplBranch0(row,
+          List(tplLeaf1(row))))
+
+      } else {
+//        val lastFlat = selectedRows.size
+//        selectedRows.forEach(row => println(row))
+        val reversed = new util.ArrayList[jList[AnyRef]](flatCount)
+        var j = flatCount - 1
+        while(j != -1){
+          reversed.add(rows.get(j))
+          j -= 1
+        }
+//        selectedRows.forEach(row => reversed.add(row))
+//        println("-----")
+//        reversed.forEach(row => println(row))
+        i = flatCount - 1
+        while (i != -1) {
+          row = reversed.get(i)
+          e0 = row.get(0).asInstanceOf[jLong]
+          if (nextRow) {
+            if (i == 0) {
+              if (e0 != p0) {
+                acc0 = tplBranch0(prevRow, acc1) :: acc0
+
+                acc1 = List(tplLeaf1(row))
+                acc0 = tplBranch0(row, acc1) :: acc0
+
+              } else /* e1 != p1 */ {
+                acc1 = tplLeaf1(row) :: acc1
+                acc0 = tplBranch0(row, acc1) :: acc0
+              }
+
+            } else if (e0 != p0) {
+              acc0 = tplBranch0(prevRow, acc1) :: acc0
+
+              acc1 = List(tplLeaf1(row))
+
+            } else /* e1 != p1 */ {
+              acc1 = tplLeaf1(row) :: acc1
+            }
+          } else {
+            acc1 = List(tplLeaf1(row))
+            nextRow = true
+          }
+          prevRow = row
+          p0 = e0
+          i -= 1
+        }
+        acc0
+      }
+    }
     final override def flat2nested(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): List[Tpl] = {
       if (flatCount == 1) {
         row = selectedRows.iterator.next
@@ -164,7 +219,6 @@ object NestedTuples {
           i += 1
           row = it.next
           e0 = row.get(0).asInstanceOf[jLong]
-
           if (nextRow) {
             if (i == lastFlat) {
               if (e0 != p0) {
@@ -190,7 +244,6 @@ object NestedTuples {
             acc1 = List(tplLeaf1(row))
             nextRow = true
           }
-
           prevRow = row
           p0 = e0
         }

@@ -187,6 +187,7 @@ private[molecule] trait GetTpls[Obj, Tpl]
   // Helpers ...............................
 
   private[molecule] def flat2nested(selectedRows: jCollection[jList[AnyRef]], flatCount: Int): List[Tpl] = ???
+  private[molecule] def flat2nested2(selectedRows: java.util.ArrayList[jList[AnyRef]], flatCount: Int): List[Tpl] = ???
 
   private def rows2tuples(
     rows: jCollection[jList[AnyRef]],

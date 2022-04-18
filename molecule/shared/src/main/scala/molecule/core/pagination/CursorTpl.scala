@@ -16,7 +16,7 @@ trait CursorTpl[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     sortedRows: util.ArrayList[jList[AnyRef]],
     limit: Int,
     offset: Int
-  ): (jCollection[jList[AnyRef]], Int) = {
+  ): (util.ArrayList[jList[AnyRef]], Int) = {
     val totalCount = sortedRows.size
     if (limit == 0) {
       return (sortedRows, totalCount)
