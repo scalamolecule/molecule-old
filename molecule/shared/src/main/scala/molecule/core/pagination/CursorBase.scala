@@ -6,6 +6,7 @@ import java.util.{Base64, List => jList}
 import molecule.core.ast.elements._
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.Marshalling
+import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.transform.Model2Query
 import scala.concurrent.{ExecutionContext, Future}
@@ -60,7 +61,7 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
 
     } else {
       // From end ..........
-      var acc   = List.empty[jList[AnyRef]] // for backward accumulation
+      var acc   = List.empty[jList[AnyRef]] // for backwards accumulation
       val until = offset - limit // (limit is negative)
       var i     = totalCount - 1
       while (continue && i != -1) {
@@ -84,7 +85,7 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     }
   }
 
-  final protected def exractSortValues(row: jList[AnyRef]): List[String] = {
+  final protected def extractSortValues(row: jList[AnyRef]): List[String] = {
     sortCoordinates.head.filterNot(_.attr == "NESTED INDEX").map(sc => row.get(sc.i).toString)
   }
 
@@ -114,8 +115,6 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   }
 
   final protected def encode(
-    from: Int,
-    to: Int,
     firstRow: String,
     lastRow: String,
     firstSortValues: List[String],
@@ -123,19 +122,53 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
   ): String = {
     val cleanStrings = Seq(firstRow, lastRow) ++ firstSortValues ++ lastSortValues
     //    println(cleanStrings.mkString("  ", "\n  ", ""))
-    Base64.getEncoder.encodeToString(
-      (Seq(from.toString, to.toString) ++ cleanStrings).mkString("__~~__").getBytes
-    )
+    Base64.getEncoder.encodeToString(cleanStrings.mkString("__~~__").getBytes)
   }
 
-  final protected def decode(cursor: String): (Int, Int, String, String, List[String], List[String]) = {
+  //  final protected def decode(cursor: String): (Int, Int, String, String, List[String], List[String]) = {
+  final protected def decode(cursor: String): (String, String, List[String], List[String]) = {
     //    println("XXX " + new String(Base64.getDecoder.decode(cursor)))
-    val values                           = new String(Base64.getDecoder.decode(cursor)).split("__~~__", -1).toList
+    val values              = new String(Base64.getDecoder.decode(cursor)).split("__~~__", -1).toList
     //    println(values.mkString("  ", "\n  ", ""))
-    val (from, until, firstRow, lastRow) = (values.head.toInt, values(1).toInt, values(2), values(3))
-    val size                             = sortCoordinates.head.filterNot(_.attr == "NESTED INDEX").size
-    val firstSortValues                  = values.slice(4, 4 + size)
-    val lastSortValues                   = values.takeRight(size)
-    (from, until, firstRow, lastRow, firstSortValues, lastSortValues)
+    val (firstRow, lastRow) = (values.head, values(1))
+    val size                = sortCoordinates.head.filterNot(_.attr == "NESTED INDEX").size
+    val firstSortValues     = values.slice(2, 2 + size)
+    val lastSortValues      = values.takeRight(size)
+    (firstRow, lastRow, firstSortValues, lastSortValues)
+  }
+
+  protected def lastIndex(sortedRows: util.ArrayList[jList[AnyRef]], prevLastRow: String, limit: Int) = {
+    // Walk forward to find row index of previous last row
+    var i = 0
+    while (sortedRows.get(i).toString != prevLastRow && i != limit) {
+      i += 1
+    }
+    i
+  }
+
+  protected def firstIndex(
+    totalCount: Int,
+    sortedRows: util.ArrayList[jList[AnyRef]],
+    prevFirstRow: String,
+    negLimit: Int
+  ) = {
+    // Walk backward to find row index of previous first row
+    var i     = totalCount - 1
+    val lower = i + negLimit // (limit is negative)
+    while (sortedRows.get(i).toString != prevFirstRow && i != lower) {
+      i -= 1
+    }
+    i
+  }
+
+  protected def extract(cursor: String, forward: Boolean): (Model, Query, String, String) = {
+    if (cursor.isEmpty) {
+      (_model, _query, "", "")
+    } else {
+      val (prevFirstRow, prevLastRow, prevFirstSortValues, prevLastSortValues) = decode(cursor)
+
+      val offsetModel = getOffsetModel(forward, prevFirstSortValues, prevLastSortValues)
+      (offsetModel, Model2Query(offsetModel).get._1, prevFirstRow, prevLastRow)
+    }
   }
 }

@@ -1,6 +1,5 @@
 package molecule.core.api
 
-import java.util
 import java.util.{Date, Collection => jCollection, List => jList}
 import molecule.core.ast.elements._
 import molecule.core.marshalling.Marshalling
@@ -184,8 +183,6 @@ private[molecule] trait GetTpls[Obj, Tpl]
 
 
   // Helpers ...............................
-
-  private[molecule] def flat2nested(rows: util.ArrayList[jList[AnyRef]], flatCount: Int): List[Tpl] = ???
 
   private def rows2tuples(
     rows: jCollection[jList[AnyRef]],

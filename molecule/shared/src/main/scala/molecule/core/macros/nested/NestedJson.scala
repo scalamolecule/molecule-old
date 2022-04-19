@@ -175,6 +175,10 @@ trait NestedJson[Obj, Tpl]
     }
   }
 
+  // Helpers .........................................
+
+  protected def flat2json(rows: util.ArrayList[jList[AnyRef]], flatCount: Int): Unit = ???
+
   final private def getNestedJson(limit: Int, offset: Int)
                                  (implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
     for {

@@ -1,4 +1,4 @@
-package moleculeTests.tests.core.pagination
+package moleculeTests.tests.core.pagination.offset
 
 import molecule.core.util.Executor._
 import molecule.datomic.api.out7._
@@ -6,7 +6,15 @@ import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
 
-object CursorPagination_asOf extends AsyncTestSuite {
+/**
+ * Using the same database as of a time point for all pages guarantees uniqueness
+ * at the expense of not including changes in-between pages.
+ *
+ * So, if intermediate changes are not that important and strict uniqueness is,
+ * then this is an option. A product catalogue could be an example, whereas a
+ * list of comments on a high-churn website might not be.
+ */
+object AsOfPagination extends AsyncTestSuite {
 
 
   lazy val tests = Tests {

@@ -1,4 +1,4 @@
-package moleculeTests.tests.core.pagination
+package moleculeTests.tests.core.pagination.cursor
 
 import molecule.core.util.Executor._
 import molecule.datomic.api.out7._

@@ -144,8 +144,6 @@ trait GetJson[Obj, Tpl] extends JavaUtil { self: Marshalling[Obj, Tpl] =>
 
   // Helpers ...............................
 
-  private[molecule] def flat2json(rows: util.ArrayList[jList[AnyRef]], flatCount: Int): Unit = ???
-
   private def rows2json(
     rows: jCollection[jList[AnyRef]],
     totalCount: Int,

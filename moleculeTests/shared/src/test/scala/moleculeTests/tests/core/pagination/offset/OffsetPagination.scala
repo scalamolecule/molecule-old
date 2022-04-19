@@ -1,4 +1,4 @@
-package moleculeTests.tests.core.pagination
+package moleculeTests.tests.core.pagination.offset
 
 import molecule.core.exceptions.MoleculeException
 import molecule.core.util.Executor._
