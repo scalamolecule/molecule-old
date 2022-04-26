@@ -12,6 +12,34 @@ Fundamental difference:
 
 This allows us to compare rows meaningfully
 
+Sort attributes can be
+- unique
+- redundant/mixed with non-sorted attributes. Order is non-deterministic between internal index jobs
+
+
+
+Change can be
+- Addition
+- Retraction
+- Update = retraction + addition
+
+Updates are semantically a retraction and an addition where we view the updated row as a completely new row. So we can concentrate on testing additions and retractions.
+
+
+
+
+Scenarios with increasing challenges:
+
+## No change
+- Check basics: forward/backward, more rows
+- Sort attributes with expressions
+- Redundant sort attr(s)
+
+## Add row
+## Retract non-cursor row
+## Retract cursor row
+
+
 
 
 Normal cursor restrictions:
@@ -32,7 +60,7 @@ Normal cursor restrictions:
 
 
 
-Drawbacks
+AsOf drawbacks:
 - Change data inbetween page loads are not shown.
 
 - Works on a snapshot of the database as of the moment the cursor is opened. So changes between page retrievals are not shown.

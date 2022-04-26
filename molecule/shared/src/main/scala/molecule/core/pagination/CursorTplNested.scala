@@ -18,7 +18,10 @@ trait CursorTplNested[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling
     log("============================================================= NESTED")
 
     val forward                                   = limit > 0
-    val (model, query, prevFirstRow, prevLastRow) = extract(cursor, forward)
+//    val (model, query, prevT, prevFirstRow, prevLastRow) = extract(cursor, forward)
+    val (model, query, t0,
+    firstIndex, lastIndex, firstRow, lastRow,
+    sortIndexes, firstSortValues, lastSortValues) = extract(cursor, forward)
 
     val selectedRows          = new util.ArrayList[jList[AnyRef]]()
     var curId : jLong         = 0
@@ -27,7 +30,7 @@ trait CursorTplNested[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling
     var current               = true
     var more                  = 0
 
-    conn.jvmQuery(model, query).map { rows =>
+    conn.jvmQueryT(model, query).map { case (rows, t) =>
       val totalCount = rows.size
       if (totalCount == 0) {
         (new java.util.ArrayList[jList[AnyRef]](0), ",", 0)
@@ -44,9 +47,9 @@ trait CursorTplNested[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling
 
         val (flatFrom, flatUntil) = (forward, cursor) match {
           case (true, "") => (0, totalCount)
-          case (true, _)  => (lastIndex(sortedRows, prevLastRow, limit) + 1, totalCount)
+          case (true, _)  => (getLastIndex(totalCount, sortedRows, lastRow, limit) + 1, totalCount)
           case (_, "")    => (totalCount - 1, -1)
-          case (_, _)     => (firstIndex(totalCount, sortedRows, prevFirstRow, limit) - 1, -1)
+          case (_, _)     => (getFirstIndex(totalCount, sortedRows, firstRow, limit) - 1, -1)
         }
         log("flatFrom : " + flatFrom)
         log("flatUntil: " + flatUntil)
@@ -108,18 +111,22 @@ trait CursorTplNested[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling
 
         log("selectedRows")
         selectedRows.forEach(r => log(r))
+
+        val from = 0
+        val to = selectedRows.size - 1
+        val newFirst           = selectedRows.get(0)
+        val newLast            = selectedRows.get(selectedRows.size - 1)
+        val newFirstRow        = newFirst.toString
+        val newlastRow         = newLast.toString
+        val newFirstSortValues = extractSortValues(newFirst)
+        val newLastSortValues  = extractSortValues(newLast)
+        val newCursor       = encode(
+          t, from, to, newFirstRow, newlastRow, sortIndexes, newFirstSortValues, newLastSortValues
+        )
+
         log("more    : " + more)
-
-        val first           = selectedRows.get(0)
-        val last            = selectedRows.get(selectedRows.size - 1)
-        val firstRow        = first.toString
-        val lastRow         = last.toString
-        val firstSortValues = extractSortValues(first)
-        val lastSortValues  = extractSortValues(last)
-        val newCursor       = encode(firstRow, lastRow, firstSortValues, lastSortValues)
-
-        log("firstRow: " + firstRow)
-        log("lastRow : " + lastRow)
+        log("firstRow: " + newFirstRow)
+        log("lastRow : " + newlastRow)
         //        log("firstSortValues: " + firstSortValues)
         //        log("lastSortValues : " + lastSortValues)
         //        log.print()

@@ -98,10 +98,13 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] with CursorTplNested[O
     }
   }
 
+//  final override def get(limit: Int, cursor: String, lookupThreshold: Int = 25)
   final override def get(limit: Int, cursor: String)
                         (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], String, Int)] = {
     if (limit == 0) {
       limit0exception
+//    } else if (lookupThreshold < 1) {
+//      lookupThresholdException(lookupThreshold)
     } else if (!sortRows) {
       notSortedException
     } else {
@@ -109,6 +112,7 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] with CursorTplNested[O
         resetCastVars()
         for {
           conn <- futConn
+//          (selectedRows, newCursor, totalCount) <- selectedNestedTplRows(conn, limit, cursor, lookupThreshold)
           (selectedRows, newCursor, totalCount) <- selectedNestedTplRows(conn, limit, cursor)
         } yield {
           val flatCount = selectedRows.size

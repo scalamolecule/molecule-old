@@ -158,10 +158,13 @@ private[molecule] trait GetTpls[Obj, Tpl]
    * @param futConn Implicit [[molecule.datomic.base.facade.Conn Conn]] value in scope
    * @return `Future[List[Tpl]]` where Tpl is a tuple of types matching the attributes of the molecule
    */
+//  def get(limit: Int, cursor: String, lookupThreshold: Int = 25)
   def get(limit: Int, cursor: String)
          (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], String, Int)] = {
     if (limit == 0) {
       limit0exception
+//    } else if (lookupThreshold < 1) {
+//      lookupThresholdException(lookupThreshold)
     } else if (!sortRows) {
       notSortedException
     } else {
