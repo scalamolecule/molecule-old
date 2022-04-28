@@ -19,7 +19,7 @@ trait CursorTplNested[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling
 
     val forward                                   = limit > 0
 //    val (model, query, prevT, prevFirstRow, prevLastRow) = extract(cursor, forward)
-    val (model, query, t0,
+    val (model, query, porevT,
     firstIndex, lastIndex, firstRow, lastRow,
     sortIndexes, firstSortValues, lastSortValues) = extract(cursor, forward)
 

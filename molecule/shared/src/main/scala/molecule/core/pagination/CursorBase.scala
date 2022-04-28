@@ -10,7 +10,6 @@ import molecule.datomic.base.ast.dbView.{AsOf, TxLong}
 import molecule.datomic.base.ast.query.Query
 import molecule.datomic.base.facade.Conn
 import molecule.datomic.base.transform.Model2Query
-import utest.test
 import scala.annotation.{nowarn, tailrec}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -161,34 +160,6 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     i
   }
 
-  final protected def encode(
-    t: Long,
-    firstIndex: Int,
-    lastIndex: Int,
-    firstRow: String,
-    lastRow: String,
-    sortIndexes: List[Int],
-    firstSortValues: List[String],
-    lastSortValues: List[String]
-  ): String = {
-    val cleanStrings = Seq(t, firstIndex, lastIndex, firstRow, lastRow) ++ sortIndexes ++ firstSortValues ++ lastSortValues
-    //    println(cleanStrings.mkString("  ", "\n  ", ""))
-    Base64.getEncoder.encodeToString(cleanStrings.mkString("__~~__").getBytes)
-  }
-
-  final protected def decode(cursor: String): (Long, Int, Int, String, String, List[Int], List[String], List[String]) = {
-    //    println("XXX " + new String(Base64.getDecoder.decode(cursor)))
-    val values                                        = new String(Base64.getDecoder.decode(cursor)).split("__~~__", -1).toList
-    //    println(values.mkString("  ", "\n  ", ""))
-    val (t, firstIndex, lastIndex, firstRow, lastRow) = (values.head, values(1), values(2), values(3), values(4))
-    val n                                             = 5
-    val s                                             = sortCoordinates.head.filterNot(_.attr == "NESTED INDEX").size
-    val (n0, n1, n2, n3)                              = (n, n + s, n + s * 2, n + s * 3)
-    val sortIndexes                                   = values.slice(n0, n1).map(_.toInt)
-    val firstSortValues                               = values.slice(n1, n2)
-    val lastSortValues                                = values.slice(n2, n3)
-    (t.toLong, firstIndex.toInt, lastIndex.toInt, firstRow, lastRow, sortIndexes, firstSortValues, lastSortValues)
-  }
 
   protected def getLastIndex(
     totalCount: Int,
@@ -243,18 +214,18 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     }
   }
 
-  protected def lastIndex2(
+  final protected def getUpdatedLastIndex(
     conn: Conn,
-    rowsGe: util.ArrayList[jList[AnyRef]], // Rows equal to or greater than sort values
+    rowsGe: util.ArrayList[jList[AnyRef]], // Rows greater than or equal to sort values
     totalCount: Int,
     sortIndexes: List[Int],
     lastIndex: Int,
     lastRow: String,
-    prevT: Long,
+    t: Long,
     lastSortValues: List[String],
   )(implicit ec: ExecutionContext): Future[Int] = {
     if (lastIndex < totalCount && rowsGe.get(lastIndex).toString == lastRow) {
-      // 1. Found last cursor row at last index (nothing changed)
+      // 1. Found cursor row at lastIndex (nothing changed)
       Future(lastIndex)
 
     } else {
@@ -263,12 +234,18 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
       val (initialSortValues, getSortValues) = sortValuesLambda(sortIndexes, rowsGe.get(0))
 
       @tailrec
-      def collectSameSortValues(i: Int, row: jList[AnyRef], prevSortValues: List[AnyRef]): Int = getSortValues(row) match {
-        case _ if row.toString == lastRow => i // cursor row was found at index i
+      def collectSameSortValues(
+        i: Int,
+        row: jList[AnyRef],
+        prevSortValues: List[AnyRef]
+      ): Int = getSortValues(row) match {
+        case _ if row.toString == lastRow =>
+          i // cursor row was found at index i
         case `prevSortValues`             => // same sort values
           curWindow.add(row)
           collectSameSortValues(i + 1, rowsGe.get(i + 1), prevSortValues)
-        case _                            => -1 // cursor row was not found
+        case _                            =>
+          -1 // cursor row was not found
       }
       val curIndex = collectSameSortValues(0, rowsGe.get(0), initialSortValues)
 
@@ -280,10 +257,10 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
         // Cursor row was retracted (delete/update)
         // Now try to find nearest previous row before cursor row in new window
 
-        // Access rows before cursor row at time prevT when cursor row existed
+        // Access rows before cursor row at time t when cursor row existed
         val model = getModelEq(lastSortValues)
         val query = Model2Query(model).get._1
-        conn.usingAdhocDbView(AsOf(TxLong(prevT))).jvmQuery(model, query).map { prevWindowUnsorted =>
+        conn.usingAdhocDbView(AsOf(TxLong(t))).jvmQuery(model, query).map { prevWindowUnsorted =>
           val prevWindow = new util.ArrayList(prevWindowUnsorted)
           prevWindow.sort(this)
           val prevCursorIndex = {
@@ -333,118 +310,136 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     }
   }
 
-
-  protected def firstIndex2(
+  final protected def getUpdatedFirstIndex(
     conn: Conn,
-    rows: util.ArrayList[jList[AnyRef]],
+    rowsLe: util.ArrayList[jList[AnyRef]], // Rows less than or equal to sort values
     totalCount: Int,
     sortIndexes: List[Int],
     firstIndex: Int,
     firstRow: String,
-    prevT: Long,
+    t: Long,
     firstSortValues: List[String],
-    limit: Int
   )(implicit ec: ExecutionContext): Future[Int] = {
-    if (rows.get(firstIndex).toString == firstRow) {
-      // 1. No change, continuing from where we left
-      return Future(firstIndex)
-    }
+    if (rowsLe.get(firstIndex).toString == firstRow) {
+      // 1. Found cursor row at firstIndex (nothing changed)
+      Future(firstIndex)
 
-    // Window of rows we can look for before sort values change
-    val sameSortValuesWindow = new util.ArrayList[AnyRef]()
-
-    val (initialSortValues, sortValues) = sortValuesLambda(sortIndexes, rows.get(totalCount - 1))
-
-    var prevSortValues = initialSortValues
-    var curSortValues  = List.empty[AnyRef]
-
-    // Check rows starting from rows with same sort values as last cursor row
-    var row: jList[AnyRef] = null
-    var i                  = totalCount - 1
-    while (rows.get(i).toString != firstRow) {
-      row = rows.get(i)
-      sameSortValuesWindow.add(row)
-
-      curSortValues = sortValues(row)
-      if (prevSortValues == curSortValues) {
-        // Continue within window of same sort values
-        prevSortValues = curSortValues
-      } else {
-        // We didn't find cursor row within same sort values window
-        // Now search for rows after previous last row as of previous t
-        val model = getModelGe(true, Nil, firstSortValues)
-        val query = Model2Query(model).get._1
-        conn.usingAdhocDbView(AsOf(TxLong(prevT))).jvmQueryT(model, query).map { case (prevRowsAfter, t) =>
-          val prevRowsAfterSorted: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(prevRowsAfter)
-          prevRowsAfterSorted.sort(this)
-          val last = sameSortValuesWindow.size
-          var j    = 0
-          while (j != limit) {
-            val prevRowAfter = prevRowsAfterSorted.get(j)
-            i = 0
-            while (i != last) {
-              if (sameSortValuesWindow.get(i) == prevRowAfter) {
-                // 3. Found row after cursor from previous page in new rows
-                return Future(i)
-              }
-              i += 1
-            }
-            j += 1
-          }
-          i
-        }
-        // Nothing matched. What then?
-
-        return Future(i)
-      }
-      i += 1
-    }
-    // 2. Found last cursor row at index i
-    Future(i)
-  }
-
-  protected def firstIndex3(
-    conn: Conn,
-    model: Model,
-    query: Query,
-    prevT: Long,
-    totalCount: Int,
-    sortedRows: util.ArrayList[jList[AnyRef]],
-    prevFirstRow: String,
-    lookupThreshold: Int
-  )(implicit ec: ExecutionContext): Future[Int] = {
-    val threshold = lookupThreshold.min(totalCount)
-    val window    = new util.ArrayList[String](threshold)
-
-    // Walk backward to find row index of previous first row
-    var i     = totalCount - 1
-    val lower = i - lookupThreshold
-    while (sortedRows.get(i).toString != prevFirstRow && i != lower) {
-      i -= 1
-    }
-
-    if (i == threshold) {
-      conn.usingAdhocDbView(AsOf(TxLong(prevT))).jvmQueryT(model, query).map { case (prevRows, t) =>
-        val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(prevRows)
-        sortedRows.sort(this)
-        prevRows.forEach { prevRow =>
-          val prevRowStr = prevRow.toString
-          i = 0
-          while (window.get(1) != prevRowStr && i != threshold) {
-            i += 1
-          }
-          if (i != threshold) {
-            return Future(i)
-          }
-        }
-        i
-      }
     } else {
-      Future(i)
+      // Try to find cursor row within same sort values window
+      val curWindow                          = new util.ArrayList[AnyRef]()
+      val (initialSortValues, getSortValues) = sortValuesLambda(sortIndexes, rowsLe.get(0))
+
+      @tailrec
+      def collectSameSortValues(
+        i: Int,
+        row: jList[AnyRef],
+        prevSortValues: List[AnyRef]
+      ): Int = getSortValues(row) match {
+        case _ if row.toString == firstRow =>
+          i // cursor row was found at index i
+        case `prevSortValues`              => // same sort values
+          curWindow.add(row)
+          collectSameSortValues(i - 1, rowsLe.get(i - 1), prevSortValues)
+        case _                             =>
+          -1 // cursor row was not found
+      }
+      val last     = totalCount - 1
+      val curIndex = collectSameSortValues(last, rowsLe.get(last), initialSortValues)
+
+      if (curIndex != -1) {
+        // 2. Found first cursor row at curIndex
+        Future(curIndex)
+
+      } else {
+        // Cursor row was retracted (delete/update)
+        // Now try to find nearest previous row after cursor row in new window
+
+        // Access rows after cursor row at time t when cursor row existed
+        val model = getModelEq(firstSortValues)
+        val query = Model2Query(model).get._1
+        conn.usingAdhocDbView(AsOf(TxLong(t))).jvmQuery(model, query).map { prevWindowUnsorted =>
+          val prevWindow = new util.ArrayList(prevWindowUnsorted)
+          prevWindow.sort(this)
+          val prevCursorIndex = {
+            var i = prevWindow.size - 1
+            while (prevWindow.get(i).toString != firstRow) {
+              i -= 1
+            }
+            i
+          }
+
+          val curFirst = curWindow.size - 1
+
+          def findPrevRowInCurrentWindow(prevRow: jList[AnyRef]): Int = {
+            @tailrec
+            def checkForwards(curIndex: Int): Int = {
+              if (curWindow.get(curIndex) == prevRow) {
+                // 3. Previous row after cursor row was found in current window at curIndex
+                curIndex
+              } else if (curIndex == -1) {
+                // No match
+                -1
+              } else {
+                // Continue checking
+                checkForwards(curIndex + 1)
+              }
+            }
+            checkForwards(0)
+          }
+
+          @tailrec
+          def loopPrevRowsAfterCursorRow(prevIndex: Int): Int = {
+            if (prevIndex == -1) {
+              -1
+            } else {
+              findPrevRowInCurrentWindow(prevWindow.get(prevIndex)) match {
+                case -1 =>
+                  loopPrevRowsAfterCursorRow(prevIndex + 1)
+                case k  =>
+                  k
+              }
+            }
+          }
+
+          loopPrevRowsAfterCursorRow(prevCursorIndex)
+        }
+      }
     }
   }
 
-  protected def extract(cursor: String, forward: Boolean)
+
+  final protected def encode(
+    t: Long,
+    firstIndex: Int,
+    lastIndex: Int,
+    firstRow: String,
+    lastRow: String,
+    sortIndexes: List[Int],
+    firstSortValues: List[String],
+    lastSortValues: List[String]
+  ): String = {
+    val cleanStrings = Seq(t, firstIndex, lastIndex, firstRow, lastRow) ++ sortIndexes ++ firstSortValues ++ lastSortValues
+    //    println(cleanStrings.mkString("  ", "\n  ", ""))
+    Base64.getEncoder.encodeToString(cleanStrings.mkString("__~~__").getBytes)
+  }
+
+  final protected def decode(cursor: String): (Long, Int, Int, String, String, List[Int], List[String], List[String]) = {
+    //    println("XXX " + new String(Base64.getDecoder.decode(cursor)))
+    val values = new String(Base64.getDecoder.decode(cursor)).split("__~~__", -1).toList
+
+    //    println(values.mkString("  ", "\n  ", ""))
+    val n                                                       = 5
+    val List(t, firstIndex, lastIndex, firstRow, lastRow) = values.take(n)
+
+    val s                = sortCoordinates.head.filterNot(_.attr == "NESTED INDEX").size
+    val (n0, n1, n2, n3) = (n, n + s, n + s * 2, n + s * 3)
+    val sortIndexes      = values.slice(n0, n1).map(_.toInt)
+    val firstSortValues  = values.slice(n1, n2)
+    val lastSortValues   = values.slice(n2, n3)
+    (t.toLong, firstIndex.toInt, lastIndex.toInt, firstRow, lastRow, sortIndexes, firstSortValues, lastSortValues)
+  }
+
+  final protected def extract(cursor: String, forward: Boolean)
   : (Model, Query, Long, Int, Int, String, String, List[Int], List[String], List[String]) = {
     if (cursor.isEmpty) {
       val sortIndexes = sortCoordinates.head.filterNot(_.attr == "NESTED INDEX").map(_.i)
@@ -457,14 +452,4 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
       (model, query, prevT, firstIndex, lastIndex, firstRow, lastRow, sortIndexes, firstSortValues, lastSortValues)
     }
   }
-
-  def oscillate(size: Int, i: Int): List[Int] = {
-    val l = (0 until size).toList
-    i match {
-      case 0                  => l
-      case _ if i + 1 == size => l.reverse
-      case _                  => List(i) ++ l.tail.flatMap(j => List(i - j, i + j)).filter(v => 0 <= v && v < size)
-    }
-  }
-
 }
