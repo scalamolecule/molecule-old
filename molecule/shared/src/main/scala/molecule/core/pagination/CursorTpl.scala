@@ -67,8 +67,8 @@ trait CursorTpl[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling[Obj, 
             val newLast            = rows.get(until - 1)
             val newFirstRow        = newFirst.toString
             val newLastRow         = newLast.toString
-            val newFirstSortValues = extractSortValues(newFirst)
-            val newLastSortValues  = extractSortValues(newLast)
+            val newFirstSortValues = sortValueStrings(newFirst)
+            val newLastSortValues  = sortValueStrings(newLast)
             val newCursor          = encode(
               t, from, until - 1, newFirstRow, newLastRow, sortIndexes, newFirstSortValues, newLastSortValues
             )
@@ -76,9 +76,9 @@ trait CursorTpl[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling[Obj, 
             log("more    : " + more)
             log("firstRow: " + newFirstRow)
             log("lastRow : " + newLastRow)
-            //      log("firstSortValues: " + firstSortValues)
-            //      log("lastSortValues : " + lastSortValues)
-            log.print()
+            //            log("firstSortValues: " + firstSortValues)
+            //            log("lastSortValues : " + lastSortValues)
+//            log.print()
 
             (tuples.result(), newCursor, more)
           }

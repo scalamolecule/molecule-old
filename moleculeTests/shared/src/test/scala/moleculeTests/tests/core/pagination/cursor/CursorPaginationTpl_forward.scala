@@ -1,7 +1,7 @@
 package moleculeTests.tests.core.pagination.cursor
 
 import molecule.core.util.Executor._
-import molecule.datomic.api.out7._
+import molecule.datomic.api.out12._
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
 import utest._
@@ -62,7 +62,53 @@ object CursorPaginationTpl_forward extends AsyncTestSuite {
         } yield ()
       }
 
-      "Expressions allowed" - core { implicit conn =>
+      "Sort value types" - core { implicit conn =>
+        for {
+          _ <- Ns.str.int.long.ref1.double.bool.date.uuid.uri.bigInt.bigDec.enumm insert List(
+            ("a", 1, 1L, 1L, 1.1, true, date1, uuid1, uri1, bigInt1, bigDec1, enum1),
+            ("b", 2, 2L, 2L, 2.2, false, date2, uuid2, uri2, bigInt2, bigDec2, enum2),
+            ("c", 3, 3L, 3L, 3.3, false, date3, uuid3, uri3, bigInt3, bigDec3, enum3)
+          )
+
+          c <- Ns.str.a1.get(2, x).map { case (List("a", "b"), c, 1) => c }
+          _ <- Ns.str.a1.get(2, c).map { case (List("c"), _, 0) => () }
+
+          c <- Ns.int.a1.get(2, x).map { case (List(1, 2), c, 1) => c }
+          _ <- Ns.int.a1.get(2, c).map { case (List(3), _, 0) => () }
+
+          c <- Ns.long.a1.get(2, x).map { case (List(1L, 2L), c, 1) => c }
+          _ <- Ns.long.a1.get(2, c).map { case (List(3L), _, 0) => () }
+
+          c <- Ns.ref1.a1.get(2, x).map { case (List(1L, 2L), c, 1) => c }
+          _ <- Ns.ref1.a1.get(2, c).map { case (List(3L), _, 0) => () }
+
+          c <- Ns.double.a1.get(2, x).map { case (List(1.1, 2.2), c, 1) => c }
+          _ <- Ns.double.a1.get(2, c).map { case (List(3.3), _, 0) => () }
+
+          c <- Ns.bool.a1.get(1, x).map { case (List(false), c, 1) => c }
+          _ <- Ns.bool.a1.get(1, c).map { case (List(true), _, 0) => () }
+
+          c <- Ns.date.a1.get(2, x).map { case (List(`date1`, `date2`), c, 1) => c }
+          _ <- Ns.date.a1.get(2, c).map { case (List(`date3`), _, 0) => () }
+
+          c <- Ns.uuid.a1.get(2, x).map { case (List(`uuid1`, `uuid2`), c, 1) => c }
+          _ <- Ns.uuid.a1.get(2, c).map { case (List(`uuid3`), _, 0) => () }
+
+          c <- Ns.uri.a1.get(2, x).map { case (List(`uri1`, `uri2`), c, 1) => c }
+          _ <- Ns.uri.a1.get(2, c).map { case (List(`uri3`), _, 0) => () }
+
+          c <- Ns.bigInt.a1.get(2, x).map { case (List(`bigInt1`, `bigInt2`), c, 1) => c }
+          _ <- Ns.bigInt.a1.get(2, c).map { case (List(`bigInt3`), _, 0) => () }
+
+          c <- Ns.bigDec.a1.get(2, x).map { case (List(`bigDec1`, `bigDec2`), c, 1) => c }
+          _ <- Ns.bigDec.a1.get(2, c).map { case (List(`bigDec3`), _, 0) => () }
+
+          c <- Ns.enumm.a1.get(2, x).map { case (List(`enum1`, `enum2`), c, 1) => c }
+          _ <- Ns.enumm.a1.get(2, c).map { case (List(`enum3`), _, 0) => () }
+        } yield ()
+      }
+
+      "Sort value can have expression too" - core { implicit conn =>
         for {
           _ <- Ns.int.insert(0, 1, 2, 3, 4, 5)
           c <- Ns.int.>(0).a1.get(2, x).map { case (List(1, 2), c, 3) => c }
@@ -91,7 +137,7 @@ object CursorPaginationTpl_forward extends AsyncTestSuite {
           _ <- Ns.int(4).save
           c3 <- Ns.int.a1.get(2, c2).map { case (List(4), c, 0) => c }
 
-          // Using the fresh cursor will notify of more pages (`more` is 1)
+          // Adding data beyond next page
           _ <- Ns.int.insert(5, 6, 7)
           c4 <- Ns.int.a1.get(2, c3).map { case (List(5, 6), c, 1) => c }
           _ <- Ns.int.a1.get(2, c4).map { case (List(7), _, 0) => () }

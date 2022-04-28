@@ -1,8 +1,9 @@
 package molecule.core.pagination
 
 import java.lang.{Long => jLong}
+import java.net.URI
 import java.util
-import java.util.{Base64, List => jList}
+import java.util.{Base64, Date, UUID, List => jList}
 import molecule.core.ast.elements._
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.Marshalling
@@ -87,74 +88,15 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     }
   }
 
-  final protected def extractSortValues(row: jList[AnyRef]): List[String] = {
-    sortCoordinates.head.filterNot(_.attr == "NESTED INDEX").map(sc => row.get(sc.i).toString)
-  }
-
-  final protected def getModelGe(
-    forward: Boolean,
-    prevTokens: List[String],
-    nextTokens: List[String]
-  ): Model = {
-    def addLimit(e: GenericAtom): Seq[Element] = {
-      val (asc, i)   = (e.sort.head == 'a', e.sort.last.toString.toInt - 1)
-      val token      = if (forward) nextTokens(i) else prevTokens(i)
-      val typedValue = e.tpe match {
-        case "Int"    => token.toInt
-        case "String" => token
-        case other    => throw MoleculeException("Unexpected sort attribute type: " + other)
-      }
-      val limitExpr  = if (forward && asc || !forward && !asc) Ge(typedValue) else Le(typedValue)
-      e match {
-        case a: Atom    => Seq(a, a.copy(attr = a.attr + "_", value = limitExpr, sort = ""))
-        case g: Generic => Seq(g, g.copy(attr = g.attr + "_", value = limitExpr, sort = ""))
-      }
-    }
-    def resolve(elements: Seq[Element]): Seq[Element] = elements.flatMap {
-      case e: GenericAtom if e.sort.nonEmpty => addLimit(e)
-      case e: GenericAtom                    => Seq(e)
-      case Composite(elements)               => Seq(Composite(resolve(elements)))
-      case TxMetaData(elements)              => Seq(TxMetaData(resolve(elements)))
-      case e                                 => Seq(e)
-    }
-    Model(resolve(_model.elements))
-  }
-
-  final protected def getModelEq(sortValues: List[String]): Model = {
-    def addEq(e: GenericAtom): Seq[Element] = {
-      val sortValue  = sortValues(e.sort.last.toString.toInt - 1)
-      val typedValue = e.tpe match {
-        case "Int"    => sortValue.toInt
-        case "String" => sortValue
-        case other    => throw MoleculeException("Unexpected sort attribute type: " + other)
-      }
-      val limitExpr  = Eq(Seq(typedValue))
-      e match {
-        case a: Atom    => Seq(a, a.copy(attr = a.attr + "_", value = limitExpr, sort = ""))
-        case g: Generic => Seq(g, g.copy(attr = g.attr + "_", value = limitExpr, sort = ""))
-      }
-    }
-    def resolve(elements: Seq[Element]): Seq[Element] = elements.flatMap {
-      case e: GenericAtom if e.sort.nonEmpty => addEq(e)
-      case e: GenericAtom                    => Seq(e)
-      case Composite(elements)               => Seq(Composite(resolve(elements)))
-      case TxMetaData(elements)              => Seq(TxMetaData(resolve(elements)))
-      case e                                 => Seq(e)
-    }
-    Model(resolve(_model.elements))
-  }
-
 
   protected def getFirstIndex(
     totalCount: Int,
     sortedRows: util.ArrayList[jList[AnyRef]],
     prevFirstRow: String,
-    lookupThreshold: Int
   ): Int = {
     // Walk backward to find row index of previous first row
-    var i     = totalCount - 1
-    val lower = i - lookupThreshold
-    while (sortedRows.get(i).toString != prevFirstRow && i != lower) {
+    var i = totalCount - 1
+    while (sortedRows.get(i).toString != prevFirstRow) {
       i -= 1
     }
     i
@@ -165,21 +107,15 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     totalCount: Int,
     sortedRows: util.ArrayList[jList[AnyRef]],
     lastRow: String,
-    lookupThreshold: Int
   ): Int = {
     val last = totalCount - 1
     // Walk forward to find row index of previous last row
     var i    = 0
     println("totalCount: " + totalCount)
-    println("threshold : " + lookupThreshold)
     println("last      : " + last)
     while (sortedRows.get(i).toString != lastRow) {
       i += 1
       println(i)
-      if (i == lookupThreshold) {
-        println(s"Couldn't find previous last row `$lastRow` within first $lookupThreshold rows. " +
-          s"Now trying to compare all rows from previous page.")
-      }
       if (i == last) {
         println(s"Couldn't find previous last row within all $totalCount rows.")
       }
@@ -428,7 +364,7 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     val values = new String(Base64.getDecoder.decode(cursor)).split("__~~__", -1).toList
 
     //    println(values.mkString("  ", "\n  ", ""))
-    val n                                                       = 5
+    val n                                                 = 5
     val List(t, firstIndex, lastIndex, firstRow, lastRow) = values.take(n)
 
     val s                = sortCoordinates.head.filterNot(_.attr == "NESTED INDEX").size
@@ -437,6 +373,76 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     val firstSortValues  = values.slice(n1, n2)
     val lastSortValues   = values.slice(n2, n3)
     (t.toLong, firstIndex.toInt, lastIndex.toInt, firstRow, lastRow, sortIndexes, firstSortValues, lastSortValues)
+  }
+
+
+  final protected def sortValueStrings(row: jList[AnyRef]): List[String] = {
+    sortCoordinates.head.filterNot(_.attr == "NESTED INDEX").map { sc =>
+      val v = row.get(sc.i)
+      sc.tpe match {
+        case "Date" => date2str(v.asInstanceOf[Date])
+        case _      => v.toString
+      }
+    }
+  }
+
+  private def getTyped(tpe: String, v: String): Any = tpe match {
+    case "String" | "enum" => v
+    case "Int"             => v.toInt
+    case "Long" | "ref"    => v.toLong
+    case "Double"          => v.toDouble
+    case "Boolean"         => v.toBoolean
+    case "Date"            => str2date(v)
+    case "UUID"            => UUID.fromString(v)
+    case "URI"             => new URI(v)
+    case "BigInt"          => BigInt(v)
+    case "BigDecimal"      => BigDecimal(v)
+    case other             => throw MoleculeException("Unexpected sort value type: " + other)
+  }
+
+  final protected def getModelGe(
+    forward: Boolean,
+    firstSortValues: List[String],
+    lastSortValues: List[String]
+  ): Model = {
+    def setLimit(e: GenericAtom): Seq[Element] = {
+      val (asc, i)   = (e.sort.head == 'a', e.sort.last.toString.toInt - 1)
+      val sortValue  = if (forward) lastSortValues(i) else firstSortValues(i)
+      val typedValue = getTyped(e.tpe, sortValue)
+      val limitExpr  = if (forward && asc || !forward && !asc) Ge(typedValue) else Le(typedValue)
+      e match {
+        case a: Atom    => Seq(a, a.copy(attr = a.attr + "_", value = limitExpr, sort = ""))
+        case g: Generic => Seq(g, g.copy(attr = g.attr + "_", value = limitExpr, sort = ""))
+      }
+    }
+    def resolve(elements: Seq[Element]): Seq[Element] = elements.flatMap {
+      case e: GenericAtom if e.sort.nonEmpty => setLimit(e)
+      case e: GenericAtom                    => Seq(e)
+      case Composite(elements)               => Seq(Composite(resolve(elements)))
+      case TxMetaData(elements)              => Seq(TxMetaData(resolve(elements)))
+      case e                                 => Seq(e)
+    }
+    Model(resolve(_model.elements))
+  }
+
+  final protected def getModelEq(sortValues: List[String]): Model = {
+    def setEq(e: GenericAtom): Seq[Element] = {
+      val sortValue  = sortValues(e.sort.last.toString.toInt - 1)
+      val typedValue = getTyped(e.tpe, sortValue)
+      val limitExpr  = Eq(Seq(typedValue))
+      e match {
+        case a: Atom    => Seq(a, a.copy(attr = a.attr + "_", value = limitExpr, sort = ""))
+        case g: Generic => Seq(g, g.copy(attr = g.attr + "_", value = limitExpr, sort = ""))
+      }
+    }
+    def resolve(elements: Seq[Element]): Seq[Element] = elements.flatMap {
+      case e: GenericAtom if e.sort.nonEmpty => setEq(e)
+      case e: GenericAtom                    => Seq(e)
+      case Composite(elements)               => Seq(Composite(resolve(elements)))
+      case TxMetaData(elements)              => Seq(TxMetaData(resolve(elements)))
+      case e                                 => Seq(e)
+    }
+    Model(resolve(_model.elements))
   }
 
   final protected def extract(cursor: String, forward: Boolean)

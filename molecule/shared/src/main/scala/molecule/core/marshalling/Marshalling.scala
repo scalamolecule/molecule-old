@@ -48,9 +48,6 @@ abstract class Marshalling[Obj, Tpl](model: Model, queryData: (Query, String, Op
   def offsetException(offset: Int): Future[Nothing] = Future.failed(
     MoleculeException("Offset has to be a positive number. Found: " + offset))
 
-  def lookupThresholdException(threshold: Int): Future[Nothing] = Future.failed(
-    MoleculeException("Lookup threshold has to be a positive number. Found: " + threshold))
-
   def limit0exception: Future[Nothing] = Future.failed(
     MoleculeException("Limit cannot be 0. " +
       "Please use a positive number to get rows from start, or a negative number to get rows from end."))

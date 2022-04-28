@@ -47,9 +47,9 @@ trait CursorTplNested[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling
 
         val (flatFrom, flatUntil) = (forward, cursor) match {
           case (true, "") => (0, totalCount)
-          case (true, _)  => (getLastIndex(totalCount, sortedRows, lastRow, limit) + 1, totalCount)
+          case (true, _)  => (getLastIndex(totalCount, sortedRows, lastRow) + 1, totalCount)
           case (_, "")    => (totalCount - 1, -1)
-          case (_, _)     => (getFirstIndex(totalCount, sortedRows, firstRow, limit) - 1, -1)
+          case (_, _)     => (getFirstIndex(totalCount, sortedRows, firstRow) - 1, -1)
         }
         log("flatFrom : " + flatFrom)
         log("flatUntil: " + flatUntil)
@@ -118,8 +118,8 @@ trait CursorTplNested[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling
         val newLast            = selectedRows.get(selectedRows.size - 1)
         val newFirstRow        = newFirst.toString
         val newlastRow         = newLast.toString
-        val newFirstSortValues = extractSortValues(newFirst)
-        val newLastSortValues  = extractSortValues(newLast)
+        val newFirstSortValues = sortValueStrings(newFirst)
+        val newLastSortValues  = sortValueStrings(newLast)
         val newCursor       = encode(
           t, from, to, newFirstRow, newlastRow, sortIndexes, newFirstSortValues, newLastSortValues
         )
