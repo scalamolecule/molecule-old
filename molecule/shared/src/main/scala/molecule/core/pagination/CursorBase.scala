@@ -150,7 +150,8 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     }
   }
 
-  final protected def getUpdatedLastIndex(
+
+  final protected def getForwardCursorIndex(
     conn: Conn,
     rowsGe: util.ArrayList[jList[AnyRef]], // Rows greater than or equal to sort values
     totalCount: Int,
@@ -166,29 +167,23 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
 
     } else {
       // Try to find cursor row within same sort values window
-      val curWindow                          = new util.ArrayList[AnyRef]()
-      val (initialSortValues, getSortValues) = sortValuesLambda(sortIndexes, rowsGe.get(0))
+      val curWindow                      = new util.ArrayList[jList[AnyRef]]()
+      val (sortValuesRaw, getSortValues) = sortValuesLambda(sortIndexes, rowsGe.get(0))
 
       @tailrec
-      def collectSameSortValues(
-        i: Int,
-        row: jList[AnyRef],
-        prevSortValues: List[AnyRef]
-      ): Int = getSortValues(row) match {
-        case _ if row.toString == lastRow =>
-          i // cursor row was found at index i
-        case `prevSortValues`             => // same sort values
+      def collectSameSortValues(i: Int, row: jList[AnyRef]): Int = getSortValues(row) match {
+        case _ if row.toString == lastRow => i // cursor row was found at index i
+        case `sortValuesRaw`              =>
+          // same sort values
           curWindow.add(row)
-          collectSameSortValues(i + 1, rowsGe.get(i + 1), prevSortValues)
-        case _                            =>
-          -1 // cursor row was not found
+          collectSameSortValues(i + 1, rowsGe.get(i + 1))
+        case _                            => -42 // cursor row was not found
       }
-      val curIndex = collectSameSortValues(0, rowsGe.get(0), initialSortValues)
+      val curIndex = collectSameSortValues(0, rowsGe.get(0))
 
-      if (curIndex != -1) {
+      if (curIndex != -42) {
         // 2. Found last cursor row at curIndex
         Future(curIndex)
-
       } else {
         // Cursor row was retracted (delete/update)
         // Now try to find nearest previous row before cursor row in new window
@@ -200,30 +195,26 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
           val prevWindow = new util.ArrayList(prevWindowUnsorted)
           prevWindow.sort(this)
           val prevCursorIndex = {
-            var i = 0
-            while (prevWindow.get(i).toString != lastRow) {
-              i += 1
-            }
+            var i = -1
+            do i += 1 while (prevWindow.get(i).toString != lastRow)
             i
           }
 
-          val curLast = curWindow.size - 1
-
           def findPrevRowInCurrentWindow(prevRow: jList[AnyRef]): Int = {
             @tailrec
-            def checkBackwards(curIndex: Int): Int = {
-              if (curWindow.get(curIndex) == prevRow) {
+            def checkBackwards(indexInCurWindow: Int): Int = {
+              if (curWindow.get(indexInCurWindow) == prevRow) {
                 // 3. Previous row before cursor row was found in current window at curIndex
-                curIndex
-              } else if (curIndex == -1) {
+                indexInCurWindow
+              } else if (indexInCurWindow == -1) {
                 // No match
-                -1
+                -42
               } else {
                 // Continue checking
-                checkBackwards(curIndex - 1)
+                checkBackwards(indexInCurWindow - 1)
               }
             }
-            checkBackwards(curLast)
+            checkBackwards(curWindow.size - 1)
           }
 
           @tailrec
@@ -232,21 +223,19 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
               -1
             } else {
               findPrevRowInCurrentWindow(prevWindow.get(prevIndex)) match {
-                case -1 =>
-                  loopPrevRowsBeforeCursorRow(prevIndex - 1)
-                case k  =>
-                  k
+                case -42              => loopPrevRowsBeforeCursorRow(prevIndex - 1)
+                case indexInCurWindow => indexInCurWindow
               }
             }
           }
-
           loopPrevRowsBeforeCursorRow(prevCursorIndex - 1)
         }
       }
     }
   }
 
-  final protected def getUpdatedFirstIndex(
+
+  final protected def getBackwardCursorIndex(
     conn: Conn,
     rowsLe: util.ArrayList[jList[AnyRef]], // Rows less than or equal to sort values
     totalCount: Int,
@@ -256,36 +245,30 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
     t: Long,
     firstSortValues: List[String],
   )(implicit ec: ExecutionContext): Future[Int] = {
-    if (rowsLe.get(firstIndex).toString == firstRow) {
+    if (firstIndex < totalCount && rowsLe.get(firstIndex).toString == firstRow) {
       // 1. Found cursor row at firstIndex (nothing changed)
       Future(firstIndex)
 
     } else {
       // Try to find cursor row within same sort values window
-      val curWindow                          = new util.ArrayList[AnyRef]()
-      val (initialSortValues, getSortValues) = sortValuesLambda(sortIndexes, rowsLe.get(0))
+      val curWindow                      = new util.ArrayList[AnyRef]()
+      val last                           = totalCount - 1
+      val (sortValuesRaw, getSortValues) = sortValuesLambda(sortIndexes, rowsLe.get(last))
 
       @tailrec
-      def collectSameSortValues(
-        i: Int,
-        row: jList[AnyRef],
-        prevSortValues: List[AnyRef]
-      ): Int = getSortValues(row) match {
-        case _ if row.toString == firstRow =>
-          i // cursor row was found at index i
-        case `prevSortValues`              => // same sort values
-          curWindow.add(row)
-          collectSameSortValues(i - 1, rowsLe.get(i - 1), prevSortValues)
-        case _                             =>
-          -1 // cursor row was not found
+      def collectSameSortValues(i: Int, row: jList[AnyRef]): Int = getSortValues(row) match {
+        case _ if row.toString == firstRow => i // cursor row was found at index i
+        case `sortValuesRaw`               =>
+          // same sort values
+          curWindow.add(0, row) // prepend
+          collectSameSortValues(i - 1, rowsLe.get(i - 1))
+        case _                             => -42 // cursor row was not found
       }
-      val last     = totalCount - 1
-      val curIndex = collectSameSortValues(last, rowsLe.get(last), initialSortValues)
+      val curIndex = collectSameSortValues(last, rowsLe.get(last))
 
-      if (curIndex != -1) {
+      if (curIndex != -42) {
         // 2. Found first cursor row at curIndex
         Future(curIndex)
-
       } else {
         // Cursor row was retracted (delete/update)
         // Now try to find nearest previous row after cursor row in new window
@@ -297,47 +280,42 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
           val prevWindow = new util.ArrayList(prevWindowUnsorted)
           prevWindow.sort(this)
           val prevCursorIndex = {
-            var i = prevWindow.size - 1
-            while (prevWindow.get(i).toString != firstRow) {
-              i -= 1
-            }
+            var i = -1
+            do i += 1 while (prevWindow.get(i).toString != firstRow)
             i
           }
 
-          val curFirst = curWindow.size - 1
-
+          val curWindowSize = curWindow.size
           def findPrevRowInCurrentWindow(prevRow: jList[AnyRef]): Int = {
             @tailrec
-            def checkForwards(curIndex: Int): Int = {
-              if (curWindow.get(curIndex) == prevRow) {
+            def checkForwards(indexInCurWindow: Int): Int = {
+              if (curWindow.get(indexInCurWindow) == prevRow) {
                 // 3. Previous row after cursor row was found in current window at curIndex
-                curIndex
-              } else if (curIndex == -1) {
+                indexInCurWindow
+              } else if (indexInCurWindow == curWindowSize) {
                 // No match
-                -1
+                -42
               } else {
                 // Continue checking
-                checkForwards(curIndex + 1)
+                checkForwards(indexInCurWindow + 1)
               }
             }
             checkForwards(0)
           }
 
+          val prevWindowSize = prevWindow.size
           @tailrec
           def loopPrevRowsAfterCursorRow(prevIndex: Int): Int = {
-            if (prevIndex == -1) {
-              -1
+            if (prevIndex == prevWindowSize) {
+              totalCount
             } else {
               findPrevRowInCurrentWindow(prevWindow.get(prevIndex)) match {
-                case -1 =>
-                  loopPrevRowsAfterCursorRow(prevIndex + 1)
-                case k  =>
-                  k
+                case -42              => loopPrevRowsAfterCursorRow(prevIndex + 1)
+                case indexInCurWindow => totalCount - curWindowSize + indexInCurWindow
               }
             }
           }
-
-          loopPrevRowsAfterCursorRow(prevCursorIndex)
+          loopPrevRowsAfterCursorRow(prevCursorIndex + 1)
         }
       }
     }

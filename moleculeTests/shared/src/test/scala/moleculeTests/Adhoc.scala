@@ -7,7 +7,7 @@ import molecule.core.util.{Helpers, JavaUtil}
 import molecule.datomic.api.in1_out12._
 import moleculeTests.dataModels.core.base.dsl.CoreTest._
 import moleculeTests.setup.AsyncTestSuite
-import moleculeTests.tests.core.pagination.cursor.CursorPaginationTpl_forward.x
+import moleculeTests.tests.core.pagination.cursor.CursorPaginationTpl.x
 import utest._
 import scala.annotation.{nowarn, tailrec}
 import scala.math.abs

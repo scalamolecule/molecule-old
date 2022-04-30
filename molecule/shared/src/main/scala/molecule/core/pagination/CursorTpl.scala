@@ -14,7 +14,7 @@ trait CursorTpl[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling[Obj, 
     cursor: String,
   )(implicit ec: ExecutionContext): Future[(List[Tpl], String, Int)] = {
     val log = new log
-    log("=============================================================")
+    log("=========================================")
     val forward = limit > 0
 
     val (model, query, prevT,
@@ -30,27 +30,30 @@ trait CursorTpl[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling[Obj, 
           val rows: util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rowsUnsorted)
           rows.sort(this) // using macro-implemented `compare` method
 
-          log(_model)
+          //          log(_model)
           rows.forEach(row => log(row))
+//          log.print()
 
           for {
             (from, until, more) <- (forward, cursor) match {
               case (true, "") => Future((0, limit.min(totalCount), (totalCount - limit).max(0)))
-              case (true, _)  => getUpdatedLastIndex(
+              case (true, _)  => getForwardCursorIndex(
                 conn, rows, totalCount, sortIndexes, lastIndex, lastRow, prevT, lastSortValues
-              ).map { updatedLastIndex =>
-                val from  = updatedLastIndex + 1
+              ).map { cursorIndex =>
+                val from  = cursorIndex + 1
                 val until = (from + limit).min(totalCount)
-                (from, until, totalCount - until)
+                val more  = totalCount - until
+                (from, until, more)
               }
 
               case (_, "") => Future(((totalCount + limit).max(0), totalCount, (totalCount + limit).max(0)))
-              case (_, _)  => getUpdatedFirstIndex(
+              case (_, _)  => getBackwardCursorIndex(
                 conn, rows, totalCount, sortIndexes, firstIndex, firstRow, prevT, firstSortValues
-              ).map { updatedFirstIndex =>
-                val from  = (updatedFirstIndex + limit).max(0) // (limit is negative)
-                val until = updatedFirstIndex
-                (from, until, from)
+              ).map { cursorIndex =>
+                val from  = (cursorIndex + limit).max(0) // (limit is negative)
+                val until = cursorIndex
+                val more  = from
+                (from, until, more)
               }
             }
           } yield {

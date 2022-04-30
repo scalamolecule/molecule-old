@@ -131,7 +131,10 @@ trait Helpers extends DateHandling {
   class log {
     private var buf = Seq.empty[String]
     def apply(s: Any): Unit = buf = buf :+ s.toString
-    def print(): Unit = println(buf.mkString("\n"))
+    def print(): Unit = {
+      println(buf.mkString("\n"))
+      buf = Nil
+    }
   }
 
 
