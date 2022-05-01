@@ -5,13 +5,16 @@ import java.util
 import java.util.{List => jList}
 import molecule.core.api.Molecule_0
 import molecule.core.macros.rowAttr.JsonBase
-import molecule.core.pagination.CursorJson
+import molecule.core.pagination.{CursorJson, OffsetPagination}
 import molecule.datomic.base.facade.Conn
 import scala.concurrent.{ExecutionContext, Future}
 
 /** Nested json builder classes of various levels. */
 trait NestedJson[Obj, Tpl]
-  extends NestedBase[Obj, Tpl] with CursorJson[Obj, Tpl] with JsonBase { self: Molecule_0[Obj, Tpl] =>
+  extends NestedBase[Obj, Tpl]
+    with CursorJson[Obj, Tpl]
+    with JsonBase
+    with OffsetPagination[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
   protected def jsonBranch0(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = ???
   protected def jsonBranch1(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = ???
@@ -189,7 +192,7 @@ trait NestedJson[Obj, Tpl]
       val sortedRows: java.util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
       sortedRows.sort(this)
       val flatCount                  = sortedRows.size
-      val (selectedRows, totalCount) = sortedRows2selectedRows(sortedRows, limit, offset)
+      val (selectedRows, totalCount) = allFlatRows2selectedFlatRows(sortedRows, limit, offset)
       if (flatCount == 0 || offset >= totalCount) {
         sb0.append("]")
       } else {

@@ -11,13 +11,14 @@ object CursorPaginationTpl extends AsyncTestSuite {
   val x = ""
 
 
-  // Non-sorted values (str) have non-deterministic order
-  // "Window" is rows sharing same sorted value(s) - here rows with int value 1
+  // Non-sorted values have non-deterministic order but will likely not change order between internal indexing jobs
+  // "Window" is rows sharing same sorted value(s) up until current cursor row (forwards or backwards)
 
-  // Allow pattern matching the result only without warnings
+  // Allow pattern matching the result without warnings
   @nowarn lazy val tests = Tests {
 
     "Basics (no change)" - {
+
       "Forward, asc" - core { implicit conn =>
         for {
           _ <- Ns.int.insert(1, 2, 3, 4, 5)
@@ -151,31 +152,31 @@ object CursorPaginationTpl extends AsyncTestSuite {
             // Window of rows with same sort value (1)
             _ <- Ns.str.int insert List(
               ("a", 1),
-              ("ba", 1),
+              ("b", 1),
               ("c", 1),
             )
 
             // Order of non-sorted attributes is non-deterministic
             // (but will likely not vary in-between internal indexing jobs)
             _ <- Ns.str.int.a1.get.map(_ ==> List(
-              ("a", 1),
-              ("ba", 1),
+              ("b", 1),
+              ("a", 1), // cursor row
               ("c", 1),
             ))
 
             // Page 1
-            c <- Ns.str.int.a1.get(2, x).map { case (List(("a", 1), ("ba", 1)), c, 1) => c }
+            c <- Ns.str.int.a1.get(2, x).map { case (List(("b", 1), ("a", 1)), c, 1) => c }
 
-            _ <- Ns.str("bb").int(1).save
+            _ <- Ns.str("d").int(1).save
             _ <- Ns.str.int.a1.get.map(_ ==> List(
-              ("a", 1),
-              ("ba", 1), // cursor row
-              ("bb", 1), // added row after cursor row
+              ("b", 1),
+              ("a", 1), // cursor row
+              ("d", 1), // added row after cursor row
               ("c", 1),
             ))
 
             // Page 2 including new bb row since it's after cursor row
-            _ <- Ns.str.int.a1.get(2, c).map { case (List(("bb", 1), ("c", 1)), _, 0) => () }
+            _ <- Ns.str.int.a1.get(2, c).map { case (List(("d", 1), ("c", 1)), _, 0) => () }
           } yield ()
         }
 
@@ -217,7 +218,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
           for {
             a1 <- Ns.str.int insert List(
               ("x", 0),
-              ("a", 1), // happens to be after cursor row in window when sorted
+              ("a", 1),
               ("b", 1),
               ("y", 2),
             ) map (_.eids(1))
@@ -249,7 +250,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
             b1 <- Ns.str.int insert List(
               ("x", 0),
               ("a", 1),
-              ("b", 1), // happens to be before cursor row in window when sorted
+              ("b", 1),
               ("y", 2),
             ) map (_.eids(2))
 
@@ -300,7 +301,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
 
             _ <- b1.retract
             _ <- Ns.str.int.a1.get.map(_ ==> List(
-              ("x", 0), // substitute cursor row (get rows after)
+              ("x", 0), // substitute cursor row (first before b on previous page)
               ("a", 1),
               ("y", 2),
             ))
@@ -334,7 +335,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
             _ <- Ns.str("c").int(1).save
 
             _ <- Ns.str.int.a1.get.map(_ ==> List(
-              ("x", 0), // substitute cursor row (get rows after)
+              ("x", 0), // substitute cursor row (first before b on previous page)
               ("a", 1),
               ("c", 1),
               ("y", 2),
@@ -353,7 +354,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
           for {
             a1 <- Ns.str.int insert List(
               ("x", 0),
-              ("a", 1), // happens to be last when sorted
+              ("a", 1),
               ("b", 1),
               ("y", 2),
             ) map (_.eids(1))
@@ -371,7 +372,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
             _ <- a1.retract
             _ <- Ns.str.int.a1.get.map(_ ==> List(
               ("x", 0),
-              ("b", 1), // substitute cursor row (get rows after)
+              ("b", 1), // substitute cursor row (first before a on previous page)
               ("y", 2),
             ))
 
@@ -384,7 +385,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
           for {
             a1 <- Ns.str.int insert List(
               ("x", 0),
-              ("a", 1), // happens to be last when sorted
+              ("a", 1),
               ("b", 1),
               ("y", 2),
             ) map (_.eids(1))
@@ -404,7 +405,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
             _ <- Ns.str("c").int(1).save
             _ <- Ns.str.int.a1.get.map(_ ==> List(
               ("x", 0),
-              ("b", 1), // substitute cursor row (get rows after)
+              ("b", 1), // substitute cursor row (first before a on previous page)
               ("c", 1),
               ("y", 2),
             ))
@@ -422,7 +423,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
           for {
             a1 <- Ns.str.int insert List(
               ("x", 0),
-              ("a", 1), // happens to be cursor row when sorted
+              ("a", 1),
               ("b", 1),
               ("c", 1),
               ("y", 2),
@@ -442,7 +443,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
             _ <- a1.retract
             _ <- Ns.str.int.a1.get.map(_ ==> List(
               ("x", 0),
-              ("b", 1), // substitute cursor row (get rows after)
+              ("b", 1), // substitute cursor row (first before a on previous page)
               ("c", 1),
               ("y", 2),
             ))
@@ -452,91 +453,11 @@ object CursorPaginationTpl extends AsyncTestSuite {
           } yield ()
         }
 
-//        "Retraction only 2" - core { implicit conn =>
-//          for {
-//            a1 <- Ns.str.int insert List(
-//              ("w", -1),
-//              ("x", 0),
-//              ("a", 1), // happens to be cursor row when sorted
-//              ("b", 1),
-//              ("c", 1),
-//              ("y", 2),
-//              ("z", 3),
-//            ) map (_.eids(2))
-//
-//            _ <- Ns.str.int.a1.get.map(_ ==> List(
-//              ("w", -1),
-//              ("x", 0),
-//              ("b", 1),
-//              ("a", 1), // cursor row
-//              ("c", 1),
-//              ("y", 2),
-//              ("z", 3),
-//            ))
-//
-//            // Page 1
-//            c <- Ns.str.int.a1.get(4, x).map { case (List(("w", -1), ("x", 0), ("b", 1), ("a", 1)), c, 3) => c }
-//
-//            _ <- a1.retract
-//            _ <- Ns.str.int.a1.get.map(_ ==> List(
-//              ("w", -1),
-//              ("x", 0),
-//              ("b", 1), // substitute cursor row (get rows after)
-//              ("c", 1),
-//              ("y", 2),
-//              ("z", 3),
-//            ))
-//
-//            // Page 2
-//            _ <- Ns.str.int.a1.get(4, c).map { case (List(("c", 1), ("y", 2), ("z", 3)), _, 0) => () }
-//          } yield ()
-//        }
-//
-//        "Retraction only 3" - core { implicit conn =>
-//          for {
-//            a1 <- Ns.str.int insert List(
-//              ("w", 0),
-//              ("x", 0),
-//              ("a", 1), // happens to be cursor row when sorted
-//              ("b", 1),
-//              ("c", 1),
-//              ("y", 2),
-//              ("z", 2),
-//            ) map (_.eids(2))
-//
-//            _ <- Ns.str.int.a1.get.map(_ ==> List(
-//              ("x", 0),
-//              ("w", 0),
-//              ("b", 1),
-//              ("a", 1), // cursor row
-//              ("c", 1),
-//              ("z", 2),
-//              ("y", 2),
-//            ))
-//
-//            // Page 1
-//            c <- Ns.str.int.a1.get(4, x).map { case (List(("x", 0), ("w", 0), ("b", 1), ("a", 1)), c, 3) => c }
-//
-//            _ <- a1.retract
-//            _ <- Ns.str.int.a1.get.map(_ ==> List(
-//              ("x", 0),
-//              ("w", 0),
-//              ("b", 1), // substitute cursor row (get rows after)
-//              ("c", 1),
-//              ("z", 2),
-//              ("y", 2),
-//            ))
-//
-//            // Page 2
-//            _ <- Ns.str.int.a1.get(4, c).map { case (List(("c", 1), ("z", 2), ("y", 2)), _, 0) => () }
-//          } yield ()
-//        }
-
         "Retraction + added data" - core { implicit conn =>
           for {
             a1 <- Ns.str.int insert List(
               ("x", 0),
-              ("a", 1), // happens to be cursor row when sorted
+              ("a", 1),
               ("b", 1),
               ("c", 1),
               ("y", 2),
@@ -558,7 +479,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
             _ <- Ns.str("d").int(1).save
             _ <- Ns.str.int.a1.get.map(_ ==> List(
               ("x", 0),
-              ("b", 1), // substitute cursor row (get rows after)
+              ("b", 1), // substitute cursor row (first before a on previous page)
               ("d", 1),
               ("c", 1),
               ("y", 2),
@@ -668,7 +589,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
           for {
             b1 <- Ns.str.int insert List(
               ("x", 0),
-              ("a", 1), // happens to be cursor row when sorted
+              ("a", 1),
               ("b", 1),
               ("y", 2),
             ) map (_.eids(2))
@@ -699,7 +620,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
           for {
             a1 <- Ns.str.int insert List(
               ("x", 0),
-              ("a", 1), // happens to be cursor row in window when sorted
+              ("a", 1),
               ("b", 1),
               ("y", 2),
             ) map (_.eids(1))
@@ -752,7 +673,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
             _ <- b1.retract
             _ <- Ns.str.int.a1.get.map(_ ==> List(
               ("x", 0),
-              ("a", 1),
+              ("a", 1), // substitute cursor row (first after b on previous page)
               ("y", 2),
             ))
 
@@ -786,7 +707,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
 
             _ <- Ns.str.int.a1.get.map(_ ==> List(
               ("x", 0),
-              ("a", 1),
+              ("a", 1), // substitute cursor row (first after b on previous page)
               ("c", 1),
               ("y", 2),
             ))
@@ -804,7 +725,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
           for {
             a1 <- Ns.str.int insert List(
               ("x", 0),
-              ("a", 1), // happens to be last when sorted
+              ("a", 1),
               ("b", 1),
               ("y", 2),
             ) map (_.eids(1))
@@ -823,7 +744,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
             _ <- Ns.str.int.a1.get.map(_ ==> List(
               ("x", 0),
               ("b", 1),
-              ("y", 2), // substitute cursor row (get rows before)
+              ("y", 2), // substitute cursor row (first after a on previous page)
             ))
 
             // Page 2
@@ -835,12 +756,10 @@ object CursorPaginationTpl extends AsyncTestSuite {
           for {
             a1 <- Ns.str.int insert List(
               ("x", 0),
-              ("a", 1), // happens to be last when sorted
+              ("a", 1),
               ("b", 1),
               ("y", 2),
             ) map (_.eids(1))
-
-            _ <- Ns(a1).str.get.map(_ ==> List("a"))
 
             _ <- Ns.str.int.a1.get.map(_ ==> List(
               ("x", 0),
@@ -859,7 +778,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
               ("x", 0),
               ("b", 1),
               ("c", 1),
-              ("y", 2), // substitute cursor row (get rows before)
+              ("y", 2), // substitute cursor row (first after a on previous page)
             ))
 
             // Page 2-3
@@ -876,7 +795,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
           for {
             a1 <- Ns.str.int insert List(
               ("x", 0),
-              ("a", 1), // happens to be cursor row when sorted
+              ("a", 1),
               ("b", 1),
               ("c", 1),
               ("y", 2),
@@ -897,7 +816,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
             _ <- Ns.str.int.a1.get.map(_ ==> List(
               ("x", 0),
               ("b", 1),
-              ("c", 1), // substitute cursor row (get rows before)
+              ("c", 1), // substitute cursor row (first after a on previous page)
               ("y", 2),
             ))
 
@@ -910,7 +829,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
           for {
             a1 <- Ns.str.int insert List(
               ("x", 0),
-              ("a", 1), // happens to be cursor row when sorted
+              ("a", 1),
               ("b", 1),
               ("c", 1),
               ("y", 2),
@@ -934,7 +853,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
               ("x", 0),
               ("b", 1),
               ("d", 1),
-              ("c", 1), // substitute cursor row (get rows before)
+              ("c", 1), // substitute cursor row (first after a on previous page)
               ("y", 2),
             ))
 

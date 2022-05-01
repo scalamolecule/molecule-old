@@ -4,13 +4,16 @@ import java.lang.{Long => jLong}
 import java.util
 import java.util.{List => jList}
 import molecule.core.api.Molecule_0
-import molecule.core.pagination.CursorTplNested
+import molecule.core.pagination.{CursorTplNested, OffsetPagination}
 import molecule.datomic.base.facade.Conn
 import scala.concurrent.{ExecutionContext, Future}
 
 
 /** Nested tuple builder classes of various levels. */
-trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] with CursorTplNested[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
+trait NestedTuples[Obj, Tpl]
+  extends NestedBase[Obj, Tpl]
+    with CursorTplNested[Obj, Tpl]
+    with OffsetPagination[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
   protected def tplBranch0(row: jList[AnyRef], leaf: List[Any]): Tpl = ???
   protected def tplBranch1(row: jList[AnyRef], leaf: List[Any]): Any = ???
@@ -110,6 +113,7 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] with CursorTplNested[O
         for {
           conn <- futConn
           (selectedRows, newCursor, totalCount) <- selectedNestedTplRows(conn, limit, cursor)
+          //          (selectedRows, newCursor, totalCount) <- selectedNestedTplRows2(conn, limit, cursor)
         } yield {
           val flatCount = selectedRows.size
           val tuples    = if (flatCount == 0) {
@@ -142,7 +146,7 @@ trait NestedTuples[Obj, Tpl] extends NestedBase[Obj, Tpl] with CursorTplNested[O
       val sortedRows: util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rows)
       sortedRows.sort(this)
       val flatCount                  = sortedRows.size
-      val (selectedRows, totalCount) = sortedRows2selectedRows(sortedRows, limit, offset)
+      val (selectedRows, totalCount) = allFlatRows2selectedFlatRows(sortedRows, limit, offset)
       val tuples                     = if (flatCount == 0 || offset >= totalCount) {
         List.empty[Tpl]
       } else {

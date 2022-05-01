@@ -15,8 +15,8 @@ trait CursorTpl[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling[Obj, 
   )(implicit ec: ExecutionContext): Future[(List[Tpl], String, Int)] = {
     val log = new log
     log("=========================================")
-    val forward = limit > 0
 
+    val forward                                   = limit > 0
     val (model, query, prevT,
     firstIndex, lastIndex, firstRow, lastRow,
     sortIndexes, firstSortValues, lastSortValues) = extract(cursor, forward)
@@ -30,15 +30,14 @@ trait CursorTpl[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling[Obj, 
           val rows: util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rowsUnsorted)
           rows.sort(this) // using macro-implemented `compare` method
 
-          //          log(_model)
           rows.forEach(row => log(row))
-//          log.print()
+          //          log.print()
 
           for {
             (from, until, more) <- (forward, cursor) match {
               case (true, "") => Future((0, limit.min(totalCount), (totalCount - limit).max(0)))
-              case (true, _)  => getForwardCursorIndex(
-                conn, rows, totalCount, sortIndexes, lastIndex, lastRow, prevT, lastSortValues
+              case (true, _)  => getCursorIndex(
+                conn, rows, totalCount, sortIndexes, lastIndex, lastRow, prevT, lastSortValues, 0
               ).map { cursorIndex =>
                 val from  = cursorIndex + 1
                 val until = (from + limit).min(totalCount)
@@ -47,8 +46,8 @@ trait CursorTpl[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling[Obj, 
               }
 
               case (_, "") => Future(((totalCount + limit).max(0), totalCount, (totalCount + limit).max(0)))
-              case (_, _)  => getBackwardCursorIndex(
-                conn, rows, totalCount, sortIndexes, firstIndex, firstRow, prevT, firstSortValues
+              case (_, _)  => getCursorIndex(
+                conn, rows, totalCount, sortIndexes, firstIndex, firstRow, prevT, firstSortValues, totalCount - 1
               ).map { cursorIndex =>
                 val from  = (cursorIndex + limit).max(0) // (limit is negative)
                 val until = cursorIndex
@@ -79,9 +78,7 @@ trait CursorTpl[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling[Obj, 
             log("more    : " + more)
             log("firstRow: " + newFirstRow)
             log("lastRow : " + newLastRow)
-            //            log("firstSortValues: " + firstSortValues)
-            //            log("lastSortValues : " + lastSortValues)
-//            log.print()
+            //            log.print()
 
             (tuples.result(), newCursor, more)
           }
