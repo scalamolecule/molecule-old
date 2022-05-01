@@ -7,7 +7,7 @@ import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.annotation.nowarn
 
-object CursorPaginationTpl extends AsyncTestSuite {
+object CursorPaginationObj extends AsyncTestSuite {
   val x = ""
 
 
@@ -17,53 +17,45 @@ object CursorPaginationTpl extends AsyncTestSuite {
   // Allow pattern matching the result without warnings
   @nowarn lazy val tests = Tests {
 
-    "Basic" - {
+    "Basic" - core { implicit conn =>
+      for {
+        _ <- Ns.int.insert(1, 2, 3, 4, 5)
 
-      "Forward, asc" - core { implicit conn =>
-        for {
-          _ <- Ns.int.insert(1, 2, 3, 4, 5)
-          c <- Ns.int.a1.get(2, x).map { case (List(1, 2), c, 3) => c }
-          c <- Ns.int.a1.get(2, c).map { case (List(3, 4), c, 1) => c }
-          c <- Ns.int.a1.get(2, c).map { case (List(5), c, 0) => c }
-          c <- Ns.int.a1.get(-2, c).map { case (List(3, 4), c, 2) => c }
-          _ <- Ns.int.a1.get(-2, c).map { case (List(1, 2), _, 0) => () }
-        } yield ()
-      }
 
-      "Forward, desc" - core { implicit conn =>
-        for {
-          _ <- Ns.int.insert(1, 2, 3, 4, 5)
-          c <- Ns.int.d1.get(2, x).map { case (List(5, 4), c, 3) => c }
-          c <- Ns.int.d1.get(2, c).map { case (List(3, 2), c, 1) => c }
-          c <- Ns.int.d1.get(2, c).map { case (List(1), c, 0) => c }
-          c <- Ns.int.d1.get(-2, c).map { case (List(3, 2), c, 2) => c }
-          _ <- Ns.int.d1.get(-2, c).map { case (List(5, 4), _, 0) => () }
-        } yield ()
-      }
+        _ <- Ns.int.a1.getObjs.collect { case List(o1, o2, o3, o4, o5) =>
+          o1.int ==> 1
+          o2.int ==> 2
+          o3.int ==> 3
+          o4.int ==> 4
+          o5.int ==> 5
+        }
 
-      "Backward, asc" - core { implicit conn =>
-        for {
-          _ <- Ns.int.insert(1, 2, 3, 4, 5)
-          c <- Ns.int.a1.get(-2, x).map { case (List(4, 5), c, 3) => c }
-          c <- Ns.int.a1.get(-2, c).map { case (List(2, 3), c, 1) => c }
-          c <- Ns.int.a1.get(-2, c).map { case (List(1), c, 0) => c }
-          c <- Ns.int.a1.get(2, c).map { case (List(2, 3), c, 2) => c }
-          _ <- Ns.int.a1.get(2, c).map { case (List(4, 5), _, 0) => () }
-        } yield ()
-      }
-
-      "Backward, desc" - core { implicit conn =>
-        for {
-          _ <- Ns.int.insert(1, 2, 3, 4, 5)
-          c <- Ns.int.d1.get(-2, x).map { case (List(2, 1), c, 3) => c }
-          c <- Ns.int.d1.get(-2, c).map { case (List(4, 3), c, 1) => c }
-          c <- Ns.int.d1.get(-2, c).map { case (List(5), c, 0) => c }
-          c <- Ns.int.d1.get(2, c).map { case (List(4, 3), c, 2) => c }
-          _ <- Ns.int.d1.get(2, c).map { case (List(2, 1), _, 0) => () }
-        } yield ()
-      }
+        c <- Ns.int.a1.getObjs(2, x).collect { case (List(o1, o2), c, 3) =>
+          o1.int ==> 1
+          o2.int ==> 2
+          c
+        }
+        c <- Ns.int.a1.getObjs(2, c).collect { case (List(o3, o4), c, 1) =>
+          o3.int ==> 3
+          o4.int ==> 4
+          c
+        }
+        c <- Ns.int.a1.getObjs(2, c).collect { case (List(o5), c, 0) =>
+          o5.int ==> 5
+          c
+        }
+        c <- Ns.int.a1.getObjs(-2, c).collect { case (List(o3, o4), c, 2) =>
+          o3.int ==> 3
+          o4.int ==> 4
+          c
+        }
+        _ <- Ns.int.a1.getObjs(-2, c).collect { case (List(o1, o2), _, 0) =>
+          o1.int ==> 1
+          o2.int ==> 2
+          ()
+        }
+      } yield ()
     }
-
 
     "Time" - {
 
@@ -162,7 +154,7 @@ object CursorPaginationTpl extends AsyncTestSuite {
       } yield ()
     }
 
-    
+
     "Expressions" - core { implicit conn =>
       for {
         _ <- Ns.int.insert(0, 1, 2, 3, 4, 5)

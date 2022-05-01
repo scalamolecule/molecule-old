@@ -147,9 +147,10 @@ class MakeMolecule_In(val c: blackbox.Context) extends MakeBase {
         }
         q"""
           final class $outMolecule extends $OutMoleculeTpe[$ObjType, ..$OutTypes](_model, queryData) {
-            final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = $tplCasts
-            final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
-            final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
+            final override lazy val row2tpl : jList[AnyRef] => (..$OutTypes)                = (row: jList[AnyRef]) => $tplCasts
+            final override lazy val row2obj : jList[AnyRef] => $ObjType                     = (row: jList[AnyRef]) => ${objTree(obj)}
+            final override lazy val row2json: (jList[AnyRef], StringBuffer) => StringBuffer = (row: jList[AnyRef], sb: StringBuffer) => ${jsonFlat(obj)}
+
             ..${sortCoordinatesFlat(model, doSort)}
             ..${compareFlat(model, doSort)}
           }

@@ -44,9 +44,10 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
          """
       } else {
         q"""
-          final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = ${tplFlat(castss, txMetas)}
-          final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
-          final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
+          final override lazy val row2tpl : jList[AnyRef] => (..$OutTypes)                = (row: jList[AnyRef]) => ${tplFlat(castss, txMetas)}
+          final override lazy val row2obj : jList[AnyRef] => $ObjType                     = (row: jList[AnyRef]) => ${objTree(obj)}
+          final override lazy val row2json: (jList[AnyRef], StringBuffer) => StringBuffer = (row: jList[AnyRef], sb: StringBuffer) => ${jsonFlat(obj)}
+
           ..${sortCoordinatesFlat(model, doSort)}
           ..${compareFlat(model, doSort)}
         """
@@ -87,13 +88,15 @@ class MakeMolecule(val c: blackbox.Context) extends MakeBase {
         val (topLevelComparisons, orderings) = compareOptNested(model, doSort)
         q"""
           import molecule.datomic.base.marshalling.sorting.ExtractFlatValues
-          final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) =
-            ${tplOptNested(obj, refIndexes, tacitIndexes, orderings = orderings)}.asInstanceOf[(..$OutTypes)]
 
-          final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj, jvmTpl)}
+          final override lazy val row2tpl : jList[AnyRef] => (..$OutTypes) =
+            (row: jList[AnyRef]) => ${tplOptNested(obj, refIndexes, tacitIndexes, orderings = orderings)}.asInstanceOf[(..$OutTypes)]
 
-          final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer =
-            ${jsonOptNested(obj, refIndexes, tacitIndexes)}
+          final override lazy val row2obj : jList[AnyRef] => $ObjType =
+            (row: jList[AnyRef]) => ${objTree(obj, jvmTpl)}
+
+          final override lazy val row2json: (jList[AnyRef], StringBuffer) => StringBuffer =
+            (row: jList[AnyRef], sb: StringBuffer) => ${jsonOptNested(obj, refIndexes, tacitIndexes)}
 
           ..$topLevelComparisons
           ..${sortCoordinatesOptNested(model, doSort)}

@@ -35,9 +35,9 @@ abstract class Marshalling[Obj, Tpl](model: Model, queryData: (Query, String, Op
   def compare(a: jList[AnyRef], b: jList[AnyRef]): Int = ???
 
   // jvm
-  protected def row2tpl(row: jList[AnyRef]): Tpl = ???
-  protected def row2obj(row: jList[AnyRef]): Obj = ???
-  protected def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ???
+  protected lazy val row2tpl : jList[AnyRef] => Tpl                          = ???
+  protected lazy val row2obj : jList[AnyRef] => Obj                          = ???
+  protected lazy val row2json: (jList[AnyRef], StringBuffer) => StringBuffer = ???
 
   // js
   protected def packed2tpl(vs: Iterator[String]): Tpl = ???

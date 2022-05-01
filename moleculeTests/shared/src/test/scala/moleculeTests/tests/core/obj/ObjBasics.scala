@@ -21,7 +21,7 @@ object ObjBasics extends AsyncTestSuite with Helpers {
         // just want the first of more rows
         _ <- Ns.int.str.Ref1.int1.getObj.map { o =>
 
-          // The above molecule and object getter generates the following code:
+          // The above molecule and object getter generates the following code (simplified):
           new Ns_int with Ns_str with Ns__Ref1[Ref1_int1] {
             override lazy val int: Int    = 0
             override lazy val str: String = "x"

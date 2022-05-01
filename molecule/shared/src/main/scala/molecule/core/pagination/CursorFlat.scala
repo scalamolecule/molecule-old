@@ -3,16 +3,18 @@ package molecule.core.pagination
 import java.util
 import java.util.{List => jList}
 import molecule.core.marshalling.Marshalling
+import molecule.core.util.Helpers
 import molecule.datomic.base.facade.Conn
 import scala.concurrent.{ExecutionContext, Future}
 
-trait CursorTpl[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
+trait CursorFlat[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
 
-  protected def selectTplRows(
+  protected def cursorPageResult[T](
     conn: Conn,
     limit: Int,
     cursor: String,
-  )(implicit ec: ExecutionContext): Future[(List[Tpl], String, Int)] = {
+    transformer: jList[AnyRef] => T
+  )(implicit ec: ExecutionContext): Future[(List[T], String, Int)] = {
     val log = new log
     log("=========================================")
 
@@ -24,8 +26,8 @@ trait CursorTpl[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling[Obj, 
     conn.jvmQueryT(model, query).flatMap { case (rowsUnsorted, t) =>
       val totalCount = rowsUnsorted.size
       totalCount match {
-        case 0 => Future((List.empty[Tpl], cursor, 0))
-        case 1 => Future((List(row2tpl(rowsUnsorted.iterator.next)), cursor, 0))
+        case 0 => Future((List.empty[T], cursor, 0))
+        case 1 => Future((List(transformer(rowsUnsorted.iterator.next)), cursor, 0))
         case _ =>
           val rows: util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rowsUnsorted)
           rows.sort(this) // using macro-implemented `compare` method
@@ -59,10 +61,10 @@ trait CursorTpl[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling[Obj, 
             log("from    : " + from)
             log("until   : " + until)
 
-            val tuples = List.newBuilder[Tpl]
+            val acc = List.newBuilder[T]
             var i      = from
             while (i != until) {
-              tuples += row2tpl(rows.get(i))
+              acc += transformer(rows.get(i))
               i += 1
             }
             val newFirst           = rows.get(from)
@@ -80,7 +82,7 @@ trait CursorTpl[Obj, Tpl] extends CursorBase[Obj, Tpl] { self: Marshalling[Obj, 
             log("lastRow : " + newLastRow)
             //            log.print()
 
-            (tuples.result(), newCursor, more)
+            (acc.result(), newCursor, more)
           }
       }
     }

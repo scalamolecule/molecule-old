@@ -32,9 +32,10 @@ class MakeComposite(val c: blackbox.Context) extends MakeBase {
       """
     } else {
       q"""
-        final override def row2tpl(row: jList[AnyRef]): (..$OutTypes) = ${tplComposite(castss, txMetas)}
-        final override def row2obj(row: jList[AnyRef]): $ObjType = ${objTree(obj)}
-        final override def row2json(row: jList[AnyRef], sb: StringBuffer): StringBuffer = ${jsonFlat(obj)}
+        final override lazy val row2tpl : jList[AnyRef] => (..$OutTypes)                = (row: jList[AnyRef]) => ${tplComposite(castss, txMetas)}
+        final override lazy val row2obj : jList[AnyRef] => $ObjType                     = (row: jList[AnyRef]) => ${objTree(obj)}
+        final override lazy val row2json: (jList[AnyRef], StringBuffer) => StringBuffer = (row: jList[AnyRef], sb: StringBuffer) => ${jsonFlat(obj)}
+
         ..${sortCoordinatesFlat(model, doSort)}
         ..${compareFlat(model, doSort)}
       """

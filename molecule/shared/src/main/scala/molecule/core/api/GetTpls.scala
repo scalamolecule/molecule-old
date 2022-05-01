@@ -5,7 +5,7 @@ import molecule.core.ast.elements._
 import molecule.core.marshalling.Marshalling
 import molecule.core.marshalling.convert.Stmts2Edn
 import molecule.core.ops.Conversions
-import molecule.core.pagination.CursorTpl
+import molecule.core.pagination.CursorFlat
 import molecule.datomic.base.ast.dbView._
 import molecule.datomic.base.ast.transactionModel.Statement
 import molecule.datomic.base.facade.{Conn, TxReport}
@@ -14,7 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 /** Default data getter methods on molecules that return data as lists of tuples. */
 private[molecule] trait GetTpls[Obj, Tpl]
-  extends Conversions with CursorTpl[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
+  extends Conversions with CursorFlat[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
 
   // get ================================================================================================
 
@@ -174,7 +174,7 @@ private[molecule] trait GetTpls[Obj, Tpl]
             //          )
             Future((List.empty[Tpl], "cursor...", 42))
           } else {
-            selectTplRows(conn, limit, cursor)
+            cursorPageResult(conn, limit, cursor, row2tpl)
           }
         }
       )(Future.failed) // Wrap exception from input failure in Future
@@ -331,6 +331,10 @@ private[molecule] trait GetTpls[Obj, Tpl]
              (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
     get(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
 
+  def getAsOf(t: Long, limit: Int, cursor: String)
+             (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], String, Int)] =
+    get(limit, cursor)(conn.map(_.usingAdhocDbView(AsOf(TxLong(t)))), ec)
+
 
   /** Get Future with List of all rows as tuples matching molecule as of tx.
    * <br><br>
@@ -434,6 +438,10 @@ private[molecule] trait GetTpls[Obj, Tpl]
              (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
     get(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxLong(txR.t)))), ec)
 
+  def getAsOf(txR: TxReport, limit: Int, cursor: String)
+             (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], String, Int)] =
+    get(limit, cursor)(conn.map(_.usingAdhocDbView(AsOf(TxLong(txR.t)))), ec)
+
 
   /** Get Future with List of all rows as tuples matching molecule as of date.
    * <br><br>
@@ -535,6 +543,10 @@ private[molecule] trait GetTpls[Obj, Tpl]
              (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
     get(limit, offset)(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
 
+  def getAsOf(date: Date, limit: Int, cursor: String)
+             (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], String, Int)] =
+    get(limit, cursor)(conn.map(_.usingAdhocDbView(AsOf(TxDate(date)))), ec)
+
 
   // get since ================================================================================================
 
@@ -611,6 +623,10 @@ private[molecule] trait GetTpls[Obj, Tpl]
   def getSince(t: Long, limit: Int, offset: Int)
               (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
     get(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
+
+  def getSince(t: Long, limit: Int, cursor: String)
+              (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], String, Int)] =
+    get(limit, cursor)(conn.map(_.usingAdhocDbView(Since(TxLong(t)))), ec)
 
 
   /** Get Future with List of all rows as tuples matching molecule since tx.
@@ -697,6 +713,10 @@ private[molecule] trait GetTpls[Obj, Tpl]
               (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
     get(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxLong(txR.t)))), ec)
 
+  def getSince(txR: TxReport, limit: Int, cursor: String)
+              (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], String, Int)] =
+    get(limit, cursor)(conn.map(_.usingAdhocDbView(Since(TxLong(txR.t)))), ec)
+
 
   /** Get Future with List of all rows as tuples matching molecule since date.
    * <br><br>
@@ -765,6 +785,10 @@ private[molecule] trait GetTpls[Obj, Tpl]
   def getSince(date: Date, limit: Int, offset: Int)
               (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], Int)] =
     get(limit, offset)(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
+
+  def getSince(date: Date, limit: Int, cursor: String)
+              (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], String, Int)] =
+    get(limit, cursor)(conn.map(_.usingAdhocDbView(Since(TxDate(date)))), ec)
 
 
   // get with ================================================================================================
@@ -871,6 +895,17 @@ private[molecule] trait GetTpls[Obj, Tpl]
     }
   }
 
+  def getWith(limit: Int, cursor: String, txData: Future[Seq[Statement]]*)
+             (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Tpl], String, Int)] = {
+    Future.sequence(txData).flatMap { stmtss =>
+      val connWith = conn.map { conn =>
+        val (stmtsEdn, uriAttrs) = Stmts2Edn(stmtss.flatten, conn)
+        conn.usingAdhocDbView(With(stmtsEdn, uriAttrs))
+      }
+      get(limit, cursor)(connWith, ec)
+    }
+  }
+
 
   // get history ================================================================================================
 
@@ -936,6 +971,7 @@ private[molecule] trait GetTpls[Obj, Tpl]
 
   // `getHistory(limit: Int)`
   // `getHistory(limit: Int, offset: Int)`
+  // `getHistory(limit: Int, cursor: String)`
   // are not implemented since the whole data set is normally only relevant for
   // the whole history of a single attribute.
 }
