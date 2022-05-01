@@ -10,11 +10,10 @@ import scala.annotation.nowarn
 object CursorPaginationTpl extends AsyncTestSuite {
   val x = ""
 
-
   // Non-sorted values have non-deterministic order but will likely not change order between internal indexing jobs
   // "Window" is rows sharing same sorted value(s) up until current cursor row (forwards or backwards)
 
-  // Allow pattern matching the result without warnings
+  // (Allow pattern matching the result without warnings)
   @nowarn lazy val tests = Tests {
 
     "Basic" - {

@@ -10,7 +10,6 @@ import scala.annotation.nowarn
 object CursorPaginationTplNested extends AsyncTestSuite {
   val x = ""
 
-
   @nowarn lazy val tests = Tests {
 
     "Basics (no change)" - {
@@ -24,6 +23,7 @@ object CursorPaginationTplNested extends AsyncTestSuite {
             (4, List(41, 42)),
             (5, List(51, 52)),
           )
+          c <- Ns.int.a1.Refs1.*(Ref1.int1).get(2, x).map { case (List((1, List(11, 12)), (2, List(21, 22))), c, 3) => c }
           c <- Ns.int.a1.Refs1.*(Ref1.int1).get(2, x).map { case (List((1, List(11, 12)), (2, List(21, 22))), c, 3) => c }
           c <- Ns.int.a1.Refs1.*(Ref1.int1).get(2, c).map { case (List((3, List(31, 32)), (4, List(41, 42))), c, 1) => c }
           c <- Ns.int.a1.Refs1.*(Ref1.int1).get(2, c).map { case (List((5, List(51, 52))), c, 0) => c }
