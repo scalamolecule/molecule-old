@@ -75,6 +75,11 @@ trait NestedTuples[Obj, Tpl]
     get(limit, offset).map { case (rows, totalCount) => (rows.map(outerTpl2obj), totalCount) }
   }
 
+  final override def getObjs(limit: Int, cursor: String)
+                            (implicit conn: Future[Conn], ec: ExecutionContext): Future[(List[Obj], String, Int)] = {
+    get(limit, cursor).map { case (rows, cursor, more) => (rows.map(outerTpl2obj), cursor, more) }
+  }
+
 
   // Nested tuples api ................................
 
