@@ -5,7 +5,7 @@ import java.util
 import java.util.{List => jList}
 import molecule.core.api.Molecule_0
 import molecule.core.macros.rowAttr.JsonBase
-import molecule.core.pagination.{CursorJson, OffsetPagination}
+import molecule.core.pagination.{CursorJson, CursorTplNested, Offset}
 import molecule.datomic.base.facade.Conn
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -13,8 +13,9 @@ import scala.concurrent.{ExecutionContext, Future}
 trait NestedJson[Obj, Tpl]
   extends NestedBase[Obj, Tpl]
     with CursorJson[Obj, Tpl]
+    with CursorTplNested[Obj, Tpl]
     with JsonBase
-    with OffsetPagination[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
+    with Offset[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
   protected def jsonBranch0(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = ???
   protected def jsonBranch1(sb: StringBuffer, row: jList[AnyRef], leaf: StringBuffer): StringBuffer = ???
@@ -141,11 +142,21 @@ trait NestedJson[Obj, Tpl]
     sb.append("}")
   }
 
-  def outerJson(totalCount: Int, limit: Int, offset: Int, sb: StringBuffer): String = {
+  def outerJsonOffset(totalCount: Int, limit: Int, offset: Int, sb: StringBuffer): String = {
     s"""{
        |  "totalCount": $totalCount,
        |  "limit"     : $limit,
        |  "offset"    : $offset,
+       |  "data": {
+       |    "${firstNs(_model)}": ${sb.toString}
+       |  }
+       |}""".stripMargin
+  }
+  def outerJsonCursor(limit: Int, cursor: String, more: Int, sb: StringBuffer): String = {
+    s"""{
+       |  "cursor": "$cursor",
+       |  "limit" : $limit,
+       |  "more"  : $more,
        |  "data": {
        |    "${firstNs(_model)}": ${sb.toString}
        |  }
@@ -156,19 +167,19 @@ trait NestedJson[Obj, Tpl]
   // Nested json ................................
 
   final override def getJson(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
-    getNestedJson(0, 0)
+    getNestedJson(0, 0).map(_._1)
   }
 
   final override def getJson(limit: Int)(implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
     if (limit == 0) {
       limit0exception
     } else {
-      getNestedJson(limit, 0)
+      getNestedJson(limit, 0).map(_._1)
     }
   }
 
   final override def getJson(limit: Int, offset: Int)
-                            (implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
+                            (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(String, Int)] = {
     if (limit == 0) {
       limit0exception
     } else if (offset < 0) {
@@ -178,12 +189,38 @@ trait NestedJson[Obj, Tpl]
     }
   }
 
+  final override def getJson(limit: Int, cursor: String)
+                            (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(String, String, Int)] = {
+    if (limit == 0) {
+      limit0exception
+    } else if (!sortRows) {
+      notSortedException
+    } else {
+      _inputThrowable.fold {
+        resetJsonVars()
+        for {
+          conn <- futConn
+          (selectedRows, newCursor, more) <- selectedNestedTplRows(conn, limit, cursor)
+        } yield {
+          val flatCount = selectedRows.size
+          if (flatCount == 0) {
+            sb0.append("]")
+          } else {
+            flat2json(selectedRows, flatCount)
+          }
+          (outerJsonCursor(limit, newCursor, more, sb0), newCursor, more)
+        }
+      }(Future.failed) // Wrap exception from input failure in Future
+    }
+  }
+
+
   // Helpers .........................................
 
   protected def flat2json(rows: util.ArrayList[jList[AnyRef]], flatCount: Int): Unit = ???
 
   final private def getNestedJson(limit: Int, offset: Int)
-                                 (implicit futConn: Future[Conn], ec: ExecutionContext): Future[String] = {
+                                 (implicit futConn: Future[Conn], ec: ExecutionContext): Future[(String, Int)] = {
     for {
       conn <- futConn
       rows <- conn.jvmQuery(_model, _query)
@@ -198,7 +235,7 @@ trait NestedJson[Obj, Tpl]
       } else {
         flat2json(selectedRows, flatCount)
       }
-      outerJson(totalCount, if (limit == 0) totalCount else limit, offset, sb0)
+      (outerJsonOffset(totalCount, if (limit == 0) totalCount else limit, offset, sb0), totalCount)
     }
   }
 }

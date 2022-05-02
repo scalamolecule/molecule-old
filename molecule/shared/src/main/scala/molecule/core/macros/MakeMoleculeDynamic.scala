@@ -14,7 +14,7 @@ class MakeMoleculeDynamic(val c: blackbox.Context) extends MakeBase with TreeTra
 
   //  private lazy val xx = InspectMacro("MakeMolecule", 9, 8)
   //  private lazy val xx = InspectMacro("MakeMoleculeDynamic", 1, 10)
-  //  private lazy val xx = InspectMacro("MakeMoleculeDynamic", 1, 10, mkError = true)
+  private lazy val yy = InspectMacro("MakeMoleculeDynamic", 1, 10, mkError = true)
 
 
   final def apply[Obj: W](body: Tree): Tree = {
@@ -59,10 +59,27 @@ class MakeMoleculeDynamic(val c: blackbox.Context) extends MakeBase with TreeTra
     }
 
     val (objTypes, objBodyElements) = if (isJsPlatform) {
-      val DefDef(_, _, _, _, _, Block(_, Block(List(ClassDef(_, _, _, Template(objTypes, _, objBodyElements))), _))) = objMaker
-      (objTypes, objBodyElements)
+      // todo
+      //      val DefDef(_, TermName("row2obj"), _, _, _, Block(_, Block(List(ClassDef(_, _, _, Template(objTypes, _, objBodyElements))), _))) = objMaker
+      //      val DefDef(_, TermName("row2obj"), _, _, _,          Block(List(ClassDef(_, _, _, Template(objTypes, _, objBodyElements))), _))                             = objMaker
+      //      val ValDef(_, TermName("row2obj"), _, Function(_, Block(List(ClassDef(_, _, _, Template(objTypes, _, objBodyElements))), _))) = objMaker
+      //      (objTypes, objBodyElements)
+
+      objMaker match {
+        case DefDef(_, TermName("packed2obj"), _, _, _, Block(_, Block(List(ClassDef(_, _, _, Template(objTypes, _, objBodyElements))), _))) => (objTypes, objBodyElements)
+        case ValDef(_, TermName("packed2obj"), _, Function(_, Block(List(ClassDef(_, _, _, Template(objTypes, _, objBodyElements))), _)))    => (objTypes, objBodyElements)
+        case ValDef(_, TermName("packed2obj"), _, Function(_, t))                                                                            =>
+          yy(1, t, t.raw)
+          null
+        case ValDef(_, _, _, t)                                                                                                              =>
+          yy(2, t, t.raw)
+          null
+      }
+
+
     } else {
-      val DefDef(_, _, _, _, _, Block(List(ClassDef(_, _, _, Template(objTypes, _, objBodyElements))), _)) = objMaker
+      val ValDef(_, TermName("row2obj"), _, Function(_, Block(List(ClassDef(_, _, _,
+      Template(objTypes, _, objBodyElements))), _))) = objMaker
       (objTypes, objBodyElements)
     }
 

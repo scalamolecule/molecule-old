@@ -4,7 +4,7 @@ import java.lang.{Long => jLong}
 import java.util
 import java.util.{List => jList}
 import molecule.core.api.Molecule_0
-import molecule.core.pagination.{CursorTplNested, OffsetPagination}
+import molecule.core.pagination.{CursorTplNested, Offset}
 import molecule.datomic.base.facade.Conn
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -13,7 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait NestedTuples[Obj, Tpl]
   extends NestedBase[Obj, Tpl]
     with CursorTplNested[Obj, Tpl]
-    with OffsetPagination[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
+    with Offset[Obj, Tpl] { self: Molecule_0[Obj, Tpl] =>
 
   protected def tplBranch0(row: jList[AnyRef], leaf: List[Any]): Tpl = ???
   protected def tplBranch1(row: jList[AnyRef], leaf: List[Any]): Any = ???
@@ -117,16 +117,15 @@ trait NestedTuples[Obj, Tpl]
         resetCastVars()
         for {
           conn <- futConn
-          (selectedRows, newCursor, totalCount) <- selectedNestedTplRows(conn, limit, cursor)
-          //          (selectedRows, newCursor, totalCount) <- selectedNestedTplRows2(conn, limit, cursor)
+          (rows, newCursor, more) <- selectedNestedTplRows(conn, limit, cursor)
         } yield {
-          val flatCount = selectedRows.size
+          val flatCount = rows.size
           val tuples    = if (flatCount == 0) {
             List.empty[Tpl]
           } else {
-            flat2nested(selectedRows, flatCount)
+            flat2nested(rows, flatCount)
           }
-          (tuples, newCursor, totalCount)
+          (tuples, newCursor, more)
         }
       }(Future.failed) // Wrap exception from input failure in Future
     }

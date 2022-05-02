@@ -8,8 +8,8 @@ import moleculeTests.tests.core.pagination.cursor.CursorPaginationObj.{core, x}
 import utest._
 import scala.annotation.nowarn
 
-// Pagination for the object api is implemented as for tuples. So we only test a
-// few things here. All tuple tests should be convertible to object tests.
+// Pagination for the nested object api is basically implemented as for nested tuples.
+// So we only test a few things here. All tuple tests should be convertible to object tests.
 
 object CursorPaginationObjNested extends AsyncTestSuite {
   val x = ""

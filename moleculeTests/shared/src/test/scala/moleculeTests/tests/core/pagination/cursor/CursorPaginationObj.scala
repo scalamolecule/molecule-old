@@ -7,7 +7,7 @@ import moleculeTests.setup.AsyncTestSuite
 import utest._
 import scala.annotation.nowarn
 
-// Pagination for the object api is implemented as for tuples. So we only test a
+// Pagination for the object api is basically implemented as for tuples. So we only test a
 // few things here. All tuple tests should be convertible to object tests.
 
 object CursorPaginationObj extends AsyncTestSuite {

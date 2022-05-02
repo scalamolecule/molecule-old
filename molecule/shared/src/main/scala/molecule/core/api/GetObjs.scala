@@ -39,7 +39,7 @@ trait GetObjs[Obj, Tpl] extends CursorFlat[Obj, Tpl] { self: Marshalling[Obj, Tp
     _inputThrowable.fold(
       futConn.flatMap { conn =>
         if (conn.isJsPlatform) {
-          conn.jsQuery(_model, _query, _datalog, -1, 0,
+          conn.jsQuery(_model, _query, _datalog, 0, 0,
             obj, nestedLevels, isOptNested, refIndexes, tacitIndexes, sortCoordinates, packed2obj
           ).map(_._1)
         } else {
@@ -1016,6 +1016,7 @@ trait GetObjs[Obj, Tpl] extends CursorFlat[Obj, Tpl] { self: Marshalling[Obj, Tp
 
   // `getObjsHistory(limit: Int)`
   // `getObjsHistory(limit: Int, offset: Int)`
+  // `getObjsHistory(limit: Int, cursor: String)`
   // are not implemented since the whole data set is normally only relevant for
   // the whole history of a single attribute.
 }

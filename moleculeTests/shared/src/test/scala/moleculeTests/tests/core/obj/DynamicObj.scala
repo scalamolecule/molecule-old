@@ -18,7 +18,7 @@ import molecule.core.util.Executor._
   * methods.
   *
   * Properties are available inside the body through the `self` reference to the
-  * object (you can give it other names too).
+  * object (you can give it another name if you prefer).
   *
   * Note that the molecule needs to be created explicitly with `m` and that the
   * self reference to the molecule object can't be named the same as any of the

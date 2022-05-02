@@ -15,7 +15,7 @@ import scala.annotation.{nowarn, tailrec}
 import scala.concurrent.{ExecutionContext, Future}
 
 
-trait OffsetPagination[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
+trait Offset[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
 
   final protected def allFlatRows2selectedFlatRows(
     sortedRows: util.ArrayList[jList[AnyRef]],

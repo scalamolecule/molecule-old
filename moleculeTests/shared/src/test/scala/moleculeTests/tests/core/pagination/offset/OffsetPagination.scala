@@ -56,7 +56,7 @@ object OffsetPagination extends AsyncTestSuite {
         _ <- Ns.int.a1.get(20, -10)
           .map(_ ==> "Unexpected success")
           .recover { case MoleculeException(msg, _) =>
-            msg ==> "Offset has to be >= 0. Found: -10"
+            msg ==> "Offset has to be a positive number. Found: -10"
           }
       } yield ()
     }
@@ -151,7 +151,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.a1.getJson(2, 0).map(_ ==>
+        _ <- Ns.int.a1.getJson(2, 0).map(_._1 ==>
           """{
             |  "totalCount": 3,
             |  "limit"     : 2,
@@ -168,7 +168,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.a1.getJson(2, 2).map(_ ==>
+        _ <- Ns.int.a1.getJson(2, 2).map(_._1 ==>
           """{
             |  "totalCount": 3,
             |  "limit"     : 2,
@@ -183,7 +183,7 @@ object OffsetPagination extends AsyncTestSuite {
             |}""".stripMargin)
 
 
-        _ <- Ns.int.d1.getJson(2, 0).map(_ ==>
+        _ <- Ns.int.d1.getJson(2, 0).map(_._1 ==>
           """{
             |  "totalCount": 3,
             |  "limit"     : 2,
@@ -200,7 +200,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.d1.getJson(2, 2).map(_ ==>
+        _ <- Ns.int.d1.getJson(2, 2).map(_._1 ==>
           """{
             |  "totalCount": 3,
             |  "limit"     : 2,
@@ -214,7 +214,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.getJson(2, 4).map(_ ==>
+        _ <- Ns.int.getJson(2, 4).map(_._1 ==>
           """{
             |  "totalCount": 3,
             |  "limit"     : 2,
@@ -224,7 +224,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.str.getJson(2, 4).map(_ ==>
+        _ <- Ns.str.getJson(2, 4).map(_._1 ==>
           """{
             |  "totalCount": 0,
             |  "limit"     : 2,
@@ -438,7 +438,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getJson(2, 0).map(_ ==>
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getJson(2, 0).map(_._1 ==>
           """{
             |  "totalCount": 3,
             |  "limit"     : 2,
@@ -471,7 +471,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getJson(2, 2).map(_ ==>
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getJson(2, 2).map(_._1 ==>
           """{
             |  "totalCount": 3,
             |  "limit"     : 2,
@@ -493,7 +493,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getJson(2, 4).map(_ ==>
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getJson(2, 4).map(_._1 ==>
           """{
             |  "totalCount": 3,
             |  "limit"     : 2,
@@ -503,7 +503,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.str.a1.Refs1.*(Ref1.int1).getJson(2, 4).map(_ ==>
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1).getJson(2, 4).map(_._1 ==>
           """{
             |  "totalCount": 0,
             |  "limit"     : 2,
@@ -549,7 +549,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.d1.Refs1.*(Ref1.int1).getJson(2, 0).map(_ ==>
+        _ <- Ns.int.d1.Refs1.*(Ref1.int1).getJson(2, 0).map(_._1 ==>
           """{
             |  "totalCount": 3,
             |  "limit"     : 2,
@@ -582,7 +582,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.d1.Refs1.*(Ref1.int1).getJson(2, 2).map(_ ==>
+        _ <- Ns.int.d1.Refs1.*(Ref1.int1).getJson(2, 2).map(_._1 ==>
           """{
             |  "totalCount": 3,
             |  "limit"     : 2,
@@ -604,7 +604,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.d1.Refs1.*(Ref1.int1).getJson(2, 4).map(_ ==>
+        _ <- Ns.int.d1.Refs1.*(Ref1.int1).getJson(2, 4).map(_._1 ==>
           """{
             |  "totalCount": 3,
             |  "limit"     : 2,
@@ -614,7 +614,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.str.d1.Refs1.*(Ref1.int1).getJson(2, 4).map(_ ==>
+        _ <- Ns.str.d1.Refs1.*(Ref1.int1).getJson(2, 4).map(_._1 ==>
           """{
             |  "totalCount": 0,
             |  "limit"     : 2,
@@ -660,7 +660,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getJson(-2, 0).map(_ ==>
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getJson(-2, 0).map(_._1 ==>
           """{
             |  "totalCount": 3,
             |  "limit"     : -2,
@@ -693,7 +693,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getJson(-2, 2).map(_ ==>
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getJson(-2, 2).map(_._1 ==>
           """{
             |  "totalCount": 3,
             |  "limit"     : -2,
@@ -715,7 +715,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getJson(-2, 4).map(_ ==>
+        _ <- Ns.int.a1.Refs1.*(Ref1.int1).getJson(-2, 4).map(_._1 ==>
           """{
             |  "totalCount": 3,
             |  "limit"     : -2,
@@ -725,7 +725,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.str.a1.Refs1.*(Ref1.int1).getJson(-2, 4).map(_ ==>
+        _ <- Ns.str.a1.Refs1.*(Ref1.int1).getJson(-2, 4).map(_._1 ==>
           """{
             |  "totalCount": 0,
             |  "limit"     : -2,
@@ -771,7 +771,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.d1.Refs1.*(Ref1.int1).getJson(-2, 0).map(_ ==>
+        _ <- Ns.int.d1.Refs1.*(Ref1.int1).getJson(-2, 0).map(_._1 ==>
           """{
             |  "totalCount": 3,
             |  "limit"     : -2,
@@ -804,7 +804,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.d1.Refs1.*(Ref1.int1).getJson(-2, 2).map(_ ==>
+        _ <- Ns.int.d1.Refs1.*(Ref1.int1).getJson(-2, 2).map(_._1 ==>
           """{
             |  "totalCount": 3,
             |  "limit"     : -2,
@@ -826,7 +826,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.d1.Refs1.*(Ref1.int1).getJson(-2, 4).map(_ ==>
+        _ <- Ns.int.d1.Refs1.*(Ref1.int1).getJson(-2, 4).map(_._1 ==>
           """{
             |  "totalCount": 3,
             |  "limit"     : -2,
@@ -836,7 +836,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.str.d1.Refs1.*(Ref1.int1).getJson(-2, 4).map(_ ==>
+        _ <- Ns.str.d1.Refs1.*(Ref1.int1).getJson(-2, 4).map(_._1 ==>
           """{
             |  "totalCount": 0,
             |  "limit"     : -2,
@@ -1069,7 +1069,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getJson(2, 0).map(_ ==>
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getJson(2, 0).map(_._1 ==>
           """{
             |  "totalCount": 4,
             |  "limit"     : 2,
@@ -1102,7 +1102,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getJson(2, 2).map(_ ==>
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getJson(2, 2).map(_._1 ==>
           """{
             |  "totalCount": 4,
             |  "limit"     : 2,
@@ -1128,7 +1128,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getJson(2, 4).map(_ ==>
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getJson(2, 4).map(_._1 ==>
           """{
             |  "totalCount": 4,
             |  "limit"     : 2,
@@ -1138,7 +1138,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.str.a1.Refs1.*?(Ref1.int1).getJson(2, 4).map(_ ==>
+        _ <- Ns.str.a1.Refs1.*?(Ref1.int1).getJson(2, 4).map(_._1 ==>
           """{
             |  "totalCount": 0,
             |  "limit"     : 2,
@@ -1177,7 +1177,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.d1.Refs1.*?(Ref1.int1).getJson(2, 0).map(_ ==>
+        _ <- Ns.int.d1.Refs1.*?(Ref1.int1).getJson(2, 0).map(_._1 ==>
           """{
             |  "totalCount": 4,
             |  "limit"     : 2,
@@ -1203,7 +1203,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.d1.Refs1.*?(Ref1.int1).getJson(2, 2).map(_ ==>
+        _ <- Ns.int.d1.Refs1.*?(Ref1.int1).getJson(2, 2).map(_._1 ==>
           """{
             |  "totalCount": 4,
             |  "limit"     : 2,
@@ -1236,7 +1236,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.d1.Refs1.*?(Ref1.int1).getJson(2, 4).map(_ ==>
+        _ <- Ns.int.d1.Refs1.*?(Ref1.int1).getJson(2, 4).map(_._1 ==>
           """{
             |  "totalCount": 4,
             |  "limit"     : 2,
@@ -1246,7 +1246,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.str.d1.Refs1.*?(Ref1.int1).getJson(2, 4).map(_ ==>
+        _ <- Ns.str.d1.Refs1.*?(Ref1.int1).getJson(2, 4).map(_._1 ==>
           """{
             |  "totalCount": 0,
             |  "limit"     : 2,
@@ -1285,7 +1285,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getJson(-2, 0).map(_ ==>
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getJson(-2, 0).map(_._1 ==>
           """{
             |  "totalCount": 4,
             |  "limit"     : -2,
@@ -1311,7 +1311,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getJson(-2, 2).map(_ ==>
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getJson(-2, 2).map(_._1 ==>
           """{
             |  "totalCount": 4,
             |  "limit"     : -2,
@@ -1344,7 +1344,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getJson(-2, 4).map(_ ==>
+        _ <- Ns.int.a1.Refs1.*?(Ref1.int1).getJson(-2, 4).map(_._1 ==>
           """{
             |  "totalCount": 4,
             |  "limit"     : -2,
@@ -1354,7 +1354,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.str.a1.Refs1.*?(Ref1.int1).getJson(-2, 4).map(_ ==>
+        _ <- Ns.str.a1.Refs1.*?(Ref1.int1).getJson(-2, 4).map(_._1 ==>
           """{
             |  "totalCount": 0,
             |  "limit"     : -2,
@@ -1400,7 +1400,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.d1.Refs1.*?(Ref1.int1).getJson(-2, 0).map(_ ==>
+        _ <- Ns.int.d1.Refs1.*?(Ref1.int1).getJson(-2, 0).map(_._1 ==>
           """{
             |  "totalCount": 4,
             |  "limit"     : -2,
@@ -1433,7 +1433,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.d1.Refs1.*?(Ref1.int1).getJson(-2, 2).map(_ ==>
+        _ <- Ns.int.d1.Refs1.*?(Ref1.int1).getJson(-2, 2).map(_._1 ==>
           """{
             |  "totalCount": 4,
             |  "limit"     : -2,
@@ -1459,7 +1459,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.int.d1.Refs1.*?(Ref1.int1).getJson(-2, 4).map(_ ==>
+        _ <- Ns.int.d1.Refs1.*?(Ref1.int1).getJson(-2, 4).map(_._1 ==>
           """{
             |  "totalCount": 4,
             |  "limit"     : -2,
@@ -1469,7 +1469,7 @@ object OffsetPagination extends AsyncTestSuite {
             |  }
             |}""".stripMargin)
 
-        _ <- Ns.str.d1.Refs1.*?(Ref1.int1).getJson(-2, 4).map(_ ==>
+        _ <- Ns.str.d1.Refs1.*?(Ref1.int1).getJson(-2, 4).map(_._1 ==>
           """{
             |  "totalCount": 0,
             |  "limit"     : -2,

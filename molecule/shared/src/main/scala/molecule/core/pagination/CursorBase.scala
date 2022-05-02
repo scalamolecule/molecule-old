@@ -2,7 +2,7 @@ package molecule.core.pagination
 
 import java.net.URI
 import java.util
-import java.util.{Base64, Date, UUID, List => jList}
+import java.util.{Base64, Date, UUID, List => jList, Collection => jCollection}
 import molecule.core.ast.elements._
 import molecule.core.exceptions.MoleculeException
 import molecule.core.marshalling.Marshalling
@@ -186,6 +186,79 @@ trait CursorBase[Obj, Tpl] { self: Marshalling[Obj, Tpl] =>
         }
       }
       loopPrevRowsAfterCursorRow(prevCursorIndex + 1)
+    }
+  }
+
+  protected def resolveSubstituteCursor[U](
+    conn: Conn,
+    limit: Int,
+    cursor: String,
+    rowsUnsorted: jCollection[jList[AnyRef]],
+    forward: Boolean,
+    totalCount: Int,
+    sortIndexes: List[Int],
+    lastIndex: Int,
+    firstIndex: Int,
+    lastRow: String,
+    firstRow: String,
+    lastSortValues: List[String],
+    firstSortValues: List[String],
+    prevT: Long,
+    t: Long,
+    appender: (util.ArrayList[jList[AnyRef]], Int, Int) => U,
+  )(implicit ec: ExecutionContext): Future[(U, String, Int)] = {
+    val log = new log
+    log("=========================================")
+
+    val rows: util.ArrayList[jList[AnyRef]] = new java.util.ArrayList(rowsUnsorted)
+    rows.sort(this) // using macro-implemented `compare` method
+
+    rows.forEach(row => log(row))
+    //          log.print()
+
+    for {
+      (from, until, more) <- (forward, cursor) match {
+        case (true, "") => Future((0, limit.min(totalCount), (totalCount - limit).max(0)))
+        case (true, _)  => getCursorIndex(
+          conn, rows, totalCount, sortIndexes, lastIndex, lastRow, prevT, lastSortValues, 0
+        ).map { cursorIndex =>
+          val from  = cursorIndex + 1
+          val until = (from + limit).min(totalCount)
+          val more  = totalCount - until
+          (from, until, more)
+        }
+
+        case (_, "") => Future(((totalCount + limit).max(0), totalCount, (totalCount + limit).max(0)))
+        case (_, _)  => getCursorIndex(
+          conn, rows, totalCount, sortIndexes, firstIndex, firstRow, prevT, firstSortValues, totalCount - 1
+        ).map { cursorIndex =>
+          val from  = (cursorIndex + limit).max(0) // (limit is negative)
+          val until = cursorIndex
+          val more  = from
+          (from, until, more)
+        }
+      }
+    } yield {
+      log("from    : " + from)
+      log("until   : " + until)
+
+      val newFirst           = rows.get(from)
+      val newLast            = rows.get(until - 1)
+      val newFirstRow        = newFirst.toString
+      val newLastRow         = newLast.toString
+      val newFirstSortValues = sortValueStrings(newFirst)
+      val newLastSortValues  = sortValueStrings(newLast)
+      val result             = appender(rows, from, until)
+      val newCursor          = encode(
+        t, from, until - 1, newFirstRow, newLastRow, sortIndexes, newFirstSortValues, newLastSortValues
+      )
+
+      log("more    : " + more)
+      log("firstRow: " + newFirstRow)
+      log("lastRow : " + newLastRow)
+      //            log.print()
+
+      (result, newCursor, more)
     }
   }
 
