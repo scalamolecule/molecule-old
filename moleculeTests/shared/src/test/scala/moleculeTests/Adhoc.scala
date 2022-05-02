@@ -18,28 +18,6 @@ object Adhoc extends AsyncTestSuite with Helpers with JavaUtil {
 
   @nowarn lazy val tests = Tests {
 
-    "Local logic" - selfJoin { implicit conn =>
-      import moleculeTests.dataModels.core.ref.dsl.SelfJoin._
-
-      for {
-        _ <- Person.name("Ben").age(23).save
-
-        // Dynamic objects needs explicit molecule created with `m`
-        person <- m(Person.name.age).getDynObjs { person =>
-          // Local business logic using the molecule object properties
-          def nextAge: Int = person.age + 1
-        }.map(_.head)
-
-        _ = {
-          person.name ==> "Ben"
-          person.age ==> 23
-          person.nextAge ==> 24
-        }
-
-      } yield ()
-    }
-
-
     "core" - core { implicit futConn =>
       for {
         conn <- futConn
