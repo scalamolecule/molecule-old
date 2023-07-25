@@ -1,4 +1,7 @@
-![](project/resources/Molecule-logo.png)
+This is an older version of the Molecule Scala library based on macros. It only targets the [Datomic][datomic] database whereas the new Molecule library living in the new [molecule](https://github.com/scalamolecule/molecule) repo targets both Datomic and JDBC-compliant databases.
+
+
+## Old Molecule...
 
 Molecule is a non-blocking asynchronous domain-customizable database query language for Scala and Scala.js against the [Datomic][datomic] database.
 
@@ -76,7 +79,7 @@ sbt.version=1.6.1
 `project/buildinfo.sbt`:
 
 ```scala
-addSbtPlugin("org.scalamolecule" % "sbt-molecule" % "1.0.2")
+addSbtPlugin("org.scalamolecule" % "sbt-molecule" % "1.0.3")
 ```
 
 `build.sbt`:
